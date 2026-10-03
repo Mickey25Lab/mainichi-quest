@@ -1,0 +1,8 @@
+{
+  "name": "マイクエ",
+  "short_name": "マイクエ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#39aef0"
+}
