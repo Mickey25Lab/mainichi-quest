@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1c5-3 8 3 14 0v9c-6 3-9-3-14 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="stopwatch" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 2h6M12 5V2m6 5 1.5-1.5M12 13V8m0 5 3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="crown" viewBox="0 0 24 24"><path d="m3 7 5 4 4-7 4 7 5-4-2 11H5L3 7Zm3 14h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="replay" viewBox="0 0 24 24"><path d="M4 10V4m0 0h6M4 4l4.2 4.2A8 8 0 1 1 5 15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3V11Z" fill="currentColor"/></symbol>
+  <symbol id="gem" viewBox="0 0 24 24"><path d="m4 8 4-5h8l4 5-8 13L4 8Zm0 0h16M8 3l4 5 4-5M8 8l4 13 4-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="car" viewBox="0 0 24 24"><path d="M3 13 5 7h14l2 6v5h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-5Zm3-4h12M7 14h2m6 0h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="robot" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6V3m-5 9h.01M17 12h.01M8 16h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="super" viewBox="0 0 24 24"><path d="m12 2 2.1 5.2L20 6l-2.8 5 4.3 3.8-5.7 1.1L16 22l-4-3.3L8 22l.2-6.1-5.7-1.1L6.8 11 4 6l5.9 1.2L12 2Z" fill="currentColor"/><circle cx="12" cy="12" r="3" fill="white"/></symbol>
+  <symbol id="gear" viewBox="0 0 24 24"><path d="M9.7 2h4.6l.7 3a8 8 0 0 1 1.5.9l2.9-.9 2.3 4-2.2 2.1a8 8 0 0 1 0 1.8l2.2 2.1-2.3 4-2.9-.9a8 8 0 0 1-1.5.9l-.7 3H9.7L9 19a8 8 0 0 1-1.5-.9l-2.9.9-2.3-4 2.2-2.1a8 8 0 0 1 0-1.8L2.3 9l2.3-4 2.9.9A8 8 0 0 1 9 5l.7-3Z" fill="currentColor"/><circle cx="12" cy="12" r="3.2" fill="white"/></symbol>
+  <symbol id="medal" viewBox="0 0 24 24"><path d="m7 2 5 8 5-8h-4l-1 5-1-5H7Z" fill="currentColor"/><circle cx="12" cy="15" r="6" fill="currentColor"/><path d="m12 11.8 1 2 2.2.3-1.6 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.6-1.6 2.2-.3 1-2Z" fill="white"/></symbol>
+  <symbol id="master-medal" viewBox="0 0 24 24"><path d="M7 2.8h10L22 12l-5 9.2H7L2 12 7 2.8Z" fill="currentColor" stroke="#9af2ff" stroke-width="1.35" stroke-linejoin="round"/><path d="M8.4 5.8h7.2l3.4 6.2-3.4 6.2H8.4L5 12l3.4-6.2Z" fill="none" stroke="#e9fdff" stroke-width="1.15" stroke-linejoin="round"/></symbol>
+</svg>

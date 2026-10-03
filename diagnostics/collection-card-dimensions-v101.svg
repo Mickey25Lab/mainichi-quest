@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a9b8c5"/><stop offset=".08" stop-color="#273747"/><stop offset=".92" stop-color="#172536"/><stop offset="1" stop-color="#8fa4b4"/></linearGradient>
+    <linearGradient id="band" x1="0" x2="1"><stop stop-color="#03132d"/><stop offset=".5" stop-color="#04305c"/><stop offset="1" stop-color="#03132d"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffdb31"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="#eef8ff"/>
+  <text x="70" y="80" fill="#083b78" font-family="Arial, sans-serif" font-size="38" font-weight="700">コレクションカード — 寸法診断（Patrol Car / 1400×1050基準）</text>
+  <text x="70" y="125" fill="#315a87" font-family="Arial, sans-serif" font-size="24">実カード: 257.6 × 176.5px　　以下は見やすく2.2倍で描画</text>
+  <g transform="translate(350 175) scale(2.2)">
+    <rect x="0" y="0" width="257.6" height="176.5" rx="13" fill="url(#card)" stroke="#8496a9" stroke-width="3"/>
+    <rect x="10" y="9" width="192.6" height="126.5" rx="5" fill="#1b4263" opacity=".42" stroke="#67d7ff" stroke-dasharray="4 3"/>
+    <image href="../dist/collection/vehicles/01_patrol_car_vehicle.webp" x="10" y="9" width="192.6" height="111.5" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="8" y="135.5" width="199.6" height="30" rx="5" fill="url(#band)" stroke="#6fd3ff" stroke-width="1"/>
+    <text x="107.8" y="152.5" fill="#fff" font-family="Arial, sans-serif" font-size="19" font-weight="700" text-anchor="middle">Patrol Car</text>
+    <line x1="0" y1="176.5" x2="257.6" y2="176.5" stroke="#e83d38" stroke-width="1.5"/>
+    <line x1="0" y1="135.5" x2="257.6" y2="135.5" stroke="#ff8b2a" stroke-width="1.5"/>
+    <line x1="0" y1="123.5" x2="257.6" y2="123.5" stroke="#00e8ff" stroke-width="1.5"/>
+    <line x1="0" y1="141" x2="257.6" y2="141" stroke="#d968ff" stroke-width="1.3" stroke-dasharray="3 2"/>
+    <line x1="202.6" y1="9" x2="202.6" y2="135.5" stroke="#ffd531" stroke-width="1" stroke-dasharray="4 3"/>
+  </g>
+  <g fill="none" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)">
+    <line x1="935" y1="447" x2="935" y2="474" stroke="#00bde9"/>
+    <line x1="1080" y1="474" x2="1080" y2="564" stroke="#ff7a22"/>
+    <line x1="1215" y1="486" x2="1215" y2="564" stroke="#b941e9"/>
+  </g>
+  <g font-family="Arial, sans-serif">
+    <text x="955" y="466" fill="#007fa8" font-size="28" font-weight="700">画像下端 → ネーム帯上端 = 12px</text>
+    <text x="1100" y="530" fill="#c95410" font-size="28" font-weight="700">カード下端 → ネーム帯上端 = 41px</text>
+    <text x="1100" y="564" fill="#8c22bd" font-size="28" font-weight="700">カード下端 → 文字上端 = 35.5px</text>
+    <text x="355" y="650" fill="#d52a26" font-size="27" font-weight="700">赤線: カード下端</text>
+    <text x="640" y="650" fill="#e56b15" font-size="27" font-weight="700">橙線: ネーム帯上端</text>
+    <text x="935" y="650" fill="#008eae" font-size="27" font-weight="700">水色線: 車両画像下端</text>
+    <text x="355" y="700" fill="#8c22bd" font-size="27" font-weight="700">紫破線: ネームラベル文字上端</text>
+    <text x="355" y="755" fill="#705100" font-size="27" font-weight="700">黄破線: 車両表示領域下端（侵入不可領域の上端）</text>
+    <text x="355" y="805" fill="#315a87" font-size="24">侵入不可領域: .vehicle-area の bottom: 38px + カード枠3px = 実表示41px</text>
+  </g>
+</svg>
