@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = 111;
+  const appVersion = "0.0.112";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./correct-grand-fanfare.wav", "./correct-arcade-celebration.wav", "./correct-applause-cheer.wav"];
   const startSoundPath = "./warizan-start-powerup.wav";
