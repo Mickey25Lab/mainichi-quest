@@ -2059,7 +2059,7 @@
       const image = resultArtworkPath(item.vehicle.index, item.after.stage, item.after.masterMedal);
       const meter = item.type === "friendship"
         ? `<div class="result-new-hearts" aria-label="なかよし ${item.to} / 5">${[5,4,3,2,1].map((level) => `<span class="${level <= item.to ? "is-earned" : ""} ${level > item.from && level <= item.to ? "is-gained" : ""}">♥</span>`).join("")}</div>`
-        : `<div class="result-new-energy" aria-label="エネルギー ${item.to} / ${item.required}"><div class="result-new-energy-tank"><i style="height:${Math.min(100, item.to / item.required * 100)}%"></i><b style="height:${Math.min(100, Math.max(0, item.to - item.from) / item.required * 100)}%"></b></div><strong>${item.to}<small>/ ${item.required}</small></strong></div>`;
+        : `<div class="result-new-energy" aria-label="エネルギー ${item.to} / ${item.required}"><div class="result-new-energy-tank"><span class="result-new-energy-stack${item.from ? "" : " is-only-gain"}"><i style="height:${Math.min(100, item.from / item.required * 100)}%"></i><b style="height:${Math.min(100, Math.max(0, item.to - item.from) / item.required * 100)}%"></b></span></div><strong>${item.to}<small>/ ${item.required}</small></strong></div>`;
       return `<article class="result-new-progress-card"><div class="result-new-progress-vehicle"><img src="${image}" alt="${item.vehicle.nameJa}" decoding="async"><span>${item.vehicle.nameEn}</span></div><div class="result-new-meter"><b>${item.type === "friendship" ? "なかよし" : "エネルギー"}</b>${meter}</div></article>`;
     }).join("");
     const getSection = $("result-gets-section");
