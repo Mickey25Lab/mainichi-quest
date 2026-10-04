@@ -488,6 +488,7 @@
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
+  // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
   function viewportSnapshot() {
     const visualViewport = window.visualViewport;
