@@ -19,3 +19,5 @@ MVP段階では、当面 `MAJOR` は `0` とします。
 
 Sites最終版 Version 111 は `0.0.111`、GitHub移行後の正式基準版は `0.0.112` とします。
 以後のリリースでは、version番号と必要なアプリ内表示を更新し、commit、`vX.Y.Z` Git tag、push、GitHub Pages反映確認を行います。
+
+Preview deployment test
