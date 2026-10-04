@@ -67,6 +67,7 @@
     rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
     rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done"
   };
+  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v1";
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -213,6 +214,32 @@
   }
   function saveCollection() {
     try { localStorage.setItem(storageKeys.collection, JSON.stringify(state.collection)); } catch (_) {}
+  }
+  function seedPreviewQaProgressPreset() {
+    const params = new URLSearchParams(window.location.search);
+    const host = window.location.hostname;
+    const isCloudflarePreview = host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev";
+    const isLocalPreview = host === "localhost" || host === "127.0.0.1";
+    if (params.get("qa") !== "progress" || (!isCloudflarePreview && !isLocalPreview)) return null;
+    try {
+      if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
+      const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
+      const normalVehicleIndexes = collectionDisplayOrder.filter((index) => vehicles[index].rarity === "normal").slice(0, 10);
+      const progressStates = [
+        null,
+        { discovered: true, friendship: 3, friendly: false, stage: 2, energy: 0, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 0, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 25, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 45, masterMedal: false }
+      ];
+      normalVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
+        const progress = progressStates[displayIndex % progressStates.length];
+        if (progress) preset[vehicleIndex] = progress;
+      });
+      localStorage.setItem(storageKeys.rewardProgressPhase1, JSON.stringify(preset));
+      localStorage.setItem(previewQaProgressPresetMarker, "done");
+      return normalVehicleIndexes[3];
+    } catch (_) { return null; }
   }
   function loadRecentVehicles() {
     try {
@@ -867,6 +894,14 @@
     state.vehicleChallengeQuestionCount = 0;
   }
   function prepareInitialVehicle() {
+    if (Number.isInteger(state.previewQaInitialVehicleIndex)) {
+      state.currentVehicleIndex = state.previewQaInitialVehicleIndex;
+      state.currentStage = currentStageForVehicle(state.currentVehicleIndex);
+      state.preparedInitialVehicleIndex = state.currentVehicleIndex;
+      state.previewQaInitialVehicleIndex = null;
+      preloadVehicleVisuals(state.currentVehicleIndex, state.currentStage);
+      return;
+    }
     if (Number.isInteger(state.preparedInitialVehicleIndex)) return;
     state.currentVehicleIndex = -1;
     state.currentStage = 1;
@@ -2127,7 +2162,7 @@
       const image = resultArtworkPath(item.vehicle.index, item.after.stage, item.after.masterMedal);
       const meter = item.type === "friendship"
         ? `<div class="result-new-hearts" aria-label="なかよし ${item.to} / 5">${[5,4,3,2,1].map((level) => `<span class="${level <= item.to ? "is-earned" : ""} ${level > item.from && level <= item.to ? "is-gained" : ""}">♥</span>`).join("")}</div>`
-        : `<div class="result-new-energy" aria-label="エネルギー ${item.to} / ${item.required}"><div class="result-new-energy-tank"><i style="height:${Math.min(100, item.to / item.required * 100)}%"></i><b style="height:${Math.min(100, Math.max(0, item.to - item.from) / item.required * 100)}%"></b></div><strong>${item.to}<small>/ ${item.required}</small></strong></div>`;
+        : `<div class="result-new-energy" aria-label="エネルギー ${item.to} / ${item.required}"><div class="result-new-energy-tank"><span class="result-new-energy-stack${item.from ? "" : " is-only-gain"}"><i style="height:${Math.min(100, item.from / item.required * 100)}%"></i><b style="height:${Math.min(100, Math.max(0, item.to - item.from) / item.required * 100)}%"></b></span></div><strong>${item.to}<small>/ ${item.required}</small></strong></div>`;
       return `<article class="result-new-progress-card"><div class="result-new-progress-vehicle"><img src="${image}" alt="${item.vehicle.nameJa}" decoding="async"><span>${item.vehicle.nameEn}</span></div><div class="result-new-meter"><b>${item.type === "friendship" ? "なかよし" : "エネルギー"}</b>${meter}</div></article>`;
     }).join("");
     const getSection = $("result-gets-section");
@@ -2461,7 +2496,7 @@
   updateBgmToggleButton();
   ensureBackgroundMusic();
   updateVersionLabelWithPreviewMetadata();
-  resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); loadRewardProgress(); loadRecentVehicles(); setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
+  resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset(); loadRewardProgress(); loadRecentVehicles(); state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex; setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
