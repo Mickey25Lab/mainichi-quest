@@ -74,15 +74,15 @@
     ["Delivery Truck", "宅配便車", "04_Delivery_Truck.webp", "04_delivery_truck.webp", "#35d471", "normal", 10],
     ["Mail Van", "郵便車", "05_Mail_Van.webp", "05_mail_van.webp", "#ef4450", "normal", 10],
     ["Garbage Truck", "ゴミ収集車", "06_Garbage_Truck.webp", "06_garbage_truck.webp", "#168fe5", "normal", 10],
-    ["Tow Truck", "レッカー車", "07_Tow_Truck.webp", "07_tow_truck.webp", "#ffd42a", "normal", 5],
+    ["Tow Truck", "レッカー車", "07_Tow_Truck.webp", "07_tow_truck.webp", "#ffd42a", "special", 5],
     ["Crane Truck", "クレーン車", "08_Crane_Truck.webp", "08_crane_truck.webp", "#41d66c", "special", 5],
     ["Concrete Mixer", "コンクリートミキサー車", "09_Concrete_Mixer.webp", "09_concrete_mixer.webp", "#27de75", "special", 5],
     ["Bulldozer", "ブルドーザー", "10_Bulldozer.webp", "10_bulldozer.webp", "#f4b21b", "special", 5],
     ["Road Roller", "ロードローラー", "11_Road_Roller.webp", "11_road_roller.webp", "#f0a515", "special", 5],
     ["Tank Lorry", "タンクローリー", "12_Tank_Lorry.webp", "12_tank_lorry.webp", "#ff8c22", "special", 5],
-    ["Watering Truck", "散水車", "13_Watering_Truck.webp", "13_watering_truck.webp", "#27afff", "normal", 5],
+    ["Watering Truck", "散水車", "13_Watering_Truck.webp", "13_watering_truck.webp", "#27afff", "special", 5],
     ["Kindergarten Bus", "幼稚園バス", "14_Kindergarten_Bus.webp", "14_kindergarten_bus.webp", "#ffd322", "normal", 10],
-    ["Sightseeing Bus", "観光バス", "15_Sightseeing_Bus.webp", "15_sightseeing_bus.webp", "#f04b42", "normal", 5],
+    ["Sightseeing Bus", "観光バス", "15_Sightseeing_Bus.webp", "15_sightseeing_bus.webp", "#f04b42", "special", 5],
     ["Formula Racer", "F1カー", "16_Formula_Racer.webp", "16_formula_racer.webp", "#ca54ff", "super-rare", 1],
     ["Racing Bike", "レーシングバイク", "17_Racing_Bike.webp", "17_racing_bike.webp", "#ffd524", "rare", 2],
     ["Snowmobile", "スノーモービル", "18_Snowmobile.webp", "18_snowmobile.webp", "#63cfff", "rare", 2],
@@ -486,54 +486,98 @@
   }
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
+  let viewportResumeGuardUntil = 0;
+  const viewportResumeGuardMs = 900;
+  const viewportDiagnostics = [];
+  window.__miqueViewportDiagnostics = viewportDiagnostics;
   function viewportSnapshot() {
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
       clientWidth: document.documentElement.clientWidth,
       clientHeight: document.documentElement.clientHeight,
-      visualViewportScale: window.visualViewport?.scale
+      visualViewportWidth: window.visualViewport?.width,
+      visualViewportHeight: window.visualViewport?.height,
+      visualViewportScale: window.visualViewport?.scale,
+      visualViewportOffsetLeft: window.visualViewport?.offsetLeft,
+      visualViewportOffsetTop: window.visualViewport?.offsetTop
     };
+  }
+  function recordViewportDiagnostic(reason, phase, snapshot) {
+    viewportDiagnostics.push({
+      at: Date.now(),
+      reason,
+      phase,
+      snapshot: { ...snapshot },
+      lastStableAppScale
+    });
+    if (viewportDiagnostics.length > 40) viewportDiagnostics.splice(0, viewportDiagnostics.length - 40);
   }
   function isNormalViewport(snapshot) {
     const viewportScale = snapshot.visualViewportScale;
     if (Number.isFinite(viewportScale) && Math.abs(viewportScale - 1) > 0.01) return false;
     const widthTolerance = Math.max(2, snapshot.clientWidth * 0.02);
     const heightTolerance = Math.max(2, snapshot.clientHeight * 0.02);
-    return Math.abs(snapshot.innerWidth - snapshot.clientWidth) <= widthTolerance
-      && Math.abs(snapshot.innerHeight - snapshot.clientHeight) <= heightTolerance;
+    if (Math.abs(snapshot.innerWidth - snapshot.clientWidth) > widthTolerance
+      || Math.abs(snapshot.innerHeight - snapshot.clientHeight) > heightTolerance) return false;
+    if (Number.isFinite(snapshot.visualViewportWidth)
+      && Math.abs(snapshot.visualViewportWidth - snapshot.innerWidth) > widthTolerance) return false;
+    if (Number.isFinite(snapshot.visualViewportHeight)
+      && Math.abs(snapshot.visualViewportHeight - snapshot.innerHeight) > heightTolerance) return false;
+    return true;
   }
   function viewportIsStable(first, second) {
+    const close = (a, b, tolerance) => !Number.isFinite(a) || !Number.isFinite(b) || Math.abs(a - b) <= tolerance;
     return Math.abs(first.innerWidth - second.innerWidth) <= 1
       && Math.abs(first.innerHeight - second.innerHeight) <= 1
       && Math.abs(first.clientWidth - second.clientWidth) <= 1
       && Math.abs(first.clientHeight - second.clientHeight) <= 1
-      && (!Number.isFinite(first.visualViewportScale)
-        || !Number.isFinite(second.visualViewportScale)
-        || Math.abs(first.visualViewportScale - second.visualViewportScale) <= 0.005);
+      && close(first.visualViewportWidth, second.visualViewportWidth, 1)
+      && close(first.visualViewportHeight, second.visualViewportHeight, 1)
+      && close(first.visualViewportScale, second.visualViewportScale, 0.005);
   }
-  function sizePlayStage(snapshot = viewportSnapshot()) {
+  function sizePlayStage(snapshot = viewportSnapshot(), reason = "direct") {
     if (!isNormalViewport(snapshot)) {
+      recordViewportDiagnostic(reason, "rejected", snapshot);
       return false;
     }
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
+    recordViewportDiagnostic(reason, "applied", snapshot);
     return true;
   }
   function schedulePlayStageSize(reason) {
     const requestId = ++scaleUpdateRequest;
-    window.requestAnimationFrame(() => {
-      const first = viewportSnapshot();
+    const now = performance.now();
+    if (reason === "pageshow" || reason === "visibilitychange:visible") {
+      viewportResumeGuardUntil = Math.max(viewportResumeGuardUntil, now + viewportResumeGuardMs);
+    }
+    const baseDelayMs = reason === "orientationchange" ? 260 : 80;
+    const firstDelayMs = Math.max(baseDelayMs, viewportResumeGuardUntil - now);
+    let attempts = 0;
+    const attempt = () => {
+      if (requestId !== scaleUpdateRequest) return;
       window.requestAnimationFrame(() => {
-        if (requestId !== scaleUpdateRequest) return;
-        const second = viewportSnapshot();
-        if (!viewportIsStable(first, second)) {
-          return;
-        }
-        sizePlayStage(second);
+        const first = viewportSnapshot();
+        window.requestAnimationFrame(() => {
+          if (requestId !== scaleUpdateRequest) return;
+          const second = viewportSnapshot();
+          recordViewportDiagnostic(reason, "sample", second);
+          if (viewportIsStable(first, second) && sizePlayStage(second, reason)) return;
+          attempts += 1;
+          if (attempts < 5) {
+            window.setTimeout(attempt, 120);
+            return;
+          }
+          if (lastStableAppScale !== null) {
+            $("play-stage").style.setProperty("--stage-scale", String(lastStableAppScale));
+            recordViewportDiagnostic(reason, "restored-last-stable", second);
+          }
+        });
       });
-    });
+    };
+    window.setTimeout(attempt, Math.max(0, firstDelayMs));
   }
   function assignQuestionVisualContext(question) {
     if (question.vehicleIndex === undefined) question.vehicleIndex = state.currentVehicleIndex;
