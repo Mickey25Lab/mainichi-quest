@@ -205,6 +205,21 @@ button { touch-action: manipulation; }
   padding:8px 14px;
   font-size:clamp(15px,1.5vw,21px);
 }
+.start-version.is-preview {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  white-space:normal;
+}
+.start-version .version-release-line {
+  white-space:nowrap;
+}
+.start-version .version-preview-line {
+  font-size:.7em;
+  letter-spacing:.01em;
+  white-space:nowrap;
+  opacity:.9;
+}
 .start-developer {
   right:max(22px,env(safe-area-inset-right));
   padding:9px 16px;
