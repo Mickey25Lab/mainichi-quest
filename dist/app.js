@@ -495,6 +495,32 @@
       visualViewportScale: window.visualViewport?.scale
     };
   }
+  async function updateVersionLabelWithPreviewMetadata() {
+    const versionLabel = $("app-version");
+    versionLabel.textContent = `Version ${appVersion}`;
+    versionLabel.classList.remove("is-preview");
+    try {
+      const response = await fetch("./preview-meta.json", { cache: "no-store" });
+      if (!response.ok) return;
+      const metadata = await response.json();
+      if (metadata?.environment !== "preview") return;
+      const identity = metadata.prNumber
+        ? `Preview PR #${metadata.prNumber}`
+        : `Preview ${metadata.branch || "branch"}`;
+      const commit = metadata.shortCommit ? ` · ${metadata.shortCommit}` : "";
+      versionLabel.replaceChildren();
+      const releaseLine = document.createElement("span");
+      releaseLine.className = "version-release-line";
+      releaseLine.textContent = `Version ${appVersion}`;
+      const previewLine = document.createElement("span");
+      previewLine.className = "version-preview-line";
+      previewLine.textContent = `${identity}${commit}`;
+      versionLabel.append(releaseLine, previewLine);
+      versionLabel.classList.add("is-preview");
+    } catch (_) {
+      // GitHub Pages / local builds do not generate preview metadata.
+    }
+  }
   function isNormalViewport(snapshot) {
     const viewportScale = snapshot.visualViewportScale;
     if (Number.isFinite(viewportScale) && Math.abs(viewportScale - 1) > 0.01) return false;
@@ -2365,7 +2391,7 @@
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   ensureBackgroundMusic();
-  $("app-version").textContent = `Version ${appVersion}`;
+  updateVersionLabelWithPreviewMetadata();
   resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); loadRewardProgress(); loadRecentVehicles(); setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
