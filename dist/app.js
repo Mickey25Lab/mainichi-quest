@@ -485,13 +485,15 @@
     preloadNormalQuestionBackgrounds();
   }
   let lastStableAppScale = null;
-  let scaleUpdateRequest = 0;
+  const playStageRecoveryDelaysMs = Object.freeze([0, 120, 400, 1000]);
   function viewportSnapshot() {
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
       clientWidth: document.documentElement.clientWidth,
       clientHeight: document.documentElement.clientHeight,
+      visualViewportWidth: window.visualViewport?.width,
+      visualViewportHeight: window.visualViewport?.height,
       visualViewportScale: window.visualViewport?.scale
     };
   }
@@ -500,39 +502,54 @@
     if (Number.isFinite(viewportScale) && Math.abs(viewportScale - 1) > 0.01) return false;
     const widthTolerance = Math.max(2, snapshot.clientWidth * 0.02);
     const heightTolerance = Math.max(2, snapshot.clientHeight * 0.02);
-    return Math.abs(snapshot.innerWidth - snapshot.clientWidth) <= widthTolerance
-      && Math.abs(snapshot.innerHeight - snapshot.clientHeight) <= heightTolerance;
+    if (Math.abs(snapshot.innerWidth - snapshot.clientWidth) > widthTolerance
+      || Math.abs(snapshot.innerHeight - snapshot.clientHeight) > heightTolerance) return false;
+    // Older iPad Safari can briefly report a lifecycle-resume viewport that
+    // looks internally consistent while visualViewport is still catching up.
+    // Reject that transient state when visualViewport already disagrees.
+    if (Number.isFinite(snapshot.visualViewportWidth)
+      && Math.abs(snapshot.visualViewportWidth - snapshot.clientWidth) > widthTolerance) return false;
+    if (Number.isFinite(snapshot.visualViewportHeight)
+      && Math.abs(snapshot.visualViewportHeight - snapshot.clientHeight) > heightTolerance) return false;
+    return true;
   }
   function viewportIsStable(first, second) {
     return Math.abs(first.innerWidth - second.innerWidth) <= 1
       && Math.abs(first.innerHeight - second.innerHeight) <= 1
       && Math.abs(first.clientWidth - second.clientWidth) <= 1
       && Math.abs(first.clientHeight - second.clientHeight) <= 1
+      && (!Number.isFinite(first.visualViewportWidth)
+        || !Number.isFinite(second.visualViewportWidth)
+        || Math.abs(first.visualViewportWidth - second.visualViewportWidth) <= 1)
+      && (!Number.isFinite(first.visualViewportHeight)
+        || !Number.isFinite(second.visualViewportHeight)
+        || Math.abs(first.visualViewportHeight - second.visualViewportHeight) <= 1)
       && (!Number.isFinite(first.visualViewportScale)
         || !Number.isFinite(second.visualViewportScale)
         || Math.abs(first.visualViewportScale - second.visualViewportScale) <= 0.005);
   }
   function sizePlayStage(snapshot = viewportSnapshot()) {
-    if (!isNormalViewport(snapshot)) {
-      return false;
-    }
+    if (!isNormalViewport(snapshot)) return false;
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
     return true;
   }
-  function schedulePlayStageSize(reason) {
-    const requestId = ++scaleUpdateRequest;
+  function attemptPlayStageSize(reason) {
     window.requestAnimationFrame(() => {
       const first = viewportSnapshot();
       window.requestAnimationFrame(() => {
-        if (requestId !== scaleUpdateRequest) return;
         const second = viewportSnapshot();
-        if (!viewportIsStable(first, second)) {
-          return;
-        }
+        if (!viewportIsStable(first, second)) return;
         sizePlayStage(second);
       });
+    });
+  }
+  function schedulePlayStageSize(reason, recovery = false) {
+    const delays = recovery ? playStageRecoveryDelaysMs : [0];
+    delays.forEach((delay) => {
+      if (delay === 0) attemptPlayStageSize(reason);
+      else window.setTimeout(() => attemptPlayStageSize(`${reason}:retry-${delay}`), delay);
     });
   }
   function assignQuestionVisualContext(question) {
@@ -2370,9 +2387,9 @@
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
-  window.addEventListener("pageshow", () => schedulePlayStageSize("pageshow"));
+  window.addEventListener("pageshow", () => schedulePlayStageSize("pageshow", true));
   window.addEventListener("pageshow", scheduleCollectionStageSize);
-  window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
+  window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange", true));
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
@@ -2396,12 +2413,15 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
-      schedulePlayStageSize("visibilitychange:visible");
+      schedulePlayStageSize("visibilitychange:visible", true);
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
   });
-  window.addEventListener("focus", checkQuestionTimeout);
+  window.addEventListener("focus", () => {
+    schedulePlayStageSize("focus", true);
+    checkQuestionTimeout();
+  });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
   $("detail-picture").addEventListener("touchend", (event) => {
