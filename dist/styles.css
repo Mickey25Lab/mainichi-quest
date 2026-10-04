@@ -1111,6 +1111,18 @@ button { touch-action: manipulation; }
   /* Centre the artwork canvas on the shared reward-frame centre line. */
   transform:translateX(-50%);
 }
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image {
+  left:51.25%;
+}
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta {
+  top:75.8%;
+  gap:0;
+}
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta span {
+  margin-top:10px;
+  font-size:clamp(13px,1.25vw,18px);
+  line-height:1;
+}
 /* The friendship frame's lower plaque sits slightly higher than the
    discovery frame.  Lift only its metadata so both lines stay inside it. */
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta {
