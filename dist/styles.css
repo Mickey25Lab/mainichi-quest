@@ -1105,29 +1105,47 @@ button { touch-action: manipulation; }
   /* Keep the Stage 1 vehicle centred on the reward frame regardless of
      the percentage width used for the artwork. */
   left:50%;
-  top:34.7%;
+  top:33.4%;
   width:43.5%;
   height:43.5%;
   /* Centre the artwork canvas on the shared reward-frame centre line. */
   transform:translateX(-50%);
 }
+.reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
+  top:32.8%;
+}
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image {
   left:51.25%;
   transform:translateX(calc(-50% - 30px));
 }
+/* The two Stage 1 frames place their lower plaques at different heights.
+   Keep shared vehicle sizing, but position each common metadata block inside
+   its own plaque so every vehicle label has the same visual breathing room. */
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta,
+.reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta {
+  width:38%;
+  gap:2px;
+}
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta {
   top:75.8%;
   gap:0;
+}
+.reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta {
+  top:72%;
+}
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta strong,
+.reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta strong {
+  font-size:clamp(21px,2.35vw,35px);
+  line-height:1.04;
 }
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta span {
   margin-top:10px;
   font-size:clamp(13px,1.25vw,18px);
   line-height:1;
 }
-/* The friendship frame's lower plaque sits slightly higher than the
-   discovery frame.  Lift only its metadata so both lines stay inside it. */
-.reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta {
-  top:72.5%;
+.reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta span {
+  font-size:clamp(14px,1.55vw,22px);
+  line-height:1.08;
 }
 .reward-stage[data-stage="2"] { --art-left:27%; --art-top:32%; --art-width:46%; --art-height:41%; }
 .reward-stage[data-stage="3"] { --art-left:28%; --art-top:22%; --art-width:44%; --art-height:55%; }
