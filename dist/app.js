@@ -486,14 +486,73 @@
   }
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
+  const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
+  const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
+  let viewportDiagnostics = [];
   function viewportSnapshot() {
+    const visualViewport = window.visualViewport;
+    const playStage = $("play-stage");
+    const playStageRect = playStage?.getBoundingClientRect();
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
       clientWidth: document.documentElement.clientWidth,
       clientHeight: document.documentElement.clientHeight,
-      visualViewportScale: window.visualViewport?.scale
+      visualViewportWidth: visualViewport?.width ?? null,
+      visualViewportHeight: visualViewport?.height ?? null,
+      visualViewportScale: visualViewport?.scale ?? null,
+      visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
+      visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
+      devicePixelRatio: window.devicePixelRatio,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      pageHidden: document.hidden,
+      stageScale: getComputedStyle(playStage).getPropertyValue("--stage-scale").trim() || null,
+      stageRect: playStageRect ? {
+        x: playStageRect.x,
+        y: playStageRect.y,
+        width: playStageRect.width,
+        height: playStageRect.height
+      } : null
     };
+  }
+  function recordViewportDiagnostic(event, detail = {}) {
+    if (!viewportDiagnosticsEnabled) return;
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
+    viewportDiagnostics.push(entry);
+    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
+    try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
+  }
+  function setupViewportDiagnostics() {
+    if (!viewportDiagnosticsEnabled) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
+    } catch (_) {}
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "MQ-001 LOG";
+    Object.assign(button.style, {
+      position: "fixed",
+      right: "8px",
+      top: "8px",
+      zIndex: "2147483647",
+      fontSize: "12px",
+      padding: "6px 8px",
+      opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      const text = JSON.stringify(viewportDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "MQ-001 LOG"; }, 1400);
+      } catch (_) {
+        window.prompt("MQ-001 viewport log", text);
+      }
+    });
+    document.body.appendChild(button);
+    recordViewportDiagnostic("diagnostics-enabled");
   }
   function isNormalViewport(snapshot) {
     const viewportScale = snapshot.visualViewportScale;
@@ -514,23 +573,31 @@
   }
   function sizePlayStage(snapshot = viewportSnapshot()) {
     if (!isNormalViewport(snapshot)) {
+      recordViewportDiagnostic("size-rejected-abnormal", { candidate: snapshot });
       return false;
     }
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
+    recordViewportDiagnostic("size-applied", { scale, candidate: snapshot });
     return true;
   }
   function schedulePlayStageSize(reason) {
     const requestId = ++scaleUpdateRequest;
+    recordViewportDiagnostic("schedule", { reason, requestId });
     window.requestAnimationFrame(() => {
       const first = viewportSnapshot();
       window.requestAnimationFrame(() => {
-        if (requestId !== scaleUpdateRequest) return;
-        const second = viewportSnapshot();
-        if (!viewportIsStable(first, second)) {
+        if (requestId !== scaleUpdateRequest) {
+          recordViewportDiagnostic("schedule-cancelled", { reason, requestId, currentRequestId: scaleUpdateRequest, first });
           return;
         }
+        const second = viewportSnapshot();
+        if (!viewportIsStable(first, second)) {
+          recordViewportDiagnostic("schedule-unstable", { reason, requestId, first, second });
+          return;
+        }
+        recordViewportDiagnostic("schedule-stable", { reason, requestId, first, second });
         sizePlayStage(second);
       });
     });
@@ -2362,6 +2429,7 @@
     window.location.reload();
   }
 
+  setupViewportDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   ensureBackgroundMusic();
@@ -2395,13 +2463,18 @@
   $("answer-confirm-proceed").addEventListener("click", revealAnswer);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
   document.addEventListener("visibilitychange", () => {
+    recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     if (!document.hidden) {
       schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
   });
-  window.addEventListener("focus", checkQuestionTimeout);
+  window.addEventListener("pagehide", (event) => recordViewportDiagnostic("pagehide", { persisted: event.persisted }));
+  window.addEventListener("focus", () => {
+    recordViewportDiagnostic("focus");
+    checkQuestionTimeout();
+  });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
   $("detail-picture").addEventListener("touchend", (event) => {
