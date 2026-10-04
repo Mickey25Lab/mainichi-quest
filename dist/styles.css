@@ -658,9 +658,9 @@ button { touch-action: manipulation; }
 .play-screen .answer-character { z-index: 1; }
 .play-screen .answer-bubble { z-index: 2; }
 .play-screen .answer-character[hidden], .play-screen .answer-bubble[hidden] { display: none; }
-.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translateX(-50%) rotate(-12deg); transform-origin:bottom center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
+.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translateX(-50%) rotate(-135deg); transform-origin:bottom center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
 .play-screen .idle-guide[hidden] { display:none; }
-@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translateX(-50%) translateY(0) rotate(-12deg); } 50% { opacity:1; transform:translateX(-50%) translateY(-10px) rotate(-12deg); } }
+@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translateX(-50%) translateY(0) rotate(-135deg); } 50% { opacity:1; transform:translateX(-50%) translateY(-10px) rotate(-135deg); } }
 .play-screen .answer-character.is-vehicle-entering,
 .play-screen .answer-character.is-vehicle-exiting,
 .play-screen .answer-character.is-robot-entering,
@@ -1114,6 +1114,10 @@ button { touch-action: manipulation; }
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
   top:32.8%;
 }
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image {
+  left:51.25%;
+  transform:translateX(calc(-50% - 30px));
+}
 /* The two Stage 1 frames place their lower plaques at different heights.
    Keep shared vehicle sizing, but position each common metadata block inside
    its own plaque so every vehicle label has the same visual breathing room. */
@@ -1123,7 +1127,8 @@ button { touch-action: manipulation; }
   gap:2px;
 }
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta {
-  top:74.6%;
+  top:75.8%;
+  gap:0;
 }
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta {
   top:72%;
@@ -1133,7 +1138,11 @@ button { touch-action: manipulation; }
   font-size:clamp(21px,2.35vw,35px);
   line-height:1.04;
 }
-.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta span,
+.reward-stage[data-stage="1"][data-reward-kind="discovery"] .reward-vehicle-meta span {
+  margin-top:10px;
+  font-size:clamp(13px,1.25vw,18px);
+  line-height:1;
+}
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] .reward-vehicle-meta span {
   font-size:clamp(14px,1.55vw,22px);
   line-height:1.08;
