@@ -35,3 +35,4 @@ const metadata = {
 
 await writeFile("dist/preview-meta.json", JSON.stringify(metadata));
 console.log("Generated dist/preview-meta.json", metadata);
+// Cloudflare build configuration verified for B-line preview identity.
