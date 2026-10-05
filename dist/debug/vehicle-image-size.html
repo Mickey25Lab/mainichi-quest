@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>01_vehicle image-size comparison</title>
+  <style>
+    :root { color-scheme: light; --page:#eef4fa; --panel:#fff; --ink:#092b57; --muted:#52667f; --line:#bdd0e4; --checker-a:#e5edf5; --checker-b:#f8fbff; --stage:#142237; }
+    body.dark { color-scheme:dark; --page:#091425; --panel:#13243a; --ink:#eff8ff; --muted:#bdd0e4; --line:#426280; --checker-a:#33465a; --checker-b:#26394d; --stage:#07101e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:"Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif; }
+    main { width:100%; min-width:700px; padding:24px; }
+    .page-head, .vehicle, .candidate { width:680px; margin:0 auto 24px; }
+    .page-head { display:flex; align-items:start; justify-content:space-between; gap:20px; }
+    h1 { margin:0; font-size:28px; } h2 { margin:0 0 12px; font-size:26px; } h3 { margin:0; font-size:22px; }
+    p { margin:8px 0 0; color:var(--muted); line-height:1.6; }
+    button { border:2px solid var(--line); border-radius:10px; padding:8px 12px; color:var(--ink); background:var(--panel); font:inherit; font-weight:700; cursor:pointer; }
+    .vehicle { margin-top:52px; } .candidate { margin-bottom:44px; }
+    .candidate-head { padding:16px 18px; border:2px solid var(--line); border-radius:16px 16px 0 0; background:var(--panel); }
+    .size-note { font-size:16px; font-weight:700; }
+    .usage { display:block; width:100%; padding:22px; border:2px solid var(--line); border-top:0; background:var(--panel); }
+    .usage-title { margin:0 0 12px; font-size:19px; } .usage-note { margin:0 0 14px; font-size:14px; }
+    .checker { display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:12px; background-color:var(--checker-b); background-image:linear-gradient(45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(-45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--checker-a) 75%),linear-gradient(-45deg,transparent 75%,var(--checker-a) 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
+    .collection-box { width:193px; height:130px; } .question-box { width:327px; height:327px; } .question-box.crane { width:264px; height:264px; } .reward-box { width:630px; height:472px; max-width:630px; background-color:var(--stage); }
+    img { display:block; width:100%; height:100%; object-fit:contain; }
+    .method { margin-top:40px; padding:18px; border:2px solid var(--line); border-radius:14px; background:var(--panel); font-size:14px; }
+    @media (max-width:699px) { body { overflow-x:auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>01_vehicle 解像度比較（debug専用）</h1>
+        <p>同一CSS表示サイズで、元WebP解像度のみを比較します。通常のゲーム導線には含まれません。</p>
+      </div>
+      <button id="theme" type="button" aria-pressed="false">暗い背景に切替</button>
+    </header>
+    <section id="content"></section>
+    <section class="method">
+      表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示を固定しています。
+    </section>
+  </main>
+  <script>
+    const sizes = [
+      [1254, { patrol: '790 KB', crane: '995 KB' }],
+      [896, { patrol: '475 KB', crane: '597 KB' }],
+      [768, { patrol: '376 KB', crane: '452 KB' }],
+      [640, { patrol: '271 KB', crane: '338 KB' }]
+    ];
+    const vehicles = [
+      { key:'patrol', title:'パトカー', file:'01_patrol_car_vehicle.webp', questionClass:'' },
+      { key:'crane', title:'クレーン車', file:'08_crane_truck_vehicle.webp', questionClass:' crane' }
+    ];
+    const usages = [
+      ['コレクション一覧相当', 'collection-box', '約193×130px（vehicle-area）'],
+      ['問題画面相当', 'question-box', 'stage 2・可視高220px相当'],
+      ['報酬ポップアップ相当', 'reward-box', 'stage 1・約630×472px（43.5% box）']
+    ];
+    const content = document.querySelector('#content');
+    for (const vehicle of vehicles) {
+      const section = document.createElement('section'); section.className = 'vehicle';
+      section.innerHTML = `<h2>${vehicle.title}</h2>`;
+      for (const [size, fileSizes] of sizes) {
+        const candidate = document.createElement('article'); candidate.className = 'candidate';
+        candidate.innerHTML = `<div class="candidate-head"><h3>${size}×${size}</h3><p class="size-note">${size}×${size} / ${fileSizes[vehicle.key]}</p></div>`;
+        for (const [title, boxClass, note] of usages) {
+          const usage = document.createElement('section'); usage.className = 'usage';
+          const box = `${boxClass}${boxClass === 'question-box' ? vehicle.questionClass : ''}`;
+          usage.innerHTML = `<h4 class="usage-title">${title}</h4><p class="usage-note">CSS表示box: ${note}</p><div class="checker ${box}"><img src="./vehicle-image-size-assets/${size}/${vehicle.file}" alt="${vehicle.title} ${size}×${size}"></div>`;
+          candidate.append(usage);
+        }
+        section.append(candidate);
+      }
+      content.append(section);
+    }
+    const button = document.querySelector('#theme');
+    button.addEventListener('click', () => { const dark = document.body.classList.toggle('dark'); button.textContent = dark ? '明るい背景に切替' : '暗い背景に切替'; button.setAttribute('aria-pressed', String(dark)); });
+  </script>
+</body>
+</html>
