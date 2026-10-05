@@ -4,16 +4,16 @@
   const $ = (id) => document.getElementById(id);
   const appVersion = "0.0.113";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
-  const correctSoundPaths = ["./correct-grand-fanfare.wav", "./correct-arcade-celebration.wav", "./correct-applause-cheer.wav"];
-  const startSoundPath = "./warizan-start-powerup.wav";
-  const startKeyVisualPath = "./assets/top/top_key_visual.webp";
-  const topBackgroundPath = "./assets/top/top_background.webp";
-  const topStartButtonPath = "./assets/top/top_button_start.webp";
-  const topCollectionButtonPath = "./assets/top/top_button_collection.webp";
-  const topCollectionUsedButtonPath = "./assets/top/top_button_no_collection.webp";
-  const modeSelectPath = "./assets/top/mode_select_titleless.png";
-  const rewardNextVehicleOverlayPath = "./assets/reward_popup/reward_next_vehicle_overlay.webp";
-  const discoveryBubblePath = "./answer/speech_bubble/stage1_no_vehicle_speech_bubble.webp";
+  const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
+  const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
+  const startKeyVisualPath = "./assets/ui/top/top_key_visual.webp";
+  const topBackgroundPath = "./assets/ui/top/top_background.webp";
+  const topStartButtonPath = "./assets/ui/top/top_button_start.webp";
+  const topCollectionButtonPath = "./assets/ui/top/top_button_collection.webp";
+  const topCollectionUsedButtonPath = "./assets/ui/top/top_button_no_collection.webp";
+  const modeSelectPath = "./assets/ui/top/mode_select_titleless.png";
+  const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/reward_next_vehicle_overlay.webp";
+  const discoveryBubblePath = "./assets/ui/speech_bubble/stage1_no_vehicle_speech_bubble.webp";
   const rewardNextVehicleOverlayDurationMs = 2000;
   const incorrectNextVehicleNoticeDurationMs = 1000;
   const retryStartDelayMs = 3000;
@@ -37,7 +37,7 @@
   // Keep the music asset, levels, and preference key together so a future
   // BGM swap or chooser remains independent from game progression.
   const bgmConfig = Object.freeze({
-    filePath: "./bgm_pynchon.mp3",
+    filePath: "./assets/audio/bgm_pynchon.mp3",
     normalVolume: 0.154,
     rewardDuckMultiplier: 0.30,
     storageKey: "warizan-robot:bgm-enabled-v1"
@@ -90,8 +90,8 @@
     ["Helicopter", "ヘリコプター", "19_Helicopter.webp", "19_helicopter.webp", "#f44943", "rare", 2],
     ["Airplane", "飛行機", "20_Airplane.webp", "20_airplane.webp", "#44a9ff", "super-rare", 1]
   ].map(([nameEn, nameJa, image, background, color, rarity, weight], index) => ({
-    index, nameEn, nameJa, image: `./collection/complete/${image}`,
-    background: `./backgrounds/collection/${background}`, color, rarity,
+    index, nameEn, nameJa, image: `./assets/collection/09_complete/detail/${image}`,
+    background: `./assets/backgrounds/collection/${background}`, color, rarity,
     rarityLabel: rarityConfig[rarity].label, rarityStars: rarityConfig[rarity].stars, weight
   }));
   // Keep stable vehicle IDs for saved progress.  The garage uses this explicit
@@ -100,10 +100,10 @@
   const rewardTitles = ["", "のりもの発見！", "ロボットに進化！", "スーパーロボット！", "スペシャル装備をゲット！", "マスターメダルをゲット！"];
   const rewardLabels = ["", "のりもの", "ロボット", "スーパーロボット", "スペシャル装備", "マスターメダル"];
   const rewardBackplates = [null, "reward_stage01_vehicle.webp", "reward_stage02_robot.webp", "reward_stage03_super_robot.webp", "reward_stage04_special_equipment.webp"];
-  const rewardArtwork = [null, "assets/collection/01_vehicle", "answer/robots", "answer/03_super_robot", "assets/05_equipment"];
+  const rewardArtwork = [null, "assets/collection/01_vehicle", "assets/collection/02_robot", "assets/collection/03_super_robot", "assets/collection/05_equipment"];
   const rewardArtworkSuffix = [null, "vehicle", "robot", "super_robot", "equipment"];
   const imagePreparationTimeoutMs = 8000;
-  const answerArtFolders = [null, "", "assets/collection/01_vehicle", "answer/robots", "answer/03_super_robot", "answer/04_super_robot_equipped"];
+  const answerArtFolders = [null, "", "assets/collection/01_vehicle", "assets/collection/02_robot", "assets/collection/03_super_robot", "assets/collection/04_super_robot_equipped"];
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
   const answerBubblePositions = [null, null, [82, 305, 400], [82, 235, 410], [82, 160, 420], [82, 125, 420]];
@@ -380,7 +380,7 @@
     if (!vehicle || stage < 1 || stage > 4) return null;
     const stem = vehicle.background.split("/").pop().replace(/\.webp$/, "");
     return {
-      backplatePath: `./assets/reward_popup/${kind === "friendship" ? "reward_stage01_nakayoshi.webp" : rewardBackplates[stage]}`,
+      backplatePath: `./assets/ui/reward_popup/${kind === "friendship" ? "reward_stage01_nakayoshi.webp" : rewardBackplates[stage]}`,
       artworkPath: stage === 1 ? vehicleArtworkPath(vehicleIndex) : `./${rewardArtwork[stage]}/${stem}_${rewardArtworkSuffix[stage]}.webp`
     };
   }
@@ -413,7 +413,7 @@
   }
   function playBackgroundPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
-    return `./assets/${stem}_background.webp`;
+    return `./assets/backgrounds/vehicle/${stem}_background.webp`;
   }
   function vehicleArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
@@ -426,14 +426,14 @@
     return `${answerArtFolders[stage]}/${stem}_${answerArtSuffixes[stage]}.webp`;
   }
   function preloadVehicleVisuals(vehicleIndex, stage) {
-    const bubblePath = stage >= 2 ? `./answer/speech_bubble/${answerBubbleFiles[stage]}` : null;
+    const bubblePath = stage >= 2 ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
     const paths = [playBackgroundPath(vehicleIndex), answerArtworkPath(vehicleIndex, stage), bubblePath].filter(Boolean);
     paths.forEach((path) => preloadDecodedImage(path).catch(() => {}));
   }
   function preloadStage5RewardVisuals(vehicleIndex) {
     const vehicle = vehicles[vehicleIndex];
-    const completePath = `./assets/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
-    return Promise.all([completePath, "./assets/reward_popup/reward_stage05_master-medal-get-overlay.webp"].map(preloadDecodedImage));
+    const completePath = `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
+    return Promise.all([completePath, "./assets/ui/reward_popup/reward_stage05_master-medal-get-overlay.webp"].map(preloadDecodedImage));
   }
   function preloadNormalQuestionBackgrounds() {
     vehicles.filter((vehicle) => vehicle.rarity === "normal")
@@ -507,8 +507,8 @@
     return shuffled;
   }
   function preloadImages() {
-    [startKeyVisualPath, topBackgroundPath, topStartButtonPath, topCollectionButtonPath, topCollectionUsedButtonPath, modeSelectPath, discoveryBubblePath, "./assets/reward_popup/reward_stage01_nakayoshi.webp"].forEach((path) => preloadDecodedImage(path).catch(() => {}));
-    rewardBackplates.slice(1).forEach((file) => preloadDecodedImage(`./assets/reward_popup/${file}`, "low").catch(() => {}));
+    [startKeyVisualPath, topBackgroundPath, topStartButtonPath, topCollectionButtonPath, topCollectionUsedButtonPath, modeSelectPath, discoveryBubblePath, "./assets/ui/reward_popup/reward_stage01_nakayoshi.webp"].forEach((path) => preloadDecodedImage(path).catch(() => {}));
+    rewardBackplates.slice(1).forEach((file) => preloadDecodedImage(`./assets/ui/reward_popup/${file}`, "low").catch(() => {}));
     preloadNormalQuestionBackgrounds();
   }
   let lastStableAppScale = null;
@@ -667,7 +667,7 @@
     const backgroundPath = playBackgroundPath(question.vehicleIndex);
     const path = vehicle && progress.discovered ? answerArtworkPath(question.vehicleIndex, stage) : null;
     const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && stage > state.collection[vehicle.index]
-      ? `./answer/speech_bubble/${answerBubbleFiles[stage]}` : null;
+      ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
     return { stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage: Boolean(vehicle && !progress.discovered) };
   }
   function preloadQuestionVisuals(question) {
@@ -2000,8 +2000,8 @@
     }
     if (stage === 5) {
       const backplate = $("reward-backplate"), artwork = $("reward-image");
-      const backplatePath = `./assets/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
-      const artworkPath = "./assets/reward_popup/reward_stage05_master-medal-get-overlay.webp";
+      const backplatePath = `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
+      const artworkPath = "./assets/ui/reward_popup/reward_stage05_master-medal-get-overlay.webp";
       backplate.style.visibility = "hidden";
       artwork.style.visibility = "hidden";
       artwork.hidden = replay;
@@ -2120,7 +2120,7 @@
     }
     renderResultSummary();
     $("collection-button").disabled = false;
-    $("collection-button").innerHTML = '<svg class="ui-icon collection-gem" aria-hidden="true"><use href="./ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクションを見る</span>';
+    $("collection-button").innerHTML = '<svg class="ui-icon collection-gem" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクションを見る</span>';
     showFixedScreenWhenReady("result-screen", [], () => {
       resetResultScrollPosition();
       playFinishSound(); state.transitioning = false;
@@ -2130,7 +2130,7 @@
   function resultArtworkPath(vehicleIndex, stage, masterMedal = false) {
     const vehicle = vehicles[vehicleIndex];
     if (!vehicle) return "";
-    if (masterMedal) return `./assets/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
+    if (masterMedal) return `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
     const path = answerArtworkPath(vehicleIndex, Math.max(2, Math.min(5, stage)));
     return path ? `./${path.replace(/^\.\//, "")}` : vehicleArtworkPath(vehicleIndex);
   }
@@ -2294,7 +2294,7 @@
     if (state.collectionUsed || state.collectionClosing) return;
     state.collectionUsed = true;
     $("collection-button").disabled = true;
-    $("collection-button").innerHTML = '<svg class="ui-icon collection-gem" aria-hidden="true"><use href="./ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクション<small>みおわったよ</small></span>';
+    $("collection-button").innerHTML = '<svg class="ui-icon collection-gem" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクション<small>みおわったよ</small></span>';
     const runId = state.runId;
     await preloadCollectionVehicleArtwork();
     if (runId !== state.runId || !state.collectionUsed) return;
