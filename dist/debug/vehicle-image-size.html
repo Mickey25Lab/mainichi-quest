@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>01_vehicle WebP final comparison</title>
+  <title>01_vehicle WebP alpha comparison</title>
   <style>
     :root { color-scheme: light; --page:#eef4fa; --panel:#fff; --ink:#092b57; --muted:#52667f; --line:#bdd0e4; --checker-a:#e5edf5; --checker-b:#f8fbff; --stage:#142237; }
     body.dark { color-scheme:dark; --page:#091425; --panel:#13243a; --ink:#eff8ff; --muted:#bdd0e4; --line:#426280; --checker-a:#33465a; --checker-b:#26394d; --stage:#07101e; }
@@ -31,27 +31,23 @@
   <main>
     <header class="page-head">
       <div>
-        <h1>01_vehicle WebP final size and quality comparison</h1>
-        <p>Compare 640px quality levels and 480px Q60 with identical CSS sizes and bottom alignment. Inspect stars, lights, tires, fine lines, crane arm, gradients, and transparent edges.</p>
+        <h1>01_vehicle alpha quality comparison</h1>
+        <p>All candidates are 640x640 and RGB Quality 40. Only alpha quality changes. Inspect outlines, white or black fringes, translucent shadows, thin lines, and transparent edges.</p>
       </div>
       <button id="theme" type="button" aria-pressed="false">Dark background</button>
     </header>
     <section id="content"></section>
     <section class="method">
-      Candidates B-I come directly from the formal PNG, resized once using the same LANCZOS method, lossless=false, method=6, alpha_quality=100, and preserved metadata. Candidate A is the current formal WebP copied byte-for-byte without re-encoding. Collection: 193x130px vehicle-area. Question: stage 2, patrol 327px and crane 264px. Reward popup: stage 1 43.5% box, 630x472px. This page always uses one column, centered images, and bottom alignment.
+      Every candidate comes directly from the formal PNG and is resized once using the same LANCZOS method, lossless=false, quality=40, method=6, exact=true, and the same preserved metadata/ICC condition. Baseline uses alpha_quality=100, verified byte-for-byte against the previous 640 Q40 candidate. Only alpha_quality differs. Collection: 193x130px vehicle-area. Question: stage 2, patrol 327px and crane 264px. Reward popup: stage 1 43.5% box, 630x472px. This page always uses one column, centered images, and bottom alignment.
     </section>
   </main>
   <script>
     const candidates = [
-      ['current', 'Current source image', '1254x1254', { patrol: '790 KB', crane: '995 KB' }],
-      ['640_q90', '640 Q90', '640x640 / Q90', { patrol: '55 KB', crane: '80 KB' }],
-      ['640_q60', '640 Q60', '640x640 / Q60', { patrol: '34 KB', crane: '52 KB' }],
-      ['640_q50', '640 Q50', '640x640 / Q50', { patrol: '32 KB', crane: '49 KB' }],
-      ['640_q40', '640 Q40', '640x640 / Q40', { patrol: '29 KB', crane: '46 KB' }],
-      ['640_q30', '640 Q30', '640x640 / Q30', { patrol: '27 KB', crane: '42 KB' }],
-      ['640_q20', '640 Q20', '640x640 / Q20', { patrol: '25 KB', crane: '38 KB' }],
-      ['640_q10', '640 Q10', '640x640 / Q10', { patrol: '22 KB', crane: '35 KB' }],
-      ['480_q60', '480 Q60', '480x480 / Q60', { patrol: '23 KB', crane: '35 KB' }]
+      ['baseline', 'Baseline alpha', '640x640 / Q40 / Alpha 100', { patrol: '29 KB', crane: '46 KB' }],
+      ['alpha80', 'Alpha 80', '640x640 / Q40 / Alpha 80', { patrol: '27 KB', crane: '36 KB' }],
+      ['alpha60', 'Alpha 60', '640x640 / Q40 / Alpha 60', { patrol: '20 KB', crane: '31 KB' }],
+      ['alpha40', 'Alpha 40', '640x640 / Q40 / Alpha 40', { patrol: '20 KB', crane: '29 KB' }],
+      ['alpha20', 'Alpha 20', '640x640 / Q40 / Alpha 20', { patrol: '20 KB', crane: '28 KB' }]
     ];
     const vehicles = [
       { key:'patrol', title:'Patrol car', file:'01_patrol_car_vehicle.webp', questionClass:'' },
