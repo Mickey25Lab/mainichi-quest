@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>01_vehicle WebP quality comparison</title>
+  <title>01_vehicle WebP final comparison</title>
   <style>
     :root { color-scheme: light; --page:#eef4fa; --panel:#fff; --ink:#092b57; --muted:#52667f; --line:#bdd0e4; --checker-a:#e5edf5; --checker-b:#f8fbff; --stage:#142237; }
     body.dark { color-scheme:dark; --page:#091425; --panel:#13243a; --ink:#eff8ff; --muted:#bdd0e4; --line:#426280; --checker-a:#33465a; --checker-b:#26394d; --stage:#07101e; }
     * { box-sizing:border-box; }
-    body { margin:0; background:var(--page); color:var(--ink); font-family:"Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:system-ui,sans-serif; }
     main { width:100%; min-width:700px; padding:24px; }
     .page-head, .vehicle, .candidate { width:680px; margin:0 auto 24px; }
     .page-head { display:flex; align-items:start; justify-content:space-between; gap:20px; }
@@ -31,43 +31,48 @@
   <main>
     <header class="page-head">
       <div>
-        <h1>01_vehicle WebP品質比較（debug専用）</h1>
-        <p>480×480・同一CSS表示サイズ・同一の下端基準で、WebP Qualityのみを比較します。通常のゲーム導線には含まれません。</p>
+        <h1>01_vehicle WebP final size and quality comparison</h1>
+        <p>Compare 640px quality levels and 480px Q60 with identical CSS sizes and bottom alignment. Inspect stars, lights, tires, fine lines, crane arm, gradients, and transparent edges.</p>
       </div>
-      <button id="theme" type="button" aria-pressed="false">暗い背景に切替</button>
+      <button id="theme" type="button" aria-pressed="false">Dark background</button>
     </header>
     <section id="content"></section>
     <section class="method">
-      固定条件：入力は正式PNGから一度だけ480×480へ縮小、alpha品質100・metadata保持・同一リサイズ方式です。表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示・横中央・下端基準を固定しています。
+      Candidates B-I come directly from the formal PNG, resized once using the same LANCZOS method, lossless=false, method=6, alpha_quality=100, and preserved metadata. Candidate A is the current formal WebP copied byte-for-byte without re-encoding. Collection: 193x130px vehicle-area. Question: stage 2, patrol 327px and crane 264px. Reward popup: stage 1 43.5% box, 630x472px. This page always uses one column, centered images, and bottom alignment.
     </section>
   </main>
   <script>
-    const qualities = [
-      [90, { patrol: '37 KB', crane: '54 KB' }],
-      [80, { patrol: '28 KB', crane: '42 KB' }],
-      [70, { patrol: '25 KB', crane: '37 KB' }],
-      [60, { patrol: '23 KB', crane: '35 KB' }]
+    const candidates = [
+      ['current', 'Current source image', '1254x1254', { patrol: '790 KB', crane: '995 KB' }],
+      ['640_q90', '640 Q90', '640x640 / Q90', { patrol: '55 KB', crane: '80 KB' }],
+      ['640_q60', '640 Q60', '640x640 / Q60', { patrol: '34 KB', crane: '52 KB' }],
+      ['640_q50', '640 Q50', '640x640 / Q50', { patrol: '32 KB', crane: '49 KB' }],
+      ['640_q40', '640 Q40', '640x640 / Q40', { patrol: '29 KB', crane: '46 KB' }],
+      ['640_q30', '640 Q30', '640x640 / Q30', { patrol: '27 KB', crane: '42 KB' }],
+      ['640_q20', '640 Q20', '640x640 / Q20', { patrol: '25 KB', crane: '38 KB' }],
+      ['640_q10', '640 Q10', '640x640 / Q10', { patrol: '22 KB', crane: '35 KB' }],
+      ['480_q60', '480 Q60', '480x480 / Q60', { patrol: '23 KB', crane: '35 KB' }]
     ];
     const vehicles = [
-      { key:'patrol', title:'パトカー', file:'01_patrol_car_vehicle.webp', questionClass:'' },
-      { key:'crane', title:'クレーン車', file:'08_crane_truck_vehicle.webp', questionClass:' crane' }
+      { key:'patrol', title:'Patrol car', file:'01_patrol_car_vehicle.webp', questionClass:'' },
+      { key:'crane', title:'Crane truck', file:'08_crane_truck_vehicle.webp', questionClass:' crane' }
     ];
     const usages = [
-      ['コレクション一覧相当', 'collection-box', '約193×130px（vehicle-area）'],
-      ['問題画面相当', 'question-box', 'stage 2・可視高220px相当'],
-      ['報酬ポップアップ相当', 'reward-box', 'stage 1・約630×472px（43.5% box）']
+      ['Collection list equivalent', 'collection-box', '193x130px (vehicle-area)'],
+      ['Question screen equivalent', 'question-box', 'stage 2: patrol 327px / crane 264px'],
+      ['Reward popup equivalent', 'reward-box', '630x472px (stage 1 43.5% box)']
     ];
     const content = document.querySelector('#content');
     for (const vehicle of vehicles) {
       const section = document.createElement('section'); section.className = 'vehicle';
       section.innerHTML = `<h2>${vehicle.title}</h2>`;
-      for (const [quality, fileSizes] of qualities) {
+      for (const [folder, title, dimensions, fileSizes] of candidates) {
         const candidate = document.createElement('article'); candidate.className = 'candidate';
-        candidate.innerHTML = `<div class="candidate-head"><h3>Quality ${quality}</h3><p class="size-note">480×480 / Quality ${quality} / ${fileSizes[vehicle.key]}</p></div>`;
+        candidate.innerHTML = `<div class="candidate-head"><h3>${title}</h3><p class="size-note">${dimensions} / ${fileSizes[vehicle.key]}</p></div>`;
         for (const [title, boxClass, note] of usages) {
           const usage = document.createElement('section'); usage.className = 'usage';
           const box = `${boxClass}${boxClass === 'question-box' ? vehicle.questionClass : ''}`;
-          usage.innerHTML = `<h4 class="usage-title">${title}</h4><p class="usage-note">CSS表示box: ${note}</p><div class="checker ${box}"><img src="./vehicle-image-size-assets/q${quality}/${vehicle.file}" alt="${vehicle.title} 480×480 Quality ${quality}"></div>`;
+          usage.innerHTML = `<h4 class="usage-title">${title}</h4><p class="usage-note">CSS display box: ${note}</p><div class="checker ${box}"><img src="./vehicle-image-size-assets/${folder}/${vehicle.file}" alt="${vehicle.title} ${dimensions}"></div>`;
           candidate.append(usage);
         }
         section.append(candidate);
@@ -75,7 +80,7 @@
       content.append(section);
     }
     const button = document.querySelector('#theme');
-    button.addEventListener('click', () => { const dark = document.body.classList.toggle('dark'); button.textContent = dark ? '明るい背景に切替' : '暗い背景に切替'; button.setAttribute('aria-pressed', String(dark)); });
+    button.addEventListener('click', () => { const dark = document.body.classList.toggle('dark'); button.textContent = dark ? 'Light background' : 'Dark background'; button.setAttribute('aria-pressed', String(dark)); });
   </script>
 </body>
 </html>
