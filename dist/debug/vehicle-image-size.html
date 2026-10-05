@@ -20,9 +20,9 @@
     .size-note { font-size:16px; font-weight:700; }
     .usage { display:block; width:100%; padding:22px; border:2px solid var(--line); border-top:0; background:var(--panel); }
     .usage-title { margin:0 0 12px; font-size:19px; } .usage-note { margin:0 0 14px; font-size:14px; }
-    .checker { display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:12px; background-color:var(--checker-b); background-image:linear-gradient(45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(-45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--checker-a) 75%),linear-gradient(-45deg,transparent 75%,var(--checker-a) 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
+    .checker { display:grid; place-items:end center; overflow:hidden; border:1px solid var(--line); border-radius:12px; background-color:var(--checker-b); background-image:linear-gradient(45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(-45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--checker-a) 75%),linear-gradient(-45deg,transparent 75%,var(--checker-a) 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
     .collection-box { width:193px; height:130px; } .question-box { width:327px; height:327px; } .question-box.crane { width:264px; height:264px; } .reward-box { width:630px; height:472px; max-width:630px; background-color:var(--stage); }
-    img { display:block; width:100%; height:100%; object-fit:contain; }
+    img { display:block; width:100%; height:100%; object-fit:contain; object-position:center bottom; }
     .method { margin-top:40px; padding:18px; border:2px solid var(--line); border-radius:14px; background:var(--panel); font-size:14px; }
     @media (max-width:699px) { body { overflow-x:auto; } }
   </style>
@@ -31,22 +31,22 @@
   <main>
     <header class="page-head">
       <div>
-        <h1>01_vehicle 解像度比較（debug専用）</h1>
-        <p>同一CSS表示サイズで、元WebP解像度のみを比較します。通常のゲーム導線には含まれません。</p>
+        <h1>01_vehicle 軽量解像度比較（debug専用）</h1>
+        <p>同一CSS表示サイズ・同一の下端基準で、元WebP解像度のみを比較します。通常のゲーム導線には含まれません。</p>
       </div>
       <button id="theme" type="button" aria-pressed="false">暗い背景に切替</button>
     </header>
     <section id="content"></section>
     <section class="method">
-      表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示を固定しています。
+      表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示・横中央・下端基準を固定しています。
     </section>
   </main>
   <script>
     const sizes = [
-      [1254, { patrol: '790 KB', crane: '995 KB' }],
-      [896, { patrol: '475 KB', crane: '597 KB' }],
-      [768, { patrol: '376 KB', crane: '452 KB' }],
-      [640, { patrol: '271 KB', crane: '338 KB' }]
+      [640, { patrol: '271 KB', crane: '338 KB' }],
+      [480, { patrol: '160 KB', crane: '208 KB' }],
+      [320, { patrol: '88 KB', crane: '106 KB' }],
+      [160, { patrol: '28 KB', crane: '35 KB' }]
     ];
     const vehicles = [
       { key:'patrol', title:'パトカー', file:'01_patrol_car_vehicle.webp', questionClass:'' },
