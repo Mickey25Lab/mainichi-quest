@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>01_vehicle extra alpha check</title>
+  <style>
+    :root { color-scheme: light; --page:#eef4fa; --panel:#fff; --ink:#092b57; --muted:#52667f; --line:#bdd0e4; --checker-a:#e5edf5; --checker-b:#f8fbff; --stage:#142237; }
+    body.dark { color-scheme:dark; --page:#091425; --panel:#13243a; --ink:#eff8ff; --muted:#bdd0e4; --line:#426280; --checker-a:#33465a; --checker-b:#26394d; --stage:#07101e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font-family:system-ui,sans-serif; }
+    main { width:100%; min-width:700px; padding:24px; }
+    .page-head, .vehicle, .candidate { width:680px; margin:0 auto 24px; }
+    .page-head { display:flex; align-items:start; justify-content:space-between; gap:20px; }
+    h1 { margin:0; font-size:28px; } h2 { margin:52px 0 12px; font-size:26px; } h3 { margin:0; font-size:22px; }
+    p { margin:8px 0 0; color:var(--muted); line-height:1.6; }
+    button { border:2px solid var(--line); border-radius:10px; padding:8px 12px; color:var(--ink); background:var(--panel); font:inherit; font-weight:700; cursor:pointer; }
+    .candidate { margin-bottom:44px; }
+    .candidate-head { padding:16px 18px; border:2px solid var(--line); border-radius:16px 16px 0 0; background:var(--panel); }
+    .size-note { font-size:16px; font-weight:700; }
+    .usage { width:100%; padding:22px; border:2px solid var(--line); border-top:0; background:var(--panel); }
+    .usage-title { margin:0 0 12px; font-size:19px; } .usage-note { margin:0 0 14px; font-size:14px; }
+    .checker { display:grid; place-items:end center; width:630px; height:472px; max-width:630px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background-color:var(--stage); background-image:linear-gradient(45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(-45deg,var(--checker-a) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--checker-a) 75%),linear-gradient(-45deg,transparent 75%,var(--checker-a) 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
+    img { display:block; width:100%; height:100%; object-fit:contain; object-position:center bottom; }
+    .method { margin-top:40px; padding:18px; border:2px solid var(--line); border-radius:14px; background:var(--panel); font-size:14px; }
+    @media (max-width:699px) { body { overflow-x:auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>01_vehicle extra alpha check: reward popup only</h1>
+        <p>Racing bike, snowmobile, and helicopter. All candidates are 640x640 / Q40; only alpha quality changes. Inspect thin outlines, tire areas, glow or shadows, rotor, landing gear, and transparent edges.</p>
+      </div>
+      <button id="theme" type="button" aria-pressed="false">Dark background</button>
+    </header>
+    <section id="content"></section>
+    <section class="method">Each candidate comes directly from its formal PNG, resized once with LANCZOS, lossless=false, quality=40, method=6, exact=true, and the same metadata/ICC handling. This page deliberately contains only the 630x472px reward-popup equivalent. Every image is centered horizontally and aligned to the bottom of the same display box.</section>
+  </main>
+  <script>
+    const candidates = [
+      ['baseline', 'Baseline alpha 100', '640x640 / Q40 / alpha100', { bike:'37 KB', snow:'34 KB', helicopter:'41 KB' }],
+      ['alpha60', 'Alpha 60', '640x640 / Q40 / alpha60', { bike:'27 KB', snow:'24 KB', helicopter:'27 KB' }],
+      ['alpha20', 'Alpha 20', '640x640 / Q40 / alpha20', { bike:'26 KB', snow:'23 KB', helicopter:'26 KB' }]
+    ];
+    const vehicles = [
+      { key:'bike', title:'17. Racing bike', file:'17_racing_bike_vehicle.webp' },
+      { key:'snow', title:'18. Snowmobile', file:'18_snowmobile_vehicle.webp' },
+      { key:'helicopter', title:'19. Helicopter', file:'19_helicopter_vehicle.webp' }
+    ];
+    const content = document.querySelector('#content');
+    for (const vehicle of vehicles) {
+      const section = document.createElement('section'); section.className = 'vehicle';
+      section.innerHTML = `<h2>${vehicle.title}</h2>`;
+      for (const [folder, title, details, fileSizes] of candidates) {
+        const candidate = document.createElement('article'); candidate.className = 'candidate';
+        candidate.innerHTML = `<div class="candidate-head"><h3>${title}</h3><p class="size-note">${details} / ${fileSizes[vehicle.key]}</p></div><section class="usage"><h4 class="usage-title">Reward popup equivalent only</h4><p class="usage-note">CSS display box: 630x472px (stage 1 43.5% box)</p><div class="checker"><img src="./vehicle-alpha-extra-assets/${folder}/${vehicle.file}" alt="${vehicle.title} ${details}"></div></section>`;
+        section.append(candidate);
+      }
+      content.append(section);
+    }
+    const button = document.querySelector('#theme');
+    button.addEventListener('click', () => { const dark = document.body.classList.toggle('dark'); button.textContent = dark ? 'Light background' : 'Dark background'; button.setAttribute('aria-pressed', String(dark)); });
+  </script>
+</body>
+</html>
