@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>01_vehicle image-size comparison</title>
+  <title>01_vehicle WebP quality comparison</title>
   <style>
     :root { color-scheme: light; --page:#eef4fa; --panel:#fff; --ink:#092b57; --muted:#52667f; --line:#bdd0e4; --checker-a:#e5edf5; --checker-b:#f8fbff; --stage:#142237; }
     body.dark { color-scheme:dark; --page:#091425; --panel:#13243a; --ink:#eff8ff; --muted:#bdd0e4; --line:#426280; --checker-a:#33465a; --checker-b:#26394d; --stage:#07101e; }
@@ -31,22 +31,22 @@
   <main>
     <header class="page-head">
       <div>
-        <h1>01_vehicle 軽量解像度比較（debug専用）</h1>
-        <p>同一CSS表示サイズ・同一の下端基準で、元WebP解像度のみを比較します。通常のゲーム導線には含まれません。</p>
+        <h1>01_vehicle WebP品質比較（debug専用）</h1>
+        <p>480×480・同一CSS表示サイズ・同一の下端基準で、WebP Qualityのみを比較します。通常のゲーム導線には含まれません。</p>
       </div>
       <button id="theme" type="button" aria-pressed="false">暗い背景に切替</button>
     </header>
     <section id="content"></section>
     <section class="method">
-      表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示・横中央・下端基準を固定しています。
+      固定条件：入力は正式PNGから一度だけ480×480へ縮小、alpha品質100・metadata保持・同一リサイズ方式です。表示サイズ根拠：コレクション一覧は基準キャンバス上の vehicle-area 約193×130px、問題画面はstage 2の可視高220px（パトカーの画像box 327px／クレーン車264px）、報酬はstage 1の43.5% box（約630×472px）です。すべて1列表示・横中央・下端基準を固定しています。
     </section>
   </main>
   <script>
-    const sizes = [
-      [640, { patrol: '271 KB', crane: '338 KB' }],
-      [480, { patrol: '160 KB', crane: '208 KB' }],
-      [320, { patrol: '88 KB', crane: '106 KB' }],
-      [160, { patrol: '28 KB', crane: '35 KB' }]
+    const qualities = [
+      [90, { patrol: '37 KB', crane: '54 KB' }],
+      [80, { patrol: '28 KB', crane: '42 KB' }],
+      [70, { patrol: '25 KB', crane: '37 KB' }],
+      [60, { patrol: '23 KB', crane: '35 KB' }]
     ];
     const vehicles = [
       { key:'patrol', title:'パトカー', file:'01_patrol_car_vehicle.webp', questionClass:'' },
@@ -61,13 +61,13 @@
     for (const vehicle of vehicles) {
       const section = document.createElement('section'); section.className = 'vehicle';
       section.innerHTML = `<h2>${vehicle.title}</h2>`;
-      for (const [size, fileSizes] of sizes) {
+      for (const [quality, fileSizes] of qualities) {
         const candidate = document.createElement('article'); candidate.className = 'candidate';
-        candidate.innerHTML = `<div class="candidate-head"><h3>${size}×${size}</h3><p class="size-note">${size}×${size} / ${fileSizes[vehicle.key]}</p></div>`;
+        candidate.innerHTML = `<div class="candidate-head"><h3>Quality ${quality}</h3><p class="size-note">480×480 / Quality ${quality} / ${fileSizes[vehicle.key]}</p></div>`;
         for (const [title, boxClass, note] of usages) {
           const usage = document.createElement('section'); usage.className = 'usage';
           const box = `${boxClass}${boxClass === 'question-box' ? vehicle.questionClass : ''}`;
-          usage.innerHTML = `<h4 class="usage-title">${title}</h4><p class="usage-note">CSS表示box: ${note}</p><div class="checker ${box}"><img src="./vehicle-image-size-assets/${size}/${vehicle.file}" alt="${vehicle.title} ${size}×${size}"></div>`;
+          usage.innerHTML = `<h4 class="usage-title">${title}</h4><p class="usage-note">CSS表示box: ${note}</p><div class="checker ${box}"><img src="./vehicle-image-size-assets/q${quality}/${vehicle.file}" alt="${vehicle.title} 480×480 Quality ${quality}"></div>`;
           candidate.append(usage);
         }
         section.append(candidate);
