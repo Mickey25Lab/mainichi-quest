@@ -100,10 +100,10 @@
   const rewardTitles = ["", "のりもの発見！", "ロボットに進化！", "スーパーロボット！", "スペシャル装備をゲット！", "マスターメダルをゲット！"];
   const rewardLabels = ["", "のりもの", "ロボット", "スーパーロボット", "スペシャル装備", "マスターメダル"];
   const rewardBackplates = [null, "reward_stage01_vehicle.webp", "reward_stage02_robot.webp", "reward_stage03_super_robot.webp", "reward_stage04_special_equipment.webp"];
-  const rewardArtwork = [null, "collection/vehicles", "answer/robots", "answer/03_super_robot", "assets/05_equipment"];
+  const rewardArtwork = [null, "assets/collection/01_vehicle", "answer/robots", "answer/03_super_robot", "assets/05_equipment"];
   const rewardArtworkSuffix = [null, "vehicle", "robot", "super_robot", "equipment"];
   const imagePreparationTimeoutMs = 8000;
-  const answerArtFolders = [null, "", "collection/vehicles", "answer/robots", "answer/03_super_robot", "answer/04_super_robot_equipped"];
+  const answerArtFolders = [null, "", "assets/collection/01_vehicle", "answer/robots", "answer/03_super_robot", "answer/04_super_robot_equipped"];
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
   const answerBubblePositions = [null, null, [82, 305, 400], [82, 235, 410], [82, 160, 420], [82, 125, 420]];
@@ -417,7 +417,7 @@
   }
   function vehicleArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
-    return `./collection/vehicles/${stem}_vehicle.webp`;
+    return `./assets/collection/01_vehicle/${stem}_vehicle.webp`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
