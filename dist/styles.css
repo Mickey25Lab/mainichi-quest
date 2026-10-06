@@ -724,7 +724,40 @@ button { touch-action: manipulation; }
 .energy-value { width:78px; margin-top:11px; display:flex; flex-direction:column; align-items:center; color:#075795; font-size:27px; font-weight:1000; line-height:.95; }
 .energy-fraction-bar { width:66px; height:3px; margin:5px 0 4px; border-radius:999px; background:#075795; box-shadow:0 1px 0 rgba(255,255,255,.9); }
 .energy-capsule.is-complete { animation:energy-capsule-flash .48s ease-out; }
-.progress-gain-fly { position:absolute; z-index:20; left:995px; top:405px; color:#54eaff; font-family:"Noto Sans JP",sans-serif; font-size:112px; font-weight:1000; line-height:1; -webkit-text-stroke:3px #075795; text-shadow:0 4px 0 #075795,0 0 18px rgba(255,255,255,.98),0 0 13px rgba(63,222,255,.95); pointer-events:none; will-change:transform,opacity; }
+.progress-gain-fly {
+  position:absolute; z-index:20; left:995px; top:405px;
+  color:#54eaff; font-family:"Noto Sans JP",sans-serif; font-size:112px; font-weight:1000; line-height:1;
+  -webkit-text-stroke:3px #075795;
+  text-shadow:0 4px 0 #075795,0 0 18px rgba(255,255,255,.98),0 0 13px rgba(63,222,255,.95);
+  pointer-events:none; will-change:transform,opacity;
+}
+.progress-gain-fly::before,
+.progress-gain-fly::after {
+  content:"✦";
+  position:absolute;
+  left:50%; top:50%;
+  color:#fff9ad;
+  -webkit-text-stroke:0;
+  text-shadow:
+    0 0 7px rgba(255,255,255,.98),
+    0 0 14px rgba(88,231,255,.95),
+    24px -14px 0 rgba(255,255,255,.92),
+    48px 8px 0 rgba(92,232,255,.78),
+    72px -20px 0 rgba(255,236,126,.72),
+    96px 12px 0 rgba(255,255,255,.55);
+  transform-origin:0 0;
+  opacity:0;
+  pointer-events:none;
+}
+.progress-gain-fly::before {
+  font-size:.28em;
+  transform:rotate(var(--gain-trail-angle,170deg)) translate(42px,-50%);
+}
+.progress-gain-fly::after {
+  content:"✧";
+  font-size:.2em;
+  transform:rotate(var(--gain-trail-angle,170deg)) translate(78px,10%);
+}
 .progress-gain-fly.is-heart {
   color:#f25165;
   -webkit-text-stroke:3px #fff;
@@ -739,8 +772,49 @@ button { touch-action: manipulation; }
   paint-order:stroke fill;
   text-shadow:0 3px 0 #075795,0 0 7px #ffc928,0 0 17px rgba(255,219,58,.98),0 0 12px rgba(65,228,255,.95);
 }
-.progress-gain-fly.is-flying { animation:progress-gain-to-panel 1.25s cubic-bezier(.2,.7,.25,1) forwards; }
-@keyframes progress-gain-to-panel { 0% { opacity:1; transform:translate(0,0) scale(1); } 68% { opacity:1; transform:translate(calc(var(--gain-translate-x, -838px) * .78),calc(var(--gain-translate-y, -138px) * .78)) scale(.9); } 100% { opacity:0; transform:translate(var(--gain-translate-x, -875px),var(--gain-translate-y, -150px)) scale(.36); } }
+.progress-gain-fly.is-flying { animation:progress-gain-to-panel 1.18s cubic-bezier(.18,.72,.2,1) forwards; }
+.progress-gain-fly.is-flying::before { animation:progress-gain-sparkle-tail 1.18s ease-out forwards; }
+.progress-gain-fly.is-flying::after { animation:progress-gain-sparkle-tail-soft 1.18s ease-out forwards; }
+@keyframes progress-gain-to-panel {
+  0% {
+    opacity:1;
+    transform:translate(0,0) scale(1);
+  }
+  46% {
+    opacity:1;
+    transform:
+      translate(
+        calc(var(--gain-translate-x, -838px) * .46),
+        calc(var(--gain-translate-y, -138px) * .46 + var(--gain-wave-y, -48px))
+      )
+      scale(.94);
+  }
+  76% {
+    opacity:.96;
+    transform:
+      translate(
+        calc(var(--gain-translate-x, -838px) * .76),
+        calc(var(--gain-translate-y, -138px) * .76 - var(--gain-wave-y, -48px) * .22)
+      )
+      scale(.78);
+  }
+  100% {
+    opacity:0;
+    transform:translate(var(--gain-translate-x, -875px),var(--gain-translate-y, -150px)) scale(.22);
+  }
+}
+@keyframes progress-gain-sparkle-tail {
+  0% { opacity:.1; filter:blur(.4px); }
+  18% { opacity:1; }
+  72% { opacity:.92; }
+  100% { opacity:0; filter:blur(1.2px); }
+}
+@keyframes progress-gain-sparkle-tail-soft {
+  0% { opacity:0; }
+  26% { opacity:.82; }
+  78% { opacity:.68; }
+  100% { opacity:0; }
+}
 @keyframes energy-capsule-flash { 0%,100% { filter:brightness(1); } 45% { filter:brightness(1.75) drop-shadow(0 0 14px #bff9ff); } }
 .play-screen .topbar { position: absolute; z-index: 7; top: 28px; left: 42px; right: 42px; height: 78px; }
 .play-screen .incorrect-next-vehicle-notice {
@@ -1305,7 +1379,7 @@ button { touch-action: manipulation; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   /* This learning feedback must remain perceptible even when general motion
      is reduced.  It is the sole animation exception. */
-  .progress-gain-fly.is-flying { animation-duration:1.25s !important; }
+  .progress-gain-fly.is-flying { animation-duration:1.18s !important; }
 }
 
 /* Result screen v99: all layout rules remain scoped to this screen. */
