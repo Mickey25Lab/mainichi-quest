@@ -1153,6 +1153,15 @@ button { touch-action: manipulation; }
   outline:4px solid rgba(255,230,0,.95);
   outline-offset:-4px;
 }
+#reward-center-diagnostic { position:absolute; inset:0; z-index:8; pointer-events:none; }
+#reward-center-diagnostic[hidden] { display:none; }
+#reward-center-diagnostic i { position:absolute; top:0; bottom:0; width:4px; transform:translateX(-50%); }
+#reward-center-diagnostic .reward-debug-element-center { left:var(--reward-debug-element-center,50%); background:#ff00d4; }
+#reward-center-diagnostic .reward-debug-alpha-center { left:var(--reward-debug-alpha-center,50%); background:#42ff00; }
+#reward-center-diagnostic .reward-debug-readout {
+  position:absolute; left:2%; bottom:2%; padding:6px 10px; border-radius:8px;
+  background:rgba(0,0,0,.82); color:#fff; font:700 15px/1.25 monospace; white-space:nowrap;
+}
 /* The two Stage 1 frames place their lower plaques at different heights.
    Keep shared vehicle sizing, but position each common metadata block inside
    its own plaque so every vehicle label has the same visual breathing room. */
