@@ -1937,56 +1937,6 @@
     ) : wrongFeedbackDurationMs);
     } catch (error) { state.transitioning = false; throw error; }
   }
-  function updateRewardCenterDiagnostic() {
-    const stage = $("reward-stage"), artwork = $("reward-image");
-    if (!stage || !artwork || stage.dataset.stage !== "1" || artwork.hidden || !artwork.naturalWidth || !artwork.naturalHeight) return;
-    let layer = $("reward-center-diagnostic");
-    if (!layer) {
-      layer = document.createElement("div");
-      layer.id = "reward-center-diagnostic";
-      layer.innerHTML = '<i class="reward-debug-element-center"></i><i class="reward-debug-alpha-center"></i><b class="reward-debug-readout"></b>';
-      stage.appendChild(layer);
-    }
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = artwork.naturalWidth;
-      canvas.height = artwork.naturalHeight;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      context.drawImage(artwork, 0, 0);
-      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-      let minX = canvas.width, maxX = -1, minY = canvas.height, maxY = -1;
-      for (let y = 0; y < canvas.height; y += 1) {
-        for (let x = 0; x < canvas.width; x += 1) {
-          if (pixels[(y * canvas.width + x) * 4 + 3] <= 16) continue;
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-      }
-      if (maxX < minX) return;
-      const stageRect = stage.getBoundingClientRect();
-      const artRect = artwork.getBoundingClientRect();
-      const scale = Math.min(artRect.width / canvas.width, artRect.height / canvas.height);
-      const drawnWidth = canvas.width * scale;
-      const objectOffsetX = (artRect.width - drawnWidth) / 2;
-      const alphaCenterSourceX = (minX + maxX + 1) / 2;
-      const alphaCenterViewportX = artRect.left + objectOffsetX + alphaCenterSourceX * scale;
-      const elementCenterViewportX = artRect.left + artRect.width / 2;
-      const toStagePercent = (viewportX) => ((viewportX - stageRect.left) / stageRect.width) * 100;
-      const elementCenterPercent = toStagePercent(elementCenterViewportX);
-      const alphaCenterPercent = toStagePercent(alphaCenterViewportX);
-      stage.style.setProperty("--reward-debug-element-center", elementCenterPercent + "%");
-      stage.style.setProperty("--reward-debug-alpha-center", alphaCenterPercent + "%");
-      layer.querySelector(".reward-debug-readout").textContent =
-        `box center ${elementCenterPercent.toFixed(1)}% / α>16 center ${alphaCenterPercent.toFixed(1)}% / source αX ${minX}–${maxX} of ${canvas.width}`;
-      layer.hidden = false;
-    } catch (error) {
-      console.warn("Reward centering diagnostic failed", error);
-      layer.hidden = true;
-    }
-  }
-
   function showReward({ stage, vehicleIndex, isNew, replay = false, kind = "evolution" }, drawAfterReward = false) {
     const vehicle = vehicles[vehicleIndex];
     const nextVehicleOverlay = $("reward-next-vehicle-overlay");
@@ -2092,7 +2042,6 @@
       if (!ready || runId !== state.runId) return;
       backplate.style.visibility = "";
       artwork.style.visibility = "";
-      if (stage === 1) window.requestAnimationFrame(updateRewardCenterDiagnostic);
       pauseGameTimer();
       setBackgroundMusicDucked(true);
       showRewardOverPlay();
