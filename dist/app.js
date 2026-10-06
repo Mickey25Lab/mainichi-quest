@@ -24,6 +24,7 @@
   const progressGainAnimationDurationMs = 1250;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
+  const vehicleDustCleanupMs = 980;
   const energyFullDisplayDurationMs = 240;
   // Temporary, Minato-only rule.  Keep the thresholds, amount, modes, and
   // copy together so the whole feature can be removed or tuned in one place.
@@ -723,6 +724,33 @@
       element.classList.add(className);
     });
   }
+  function playVehicleDust(character, phase) {
+    const stage = $("play-stage");
+    if (!stage || !character || character.hidden) return null;
+    const stageRect = stage.getBoundingClientRect();
+    const charRect = character.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    const dust = document.createElement("div");
+    dust.className = `vehicle-dust is-${phase}`;
+    dust.setAttribute("aria-hidden", "true");
+    for (let index = 0; index < 7; index += 1) {
+      const plume = document.createElement("i");
+      plume.style.setProperty("--dust-index", String(index));
+      dust.appendChild(plume);
+    }
+    const charLeft = (charRect.left - stageRect.left) / scale;
+    const charWidth = charRect.width / scale;
+    const charBottom = (charRect.bottom - stageRect.top) / scale;
+    const dustWidth = Math.max(360, charWidth * 0.72);
+    const dustTipX = charLeft + charWidth * 0.36;
+    dust.style.left = `${dustTipX - dustWidth}px`;
+    dust.style.top = `${charBottom - 182}px`;
+    dust.style.width = `${dustWidth}px`;
+    stage.appendChild(dust);
+    window.setTimeout(() => dust.remove(), vehicleDustCleanupMs);
+    return dust;
+  }
+
   function currentCharacterNeedsExit(prepared) {
     const currentCharacter = $("answer-character");
     const stagedCharacter = $("answer-character-next");
@@ -733,6 +761,7 @@
     const currentCharacter = $("answer-character");
     const currentStage = Number(currentCharacter.dataset.answerStage || 0);
     if (currentStage === 2) {
+      playVehicleDust(currentCharacter, "exiting");
       await waitForCharacterAnimation(currentCharacter, "is-vehicle-exiting", 720);
     } else if (currentStage === 3) {
       playRobotDissolveSparkle(currentCharacter, "exit");
@@ -744,6 +773,7 @@
     if (!prepared.hasCharacter || !shouldAnimate) return;
     const character = $("answer-character");
     if (prepared.characterStage === 2) {
+      playVehicleDust(character, "entering");
       await waitForCharacterAnimation(character, "is-vehicle-entering", 920);
     } else if (prepared.characterStage === 3) {
       playRobotDissolveSparkle(character, "enter");
@@ -2243,8 +2273,10 @@
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
     const guide = $("idle-guide");
-    guide.style.left = `${(targetRect.left + targetRect.width / 2 - stageRect.left) / scale}px`;
-    guide.style.top = `${Math.max(24, (targetRect.top - stageRect.top) / scale - 92)}px`;
+    const targetCenterX = (targetRect.left + targetRect.width / 2 - stageRect.left) / scale;
+    const targetCenterY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
+    guide.style.left = `${targetCenterX + 74}px`;
+    guide.style.top = `${Math.max(74, targetCenterY - 46)}px`;
     guide.hidden = false;
   }
   function resetIdleGuideTimer() {
