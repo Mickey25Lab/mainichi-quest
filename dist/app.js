@@ -746,7 +746,7 @@
     // Stage 2 vehicles are mirrored and travel left -> right. Put the dust
     // wedge behind the vehicle, with its narrow tip near the rear wheel and
     // the tall body stretching back over the path it already travelled.
-    const dustTipX = charLeft + charWidth * 0.18;
+    const dustTipX = charLeft + charWidth * 0.36;
     dust.style.left = `${dustTipX - dustWidth}px`;
     dust.style.top = `${charBottom - 182}px`;
     dust.style.width = `${dustWidth}px`;
@@ -883,24 +883,25 @@
       stagedBackground.hidden = true;
       stagedBackground.style.visibility = "hidden";
     } else {
-      // Reveal the decoded next background underneath the current one, then
-      // peel the current scene away from the lower-left corner. Character exit
-      // has already completed before commitQuestionVisuals is called.
+      // Keep the CURRENT background on top for the entire peel. The decoded
+      // NEXT background is already visible underneath. Only swap ids AFTER the
+      // peel ends, so there is never a new -> old -> new flash.
       stagedBackground.style.visibility = "";
       stagedBackground.hidden = false;
       stagedBackground.style.zIndex = "0";
+      background.hidden = false;
+      background.style.visibility = "";
       background.style.zIndex = "1";
+      await playBackgroundPeel(background);
+      if (prepared.preserveCurrent) return;
       swapBackgroundLayerIds();
       const outgoingBackground = $("play-background-next");
       const incomingBackground = $("play-background");
-      outgoingBackground.hidden = false;
-      outgoingBackground.style.visibility = "";
-      outgoingBackground.style.zIndex = "1";
-      incomingBackground.style.zIndex = "0";
-      await playBackgroundPeel(outgoingBackground);
       outgoingBackground.hidden = true;
       outgoingBackground.style.visibility = "hidden";
       outgoingBackground.style.zIndex = "";
+      incomingBackground.hidden = false;
+      incomingBackground.style.visibility = "";
       incomingBackground.style.zIndex = "";
     }
     if (!prepared.hasCharacter) {
