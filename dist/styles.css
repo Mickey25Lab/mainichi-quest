@@ -652,15 +652,41 @@ button { touch-action: manipulation; }
   pointer-events:none;
 }
 .play-screen .play-background[hidden] { display:none; }
+.play-screen .play-background.is-peeling-away {
+  will-change:clip-path,transform,filter;
+  animation:background-peel-away .76s cubic-bezier(.42,0,.18,1) both;
+}
+@keyframes background-peel-away {
+  0% {
+    clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+    transform:translate(0,0) rotate(0deg) scale(1);
+    filter:brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0));
+  }
+  24% {
+    clip-path:polygon(0 0,100% 0,100% 100%,17% 100%,0 82%);
+    transform:translate(0,-2px) rotate(-.15deg) scale(1.002);
+    filter:brightness(1.03) drop-shadow(-12px 13px 12px rgba(0,23,56,.24));
+  }
+  58% {
+    clip-path:polygon(0 0,100% 0,100% 100%,58% 100%,0 40%);
+    transform:translate(3px,-5px) rotate(-.28deg) scale(1.004);
+    filter:brightness(1.05) drop-shadow(-20px 18px 17px rgba(0,23,56,.28));
+  }
+  100% {
+    clip-path:polygon(100% 0,100% 0,100% 100%,100% 100%,100% 100%);
+    transform:translate(8px,-9px) rotate(-.45deg) scale(1.008);
+    filter:brightness(1.08) drop-shadow(-24px 22px 20px rgba(0,23,56,.18));
+  }
+}
 .play-screen .answer-character, .play-screen .answer-bubble {
   position: absolute; display: block; height: auto; pointer-events: none;
 }
-.play-screen .answer-character { z-index: 1; }
-.play-screen .answer-bubble { z-index: 2; }
+.play-screen .answer-character { z-index: 2; }
+.play-screen .answer-bubble { z-index: 3; }
 .play-screen .answer-character[hidden], .play-screen .answer-bubble[hidden] { display: none; }
-.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translateX(-50%) rotate(-135deg); transform-origin:bottom center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
+.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translate(-50%,-50%) rotate(-135deg); transform-origin:center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
 .play-screen .idle-guide[hidden] { display:none; }
-@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translateX(-50%) translateY(0) rotate(-135deg); } 50% { opacity:1; transform:translateX(-50%) translateY(-10px) rotate(-135deg); } }
+@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translate(-50%,-50%) rotate(-135deg) scale(1); } 50% { opacity:1; transform:translate(-50%,-50%) rotate(-135deg) scale(1.08); } }
 .play-screen .answer-character.is-vehicle-entering,
 .play-screen .answer-character.is-vehicle-exiting,
 .play-screen .answer-character.is-robot-entering,
@@ -686,6 +712,53 @@ button { touch-action: manipulation; }
 @keyframes vehicle-character-exit {
   from { opacity:1; transform:var(--character-static-transform, none); }
   to { opacity:.88; transform:translateX(820px) var(--character-static-transform, none); }
+}
+.play-screen .vehicle-dust {
+  position:absolute;
+  z-index:1;
+  height:110px;
+  pointer-events:none;
+  opacity:0;
+  will-change:transform,opacity;
+}
+.play-screen .vehicle-dust i {
+  --dust-size:calc(34px + var(--dust-index) * 5px);
+  position:absolute;
+  left:calc(var(--dust-index) * 13px);
+  bottom:calc(8px + (var(--dust-index) % 2) * 12px);
+  width:var(--dust-size);
+  height:calc(var(--dust-size) * .7);
+  border-radius:50%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(238,226,196,.92) 0 34%,rgba(205,190,158,.68) 48%,rgba(176,159,128,.22) 68%,transparent 76%);
+  filter:blur(calc(var(--dust-index) * .25px));
+  transform:scale(.45);
+  opacity:0;
+}
+.play-screen .vehicle-dust.is-entering {
+  animation:vehicle-dust-enter .82s cubic-bezier(.12,.82,.18,1) both;
+}
+.play-screen .vehicle-dust.is-exiting {
+  animation:vehicle-dust-exit .6s ease-in both;
+}
+.play-screen .vehicle-dust.is-entering i,
+.play-screen .vehicle-dust.is-exiting i {
+  animation:vehicle-dust-puff .72s ease-out both;
+  animation-delay:calc(var(--dust-index) * 42ms);
+}
+@keyframes vehicle-dust-enter {
+  0% { opacity:.18; transform:translateX(-620px); }
+  32% { opacity:.78; }
+  100% { opacity:0; transform:translateX(0); }
+}
+@keyframes vehicle-dust-exit {
+  0% { opacity:.72; transform:translateX(0); }
+  72% { opacity:.64; }
+  100% { opacity:0; transform:translateX(700px); }
+}
+@keyframes vehicle-dust-puff {
+  0% { opacity:0; transform:translate(0,12px) scale(.35); }
+  22% { opacity:.82; }
+  100% { opacity:0; transform:translate(calc(-34px - var(--dust-index) * 7px),calc(-18px - var(--dust-index) * 4px)) scale(1.5); }
 }
 @keyframes robot-character-materialize {
   0% { opacity:0; clip-path:inset(100% 0 0 0); filter:brightness(1.35) drop-shadow(0 0 10px rgba(102,229,255,.7)); }
