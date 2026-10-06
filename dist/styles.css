@@ -1102,65 +1102,19 @@ button { touch-action: manipulation; }
 .reward-stage[data-stage="1"] { --art-left:25%; --art-top:25%; --art-width:50%; --art-height:50%; }
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image,
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
-  /* Keep the Stage 1 vehicle centred on the reward frame regardless of
-     the percentage width used for the artwork. */
+  /* The older Stage 1 image rule has higher specificity and sets
+     object-position:left bottom. The vehicle source is square but this box is
+     4:3, so that inherited object-position left-aligns the contained artwork
+     inside an otherwise perfectly centred element. Override it explicitly. */
   left:50%;
   top:33.4%;
   width:43.5%;
   height:43.5%;
-  /* Centre the artwork canvas on the shared reward-frame centre line. */
+  object-position:center center;
   transform:translateX(-50%);
 }
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
   top:32.8%;
-}
-.reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image {
-  left:50%;
-  transform:translateX(-50%);
-}
-
-/* TEMP DIAGNOSTIC (PR #16): show the reward-frame centre and the actual
-   #reward-image element box so Stage 1 centring can be diagnosed visually.
-   Remove these guides after the root cause is identified. */
-.reward-stage[data-stage="1"][data-reward-kind="discovery"]::before,
-.reward-stage[data-stage="1"][data-reward-kind="friendship"]::before {
-  content:"";
-  position:absolute;
-  z-index:6;
-  left:50%;
-  top:0;
-  bottom:0;
-  width:3px;
-  background:rgba(255,45,45,.92);
-  transform:translateX(-50%);
-  pointer-events:none;
-}
-.reward-stage[data-stage="1"][data-reward-kind="discovery"]::after,
-.reward-stage[data-stage="1"][data-reward-kind="friendship"]::after {
-  content:"";
-  position:absolute;
-  z-index:6;
-  left:0;
-  right:0;
-  top:50%;
-  height:3px;
-  background:rgba(0,235,255,.92);
-  transform:translateY(-50%);
-  pointer-events:none;
-}
-.reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image,
-.reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
-  outline:4px solid rgba(255,230,0,.95);
-  outline-offset:-4px;
-}
-#reward-center-diagnostic { position:absolute; inset:0; z-index:8; pointer-events:none; }
-#reward-center-diagnostic[hidden] { display:none; }
-#reward-center-diagnostic i { position:absolute; top:0; bottom:0; width:4px; transform:translateX(-50%); }
-#reward-center-diagnostic .reward-debug-element-center { left:var(--reward-debug-element-center,50%); background:#ff00d4; }
-#reward-center-diagnostic .reward-debug-alpha-center { left:var(--reward-debug-alpha-center,50%); background:#42ff00; }
-#reward-center-diagnostic .reward-debug-readout {
-  position:absolute; left:2%; bottom:2%; padding:6px 10px; border-radius:8px;
-  background:rgba(0,0,0,.82); color:#fff; font:700 15px/1.25 monospace; white-space:nowrap;
 }
 /* The two Stage 1 frames place their lower plaques at different heights.
    Keep shared vehicle sizing, but position each common metadata block inside
