@@ -1714,14 +1714,28 @@
     const sparkleTrail = document.createElement("span");
     sparkleTrail.className = "progress-gain-sparkle-trail";
     sparkleTrail.setAttribute("aria-hidden", "true");
+    // Scatter the sparkles with a small deterministic hash instead of rows /
+    // lanes. This keeps the trail visually random while remaining stable for
+    // the duration of each flight.
     for (let index = 0; index < 60; index += 1) {
       const sparkle = document.createElement("i");
-      const lane = index % 12;
-      const row = Math.floor(index / 12);
-      sparkle.style.setProperty("--spark-x", `${18 + lane * 20 + row * 7}px`);
-      sparkle.style.setProperty("--spark-y", `${-72 + ((index * 37) % 145)}px`);
-      sparkle.style.setProperty("--spark-size", `${6 + (index % 5) * 3}px`);
-      sparkle.style.setProperty("--spark-delay", `${-(index % 10) * 74}ms`);
+      const hash = (seed) => {
+        const value = Math.sin((index + 1) * seed) * 43758.5453123;
+        return value - Math.floor(value);
+      };
+      const x = 14 + Math.pow(hash(12.9898), 0.72) * 272;
+      const y = -78 + hash(78.233) * 156;
+      const size = 5 + hash(39.425) * 14;
+      const delay = -(hash(91.117) * 620);
+      const driftX = 18 + hash(51.913) * 34;
+      const driftY = -18 + hash(27.631) * 34;
+      sparkle.style.setProperty("--spark-x", `${x.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-y", `${y.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-size", `${size.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-delay", `${delay.toFixed(0)}ms`);
+      sparkle.style.setProperty("--spark-drift-x", `${driftX.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-drift-y", `${driftY.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-duration", `${(460 + hash(63.719) * 430).toFixed(0)}ms`);
       sparkleTrail.appendChild(sparkle);
     }
     gain.appendChild(sparkleTrail);
