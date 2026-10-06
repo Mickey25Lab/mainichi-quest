@@ -89,9 +89,9 @@
     ["Snowmobile", "スノーモービル", "18_Snowmobile.webp", "18_snowmobile.webp", "#63cfff", "rare", 2],
     ["Helicopter", "ヘリコプター", "19_Helicopter.webp", "19_helicopter.webp", "#f44943", "rare", 2],
     ["Airplane", "飛行機", "20_Airplane.webp", "20_airplane.webp", "#44a9ff", "super-rare", 1]
-  ].map(([nameEn, nameJa, image, background, color, rarity, weight], index) => ({
+  ].map(([nameEn, nameJa, image, stemFile, color, rarity, weight], index) => ({
     index, nameEn, nameJa, image: `./assets/collection/09_complete/detail/${image}`,
-    background: `./assets/backgrounds/collection/${background}`, color, rarity,
+    stem: stemFile.replace(/\.webp$/, ""), color, rarity,
     rarityLabel: rarityConfig[rarity].label, rarityStars: rarityConfig[rarity].stars, weight
   }));
   // Keep stable vehicle IDs for saved progress.  The garage uses this explicit
@@ -378,7 +378,7 @@
   function rewardVisualPaths(stage, vehicleIndex, kind = "evolution") {
     const vehicle = vehicles[vehicleIndex];
     if (!vehicle || stage < 1 || stage > 4) return null;
-    const stem = vehicle.background.split("/").pop().replace(/\.webp$/, "");
+    const stem = vehicle.stem;
     return {
       backplatePath: `./assets/ui/reward_popup/${kind === "friendship" ? "reward_stage01_nakayoshi.webp" : rewardBackplates[stage]}`,
       artworkPath: stage === 1 ? vehicleArtworkPath(vehicleIndex) : `./${rewardArtwork[stage]}/${stem}_${rewardArtworkSuffix[stage]}.webp`
@@ -412,17 +412,17 @@
     }), imagePreparationTimeoutMs, `Image element decode: ${path}`);
   }
   function playBackgroundPath(vehicleIndex) {
-    const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
-    return `./assets/backgrounds/vehicle/${stem}_background.webp`;
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/backgrounds/play/${stem}_background.webp`;
   }
   function vehicleArtworkPath(vehicleIndex) {
-    const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
+    const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/01_vehicle/${stem}_vehicle.webp`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
     if (stage === 2) return vehicleArtworkPath(vehicleIndex).replace(/^\.\//, "");
-    const stem = vehicles[vehicleIndex].background.split("/").pop().replace(/\.webp$/, "");
+    const stem = vehicles[vehicleIndex].stem;
     return `${answerArtFolders[stage]}/${stem}_${answerArtSuffixes[stage]}.webp`;
   }
   function preloadVehicleVisuals(vehicleIndex, stage) {
