@@ -764,14 +764,14 @@ button { touch-action: manipulation; }
   background:#8ff4ff;
 }
 .progress-gain-fly.is-flying .progress-gain-sparkle-trail i {
-  animation:progress-gain-sparkle-stream .62s ease-in-out infinite;
+  animation:progress-gain-sparkle-stream var(--spark-duration,.62s) ease-in-out infinite;
   animation-delay:var(--spark-delay);
 }
 @keyframes progress-gain-sparkle-stream {
   0% { opacity:0; transform:translate(0,0) rotate(45deg) scale(.35); }
   28% { opacity:1; }
-  65% { opacity:.9; transform:translate(14px,-6px) rotate(45deg) scale(1); }
-  100% { opacity:0; transform:translate(34px,-12px) rotate(45deg) scale(.42); }
+  65% { opacity:.9; transform:translate(calc(var(--spark-drift-x) * .45),calc(var(--spark-drift-y) * .45)) rotate(45deg) scale(1); }
+  100% { opacity:0; transform:translate(var(--spark-drift-x),var(--spark-drift-y)) rotate(45deg) scale(.42); }
 }
 .progress-gain-fly.is-heart {
   color:#f25165;
