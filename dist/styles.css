@@ -731,32 +731,47 @@ button { touch-action: manipulation; }
   text-shadow:0 4px 0 #075795,0 0 18px rgba(255,255,255,.98),0 0 13px rgba(63,222,255,.95);
   pointer-events:none; will-change:transform,opacity;
 }
-.progress-gain-fly::before,
-.progress-gain-fly::after {
-  content:"✦";
+.progress-gain-sparkle-trail {
   position:absolute;
-  left:50%; top:50%;
-  color:#fff9ad;
-  -webkit-text-stroke:0;
-  text-shadow:
-    0 0 7px rgba(255,255,255,.98),
-    0 0 14px rgba(88,231,255,.95),
-    24px -14px 0 rgba(255,255,255,.92),
-    48px 8px 0 rgba(92,232,255,.78),
-    72px -20px 0 rgba(255,236,126,.72),
-    96px 12px 0 rgba(255,255,255,.55);
-  transform-origin:0 0;
-  opacity:0;
+  left:100%;
+  top:50%;
+  width:290px;
+  height:170px;
+  transform:translateY(-50%);
   pointer-events:none;
+  overflow:visible;
 }
-.progress-gain-fly::before {
-  font-size:.28em;
-  transform:rotate(var(--gain-trail-angle,170deg)) translate(42px,-50%);
+.progress-gain-sparkle-trail i {
+  position:absolute;
+  left:var(--spark-x);
+  top:calc(50% + var(--spark-y));
+  width:var(--spark-size);
+  height:var(--spark-size);
+  border-radius:50%;
+  background:#fffdf0;
+  box-shadow:
+    0 0 5px 2px rgba(255,255,255,.96),
+    0 0 10px 4px rgba(91,231,255,.82),
+    0 0 16px 6px rgba(255,220,91,.42);
+  opacity:0;
+  transform:rotate(45deg) scale(.55);
 }
-.progress-gain-fly::after {
-  content:"✧";
-  font-size:.2em;
-  transform:rotate(var(--gain-trail-angle,170deg)) translate(78px,10%);
+.progress-gain-sparkle-trail i:nth-child(3n) {
+  border-radius:1px;
+  background:#fff3a5;
+}
+.progress-gain-sparkle-trail i:nth-child(4n) {
+  background:#8ff4ff;
+}
+.progress-gain-fly.is-flying .progress-gain-sparkle-trail i {
+  animation:progress-gain-sparkle-stream .62s ease-in-out infinite;
+  animation-delay:var(--spark-delay);
+}
+@keyframes progress-gain-sparkle-stream {
+  0% { opacity:0; transform:translate(0,0) rotate(45deg) scale(.35); }
+  28% { opacity:1; }
+  65% { opacity:.9; transform:translate(14px,-6px) rotate(45deg) scale(1); }
+  100% { opacity:0; transform:translate(34px,-12px) rotate(45deg) scale(.42); }
 }
 .progress-gain-fly.is-heart {
   color:#f25165;
@@ -771,49 +786,6 @@ button { touch-action: manipulation; }
   -webkit-text-stroke:3px #075795;
   paint-order:stroke fill;
   text-shadow:0 3px 0 #075795,0 0 7px #ffc928,0 0 17px rgba(255,219,58,.98),0 0 12px rgba(65,228,255,.95);
-}
-.progress-gain-fly.is-flying { animation:progress-gain-to-panel 1.18s cubic-bezier(.18,.72,.2,1) forwards; }
-.progress-gain-fly.is-flying::before { animation:progress-gain-sparkle-tail 1.18s ease-out forwards; }
-.progress-gain-fly.is-flying::after { animation:progress-gain-sparkle-tail-soft 1.18s ease-out forwards; }
-@keyframes progress-gain-to-panel {
-  0% {
-    opacity:1;
-    transform:translate(0,0) scale(1);
-  }
-  46% {
-    opacity:1;
-    transform:
-      translate(
-        calc(var(--gain-translate-x, -838px) * .46),
-        calc(var(--gain-translate-y, -138px) * .46 + var(--gain-wave-y, -48px))
-      )
-      scale(.94);
-  }
-  76% {
-    opacity:.96;
-    transform:
-      translate(
-        calc(var(--gain-translate-x, -838px) * .76),
-        calc(var(--gain-translate-y, -138px) * .76 - var(--gain-wave-y, -48px) * .22)
-      )
-      scale(.78);
-  }
-  100% {
-    opacity:0;
-    transform:translate(var(--gain-translate-x, -875px),var(--gain-translate-y, -150px)) scale(.22);
-  }
-}
-@keyframes progress-gain-sparkle-tail {
-  0% { opacity:.1; filter:blur(.4px); }
-  18% { opacity:1; }
-  72% { opacity:.92; }
-  100% { opacity:0; filter:blur(1.2px); }
-}
-@keyframes progress-gain-sparkle-tail-soft {
-  0% { opacity:0; }
-  26% { opacity:.82; }
-  78% { opacity:.68; }
-  100% { opacity:0; }
 }
 @keyframes energy-capsule-flash { 0%,100% { filter:brightness(1); } 45% { filter:brightness(1.75) drop-shadow(0 0 14px #bff9ff); } }
 .play-screen .topbar { position: absolute; z-index: 7; top: 28px; left: 42px; right: 42px; height: 78px; }
@@ -1379,7 +1351,6 @@ button { touch-action: manipulation; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   /* This learning feedback must remain perceptible even when general motion
      is reduced.  It is the sole animation exception. */
-  .progress-gain-fly.is-flying { animation-duration:1.18s !important; }
 }
 
 /* Result screen v99: all layout rules remain scoped to this screen. */
