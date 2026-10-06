@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#39aef0">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/png" href="./assets/favicon-mique-logo.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="./assets/ui/branding/favicon-mique-logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/ui/branding/apple-touch-icon.png">
   <meta name="description" content="ミナト向け、キーパッドで答える10問の割り算復習アプリ">
   <title>マイクエ｜毎日クエスト</title>
-  <link rel="preload" as="image" href="./assets/top/top_key_visual.webp" fetchpriority="high">
-  <link rel="preload" as="image" href="./assets/top/top_button_start.webp">
-  <link rel="preload" as="image" href="./assets/top/top_button_collection.webp">
-  <link rel="preload" as="image" href="./assets/top/mode_select_titleless.png">
+  <link rel="preload" as="image" href="./assets/ui/top/top_key_visual.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="./assets/ui/top/top_button_start.webp">
+  <link rel="preload" as="image" href="./assets/ui/top/top_button_collection.webp">
+  <link rel="preload" as="image" href="./assets/ui/top/mode_select_titleless.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;800;900&display=block" rel="stylesheet">
@@ -22,10 +22,10 @@
   <main class="app" id="app">
     <section class="screen start-screen active" id="start-screen" aria-labelledby="start-title">
       <div class="start-layer">
-        <img src="./assets/top/top_key_visual.webp" width="1448" height="1086" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
+        <img src="./assets/ui/top/top_key_visual.webp" width="1448" height="1086" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
         <div class="top-image-buttons" aria-label="ゲームを始めるメニュー">
-          <button class="top-image-button" id="start-button" type="button" aria-label="はじめる"><img id="top-start-button-image" src="./assets/top/top_button_start.webp" width="2048" height="682" decoding="async" alt=""></button>
-          <button class="top-image-button" id="top-collection-button" type="button" aria-label="コレクションを見る"><img id="top-collection-button-image" src="./assets/top/top_button_collection.webp" width="2048" height="682" decoding="async" alt="コレクションを見る"></button>
+          <button class="top-image-button" id="start-button" type="button" aria-label="はじめる"><img id="top-start-button-image" src="./assets/ui/top/top_button_start.webp" width="2048" height="682" decoding="async" alt=""></button>
+          <button class="top-image-button" id="top-collection-button" type="button" aria-label="コレクションを見る"><img id="top-collection-button-image" src="./assets/ui/top/top_button_collection.webp" width="2048" height="682" decoding="async" alt="コレクションを見る"></button>
         </div>
         <p class="start-version" id="app-version" aria-label="アプリのバージョン"></p>
         <p class="start-developer">開発者: Papa, Chuppy and Minato</p>
@@ -34,7 +34,7 @@
 
     <section class="screen mode-select-screen" id="mode-select-screen" aria-label="学習モードを選ぶ">
       <div class="mode-select-stage">
-        <img id="mode-select-image" src="./assets/top/mode_select_titleless.png" width="1448" height="1086" decoding="async" alt="学習モードを選ぶ">
+        <img id="mode-select-image" src="./assets/ui/top/mode_select_titleless.png" width="1448" height="1086" decoding="async" alt="学習モードを選ぶ">
         <button class="mode-select-hit mode-select-back" id="mode-select-back" type="button" aria-label="もどる"></button>
         <button class="mode-select-hit mode-select-number-cards" id="mode-select-number-cards" type="button" aria-label="すうじあつめ"></button>
         <button class="mode-select-hit mode-select-multiplication" id="mode-select-multiplication" type="button" aria-label="かけ算ひっ算"></button>
@@ -125,7 +125,7 @@
       <button class="assist-button" id="assist-button">ヒントを見る</button>
       <div class="idle-guide" id="idle-guide" hidden aria-hidden="true">☝️</div>
       <div class="incorrect-next-vehicle-notice" id="incorrect-next-vehicle-notice" hidden aria-live="assertive">
-        <img src="./assets/reward_popup/go_to_next_vehicle_incorrect.webp" alt="おしい…！ つぎののりものをさがしにいこう！">
+        <img src="./assets/ui/reward_popup/go_to_next_vehicle_incorrect.webp" alt="おしい…！ つぎののりものをさがしにいこう！">
       </div>
       </div>
     </section>
@@ -142,7 +142,7 @@
 
     <section class="screen transition-screen" id="transition-screen" aria-live="polite">
       <div class="transition-stage">
-        <img class="transition-background" src="./assets/top/top_background.webp" width="1448" height="1086" decoding="async" alt="">
+        <img class="transition-background" src="./assets/ui/top/top_background.webp" width="1448" height="1086" decoding="async" alt="">
         <div class="transition-card">
           <h2 class="retry-title">ふくしゅう問題</h2>
           <p id="retry-count">あと2問！</p>
@@ -160,13 +160,13 @@
           <strong id="reward-vehicle-name"></strong>
           <span id="reward-vehicle-rarity"></span>
         </div>
-        <img class="reward-next-vehicle-overlay" id="reward-next-vehicle-overlay" src="./assets/reward_popup/reward_next_vehicle_overlay.webp" alt="さあ、新しいのりものをさがしに行こう!!" hidden>
+        <img class="reward-next-vehicle-overlay" id="reward-next-vehicle-overlay" src="./assets/ui/reward_popup/reward_next_vehicle_overlay.webp" alt="さあ、新しいのりものをさがしに行こう!!" hidden>
       </div>
     </section>
 
     <section class="screen result-screen" id="result-screen" aria-labelledby="result-title">
       <div class="result-stage result-screen-new">
-        <img class="result-background" id="result-background" src="./assets/top/top_background.webp" width="1448" height="1086" decoding="async" alt="">
+        <img class="result-background" id="result-background" src="./assets/ui/top/top_background.webp" width="1448" height="1086" decoding="async" alt="">
         <button class="developer-reset-button" id="developer-reset-button" type="button">きろくとコレクションをぜんぶけす</button>
         <main class="result-new-content">
           <header class="result-new-hero">
@@ -191,9 +191,9 @@
           </section>
 
           <nav class="result-new-actions" aria-label="結果画面の操作">
-            <button class="primary-button" id="again-button"><svg class="ui-icon" aria-hidden="true"><use href="./ui-icons.svg#replay"></use></svg>もう一度</button>
-            <button class="top-button" id="finish-button"><svg class="ui-icon" aria-hidden="true"><use href="./ui-icons.svg#home"></use></svg>トップへ</button>
-            <button class="collection-button" id="collection-button"><svg class="ui-icon collection-gem" aria-hidden="true"><use href="./ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクションを見る</span></button>
+            <button class="primary-button" id="again-button"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#replay"></use></svg>もう一度</button>
+            <button class="top-button" id="finish-button"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#home"></use></svg>トップへ</button>
+            <button class="collection-button" id="collection-button"><svg class="ui-icon collection-gem" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクションを見る</span></button>
           </nav>
         </main>
       <div class="developer-reset-confirm" id="developer-reset-confirm" role="dialog" aria-modal="true" aria-labelledby="developer-reset-question" hidden>
@@ -212,16 +212,16 @@
       <div class="collection-stage" id="collection-stage">
         <header class="collection-header">
           <h2>COLLECTION <span>GARAGE</span></h2>
-          <div class="medal-count"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
+          <div class="medal-count"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
           <button class="collection-end" id="collection-exit" aria-label="コレクションを閉じる">×</button>
         </header>
         <div class="collection-grid" id="collection-grid"></div>
         <nav class="collection-categories" aria-label="コレクションのカテゴリ">
           <button class="category-button selected" data-category="vehicle" aria-label="乗り物" aria-pressed="true"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19h22l-2-8H9l-4 8Zm3 0v3m16-3v3M9 25a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></button>
-          <button class="category-button" data-category="robot" aria-label="ロボット" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./ui-icons.svg#robot"></use></svg></button>
+          <button class="category-button" data-category="robot" aria-label="ロボット" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#robot"></use></svg></button>
           <button class="category-button" data-category="super-robot" aria-label="スーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 2 2.5 7.5L26 7l-3 7 7 2-7 2 3 7-7.5-2.5L16 30l-2.5-7.5L6 25l3-7-7-2 7-2-3-7 7.5 2.5L16 2Z"/><path d="M11 14h10v7H11z"/></svg></button>
           <button class="category-button" data-category="equipment" aria-label="スーパー装備" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m17 2-3 10h-8l10 18 2-12h8L17 2Z"/></svg></button>
-          <button class="category-button" data-category="medal" aria-label="メダル" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./ui-icons.svg#master-medal"></use></svg></button>
+          <button class="category-button" data-category="medal" aria-label="メダル" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg></button>
         </nav>
         <div class="collection-time collection-time-panel">あと<strong id="collection-seconds">60</strong>秒</div>
         <div class="collection-exit-confirm" id="collection-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="collection-exit-question" hidden>
@@ -254,7 +254,7 @@
 
     <div class="time-up" id="time-up" hidden>じかんだよ！<br><span>またつぎにみよう！</span></div>
   </main>
-  <script src="./answer/artwork-metrics.js"></script>
+  <script src="./scripts/artwork-metrics.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
