@@ -24,6 +24,8 @@
   const progressGainAnimationDurationMs = 1250;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
+  const backgroundPeelDurationMs = 760;
+  const vehicleDustCleanupMs = 980;
   const energyFullDisplayDurationMs = 240;
   // Temporary, Minato-only rule.  Keep the thresholds, amount, modes, and
   // copy together so the whole feature can be removed or tuned in one place.
@@ -723,6 +725,30 @@
       element.classList.add(className);
     });
   }
+  function playVehicleDust(character, phase) {
+    const stage = $("play-stage");
+    if (!stage || !character || character.hidden) return null;
+    const stageRect = stage.getBoundingClientRect();
+    const charRect = character.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    const dust = document.createElement("div");
+    dust.className = `vehicle-dust is-${phase}`;
+    dust.setAttribute("aria-hidden", "true");
+    for (let index = 0; index < 6; index += 1) {
+      const puff = document.createElement("i");
+      puff.style.setProperty("--dust-index", String(index));
+      dust.appendChild(puff);
+    }
+    const left = (charRect.left - stageRect.left) / scale + Math.max(18, charRect.width / scale * 0.08);
+    const top = (charRect.bottom - stageRect.top) / scale - 84;
+    dust.style.left = `${left}px`;
+    dust.style.top = `${top}px`;
+    dust.style.width = `${Math.max(150, charRect.width / scale * 0.42)}px`;
+    stage.appendChild(dust);
+    window.setTimeout(() => dust.remove(), vehicleDustCleanupMs);
+    return dust;
+  }
+
   function currentCharacterNeedsExit(prepared) {
     const currentCharacter = $("answer-character");
     const stagedCharacter = $("answer-character-next");
@@ -733,6 +759,7 @@
     const currentCharacter = $("answer-character");
     const currentStage = Number(currentCharacter.dataset.answerStage || 0);
     if (currentStage === 2) {
+      playVehicleDust(currentCharacter, "exiting");
       await waitForCharacterAnimation(currentCharacter, "is-vehicle-exiting", 720);
     } else if (currentStage === 3) {
       playRobotDissolveSparkle(currentCharacter, "exit");
@@ -744,6 +771,7 @@
     if (!prepared.hasCharacter || !shouldAnimate) return;
     const character = $("answer-character");
     if (prepared.characterStage === 2) {
+      playVehicleDust(character, "entering");
       await waitForCharacterAnimation(character, "is-vehicle-entering", 920);
     } else if (prepared.characterStage === 3) {
       playRobotDissolveSparkle(character, "enter");
@@ -812,7 +840,26 @@
     background.id = "play-background-next"; stagedBackground.id = "play-background";
     background.setAttribute("aria-hidden", "true"); stagedBackground.removeAttribute("aria-hidden");
   }
-  function commitQuestionVisuals(prepared) {
+  function playBackgroundPeel(outgoingBackground) {
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        outgoingBackground.removeEventListener("animationend", onAnimationEnd);
+        outgoingBackground.classList.remove("is-peeling-away");
+        resolve();
+      };
+      const onAnimationEnd = (event) => {
+        if (event.target === outgoingBackground && event.animationName === "background-peel-away") finish();
+      };
+      outgoingBackground.addEventListener("animationend", onAnimationEnd);
+      void outgoingBackground.offsetWidth;
+      outgoingBackground.classList.add("is-peeling-away");
+      window.setTimeout(finish, backgroundPeelDurationMs + 120);
+    });
+  }
+  async function commitQuestionVisuals(prepared) {
     if (prepared.preserveCurrent) return;
     const discoveryBubble = $("answer-discovery-bubble");
     discoveryBubble.hidden = !prepared.hasDiscoveryMessage;
@@ -825,17 +872,25 @@
       stagedBackground.hidden = true;
       stagedBackground.style.visibility = "hidden";
     } else {
+      // Reveal the decoded next background underneath the current one, then
+      // peel the current scene away from the lower-left corner. Character exit
+      // has already completed before commitQuestionVisuals is called.
       stagedBackground.style.visibility = "";
       stagedBackground.hidden = false;
-      stagedBackground.style.zIndex = "1";
-      background.style.zIndex = "0";
+      stagedBackground.style.zIndex = "0";
+      background.style.zIndex = "1";
       swapBackgroundLayerIds();
       const outgoingBackground = $("play-background-next");
-      window.requestAnimationFrame(() => {
-        outgoingBackground.hidden = true;
-        outgoingBackground.style.zIndex = "";
-        $("play-background").style.zIndex = "";
-      });
+      const incomingBackground = $("play-background");
+      outgoingBackground.hidden = false;
+      outgoingBackground.style.visibility = "";
+      outgoingBackground.style.zIndex = "1";
+      incomingBackground.style.zIndex = "0";
+      await playBackgroundPeel(outgoingBackground);
+      outgoingBackground.hidden = true;
+      outgoingBackground.style.visibility = "hidden";
+      outgoingBackground.style.zIndex = "";
+      incomingBackground.style.zIndex = "";
     }
     if (!prepared.hasCharacter) {
       character.hidden = true; stagedCharacter.hidden = true;
@@ -1130,7 +1185,8 @@
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
-      commitQuestionVisuals(prepared);
+      await commitQuestionVisuals(prepared);
+      if (runId !== state.runId || state.current !== question) return;
       renderVehicleProgressUi(question.vehicleIndex);
       $("incorrect-next-vehicle-notice").hidden = true;
       if (state.pendingNextVehicleOverlay) {
@@ -2243,8 +2299,13 @@
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
     const guide = $("idle-guide");
-    guide.style.left = `${(targetRect.left + targetRect.width / 2 - stageRect.left) / scale}px`;
-    guide.style.top = `${Math.max(24, (targetRect.top - stageRect.top) / scale - 92)}px`;
+    const targetCenterX = (targetRect.left + targetRect.width / 2 - stageRect.left) / scale;
+    const targetCenterY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
+    // The ☝️ glyph is rotated down-left, so place its centre up-right of the
+    // actual target. This makes the fingertip land on the button/card instead
+    // of floating above it.
+    guide.style.left = `${targetCenterX + 74}px`;
+    guide.style.top = `${Math.max(74, targetCenterY - 74)}px`;
     guide.hidden = false;
   }
   function resetIdleGuideTimer() {
