@@ -653,27 +653,22 @@ button { touch-action: manipulation; }
 }
 .play-screen .play-background[hidden] { display:none; }
 .play-screen .play-background.is-peeling-away {
-  will-change:-webkit-mask-position,mask-position,filter,transform;
-  -webkit-mask-image:linear-gradient(45deg,transparent 0 49.8%,#000 50.2% 100%);
-  mask-image:linear-gradient(45deg,transparent 0 49.8%,#000 50.2% 100%);
-  -webkit-mask-size:310% 310%;
-  mask-size:310% 310%;
-  -webkit-mask-repeat:no-repeat;
-  mask-repeat:no-repeat;
+  will-change:clip-path,filter,transform;
   animation:background-peel-away .76s cubic-bezier(.42,0,.18,1) both;
 }
 @keyframes background-peel-away {
   0% {
-    -webkit-mask-position:0% 100%;
-    mask-position:0% 100%;
+    /* The diagonal edge starts entirely below/right of the viewport, so the
+       old background is fully visible on frame 1. */
+    clip-path:polygon(-200% -200%,300% -200%,300% 300%,-200% 800%);
     transform:translate(0,0) rotate(0deg) scale(1);
     filter:brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0));
   }
   100% {
-    -webkit-mask-position:100% 0%;
-    mask-position:100% 0%;
-    transform:translate(8px,-9px) rotate(-.35deg) scale(1.006);
-    filter:brightness(1.06) drop-shadow(-20px 18px 18px rgba(0,23,56,.22));
+    /* Same single straight edge, translated past the upper-right. */
+    clip-path:polygon(-200% -200%,300% -200%,300% -800%,-200% -300%);
+    transform:translate(7px,-8px) rotate(-.25deg) scale(1.005);
+    filter:brightness(1.05) drop-shadow(-18px 16px 16px rgba(0,23,56,.20));
   }
 }
 .play-screen .answer-character, .play-screen .answer-bubble {
@@ -717,13 +712,15 @@ button { touch-action: manipulation; }
   height:182px;
   pointer-events:none;
   opacity:0;
-  clip-path:polygon(0 0,100% 72%,100% 100%,0 100%);
+  clip-path:polygon(0 5%,100% 70%,100% 100%,0 100%);
   background:
-    radial-gradient(ellipse at 10% 62%,rgba(242,224,184,.85) 0 15%,rgba(195,165,116,.48) 36%,transparent 64%),
-    radial-gradient(ellipse at 34% 72%,rgba(237,216,174,.72) 0 13%,rgba(181,151,106,.38) 35%,transparent 63%),
-    radial-gradient(ellipse at 63% 83%,rgba(231,209,166,.58) 0 11%,rgba(171,142,101,.28) 34%,transparent 61%),
-    linear-gradient(to right,rgba(179,145,95,.34),rgba(223,201,159,.22) 58%,rgba(238,220,184,.08) 84%,transparent);
-  filter:blur(1.2px) drop-shadow(0 5px 8px rgba(90,66,32,.18));
+    radial-gradient(ellipse at 8% 58%,rgba(242,224,184,.78) 0 16%,rgba(195,165,116,.42) 38%,transparent 68%),
+    radial-gradient(ellipse at 30% 69%,rgba(237,216,174,.64) 0 14%,rgba(181,151,106,.32) 38%,transparent 67%),
+    radial-gradient(ellipse at 57% 80%,rgba(231,209,166,.48) 0 12%,rgba(171,142,101,.22) 36%,transparent 65%),
+    linear-gradient(to right,rgba(179,145,95,.28),rgba(223,201,159,.17) 56%,rgba(238,220,184,.06) 82%,transparent 96%);
+  -webkit-mask-image:linear-gradient(to right,#000 0 72%,rgba(0,0,0,.72) 84%,transparent 100%);
+  mask-image:linear-gradient(to right,#000 0 72%,rgba(0,0,0,.72) 84%,transparent 100%);
+  filter:blur(5px) drop-shadow(0 5px 9px rgba(90,66,32,.14));
   transform-origin:right bottom;
   will-change:transform,opacity;
 }
@@ -740,7 +737,7 @@ button { touch-action: manipulation; }
     radial-gradient(ellipse at 6% 34%,rgba(255,243,207,.58) 0 9%,transparent 25%),
     radial-gradient(ellipse at 22% 51%,rgba(218,191,145,.48) 0 10%,transparent 28%),
     radial-gradient(ellipse at 45% 67%,rgba(203,176,133,.35) 0 8%,transparent 24%);
-  filter:blur(5px);
+  filter:blur(9px);
 }
 .play-screen .vehicle-dust::after {
   background:linear-gradient(to right,rgba(255,248,225,.28),transparent 72%);
