@@ -655,12 +655,12 @@ button { touch-action: manipulation; }
 .play-screen .answer-character, .play-screen .answer-bubble {
   position: absolute; display: block; height: auto; pointer-events: none;
 }
-.play-screen .answer-character { z-index: 1; }
-.play-screen .answer-bubble { z-index: 2; }
+.play-screen .answer-character { z-index: 2; }
+.play-screen .answer-bubble { z-index: 3; }
 .play-screen .answer-character[hidden], .play-screen .answer-bubble[hidden] { display: none; }
-.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translateX(-50%) rotate(-135deg); transform-origin:bottom center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
+.play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translate(-50%,-50%) rotate(-135deg); transform-origin:center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-pulse 1.2s ease-in-out infinite; }
 .play-screen .idle-guide[hidden] { display:none; }
-@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translateX(-50%) translateY(0) rotate(-135deg); } 50% { opacity:1; transform:translateX(-50%) translateY(-10px) rotate(-135deg); } }
+@keyframes idle-guide-pulse { 0%,100% { opacity:.72; transform:translate(-50%,-50%) rotate(-135deg) scale(1); } 50% { opacity:1; transform:translate(-50%,-50%) rotate(-135deg) scale(1.08); } }
 .play-screen .answer-character.is-vehicle-entering,
 .play-screen .answer-character.is-vehicle-exiting,
 .play-screen .answer-character.is-robot-entering,
@@ -686,6 +686,81 @@ button { touch-action: manipulation; }
 @keyframes vehicle-character-exit {
   from { opacity:1; transform:var(--character-static-transform, none); }
   to { opacity:.88; transform:translateX(820px) var(--character-static-transform, none); }
+}
+.play-screen .vehicle-dust {
+  position:absolute;
+  z-index:1;
+  height:182px;
+  pointer-events:none;
+  opacity:0;
+  clip-path:polygon(0 5%,100% 70%,100% 100%,0 100%);
+  background:
+    radial-gradient(ellipse at 8% 58%,rgba(242,224,184,.78) 0 16%,rgba(195,165,116,.42) 38%,transparent 68%),
+    radial-gradient(ellipse at 30% 69%,rgba(237,216,174,.64) 0 14%,rgba(181,151,106,.32) 38%,transparent 67%),
+    radial-gradient(ellipse at 57% 80%,rgba(231,209,166,.48) 0 12%,rgba(171,142,101,.22) 36%,transparent 65%),
+    linear-gradient(to right,rgba(179,145,95,.28),rgba(223,201,159,.17) 56%,rgba(238,220,184,.06) 82%,transparent 96%);
+  -webkit-mask-image:linear-gradient(to right,#000 0 72%,rgba(0,0,0,.72) 84%,transparent 100%);
+  mask-image:linear-gradient(to right,#000 0 72%,rgba(0,0,0,.72) 84%,transparent 100%);
+  filter:blur(5px) drop-shadow(0 5px 9px rgba(90,66,32,.14));
+  transform-origin:right bottom;
+  will-change:transform,opacity;
+}
+.play-screen .vehicle-dust::before,
+.play-screen .vehicle-dust::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  clip-path:inherit;
+  pointer-events:none;
+}
+.play-screen .vehicle-dust::before {
+  background:
+    radial-gradient(ellipse at 6% 34%,rgba(255,243,207,.58) 0 9%,transparent 25%),
+    radial-gradient(ellipse at 22% 51%,rgba(218,191,145,.48) 0 10%,transparent 28%),
+    radial-gradient(ellipse at 45% 67%,rgba(203,176,133,.35) 0 8%,transparent 24%);
+  filter:blur(9px);
+}
+.play-screen .vehicle-dust::after {
+  background:linear-gradient(to right,rgba(255,248,225,.28),transparent 72%);
+  mix-blend-mode:screen;
+}
+.play-screen .vehicle-dust i {
+  position:absolute;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:rgba(239,217,176,.5);
+  left:calc(8% + var(--dust-index) * 10%);
+  bottom:calc(12px + var(--dust-index) * 8px);
+  filter:blur(3px);
+  opacity:0;
+}
+.play-screen .vehicle-dust.is-entering {
+  animation:vehicle-dust-enter .82s cubic-bezier(.12,.82,.18,1) both;
+}
+.play-screen .vehicle-dust.is-exiting {
+  animation:vehicle-dust-exit .6s ease-in both;
+}
+.play-screen .vehicle-dust.is-entering i,
+.play-screen .vehicle-dust.is-exiting i {
+  animation:vehicle-dust-plume .74s ease-out both;
+  animation-delay:calc(var(--dust-index) * 34ms);
+}
+@keyframes vehicle-dust-enter {
+  0% { opacity:.15; transform:translateX(-600px) scaleX(.78) scaleY(.72); }
+  24% { opacity:.82; }
+  68% { opacity:.7; }
+  100% { opacity:0; transform:translateX(0) scaleX(1) scaleY(1); }
+}
+@keyframes vehicle-dust-exit {
+  0% { opacity:.78; transform:translateX(0) scaleX(.82) scaleY(.8); }
+  55% { opacity:.86; }
+  100% { opacity:0; transform:translateX(430px) scaleX(1.18) scaleY(1.08); }
+}
+@keyframes vehicle-dust-plume {
+  0% { opacity:0; transform:translateY(8px) scale(.7); }
+  24% { opacity:.72; }
+  100% { opacity:0; transform:translateY(calc(-34px - var(--dust-index) * 7px)) scale(1.45); }
 }
 @keyframes robot-character-materialize {
   0% { opacity:0; clip-path:inset(100% 0 0 0); filter:brightness(1.35) drop-shadow(0 0 10px rgba(102,229,255,.7)); }
