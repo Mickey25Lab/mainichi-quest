@@ -1723,7 +1723,10 @@
         const value = Math.sin((index + 1) * seed) * 43758.5453123;
         return value - Math.floor(value);
       };
-      const x = 14 + Math.pow(hash(12.9898), 0.72) * 272;
+      const nearOrigin = index % 5 < 2;
+      const x = nearOrigin
+        ? 2 + Math.pow(hash(12.9898), 1.65) * 74
+        : 18 + Math.pow(hash(12.9898), 0.72) * 268;
       const y = -78 + hash(78.233) * 156;
       const size = 5 + hash(39.425) * 14;
       const delay = -(hash(91.117) * 620);
