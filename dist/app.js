@@ -734,16 +734,22 @@
     const dust = document.createElement("div");
     dust.className = `vehicle-dust is-${phase}`;
     dust.setAttribute("aria-hidden", "true");
-    for (let index = 0; index < 10; index += 1) {
-      const puff = document.createElement("i");
-      puff.style.setProperty("--dust-index", String(index));
-      dust.appendChild(puff);
+    for (let index = 0; index < 7; index += 1) {
+      const plume = document.createElement("i");
+      plume.style.setProperty("--dust-index", String(index));
+      dust.appendChild(plume);
     }
-    const left = (charRect.left - stageRect.left) / scale + Math.max(18, charRect.width / scale * 0.08);
-    const top = (charRect.bottom - stageRect.top) / scale - 112;
-    dust.style.left = `${left}px`;
-    dust.style.top = `${top}px`;
-    dust.style.width = `${Math.max(230, charRect.width / scale * 0.56)}px`;
+    const charLeft = (charRect.left - stageRect.left) / scale;
+    const charWidth = charRect.width / scale;
+    const charBottom = (charRect.bottom - stageRect.top) / scale;
+    const dustWidth = Math.max(360, charWidth * 0.72);
+    // Stage 2 vehicles are mirrored and travel left -> right. Put the dust
+    // wedge behind the vehicle, with its narrow tip near the rear wheel and
+    // the tall body stretching back over the path it already travelled.
+    const dustTipX = charLeft + charWidth * 0.18;
+    dust.style.left = `${dustTipX - dustWidth}px`;
+    dust.style.top = `${charBottom - 182}px`;
+    dust.style.width = `${dustWidth}px`;
     stage.appendChild(dust);
     window.setTimeout(() => dust.remove(), vehicleDustCleanupMs);
     return dust;
