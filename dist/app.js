@@ -1692,6 +1692,7 @@
     const sourceRect = source?.getBoundingClientRect();
     const targetRect = target?.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
+    let dx = -875, dy = -150, waveAmplitude = 46;
     if (sourceRect && targetRect && scale > 0) {
       // Start just outside the lower-left of the correct mark, rather than
       // from its centre, so the gain visibly flies out toward the progress UI.
@@ -1701,36 +1702,70 @@
       const endY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
       gain.style.left = `${startX}px`;
       gain.style.top = `${startY}px`;
-      const dx = endX - startX;
-      const dy = endY - startY;
+      dx = endX - startX;
+      dy = endY - startY;
+      waveAmplitude = Math.max(34, Math.min(58, Math.abs(dy) * 0.16 + 34));
       gain.style.setProperty("--gain-translate-x", `${dx}px`);
       gain.style.setProperty("--gain-translate-y", `${dy}px`);
-      gain.style.setProperty("--gain-wave-y", `${Math.max(-62, Math.min(-34, dy * 0.16 - 38))}px`);
-      gain.style.setProperty("--gain-trail-angle", `${Math.atan2(dy, dx) * 180 / Math.PI}deg`);
     }
     gain.textContent = kind === "friendship" ? "♥" : kind === "time-bonus" ? timeBonusConfig.label : `+${amount}`;
     gain.classList.toggle("is-heart", kind === "friendship");
     gain.classList.toggle("is-time-bonus", kind === "time-bonus");
+    const sparkleTrail = document.createElement("span");
+    sparkleTrail.className = "progress-gain-sparkle-trail";
+    sparkleTrail.setAttribute("aria-hidden", "true");
+    for (let index = 0; index < 60; index += 1) {
+      const sparkle = document.createElement("i");
+      const lane = index % 12;
+      const row = Math.floor(index / 12);
+      sparkle.style.setProperty("--spark-x", `${18 + lane * 20 + row * 7}px`);
+      sparkle.style.setProperty("--spark-y", `${-72 + ((index * 37) % 145)}px`);
+      sparkle.style.setProperty("--spark-size", `${6 + (index % 5) * 3}px`);
+      sparkle.style.setProperty("--spark-delay", `${-(index % 10) * 74}ms`);
+      sparkleTrail.appendChild(sparkle);
+    }
+    gain.appendChild(sparkleTrail);
     void gain.offsetWidth;
     // Keep the gain beside the correct mark long enough to be recognised,
     // then send it to the shared left-side progress panel.
     let arrived = false;
     let fallbackTimer = null;
+    let flightAnimation = null;
     const arrive = () => {
       if (arrived) return;
       arrived = true;
-      gain.removeEventListener("animationend", onAnimationEnd);
       if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
       if (onArrive) onArrive();
       else renderVehicleProgressUi();
       if (completed) flashEnergyCapsule();
       window.setTimeout(() => { gain.remove(); if (onComplete) onComplete(); }, progressGainCleanupDurationMs);
     };
-    const onAnimationEnd = (event) => { if (event.target === gain) arrive(); };
     const startFlight = () => {
-      gain.addEventListener("animationend", onAnimationEnd);
       gain.classList.add("is-flying");
-      fallbackTimer = window.setTimeout(arrive, progressGainAnimationDurationMs + 90);
+      if (typeof gain.animate === "function") {
+        const frames = Array.from({ length: 33 }, (_, index) => {
+          const t = index / 32;
+          // Constant forward progress prevents the object from ever pausing at
+          // the wave crest/trough. One gentle sine wave is layered over that
+          // uninterrupted right-to-left movement.
+          const x = dx * t;
+          const y = dy * t + Math.sin(t * Math.PI * 2) * waveAmplitude;
+          const scaleValue = 1 - 0.78 * t;
+          const opacity = t < 0.72 ? 1 : Math.max(0, 1 - (t - 0.72) / 0.28);
+          return {
+            offset: t,
+            opacity,
+            transform: `translate(${x}px,${y}px) scale(${scaleValue})`
+          };
+        });
+        flightAnimation = gain.animate(frames, {
+          duration: progressGainAnimationDurationMs,
+          easing: "linear",
+          fill: "forwards"
+        });
+        flightAnimation.finished.then(arrive, arrive);
+      }
+      fallbackTimer = window.setTimeout(arrive, progressGainAnimationDurationMs + 120);
     };
     if (holdDurationMs > 0) window.setTimeout(startFlight, holdDurationMs);
     else window.requestAnimationFrame(startFlight);
