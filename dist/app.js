@@ -20,8 +20,8 @@
   const idleGuideDelayMs = 60 * 1000;
   const collectionEndTransitionDurationMs = 1000 * 3;
   const correctFeedbackDurationMs = 560 * 1.5;
-  const progressGainHoldDurationMs = 500;
-  const progressGainAnimationDurationMs = 1250;
+  const progressGainHoldDurationMs = 0;
+  const progressGainAnimationDurationMs = 1180;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
   const energyFullDisplayDurationMs = 240;
@@ -1701,8 +1701,12 @@
       const endY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
       gain.style.left = `${startX}px`;
       gain.style.top = `${startY}px`;
-      gain.style.setProperty("--gain-translate-x", `${endX - startX}px`);
-      gain.style.setProperty("--gain-translate-y", `${endY - startY}px`);
+      const dx = endX - startX;
+      const dy = endY - startY;
+      gain.style.setProperty("--gain-translate-x", `${dx}px`);
+      gain.style.setProperty("--gain-translate-y", `${dy}px`);
+      gain.style.setProperty("--gain-wave-y", `${Math.max(-62, Math.min(-34, dy * 0.16 - 38))}px`);
+      gain.style.setProperty("--gain-trail-angle", `${Math.atan2(dy, dx) * 180 / Math.PI}deg`);
     }
     gain.textContent = kind === "friendship" ? "♥" : kind === "time-bonus" ? timeBonusConfig.label : `+${amount}`;
     gain.classList.toggle("is-heart", kind === "friendship");
@@ -1723,11 +1727,13 @@
       window.setTimeout(() => { gain.remove(); if (onComplete) onComplete(); }, progressGainCleanupDurationMs);
     };
     const onAnimationEnd = (event) => { if (event.target === gain) arrive(); };
-    window.setTimeout(() => {
+    const startFlight = () => {
       gain.addEventListener("animationend", onAnimationEnd);
       gain.classList.add("is-flying");
       fallbackTimer = window.setTimeout(arrive, progressGainAnimationDurationMs + 90);
-    }, holdDurationMs);
+    };
+    if (holdDurationMs > 0) window.setTimeout(startFlight, holdDurationMs);
+    else window.requestAnimationFrame(startFlight);
   }
   function timeBonusAnswerDigits(question) {
     if (question.kind === "multiplication") return String(question.product).length;
@@ -1794,7 +1800,7 @@
     // Announce the extra reward as +3 starts moving, then let it join the
     // flight after a short, readable 0.3 second pause.
     window.setTimeout(() => playProgressGainAnimation({
-      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: 300,
+      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: 0,
       onArrive: () => {
         if (runId !== state.runId) return;
         const resolved = finishDeferredTimeBonusProgress(deferred);
