@@ -767,7 +767,7 @@
       }
       const characterPath = path.startsWith("./") ? path : `./${path}`;
       const [width, , left, top, right, bottom] = window.answerArtMetrics[path];
-      const stageScale = stage >= 4 ? 1.3 : 1;
+      const stageScale = stage === 2 ? 1.5 : stage >= 4 ? 1.3 : 1;
       const scale = (answerArtHeights[stage] * stageScale) / (bottom - top);
       const flip = stage <= 3;
       const visualCenter = flip ? width - (left + right) / 2 : (left + right) / 2;
