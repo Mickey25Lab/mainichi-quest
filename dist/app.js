@@ -20,8 +20,8 @@
   const idleGuideDelayMs = 60 * 1000;
   const collectionEndTransitionDurationMs = 1000 * 3;
   const correctFeedbackDurationMs = 560 * 1.5;
-  const progressGainHoldDurationMs = 500;
-  const progressGainAnimationDurationMs = 1250;
+  const progressGainHoldDurationMs = 0;
+  const progressGainAnimationDurationMs = 1180;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
   const vehicleDustCleanupMs = 980;
@@ -1722,6 +1722,7 @@
     const sourceRect = source?.getBoundingClientRect();
     const targetRect = target?.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
+    let dx = -875, dy = -150, waveAmplitude = 46;
     if (sourceRect && targetRect && scale > 0) {
       // Start just outside the lower-left of the correct mark, rather than
       // from its centre, so the gain visibly flies out toward the progress UI.
@@ -1731,33 +1732,90 @@
       const endY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
       gain.style.left = `${startX}px`;
       gain.style.top = `${startY}px`;
-      gain.style.setProperty("--gain-translate-x", `${endX - startX}px`);
-      gain.style.setProperty("--gain-translate-y", `${endY - startY}px`);
+      dx = endX - startX;
+      dy = endY - startY;
+      waveAmplitude = Math.max(34, Math.min(58, Math.abs(dy) * 0.16 + 34));
+      gain.style.setProperty("--gain-translate-x", `${dx}px`);
+      gain.style.setProperty("--gain-translate-y", `${dy}px`);
     }
     gain.textContent = kind === "friendship" ? "♥" : kind === "time-bonus" ? timeBonusConfig.label : `+${amount}`;
     gain.classList.toggle("is-heart", kind === "friendship");
     gain.classList.toggle("is-time-bonus", kind === "time-bonus");
+    const sparkleTrail = document.createElement("span");
+    sparkleTrail.className = "progress-gain-sparkle-trail";
+    sparkleTrail.setAttribute("aria-hidden", "true");
+    // Scatter the sparkles with a small deterministic hash instead of rows /
+    // lanes. This keeps the trail visually random while remaining stable for
+    // the duration of each flight.
+    for (let index = 0; index < 60; index += 1) {
+      const sparkle = document.createElement("i");
+      const hash = (seed) => {
+        const value = Math.sin((index + 1) * seed) * 43758.5453123;
+        return value - Math.floor(value);
+      };
+      const nearOrigin = index % 5 < 2;
+      const x = nearOrigin
+        ? 2 + Math.pow(hash(12.9898), 1.65) * 74
+        : 18 + Math.pow(hash(12.9898), 0.72) * 268;
+      const y = -78 + hash(78.233) * 156;
+      const size = 5 + hash(39.425) * 14;
+      const delay = -(hash(91.117) * 620);
+      const driftX = 18 + hash(51.913) * 34;
+      const driftY = -18 + hash(27.631) * 34;
+      sparkle.style.setProperty("--spark-x", `${x.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-y", `${y.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-size", `${size.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-delay", `${delay.toFixed(0)}ms`);
+      sparkle.style.setProperty("--spark-drift-x", `${driftX.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-drift-y", `${driftY.toFixed(1)}px`);
+      sparkle.style.setProperty("--spark-duration", `${(460 + hash(63.719) * 430).toFixed(0)}ms`);
+      sparkleTrail.appendChild(sparkle);
+    }
+    gain.appendChild(sparkleTrail);
     void gain.offsetWidth;
     // Keep the gain beside the correct mark long enough to be recognised,
     // then send it to the shared left-side progress panel.
     let arrived = false;
     let fallbackTimer = null;
+    let flightAnimation = null;
     const arrive = () => {
       if (arrived) return;
       arrived = true;
-      gain.removeEventListener("animationend", onAnimationEnd);
       if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
       if (onArrive) onArrive();
       else renderVehicleProgressUi();
       if (completed) flashEnergyCapsule();
       window.setTimeout(() => { gain.remove(); if (onComplete) onComplete(); }, progressGainCleanupDurationMs);
     };
-    const onAnimationEnd = (event) => { if (event.target === gain) arrive(); };
-    window.setTimeout(() => {
-      gain.addEventListener("animationend", onAnimationEnd);
+    const startFlight = () => {
       gain.classList.add("is-flying");
-      fallbackTimer = window.setTimeout(arrive, progressGainAnimationDurationMs + 90);
-    }, holdDurationMs);
+      if (typeof gain.animate === "function") {
+        const frames = Array.from({ length: 33 }, (_, index) => {
+          const t = index / 32;
+          // Constant forward progress prevents the object from ever pausing at
+          // the wave crest/trough. One gentle sine wave is layered over that
+          // uninterrupted right-to-left movement.
+          const x = dx * t;
+          const y = dy * t + Math.sin(t * Math.PI * 2) * waveAmplitude;
+          const scaleValue = 1 - 0.78 * t;
+          const opacity = t < 0.72 ? 1 : Math.max(0, 1 - (t - 0.72) / 0.28);
+          return {
+            offset: t,
+            opacity,
+            transform: `translate(${x}px,${y}px) scale(${scaleValue})`
+          };
+        });
+        flightAnimation = gain.animate(frames, {
+          duration: progressGainAnimationDurationMs,
+          easing: "linear",
+          fill: "forwards"
+        });
+        flightAnimation.finished.then(arrive, arrive);
+      }
+      fallbackTimer = window.setTimeout(arrive, progressGainAnimationDurationMs + 120);
+    };
+    if (holdDurationMs > 0) window.setTimeout(startFlight, holdDurationMs);
+    else window.requestAnimationFrame(startFlight);
   }
   function timeBonusAnswerDigits(question) {
     if (question.kind === "multiplication") return String(question.product).length;
@@ -1824,7 +1882,7 @@
     // Announce the extra reward as +3 starts moving, then let it join the
     // flight after a short, readable 0.3 second pause.
     window.setTimeout(() => playProgressGainAnimation({
-      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: 300,
+      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: 0,
       onArrive: () => {
         if (runId !== state.runId) return;
         const resolved = finishDeferredTimeBonusProgress(deferred);

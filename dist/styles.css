@@ -799,7 +799,55 @@ button { touch-action: manipulation; }
 .energy-value { width:78px; margin-top:11px; display:flex; flex-direction:column; align-items:center; color:#075795; font-size:27px; font-weight:1000; line-height:.95; }
 .energy-fraction-bar { width:66px; height:3px; margin:5px 0 4px; border-radius:999px; background:#075795; box-shadow:0 1px 0 rgba(255,255,255,.9); }
 .energy-capsule.is-complete { animation:energy-capsule-flash .48s ease-out; }
-.progress-gain-fly { position:absolute; z-index:20; left:995px; top:405px; color:#54eaff; font-family:"Noto Sans JP",sans-serif; font-size:112px; font-weight:1000; line-height:1; -webkit-text-stroke:3px #075795; text-shadow:0 4px 0 #075795,0 0 18px rgba(255,255,255,.98),0 0 13px rgba(63,222,255,.95); pointer-events:none; will-change:transform,opacity; }
+.progress-gain-fly {
+  position:absolute; z-index:20; left:995px; top:405px;
+  color:#54eaff; font-family:"Noto Sans JP",sans-serif; font-size:112px; font-weight:1000; line-height:1;
+  -webkit-text-stroke:3px #075795;
+  text-shadow:0 4px 0 #075795,0 0 18px rgba(255,255,255,.98),0 0 13px rgba(63,222,255,.95);
+  pointer-events:none; will-change:transform,opacity;
+}
+.progress-gain-sparkle-trail {
+  position:absolute;
+  left:92%;
+  top:50%;
+  width:290px;
+  height:170px;
+  transform:translateY(-50%);
+  pointer-events:none;
+  overflow:visible;
+}
+.progress-gain-sparkle-trail i {
+  position:absolute;
+  left:var(--spark-x);
+  top:calc(50% + var(--spark-y));
+  width:var(--spark-size);
+  height:var(--spark-size);
+  border-radius:50%;
+  background:#fffdf0;
+  box-shadow:
+    0 0 5px 2px rgba(255,255,255,.96),
+    0 0 10px 4px rgba(91,231,255,.82),
+    0 0 16px 6px rgba(255,220,91,.42);
+  opacity:0;
+  transform:rotate(45deg) scale(.55);
+}
+.progress-gain-sparkle-trail i:nth-child(3n) {
+  border-radius:1px;
+  background:#fff3a5;
+}
+.progress-gain-sparkle-trail i:nth-child(4n) {
+  background:#8ff4ff;
+}
+.progress-gain-fly.is-flying .progress-gain-sparkle-trail i {
+  animation:progress-gain-sparkle-stream var(--spark-duration,.62s) ease-in-out infinite;
+  animation-delay:var(--spark-delay);
+}
+@keyframes progress-gain-sparkle-stream {
+  0% { opacity:0; transform:translate(0,0) rotate(45deg) scale(.35); }
+  28% { opacity:1; }
+  65% { opacity:.9; transform:translate(calc(var(--spark-drift-x) * .45),calc(var(--spark-drift-y) * .45)) rotate(45deg) scale(1); }
+  100% { opacity:0; transform:translate(var(--spark-drift-x),var(--spark-drift-y)) rotate(45deg) scale(.42); }
+}
 .progress-gain-fly.is-heart {
   color:#f25165;
   -webkit-text-stroke:3px #fff;
@@ -814,8 +862,6 @@ button { touch-action: manipulation; }
   paint-order:stroke fill;
   text-shadow:0 3px 0 #075795,0 0 7px #ffc928,0 0 17px rgba(255,219,58,.98),0 0 12px rgba(65,228,255,.95);
 }
-.progress-gain-fly.is-flying { animation:progress-gain-to-panel 1.25s cubic-bezier(.2,.7,.25,1) forwards; }
-@keyframes progress-gain-to-panel { 0% { opacity:1; transform:translate(0,0) scale(1); } 68% { opacity:1; transform:translate(calc(var(--gain-translate-x, -838px) * .78),calc(var(--gain-translate-y, -138px) * .78)) scale(.9); } 100% { opacity:0; transform:translate(var(--gain-translate-x, -875px),var(--gain-translate-y, -150px)) scale(.36); } }
 @keyframes energy-capsule-flash { 0%,100% { filter:brightness(1); } 45% { filter:brightness(1.75) drop-shadow(0 0 14px #bff9ff); } }
 .play-screen .topbar { position: absolute; z-index: 7; top: 28px; left: 42px; right: 42px; height: 78px; }
 .play-screen .incorrect-next-vehicle-notice {
@@ -1380,7 +1426,6 @@ button { touch-action: manipulation; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   /* This learning feedback must remain perceptible even when general motion
      is reduced.  It is the sole animation exception. */
-  .progress-gain-fly.is-flying { animation-duration:1.25s !important; }
 }
 
 /* Result screen v99: all layout rules remain scoped to this screen. */
