@@ -653,29 +653,27 @@ button { touch-action: manipulation; }
 }
 .play-screen .play-background[hidden] { display:none; }
 .play-screen .play-background.is-peeling-away {
-  will-change:clip-path,transform,filter;
+  will-change:-webkit-mask-position,mask-position,filter,transform;
+  -webkit-mask-image:linear-gradient(45deg,transparent 0 49.8%,#000 50.2% 100%);
+  mask-image:linear-gradient(45deg,transparent 0 49.8%,#000 50.2% 100%);
+  -webkit-mask-size:310% 310%;
+  mask-size:310% 310%;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
   animation:background-peel-away .76s cubic-bezier(.42,0,.18,1) both;
 }
 @keyframes background-peel-away {
   0% {
-    clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+    -webkit-mask-position:0% 100%;
+    mask-position:0% 100%;
     transform:translate(0,0) rotate(0deg) scale(1);
     filter:brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0));
   }
-  24% {
-    clip-path:polygon(0 0,100% 0,100% 100%,17% 100%,0 82%);
-    transform:translate(0,-2px) rotate(-.15deg) scale(1.002);
-    filter:brightness(1.03) drop-shadow(-12px 13px 12px rgba(0,23,56,.24));
-  }
-  58% {
-    clip-path:polygon(0 0,100% 0,100% 100%,58% 100%,0 40%);
-    transform:translate(3px,-5px) rotate(-.28deg) scale(1.004);
-    filter:brightness(1.05) drop-shadow(-20px 18px 17px rgba(0,23,56,.28));
-  }
   100% {
-    clip-path:polygon(100% 0,100% 0,100% 100%,100% 100%,100% 100%);
-    transform:translate(8px,-9px) rotate(-.45deg) scale(1.008);
-    filter:brightness(1.08) drop-shadow(-24px 22px 20px rgba(0,23,56,.18));
+    -webkit-mask-position:100% 0%;
+    mask-position:100% 0%;
+    transform:translate(8px,-9px) rotate(-.35deg) scale(1.006);
+    filter:brightness(1.06) drop-shadow(-20px 18px 18px rgba(0,23,56,.22));
   }
 }
 .play-screen .answer-character, .play-screen .answer-bubble {
@@ -716,30 +714,47 @@ button { touch-action: manipulation; }
 .play-screen .vehicle-dust {
   position:absolute;
   z-index:1;
-  height:150px;
+  height:182px;
   pointer-events:none;
   opacity:0;
+  clip-path:polygon(0 0,100% 72%,100% 100%,0 100%);
+  background:
+    radial-gradient(ellipse at 10% 62%,rgba(242,224,184,.85) 0 15%,rgba(195,165,116,.48) 36%,transparent 64%),
+    radial-gradient(ellipse at 34% 72%,rgba(237,216,174,.72) 0 13%,rgba(181,151,106,.38) 35%,transparent 63%),
+    radial-gradient(ellipse at 63% 83%,rgba(231,209,166,.58) 0 11%,rgba(171,142,101,.28) 34%,transparent 61%),
+    linear-gradient(to right,rgba(179,145,95,.34),rgba(223,201,159,.22) 58%,rgba(238,220,184,.08) 84%,transparent);
+  filter:blur(1.2px) drop-shadow(0 5px 8px rgba(90,66,32,.18));
+  transform-origin:right bottom;
   will-change:transform,opacity;
-  filter:drop-shadow(0 6px 8px rgba(86,67,38,.24));
+}
+.play-screen .vehicle-dust::before,
+.play-screen .vehicle-dust::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  clip-path:inherit;
+  pointer-events:none;
+}
+.play-screen .vehicle-dust::before {
+  background:
+    radial-gradient(ellipse at 6% 34%,rgba(255,243,207,.58) 0 9%,transparent 25%),
+    radial-gradient(ellipse at 22% 51%,rgba(218,191,145,.48) 0 10%,transparent 28%),
+    radial-gradient(ellipse at 45% 67%,rgba(203,176,133,.35) 0 8%,transparent 24%);
+  filter:blur(5px);
+}
+.play-screen .vehicle-dust::after {
+  background:linear-gradient(to right,rgba(255,248,225,.28),transparent 72%);
+  mix-blend-mode:screen;
 }
 .play-screen .vehicle-dust i {
-  --dust-size:calc(54px + var(--dust-index) * 7px);
   position:absolute;
-  left:calc(var(--dust-index) * 15px);
-  bottom:calc(6px + (var(--dust-index) % 3) * 15px);
-  width:var(--dust-size);
-  height:calc(var(--dust-size) * .72);
+  width:22px;
+  height:22px;
   border-radius:50%;
-  background:
-    radial-gradient(ellipse at 48% 56%,
-      rgba(255,246,215,.98) 0 24%,
-      rgba(231,211,169,.94) 40%,
-      rgba(191,164,119,.72) 57%,
-      rgba(151,124,87,.28) 70%,
-      transparent 80%);
-  box-shadow:0 0 18px rgba(255,239,196,.42);
-  filter:blur(calc(.4px + var(--dust-index) * .18px));
-  transform:scale(.38);
+  background:rgba(239,217,176,.5);
+  left:calc(8% + var(--dust-index) * 10%);
+  bottom:calc(12px + var(--dust-index) * 8px);
+  filter:blur(3px);
   opacity:0;
 }
 .play-screen .vehicle-dust.is-entering {
@@ -750,25 +765,24 @@ button { touch-action: manipulation; }
 }
 .play-screen .vehicle-dust.is-entering i,
 .play-screen .vehicle-dust.is-exiting i {
-  animation:vehicle-dust-puff .72s ease-out both;
-  animation-delay:calc(var(--dust-index) * 42ms);
+  animation:vehicle-dust-plume .74s ease-out both;
+  animation-delay:calc(var(--dust-index) * 34ms);
 }
 @keyframes vehicle-dust-enter {
-  0% { opacity:.35; transform:translateX(-620px); }
-  24% { opacity:1; }
-  74% { opacity:.88; }
-  100% { opacity:0; transform:translateX(0); }
+  0% { opacity:.15; transform:translateX(-600px) scaleX(.78) scaleY(.72); }
+  24% { opacity:.82; }
+  68% { opacity:.7; }
+  100% { opacity:0; transform:translateX(0) scaleX(1) scaleY(1); }
 }
 @keyframes vehicle-dust-exit {
-  0% { opacity:.9; transform:translateX(0); }
-  68% { opacity:1; }
-  100% { opacity:0; transform:translateX(700px); }
+  0% { opacity:.78; transform:translateX(0) scaleX(.82) scaleY(.8); }
+  55% { opacity:.86; }
+  100% { opacity:0; transform:translateX(430px) scaleX(1.18) scaleY(1.08); }
 }
-@keyframes vehicle-dust-puff {
-  0% { opacity:0; transform:translate(0,16px) scale(.28); }
-  16% { opacity:1; }
-  66% { opacity:.9; }
-  100% { opacity:0; transform:translate(calc(-48px - var(--dust-index) * 9px),calc(-28px - var(--dust-index) * 5px)) scale(1.85); }
+@keyframes vehicle-dust-plume {
+  0% { opacity:0; transform:translateY(8px) scale(.7); }
+  24% { opacity:.72; }
+  100% { opacity:0; transform:translateY(calc(-34px - var(--dust-index) * 7px)) scale(1.45); }
 }
 @keyframes robot-character-materialize {
   0% { opacity:0; clip-path:inset(100% 0 0 0); filter:brightness(1.35) drop-shadow(0 0 10px rgba(102,229,255,.7)); }
