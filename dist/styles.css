@@ -1107,14 +1107,14 @@ button { touch-action: manipulation; }
      4:3, so that inherited object-position left-aligns the contained artwork
      inside an otherwise perfectly centred element. Override it explicitly. */
   left:50%;
-  top:33.4%;
+  top:29.4%;
   width:43.5%;
   height:43.5%;
   object-position:center center;
   transform:translateX(-50%);
 }
 .reward-stage[data-stage="1"][data-reward-kind="friendship"] #reward-image {
-  top:32.8%;
+  top:28.8%;
 }
 /* The two Stage 1 frames place their lower plaques at different heights.
    Keep shared vehicle sizing, but position each common metadata block inside
