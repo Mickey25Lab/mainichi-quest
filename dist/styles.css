@@ -668,10 +668,10 @@ button { touch-action: manipulation; }
   will-change: transform, opacity, clip-path, filter;
 }
 .play-screen .answer-character.is-vehicle-entering {
-  animation: vehicle-character-enter 820ms ease-out both;
+  animation: vehicle-character-enter 820ms cubic-bezier(.12,.82,.18,1) both;
 }
 .play-screen .answer-character.is-vehicle-exiting {
-  animation: vehicle-character-exit 600ms ease-in both;
+  animation: vehicle-character-exit 600ms cubic-bezier(.82,0,1,.18) both;
 }
 .play-screen .answer-character.is-robot-entering {
   animation: robot-character-materialize 900ms cubic-bezier(.25,.7,.3,1) both;
@@ -1115,8 +1115,8 @@ button { touch-action: manipulation; }
   top:32.8%;
 }
 .reward-stage[data-stage="1"][data-reward-kind="discovery"] #reward-image {
-  left:51.25%;
-  transform:translateX(calc(-50% - 30px));
+  left:50%;
+  transform:translateX(-50%);
 }
 /* The two Stage 1 frames place their lower plaques at different heights.
    Keep shared vehicle sizing, but position each common metadata block inside
