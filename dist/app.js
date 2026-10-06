@@ -734,16 +734,16 @@
     const dust = document.createElement("div");
     dust.className = `vehicle-dust is-${phase}`;
     dust.setAttribute("aria-hidden", "true");
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       const puff = document.createElement("i");
       puff.style.setProperty("--dust-index", String(index));
       dust.appendChild(puff);
     }
     const left = (charRect.left - stageRect.left) / scale + Math.max(18, charRect.width / scale * 0.08);
-    const top = (charRect.bottom - stageRect.top) / scale - 84;
+    const top = (charRect.bottom - stageRect.top) / scale - 112;
     dust.style.left = `${left}px`;
     dust.style.top = `${top}px`;
-    dust.style.width = `${Math.max(150, charRect.width / scale * 0.42)}px`;
+    dust.style.width = `${Math.max(230, charRect.width / scale * 0.56)}px`;
     stage.appendChild(dust);
     window.setTimeout(() => dust.remove(), vehicleDustCleanupMs);
     return dust;
@@ -766,6 +766,11 @@
       await waitForCharacterAnimation(currentCharacter, "is-robot-exiting", 780);
       clearRobotDissolveSparkle();
     }
+    // The animation helper removes its motion class when it finishes. Without
+    // hiding here, the old character snaps back to its static position for the
+    // brief background-peel interval. Keep the scene character-free until the
+    // new background has finished revealing.
+    currentCharacter.hidden = true;
   }
   async function playPreparedCharacterEntry(prepared, shouldAnimate) {
     if (!prepared.hasCharacter || !shouldAnimate) return;
@@ -2305,7 +2310,7 @@
     // actual target. This makes the fingertip land on the button/card instead
     // of floating above it.
     guide.style.left = `${targetCenterX + 74}px`;
-    guide.style.top = `${Math.max(74, targetCenterY - 74)}px`;
+    guide.style.top = `${Math.max(74, targetCenterY - 46)}px`;
     guide.hidden = false;
   }
   function resetIdleGuideTimer() {
