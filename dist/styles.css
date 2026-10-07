@@ -983,6 +983,17 @@ button { touch-action: manipulation; }
   padding:24px; color:var(--navy); text-align:center;
 }
 .number-card-panel p { margin:0; font-size:56px; font-weight:900; line-height:1.2; letter-spacing:.015em; white-space:nowrap; }
+.number-card-panel p,
+.multiplication-panel,
+.long-division-panel {
+  font-family:"Noto Sans JP",sans-serif;
+  font-style:normal;
+  font-synthesis:none;
+  font-kerning:none;
+  -webkit-text-stroke:0;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
 .multiplication-panel {
   --multiplication-column:64px;
   --multiplication-gap:13px;
