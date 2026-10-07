@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.121";
+  const appVersion = "0.0.122";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -688,6 +688,7 @@
     const sparkle = $("robot-dissolve-sparkle");
     if (!sparkle) return;
     sparkle.classList.remove("is-entering", "is-exiting");
+    sparkle.replaceChildren();
     sparkle.hidden = true;
   }
   function playRobotDissolveSparkle(character, direction) {
@@ -700,6 +701,39 @@
     sparkle.style.top = `${(characterRect.top - stageRect.top) / scale}px`;
     sparkle.style.width = `${characterRect.width / scale}px`;
     sparkle.style.height = `${characterRect.height / scale}px`;
+    sparkle.replaceChildren();
+    // Dense but still restrained: roughly the same sparkle count as the
+    // +3 / heart trail, scattered across the robot instead of marching in
+    // a straight line. Entry rises from below; exit mirrors it downward.
+    for (let index = 0; index < 78; index += 1) {
+      const particle = document.createElement("i");
+      const hash = (seed) => {
+        const value = Math.sin((index + 1) * seed) * 43758.5453123;
+        return value - Math.floor(value);
+      };
+      const x = -2 + hash(12.9898) * 104;
+      const startY = direction === "enter"
+        ? 60 + hash(78.233) * 38
+        : -2 + hash(78.233) * 34;
+      // Let the sparkle field visibly follow more of the robot's body:
+      // entry rises from the feet toward just under the face, while exit
+      // travels from the upper body down through roughly the knees.
+      const travel = direction === "enter"
+        ? 58 + hash(39.425) * 38
+        : 50 + hash(39.425) * 34;
+      const driftX = -18 + hash(91.117) * 36;
+      const size = 5 + hash(51.913) * 12;
+      const delay = hash(27.631) * (direction === "enter" ? 520 : 340);
+      const duration = (direction === "enter" ? 680 : 560) + hash(63.719) * (direction === "enter" ? 520 : 380);
+      particle.style.setProperty("--robot-spark-x", `${x.toFixed(1)}%`);
+      particle.style.setProperty("--robot-spark-start-y", `${startY.toFixed(1)}%`);
+      particle.style.setProperty("--robot-spark-travel", `${travel.toFixed(1)}%`);
+      particle.style.setProperty("--robot-spark-drift-x", `${driftX.toFixed(1)}px`);
+      particle.style.setProperty("--robot-spark-size", `${size.toFixed(1)}px`);
+      particle.style.setProperty("--robot-spark-delay", `${delay.toFixed(0)}ms`);
+      particle.style.setProperty("--robot-spark-duration", `${duration.toFixed(0)}ms`);
+      sparkle.appendChild(particle);
+    }
     sparkle.hidden = false;
     sparkle.classList.remove("is-entering", "is-exiting");
     void sparkle.offsetWidth;
