@@ -1982,7 +1982,7 @@
           if (runId === state.runId) onResolved(timeBonusReward);
         }, timeBonusReward ? energyFullDisplayDurationMs : 0);
       }
-    }), progressGainHoldDurationMs);
+    }), 300);
   }
   function progressCollectionForCorrect(question = state.current) {
     const vehicleIndex = question.vehicleIndex ?? state.currentVehicleIndex;
