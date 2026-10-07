@@ -688,6 +688,7 @@
     const sparkle = $("robot-dissolve-sparkle");
     if (!sparkle) return;
     sparkle.classList.remove("is-entering", "is-exiting");
+    sparkle.replaceChildren();
     sparkle.hidden = true;
   }
   function playRobotDissolveSparkle(character, direction) {
@@ -700,6 +701,34 @@
     sparkle.style.top = `${(characterRect.top - stageRect.top) / scale}px`;
     sparkle.style.width = `${characterRect.width / scale}px`;
     sparkle.style.height = `${characterRect.height / scale}px`;
+    sparkle.replaceChildren();
+    if (direction === "enter") {
+      // Dense but still restrained: roughly the same sparkle count as the
+      // +3 / heart trail, scattered across the robot instead of marching in
+      // a straight line. Each particle rises and fades on its own timing.
+      for (let index = 0; index < 60; index += 1) {
+        const particle = document.createElement("i");
+        const hash = (seed) => {
+          const value = Math.sin((index + 1) * seed) * 43758.5453123;
+          return value - Math.floor(value);
+        };
+        const x = 4 + hash(12.9898) * 92;
+        const startY = 70 + hash(78.233) * 30;
+        const rise = 34 + hash(39.425) * 54;
+        const driftX = -18 + hash(91.117) * 36;
+        const size = 5 + hash(51.913) * 12;
+        const delay = hash(27.631) * 420;
+        const duration = 520 + hash(63.719) * 430;
+        particle.style.setProperty("--robot-spark-x", `${x.toFixed(1)}%`);
+        particle.style.setProperty("--robot-spark-start-y", `${startY.toFixed(1)}%`);
+        particle.style.setProperty("--robot-spark-rise", `${rise.toFixed(1)}%`);
+        particle.style.setProperty("--robot-spark-drift-x", `${driftX.toFixed(1)}px`);
+        particle.style.setProperty("--robot-spark-size", `${size.toFixed(1)}px`);
+        particle.style.setProperty("--robot-spark-delay", `${delay.toFixed(0)}ms`);
+        particle.style.setProperty("--robot-spark-duration", `${duration.toFixed(0)}ms`);
+        sparkle.appendChild(particle);
+      }
+    }
     sparkle.hidden = false;
     sparkle.classList.remove("is-entering", "is-exiting");
     void sparkle.offsetWidth;
