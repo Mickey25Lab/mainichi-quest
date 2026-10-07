@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.115";
+  const appVersion = "0.0.116";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -2434,10 +2434,14 @@
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
       const medal = complete ? `<img class="card-master-medal-bg" src="${resultArtworkPath(vehicle.index, formStage, true)}" alt="" decoding="async">` : "";
       const isNew = state.collectionNewVehicleIndexes.has(vehicle.index);
-      return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" style="--card-color:${vehicle.color}">
+      const before = state.resultStartProgress[vehicle.index] || emptyVehicleProgress();
+      const friendshipGrew = progress.friendship > before.friendship;
+      const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
+      const isUp = !isNew && (friendshipGrew || energyGrew);
+      return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
-        ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon">NEW</span>' : ""}</button>`;
+        ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon">NEW</span>' : isUp ? '<span class="collection-card-up-ribbon">UP</span>' : ""}</button>`;
     }).join("");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => openVehicleDetail(Number(card.dataset.vehicle))));
   }
