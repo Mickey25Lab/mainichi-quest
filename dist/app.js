@@ -759,6 +759,7 @@
   async function playCurrentCharacterExit(prepared) {
     if (!currentCharacterNeedsExit(prepared)) return;
     const currentCharacter = $("answer-character");
+    const currentBubble = $("answer-bubble");
     const currentStage = Number(currentCharacter.dataset.answerStage || 0);
     if (currentStage === 2) {
       playVehicleDust(currentCharacter, "exiting");
@@ -768,6 +769,10 @@
       await waitForCharacterAnimation(currentCharacter, "is-robot-exiting", 780);
       clearRobotDissolveSparkle();
     }
+    // The old character must be completely gone before any background peel
+    // begins. Stages without an exit animation disappear immediately here.
+    currentCharacter.hidden = true;
+    currentBubble.hidden = true;
   }
   async function playPreparedCharacterEntry(prepared, shouldAnimate) {
     if (!prepared.hasCharacter || !shouldAnimate) return;
@@ -842,6 +847,57 @@
     background.id = "play-background-next"; stagedBackground.id = "play-background";
     background.setAttribute("aria-hidden", "true"); stagedBackground.removeAttribute("aria-hidden");
   }
+  function waitForElementAnimation(element, className, fallbackDurationMs) {
+    return new Promise((resolve) => {
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        element.removeEventListener("animationend", onAnimationEnd);
+        window.clearTimeout(fallbackTimer);
+        element.classList.remove(className);
+        resolve();
+      };
+      const onAnimationEnd = (event) => {
+        if (event.target === element) finish();
+      };
+      const fallbackTimer = window.setTimeout(finish, fallbackDurationMs);
+      element.addEventListener("animationend", onAnimationEnd);
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
+    });
+  }
+  async function transitionQuestionBackground(prepared) {
+    if (prepared.preserveCurrent) return;
+    const background = $("play-background"), stagedBackground = $("play-background-next");
+    const sameBackground = background.src === stagedBackground.src;
+    if (sameBackground) {
+      stagedBackground.hidden = true;
+      stagedBackground.style.visibility = "hidden";
+      prepared.backgroundCommitted = true;
+      return;
+    }
+    const hasOutgoingBackground = !background.hidden && Boolean(background.src);
+    stagedBackground.style.visibility = "";
+    stagedBackground.hidden = false;
+    stagedBackground.style.zIndex = "1";
+    background.style.zIndex = "0";
+    if (hasOutgoingBackground) {
+      // Reveal the next background from bottom-left to top-right. The CSS
+      // polygon keeps the moving reveal boundary as one straight segment
+      // throughout the animation.
+      await waitForElementAnimation(stagedBackground, "is-page-peeling-in", 900);
+    }
+    swapBackgroundLayerIds();
+    const outgoingBackground = $("play-background-next");
+    const incomingBackground = $("play-background");
+    outgoingBackground.hidden = true;
+    outgoingBackground.style.visibility = "hidden";
+    outgoingBackground.style.zIndex = "";
+    incomingBackground.style.zIndex = "";
+    prepared.backgroundCommitted = true;
+  }
   function commitQuestionVisuals(prepared) {
     if (prepared.preserveCurrent) return;
     const discoveryBubble = $("answer-discovery-bubble");
@@ -850,22 +906,24 @@
     const background = $("play-background"), stagedBackground = $("play-background-next");
     const character = $("answer-character"), stagedCharacter = $("answer-character-next");
     const bubble = $("answer-bubble"), stagedBubble = $("answer-bubble-next");
-    const sameBackground = background.src === stagedBackground.src;
-    if (sameBackground) {
-      stagedBackground.hidden = true;
-      stagedBackground.style.visibility = "hidden";
-    } else {
-      stagedBackground.style.visibility = "";
-      stagedBackground.hidden = false;
-      stagedBackground.style.zIndex = "1";
-      background.style.zIndex = "0";
-      swapBackgroundLayerIds();
-      const outgoingBackground = $("play-background-next");
-      window.requestAnimationFrame(() => {
-        outgoingBackground.hidden = true;
-        outgoingBackground.style.zIndex = "";
-        $("play-background").style.zIndex = "";
-      });
+    if (!prepared.backgroundCommitted) {
+      const sameBackground = background.src === stagedBackground.src;
+      if (sameBackground) {
+        stagedBackground.hidden = true;
+        stagedBackground.style.visibility = "hidden";
+      } else {
+        stagedBackground.style.visibility = "";
+        stagedBackground.hidden = false;
+        stagedBackground.style.zIndex = "1";
+        background.style.zIndex = "0";
+        swapBackgroundLayerIds();
+        const outgoingBackground = $("play-background-next");
+        window.requestAnimationFrame(() => {
+          outgoingBackground.hidden = true;
+          outgoingBackground.style.zIndex = "";
+          $("play-background").style.zIndex = "";
+        });
+      }
     }
     if (!prepared.hasCharacter) {
       character.hidden = true; stagedCharacter.hidden = true;
@@ -1154,6 +1212,8 @@
       // prepareQuestionVisuals, so commitQuestionVisuals can remain atomic.
       const shouldAnimateCharacter = Boolean(prepared.hasCharacter && (currentCharacterNeedsExit(prepared) || $("answer-character").hidden));
       await playCurrentCharacterExit(prepared);
+      if (runId !== state.runId || state.current !== question) return;
+      await transitionQuestionBackground(prepared);
       if (runId !== state.runId || state.current !== question) return;
       $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" ? "" : `${question.dividend} ÷ ${question.divisor}`;
       resetAnswerCard(); setProgress();

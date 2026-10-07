@@ -652,6 +652,20 @@ button { touch-action: manipulation; }
   pointer-events:none;
 }
 .play-screen .play-background[hidden] { display:none; }
+.play-screen .play-background.is-page-peeling-in {
+  will-change:clip-path;
+  animation:background-page-peel 840ms linear both;
+}
+@keyframes background-page-peel {
+  0% {
+    -webkit-clip-path:polygon(-500% -300%,-420% -300%,280% 400%,-500% 400%);
+    clip-path:polygon(-500% -300%,-420% -300%,280% 400%,-500% 400%);
+  }
+  100% {
+    -webkit-clip-path:polygon(-500% -300%,-180% -300%,520% 400%,-500% 400%);
+    clip-path:polygon(-500% -300%,-180% -300%,520% 400%,-500% 400%);
+  }
+}
 .play-screen .answer-character, .play-screen .answer-bubble {
   position: absolute; display: block; height: auto; pointer-events: none;
 }
