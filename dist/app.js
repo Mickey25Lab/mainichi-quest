@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.119";
+  const appVersion = "0.0.120";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1184,6 +1184,21 @@
     $("progress-badge").classList.toggle("is-retry", isRetry);
     $("progress-count").textContent = `${Math.min(number, total)} / ${total}`;
   }
+  let gameplayFontsReadyPromise = null;
+  function ensureGameplayFontsReady() {
+    if (gameplayFontsReadyPromise) return gameplayFontsReadyPromise;
+    if (!document.fonts?.load) return Promise.resolve();
+    gameplayFontsReadyPromise = Promise.all([
+      document.fonts.load('400 88px "Noto Sans JP"'),
+      document.fonts.load('700 76px "Noto Sans JP"'),
+      document.fonts.load('900 102px "Noto Sans JP"')
+    ]).catch((error) => {
+      console.warn("Gameplay font preload failed", error);
+    });
+    return gameplayFontsReadyPromise;
+  }
+  ensureGameplayFontsReady();
+
   function displayQuestion(question, onRevealed = null) {
     clearIdleGuide();
     state.energyDisplayOverride = null;
@@ -1206,9 +1221,14 @@
     preloadPotentialReward(question);
     const cachedVisual = state.preparedNextQuestionVisual;
     state.preparedNextQuestionVisual = null;
-    const visualsReady = cachedVisual && cachedVisual.question === question
+    const preparedVisualReady = cachedVisual && cachedVisual.question === question
       ? Promise.resolve(cachedVisual.prepared)
       : prepareQuestionVisuals(question);
+    // Do not reveal the play screen while the tablet/browser is still swapping
+    // from its fallback font to Noto Sans JP. This keeps problem digits and
+    // number-card instructions visually stable from their first painted frame.
+    const visualsReady = Promise.all([preparedVisualReady, ensureGameplayFontsReady()])
+      .then(([prepared]) => prepared);
     const runId = state.runId;
     visualsReady.then(async (prepared) => {
       if (!prepared || runId !== state.runId || state.current !== question) return;
