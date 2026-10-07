@@ -873,7 +873,10 @@
   async function transitionQuestionBackground(prepared) {
     if (prepared.preserveCurrent) return;
     const background = $("play-background"), stagedBackground = $("play-background-next");
-    const sameBackground = background.src === stagedBackground.src;
+    // A fixed/transition screen hides both play-background layers. If the
+    // first retry happens to reuse the same image URL as the previous question,
+    // URL equality alone must not skip the reveal or both layers remain hidden.
+    const sameBackground = !background.hidden && background.src === stagedBackground.src;
     if (sameBackground) {
       stagedBackground.hidden = true;
       stagedBackground.style.visibility = "hidden";
@@ -909,7 +912,7 @@
     const character = $("answer-character"), stagedCharacter = $("answer-character-next");
     const bubble = $("answer-bubble"), stagedBubble = $("answer-bubble-next");
     if (!prepared.backgroundCommitted) {
-      const sameBackground = background.src === stagedBackground.src;
+      const sameBackground = !background.hidden && background.src === stagedBackground.src;
       if (sameBackground) {
         stagedBackground.hidden = true;
         stagedBackground.style.visibility = "hidden";
