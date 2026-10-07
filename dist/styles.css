@@ -817,6 +817,10 @@ button { touch-action: manipulation; }
   animation:robot-sparkle-particle-rise var(--robot-spark-duration,.72s) ease-out both;
   animation-delay:var(--robot-spark-delay,0ms);
 }
+.play-screen .robot-dissolve-sparkle.is-exiting > i {
+  animation:robot-sparkle-particle-fall var(--robot-spark-duration,.56s) ease-in both;
+  animation-delay:var(--robot-spark-delay,0ms);
+}
 @keyframes robot-sparkle-particle-rise {
   0% {
     opacity:0;
@@ -825,11 +829,26 @@ button { touch-action: manipulation; }
   20% { opacity:1; }
   68% {
     opacity:.92;
-    transform:translate(calc(var(--robot-spark-drift-x) * .55),calc(var(--robot-spark-rise) * -.55)) rotate(45deg) scale(1);
+    transform:translate(calc(var(--robot-spark-drift-x) * .55),calc(var(--robot-spark-travel) * -.55)) rotate(45deg) scale(1);
   }
   100% {
     opacity:0;
-    transform:translate(var(--robot-spark-drift-x),calc(var(--robot-spark-rise) * -1)) rotate(45deg) scale(.4);
+    transform:translate(var(--robot-spark-drift-x),calc(var(--robot-spark-travel) * -1)) rotate(45deg) scale(.4);
+  }
+}
+@keyframes robot-sparkle-particle-fall {
+  0% {
+    opacity:0;
+    transform:translate(0,0) rotate(45deg) scale(.35);
+  }
+  18% { opacity:1; }
+  66% {
+    opacity:.92;
+    transform:translate(calc(var(--robot-spark-drift-x) * .55),calc(var(--robot-spark-travel) * .55)) rotate(45deg) scale(1);
+  }
+  100% {
+    opacity:0;
+    transform:translate(var(--robot-spark-drift-x),var(--robot-spark-travel)) rotate(45deg) scale(.4);
   }
 }
 .play-screen .robot-dissolve-sparkle.is-exiting::before { animation:robot-sparkle-fall 640ms cubic-bezier(.5,0,.7,.35) both; }
