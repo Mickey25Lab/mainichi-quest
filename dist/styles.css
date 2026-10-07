@@ -1543,8 +1543,8 @@ button { touch-action: manipulation; }
 .result-screen-new .result-new-energy-tank i,
 .result-screen-new .result-new-energy-tank b { display:block; flex:0 0 auto; }
 .result-screen-new .result-new-energy-tank i { border-radius:0 0 18px 18px; background:linear-gradient(90deg,#087de0,#24c8ff 52%,#b8f8ff); box-shadow:inset 0 4px 8px rgba(255,255,255,.55),0 0 8px rgba(41,196,255,.55); }
-.result-screen-new .result-new-energy-tank b { border-radius:18px 18px 0 0; background:linear-gradient(90deg,#033d94,#0874d1 52%,#0e9cff); border-bottom:2px solid rgba(225,249,255,.94); box-shadow:inset 0 3px 6px rgba(255,255,255,.34),0 0 11px rgba(0,81,205,.78); }
-.result-screen-new .result-new-energy-stack.is-only-gain b { border-radius:18px; }
+.result-screen-new .result-new-energy-tank b { border-radius:0; background:linear-gradient(90deg,#033d94,#0874d1 52%,#0e9cff); border-bottom:2px solid rgba(225,249,255,.94); box-shadow:inset 0 3px 6px rgba(255,255,255,.34),0 0 11px rgba(0,81,205,.78); }
+.result-screen-new .result-new-energy-stack.is-only-gain b { border-radius:0 0 18px 18px; }
 .result-screen-new .result-new-energy strong { display:flex; align-items:baseline; gap:4px; color:#073b91; font-size:28px; line-height:1; white-space:nowrap; }.result-screen-new .result-new-energy strong small { display:inline; margin:0; font-size:18px; }
 .result-screen-new .result-new-gets-list { display:grid; gap:18px; }
 .result-screen-new .result-new-get-card { position:relative; display:grid; grid-template-columns:1.05fr .95fr; align-items:center; min-height:330px; overflow:hidden; padding:22px 46px; border:5px solid #fff16d; border-radius:34px; background:radial-gradient(circle at 70% 30%,#55eafa 0 4%,transparent 5%),linear-gradient(135deg,#0768dc,#28d8ff 54%,#0579d9); box-shadow:inset 0 0 0 6px #0970d7,inset 0 0 42px rgba(255,255,255,.45),0 11px 0 #0759b5,0 16px 30px rgba(0,68,151,.25); }
@@ -1815,6 +1815,7 @@ button { touch-action: manipulation; }
 .collection-card-energy { overflow:hidden; border:2px solid rgba(245,252,255,.96); border-radius:999px; background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(202,239,255,.42),rgba(255,255,255,.14)); box-shadow:inset 3px 0 6px rgba(255,255,255,.42),inset -3px 0 6px rgba(12,91,165,.28),0 2px 4px rgba(0,73,175,.25); }
 .collection-card-energy i { position:absolute; right:3px; bottom:3px; left:3px; display:block; border-radius:999px; background:linear-gradient(90deg,#087de0,#24c8ff 52%,#b8f8ff); box-shadow:inset 0 3px 5px rgba(255,255,255,.55),0 0 7px rgba(41,196,255,.75); }
 .collection-card-new-ribbon { position:absolute; z-index:7; top:0; right:0; width:56px; height:56px; display:grid; place-items:start end; padding:6px 5px 0 0; box-sizing:border-box; overflow:hidden; color:#fffbd4; background:linear-gradient(135deg,#ff7e2a,#ee223b); clip-path:polygon(0 0,100% 0,100% 100%); font-size:14px; font-weight:1000; line-height:1; text-shadow:0 1px 1px #8e1023; pointer-events:none; }
+.collection-card-up-ribbon { position:absolute; z-index:7; top:0; right:0; width:56px; height:56px; display:grid; place-items:start end; padding:6px 5px 0 0; box-sizing:border-box; overflow:hidden; color:#effcff; background:linear-gradient(135deg,#63e4ff,#079fd2); clip-path:polygon(0 0,100% 0,100% 100%); font-size:14px; font-weight:1000; line-height:1; text-shadow:0 1px 1px #006f99; pointer-events:none; }
 
 .collection-categories {
   position:absolute;
