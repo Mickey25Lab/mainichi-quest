@@ -705,26 +705,26 @@
     // Dense but still restrained: roughly the same sparkle count as the
     // +3 / heart trail, scattered across the robot instead of marching in
     // a straight line. Entry rises from below; exit mirrors it downward.
-    for (let index = 0; index < 60; index += 1) {
+    for (let index = 0; index < 78; index += 1) {
       const particle = document.createElement("i");
       const hash = (seed) => {
         const value = Math.sin((index + 1) * seed) * 43758.5453123;
         return value - Math.floor(value);
       };
-      const x = 4 + hash(12.9898) * 92;
+      const x = -2 + hash(12.9898) * 104;
       const startY = direction === "enter"
-        ? 68 + hash(78.233) * 30
-        : 2 + hash(78.233) * 26;
+        ? 60 + hash(78.233) * 38
+        : -2 + hash(78.233) * 34;
       // Let the sparkle field visibly follow more of the robot's body:
       // entry rises from the feet toward just under the face, while exit
       // travels from the upper body down through roughly the knees.
       const travel = direction === "enter"
-        ? 52 + hash(39.425) * 34
-        : 44 + hash(39.425) * 28;
+        ? 58 + hash(39.425) * 38
+        : 50 + hash(39.425) * 34;
       const driftX = -18 + hash(91.117) * 36;
       const size = 5 + hash(51.913) * 12;
-      const delay = hash(27.631) * (direction === "enter" ? 420 : 260);
-      const duration = (direction === "enter" ? 520 : 420) + hash(63.719) * (direction === "enter" ? 430 : 260);
+      const delay = hash(27.631) * (direction === "enter" ? 520 : 340);
+      const duration = (direction === "enter" ? 680 : 560) + hash(63.719) * (direction === "enter" ? 520 : 380);
       particle.style.setProperty("--robot-spark-x", `${x.toFixed(1)}%`);
       particle.style.setProperty("--robot-spark-start-y", `${startY.toFixed(1)}%`);
       particle.style.setProperty("--robot-spark-travel", `${travel.toFixed(1)}%`);
