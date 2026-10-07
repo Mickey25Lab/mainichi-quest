@@ -108,7 +108,7 @@
   const answerArtFolders = [null, "", "assets/collection/01_vehicle", "assets/collection/02_robot", "assets/collection/03_super_robot", "assets/collection/04_super_robot_equipped"];
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
-  const answerBubblePositions = [null, null, [82, 305, 400], [82, 235, 410], [82, 160, 420], [82, 125, 420]];
+  const answerBubblePositions = [null, null, { top:305, width:400 }, { top:235, width:410 }, { top:null, width:420 }, { top:null, width:420 }];
   const answerArtCanvasScales = [0, 0, 0.39, 0.36, 0.55, 0.55];
   const listedTwoDigitQuotientProblems = [
     [20, 2], [22, 2], [24, 2], [26, 2], [28, 2], [40, 2], [42, 2], [44, 2], [46, 2], [48, 2],
@@ -695,6 +695,29 @@
     element.style.visibility = "hidden";
     return decodeImageElement(element, path);
   }
+  function positionAnswerBubble(bubble, stage, character) {
+    const position = answerBubblePositions[stage];
+    if (!bubble || !position || !character) return;
+    const characterLeft = Number.parseFloat(character.style.left);
+    const characterWidth = Number.parseFloat(character.style.width);
+    if (Number.isFinite(characterLeft) && Number.isFinite(characterWidth)) {
+      bubble.style.left = `${characterLeft + characterWidth / 2 - position.width / 2}px`;
+    }
+    let top = position.top;
+    if (stage >= 4) {
+      const playStage = $("play-stage");
+      const timer = $("elapsed-time");
+      const stageRect = playStage?.getBoundingClientRect();
+      const timerRect = timer?.getBoundingClientRect();
+      const stageScale = stageRect?.width ? stageRect.width / 1448 : 0;
+      if (stageRect && timerRect && stageScale) {
+        top = (timerRect.top + timerRect.height / 2 - stageRect.top) / stageScale;
+      }
+    }
+    if (Number.isFinite(top)) bubble.style.top = `${top}px`;
+    bubble.style.width = `${position.width}px`;
+  }
+
   function clearCharacterMotion(element) {
     element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting");
   }
@@ -870,8 +893,7 @@
       clearCharacterMotion(stagedCharacter);
       elementPrepares.push(prepareStagedImage(stagedCharacter, characterPath));
       if (bubblePath) {
-        const [x, y, bubbleWidth] = answerBubblePositions[stage];
-        stagedBubble.style.left = `${x}px`; stagedBubble.style.top = `${y}px`; stagedBubble.style.width = `${bubbleWidth}px`;
+        positionAnswerBubble(stagedBubble, stage, stagedCharacter);
         elementPrepares.push(prepareStagedImage(stagedBubble, bubblePath));
       } else stagedBubble.hidden = true;
       await Promise.all(elementPrepares);
@@ -1841,12 +1863,9 @@
     const spec = progressSpeechBubbleSpec(vehicleIndex);
     if (!spec || spec.stage !== question.answerStage) return;
     const bubble = $("answer-bubble");
-    const position = answerBubblePositions[spec.stage];
-    if (!bubble || !position) return;
-    const [x, y, bubbleWidth] = position;
-    bubble.style.left = `${x}px`;
-    bubble.style.top = `${y}px`;
-    bubble.style.width = `${bubbleWidth}px`;
+    const character = $("answer-character");
+    if (!bubble || !character) return;
+    positionAnswerBubble(bubble, spec.stage, character);
     const reveal = () => {
       if (state.current !== question) return;
       const currentSpec = progressSpeechBubbleSpec(vehicleIndex);
