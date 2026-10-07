@@ -283,7 +283,7 @@
     if (state.collectionUsed || topCollectionAlreadyUsedToday()) { updateTopCollectionButton(); return; }
     try { localStorage.setItem(storageKeys.topCollectionLastUsedJst, japanDateKey()); } catch (_) {}
     updateTopCollectionButton();
-    openCollection();
+    openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
@@ -2380,7 +2380,7 @@
     });
   }
 
-  async function openCollection() {
+  async function openCollection({ showSessionMarkers = true } = {}) {
     if (state.collectionUsed || state.collectionClosing) return;
     state.collectionUsed = true;
     $("collection-button").disabled = true;
@@ -2389,7 +2389,7 @@
     await preloadCollectionVehicleArtwork();
     if (runId !== state.runId || !state.collectionUsed) return;
     state.collectionDeadline = Date.now() + 60000;
-    setCollectionCategory("vehicle"); renderCollectionGrid(); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
+    setCollectionCategory("vehicle"); renderCollectionGrid({ showSessionMarkers }); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
   function updateCollectionClock() {
@@ -2417,7 +2417,7 @@
   }
   function exitCollection() { $("collection-exit-confirm").hidden = false; $("collection-exit-no").focus(); }
   function closeCollectionExit() { $("collection-exit-confirm").hidden = true; $("collection-exit").focus(); }
-  function renderCollectionGrid() {
+  function renderCollectionGrid({ showSessionMarkers = true } = {}) {
     $("medal-count").textContent = `${state.collection.filter((stage) => stage === 5).length} / 20`;
     $("collection-grid").innerHTML = collectionDisplayOrder.map((vehicleIndex) => {
       const vehicle = vehicles[vehicleIndex];
@@ -2433,11 +2433,11 @@
       const artwork = discovered ? `<img class="card-vehicle ${formClass}${grayscaleClass}" src="${artPath}" alt="" decoding="async">`
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
       const medal = complete ? `<img class="card-master-medal-bg" src="${resultArtworkPath(vehicle.index, formStage, true)}" alt="" decoding="async">` : "";
-      const isNew = state.collectionNewVehicleIndexes.has(vehicle.index);
+      const isNew = showSessionMarkers && state.collectionNewVehicleIndexes.has(vehicle.index);
       const before = state.resultStartProgress[vehicle.index] || emptyVehicleProgress();
       const friendshipGrew = progress.friendship > before.friendship;
       const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
-      const isUp = !isNew && (friendshipGrew || energyGrew);
+      const isUp = showSessionMarkers && !isNew && (friendshipGrew || energyGrew);
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
