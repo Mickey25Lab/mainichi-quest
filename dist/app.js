@@ -12,10 +12,11 @@
   const topCollectionButtonPath = "./assets/ui/top/top_button_collection.webp";
   const topCollectionUsedButtonPath = "./assets/ui/top/top_button_no_collection.webp";
   const modeSelectPath = "./assets/ui/top/mode_select_titleless.png";
-  const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/reward_next_vehicle_overlay.webp";
+  const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.png";
+  const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.png";
   const discoveryBubblePath = "./assets/ui/speech_bubble/stage1_no_vehicle_speech_bubble.webp";
   const rewardNextVehicleOverlayDurationMs = 2000;
-  const incorrectNextVehicleNoticeDurationMs = 1000;
+  const incorrectNextVehicleNoticeDurationMs = 2000;
   const retryStartDelayMs = 3000;
   const idleGuideDelayMs = 60 * 1000;
   const collectionEndTransitionDurationMs = 1000 * 3;
@@ -2070,6 +2071,7 @@
     }
     if (!finalQuestion && challengeEnds) {
       if (state.current?.hadWrong && state.mode !== "numbercards") { showIncorrectNextVehicleNotice(); return; }
+      if (state.vehicleChallengeQuestionCount >= 5) { showFiveQuestionClearTransition(); return; }
       startNextVehicleChallenge();
     }
     advance();
@@ -2294,6 +2296,36 @@
         runAnswerTransition(advance);
       });
     }, incorrectNextVehicleNoticeDurationMs);
+  }
+  function showFiveQuestionClearTransition() {
+    const runId = state.runId;
+    const overlay = $("vehicle-transition-five-clear");
+    pauseGameTimer();
+    const prepareNextVisuals = () => {
+      startNextVehicleChallenge();
+      const nextQuestion = state.questions[state.initialIndex + 1];
+      if (!nextQuestion) return Promise.resolve(null);
+      assignQuestionVisualContext(nextQuestion);
+      return prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
+        if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
+        return prepared;
+      }).catch(() => null);
+    };
+    const nextVisualsReady = prepareNextVisuals();
+    preloadDecodedImage(vehicleTransitionFiveClearPath)
+      .then(() => decodeImageElement(overlay, vehicleTransitionFiveClearPath))
+      .catch((error) => { console.error("Five-question transition overlay failed to load", error); })
+      .then(() => {
+        if (runId !== state.runId) return;
+        overlay.hidden = false;
+        window.setTimeout(() => {
+          if (runId !== state.runId) return;
+          overlay.hidden = true;
+          nextVisualsReady.then(() => {
+            if (runId === state.runId) runAnswerTransition(advance);
+          });
+        }, rewardNextVehicleOverlayDurationMs);
+      });
   }
   function advance() {
     if (state.phase === "initial") {
