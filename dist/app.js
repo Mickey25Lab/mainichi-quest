@@ -713,9 +713,14 @@
       };
       const x = 4 + hash(12.9898) * 92;
       const startY = direction === "enter"
-        ? 70 + hash(78.233) * 30
-        : hash(78.233) * 30;
-      const travel = 34 + hash(39.425) * 54;
+        ? 68 + hash(78.233) * 30
+        : 2 + hash(78.233) * 26;
+      // Let the sparkle field visibly follow more of the robot's body:
+      // entry rises from the feet toward just under the face, while exit
+      // travels from the upper body down through roughly the knees.
+      const travel = direction === "enter"
+        ? 52 + hash(39.425) * 34
+        : 44 + hash(39.425) * 28;
       const driftX = -18 + hash(91.117) * 36;
       const size = 5 + hash(51.913) * 12;
       const delay = hash(27.631) * (direction === "enter" ? 420 : 260);
