@@ -39,7 +39,7 @@
   // BGM swap or chooser remains independent from game progression.
   const bgmConfig = Object.freeze({
     filePath: "./assets/audio/bgm_pynchon.mp3",
-    normalVolume: 0.154,
+    normalVolume: 0.22,
     rewardDuckMultiplier: 0.30,
     storageKey: "warizan-robot:bgm-enabled-v1"
   });
@@ -2600,7 +2600,7 @@
     if (buffers.length > 1 && index === state.lastCorrectSoundIndex) index = (index + 1) % buffers.length;
     state.lastCorrectSoundIndex = index;
     const ctx = audioContext(), source = ctx.createBufferSource(), gain = ctx.createGain(), compressor = ctx.createDynamicsCompressor();
-    source.buffer = buffers[index]; gain.gain.value = 2.145; compressor.threshold.value = -10; compressor.ratio.value = 4;
+    source.buffer = buffers[index]; gain.gain.value = 1.55; compressor.threshold.value = -10; compressor.ratio.value = 4;
     source.connect(gain).connect(compressor).connect(ctx.destination); source.start();
   }
   function playSimpleCorrectSound() { tone(880, 0, .12, "sine", .234); tone(1320, .14, .18, "sine", .234); }
