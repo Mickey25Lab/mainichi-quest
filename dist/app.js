@@ -208,6 +208,18 @@
     return progress.discovered ? progress.stage : 1;
   }
   function requiredEnergyForStage(stage) { return ({ 2: 30, 3: 50, 4: 70, 5: 100 })[stage] || 0; }
+  function energyStageForRequired(required) { return ({ 30: 2, 50: 3, 70: 4, 100: 5 })[required] || 0; }
+  function progressSpeechBubbleSpec(vehicleIndex) {
+    const progress = vehicleProgress(vehicleIndex);
+    if (!progress.discovered || !progress.friendly || progress.masterMedal) return null;
+    const visualEnergy = state.energyDisplayOverride?.vehicleIndex === vehicleIndex ? state.energyDisplayOverride : null;
+    const required = visualEnergy?.required ?? requiredEnergyForStage(progress.stage);
+    const energy = visualEnergy?.energy ?? progress.energy;
+    const stage = visualEnergy ? energyStageForRequired(required) : progress.stage;
+    const threshold = Math.floor(required * 0.8);
+    if (!required || stage < 2 || stage > 5 || energy < threshold) return null;
+    return { stage, energy, required, threshold, path: `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` };
+  }
   function loadCollection() {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKeys.collection));
@@ -668,8 +680,9 @@
     const progress = vehicleProgress(question.vehicleIndex);
     const backgroundPath = playBackgroundPath(question.vehicleIndex);
     const path = vehicle && progress.discovered ? answerArtworkPath(question.vehicleIndex, stage) : null;
-    const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && stage > state.collection[vehicle.index]
-      ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
+    const bubbleSpec = progressSpeechBubbleSpec(question.vehicleIndex);
+    const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && bubbleSpec?.stage === stage
+      ? bubbleSpec.path : null;
     return { stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage: Boolean(vehicle && !progress.discovered) };
   }
   function preloadQuestionVisuals(question) {
@@ -1822,6 +1835,31 @@
     $("energy-current").textContent = String(currentEnergy);
     $("energy-required").textContent = String(needed);
   }
+  function showProgressSpeechBubbleForCurrentQuestion(vehicleIndex) {
+    const question = state.current;
+    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.answerRevealed) return;
+    const spec = progressSpeechBubbleSpec(vehicleIndex);
+    if (!spec || spec.stage !== question.answerStage) return;
+    const bubble = $("answer-bubble");
+    const position = answerBubblePositions[spec.stage];
+    if (!bubble || !position) return;
+    const [x, y, bubbleWidth] = position;
+    bubble.style.left = `${x}px`;
+    bubble.style.top = `${y}px`;
+    bubble.style.width = `${bubbleWidth}px`;
+    const reveal = () => {
+      if (state.current !== question) return;
+      const currentSpec = progressSpeechBubbleSpec(vehicleIndex);
+      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.answerRevealed) return;
+      bubble.style.visibility = "";
+      bubble.hidden = false;
+    };
+    preloadDecodedImage(spec.path)
+      .then(() => decodeImageElement(bubble, spec.path))
+      .then(reveal)
+      .catch(() => {});
+  }
+
   function flashEnergyCapsule() {
     const capsule = $("energy-capsule");
     capsule.classList.remove("is-complete");
@@ -1998,6 +2036,7 @@
       const gain = applyEnergyGain(progress, deferred.vehicleIndex, deferred.energyGain, { completeStage: false });
       state.energyDisplayOverride = { vehicleIndex: deferred.vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
       renderVehicleProgressUi(deferred.vehicleIndex);
+      showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
     }});
     // Announce the extra reward as +3 starts moving, then let it join the
     // flight after a short, readable 0.3 second pause.
@@ -2009,6 +2048,7 @@
         timeBonusReward = resolved.reward;
         state.energyDisplayOverride = resolved.energyVisual;
         renderVehicleProgressUi(deferred.vehicleIndex);
+        showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
         if (timeBonusReward) flashEnergyCapsule();
       },
       onComplete: () => {
@@ -2107,6 +2147,7 @@
           onArrive: () => {
             if (progression.energyVisual) state.energyDisplayOverride = progression.energyVisual;
             renderVehicleProgressUi(state.current.vehicleIndex);
+            showProgressSpeechBubbleForCurrentQuestion(state.current.vehicleIndex);
           }
         });
       }
