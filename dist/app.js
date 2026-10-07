@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.116";
+  const appVersion = "0.0.117";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -128,7 +128,7 @@
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null,
-    bgmAudio: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
+    bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
   };
 
   function resetStoredRecordsOnce() {
@@ -2466,15 +2466,60 @@
   function backgroundMusicVolume() {
     return bgmConfig.normalVolume * (state.bgmDucked ? bgmConfig.rewardDuckMultiplier : 1);
   }
+  function detectBgmLoopBounds(buffer) {
+    const sampleRate = buffer.sampleRate;
+    const maxTrimSamples = Math.min(Math.floor(sampleRate * 0.35), Math.floor(buffer.length * 0.08));
+    const threshold = 0.0015;
+    let first = 0, last = buffer.length;
+    outerStart:
+    for (let i = 0; i < maxTrimSamples; i += 1) {
+      for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+        if (Math.abs(buffer.getChannelData(channel)[i]) >= threshold) { first = Math.max(0, i - 32); break outerStart; }
+      }
+    }
+    outerEnd:
+    for (let i = buffer.length - 1; i >= buffer.length - maxTrimSamples; i -= 1) {
+      for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+        if (Math.abs(buffer.getChannelData(channel)[i]) >= threshold) { last = Math.min(buffer.length, i + 33); break outerEnd; }
+      }
+    }
+    if (last - first < sampleRate) return { start: 0, end: buffer.duration };
+    return { start: first / sampleRate, end: last / sampleRate };
+  }
   function ensureBackgroundMusic() {
-    if (state.bgmAudio) return state.bgmAudio;
-    const music = new Audio(bgmConfig.filePath);
-    music.preload = "auto";
-    music.loop = true;
-    music.volume = backgroundMusicVolume();
-    state.bgmAudio = music;
-    music.load();
-    return music;
+    if (state.bgmBuffer) return Promise.resolve(state.bgmBuffer);
+    if (state.bgmBufferPromise) return state.bgmBufferPromise;
+    const ctx = audioContext();
+    state.bgmBufferPromise = fetch(bgmConfig.filePath)
+      .then((response) => { if (!response.ok) throw new Error(bgmConfig.filePath); return response.arrayBuffer(); })
+      .then((arrayBuffer) => decodeAudio(ctx, arrayBuffer))
+      .then((buffer) => { state.bgmBuffer = buffer; return buffer; })
+      .catch(() => null);
+    return state.bgmBufferPromise;
+  }
+  function ensureBgmGain() {
+    if (state.bgmGain) return state.bgmGain;
+    const ctx = audioContext();
+    const gain = ctx.createGain();
+    gain.gain.value = backgroundMusicVolume();
+    gain.connect(ctx.destination);
+    state.bgmGain = gain;
+    return gain;
+  }
+  function startDecodedBackgroundMusic(buffer) {
+    if (!buffer || state.bgmSource || !canPlayBackgroundMusic()) return;
+    const ctx = audioContext();
+    const gain = ensureBgmGain();
+    const source = ctx.createBufferSource();
+    const bounds = detectBgmLoopBounds(buffer);
+    source.buffer = buffer;
+    source.loop = true;
+    source.loopStart = bounds.start;
+    source.loopEnd = bounds.end;
+    source.connect(gain);
+    source.onended = () => { if (state.bgmSource === source) state.bgmSource = null; };
+    state.bgmSource = source;
+    source.start(0, bounds.start);
   }
   function updateBgmToggleButton() {
     const button = $("bgm-toggle-button");
@@ -2483,41 +2528,44 @@
     button.setAttribute("aria-label", state.bgmEnabled ? "BGMをオフにする" : "BGMをオンにする");
   }
   function stopBackgroundMusic() {
-    if (!state.bgmAudio) return;
-    state.bgmAudio.pause();
-    state.bgmAudio.currentTime = 0;
+    const source = state.bgmSource;
+    state.bgmSource = null;
+    if (source) {
+      try { source.stop(); } catch (_) {}
+      try { source.disconnect(); } catch (_) {}
+    }
     state.bgmDucked = false;
-    state.bgmAudio.volume = bgmConfig.normalVolume;
+    if (state.bgmGain) state.bgmGain.gain.value = bgmConfig.normalVolume;
   }
   function setBackgroundMusicDucked(ducked) {
     state.bgmDucked = Boolean(ducked);
-    if (state.bgmAudio) state.bgmAudio.volume = backgroundMusicVolume();
+    if (state.bgmGain) {
+      const ctx = audioContext();
+      state.bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+      state.bgmGain.gain.setTargetAtTime(backgroundMusicVolume(), ctx.currentTime, 0.025);
+    }
   }
   function canPlayBackgroundMusic() {
     return state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
   }
   function startBackgroundMusic() {
     if (!canPlayBackgroundMusic()) return;
-    const music = ensureBackgroundMusic();
     state.bgmPriming = false;
     setBackgroundMusicDucked(false);
-    music.muted = false;
-    music.play().catch(() => {});
+    ensureBackgroundMusic().then((buffer) => startDecodedBackgroundMusic(buffer));
   }
   function primeBackgroundMusicFromGesture() {
     if (!state.bgmEnabled) return;
-    const music = ensureBackgroundMusic();
-    // This is initiated by the child's explicit Start/Mode tap. It only
-    // unlocks the local asset; audible playback starts with the first question.
+    // Decode the local MP3 into a Web Audio buffer after the child's explicit
+    // gesture. BufferSource looping is sample-accurate, avoiding the audible
+    // media-element restart gap at the end of the MP3.
     state.bgmPriming = true;
-    music.muted = true;
-    music.play().then(() => {
+    audioContext();
+    ensureBackgroundMusic().then((buffer) => {
       if (!state.bgmPriming) return;
-      music.pause();
-      music.currentTime = 0;
-      music.muted = false;
       state.bgmPriming = false;
-    }).catch(() => { music.muted = false; state.bgmPriming = false; });
+      if (buffer && canPlayBackgroundMusic()) startDecodedBackgroundMusic(buffer);
+    });
   }
   function setBgmEnabled(enabled) {
     state.bgmEnabled = Boolean(enabled);
