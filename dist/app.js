@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.117";
+  const appVersion = "0.0.118";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -108,7 +108,7 @@
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
   const answerBubblePositions = [null, null, [82, 305, 400], [82, 235, 410], [82, 160, 420], [82, 125, 420]];
-  const answerArtHeights = [0, 0, 220, 400, 620, 620];
+  const answerArtCanvasScales = [0, 0, 0.39, 0.36, 0.55, 0.55];
   const listedTwoDigitQuotientProblems = [
     [20, 2], [22, 2], [24, 2], [26, 2], [28, 2], [40, 2], [42, 2], [44, 2], [46, 2], [48, 2],
     [60, 2], [62, 2], [64, 2], [66, 2], [68, 2], [80, 2], [82, 2], [84, 2], [86, 2], [88, 2],
@@ -801,19 +801,21 @@
         return { backgroundPath, hasCharacter: false, hasBubble: false, hasDiscoveryMessage };
       }
       const characterPath = path.startsWith("./") ? path : `./${path}`;
-      const [width, , left, top, right, bottom] = window.answerArtMetrics[path];
-      const stageScale = stage === 2 ? 1.5 : stage >= 4 ? 1.3 : 1;
-      const scale = (answerArtHeights[stage] * stageScale) / (bottom - top);
+      // All current answer artwork uses the same 1254×1254 canvas. Use one
+      // common scale and one common placement per evolution stage so no vehicle
+      // receives a per-asset size/position adjustment. The artwork itself now
+      // owns its internal framing.
+      const sourceCanvasSize = 1254;
+      const scale = answerArtCanvasScales[stage];
       const flip = stage <= 3;
-      const visualCenter = flip ? width - (left + right) / 2 : (left + right) / 2;
       stagedCharacter.alt = `${vehicle.nameJa}の${["", "", "乗り物", "ロボット", "スーパーロボット", "装備付きスーパーロボット"][stage]}`;
-      stagedCharacter.style.width = `${width * scale}px`;
+      stagedCharacter.style.width = `${sourceCanvasSize * scale}px`;
       // Keep every stage on the same centre line: halfway between the play
       // stage's left edge and the existing keyboard area's left edge.
       const keypadLeft = Number.parseFloat(window.getComputedStyle(document.querySelector(".game-area")).left);
       const characterCenterX = (Number.isFinite(keypadLeft) ? keypadLeft / 2 : 380) + 100;
-      stagedCharacter.style.left = `${characterCenterX - visualCenter * scale}px`;
-      stagedCharacter.style.top = `${968 - bottom * scale}px`;
+      stagedCharacter.style.left = `${characterCenterX - sourceCanvasSize * scale / 2}px`;
+      stagedCharacter.style.top = `${968 - sourceCanvasSize * scale}px`;
       stagedCharacter.style.setProperty("--character-static-transform", flip ? "scaleX(-1)" : "none");
       stagedCharacter.style.transform = "var(--character-static-transform)";
       stagedCharacter.dataset.answerStage = String(stage);
