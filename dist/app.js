@@ -528,6 +528,66 @@
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
+  const audioDiagnosticsEnabled = new URLSearchParams(window.location.search).get("audio-diagnostics") === "1";
+  const audioDiagnosticsStorageKey = "mq-audio:diagnostics-v1";
+  let audioDiagnostics = [];
+  function audioDiagnosticSnapshot() {
+    const ctx = state.audio;
+    return {
+      contextExists: Boolean(ctx),
+      contextState: ctx?.state ?? null,
+      contextCurrentTime: ctx?.currentTime ?? null,
+      bgmEnabled: state.bgmEnabled,
+      bgmPriming: state.bgmPriming,
+      bgmDucked: state.bgmDucked,
+      bgmSourceExists: Boolean(state.bgmSource),
+      bgmGainExists: Boolean(state.bgmGain),
+      bgmBufferExists: Boolean(state.bgmBuffer),
+      canPlayBgm: typeof canPlayBackgroundMusic === "function" ? canPlayBackgroundMusic() : null,
+      phase: state.phase,
+      pageHidden: document.hidden,
+      visibilityState: document.visibilityState,
+      hasFocus: document.hasFocus()
+    };
+  }
+  function recordAudioDiagnostic(event, detail = {}) {
+    if (!audioDiagnosticsEnabled) return;
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: audioDiagnosticSnapshot() };
+    audioDiagnostics.push(entry);
+    if (audioDiagnostics.length > 240) audioDiagnostics = audioDiagnostics.slice(-240);
+    try { localStorage.setItem(audioDiagnosticsStorageKey, JSON.stringify(audioDiagnostics)); } catch (_) {}
+  }
+  function setupAudioDiagnostics() {
+    if (!audioDiagnosticsEnabled) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(audioDiagnosticsStorageKey) || "[]");
+      if (Array.isArray(stored)) audioDiagnostics = stored.slice(-240);
+    } catch (_) {}
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "AUDIO LOG";
+    Object.assign(button.style, {
+      position: "fixed",
+      right: "8px",
+      top: viewportDiagnosticsEnabled ? "46px" : "8px",
+      zIndex: "2147483647",
+      fontSize: "12px",
+      padding: "6px 8px",
+      opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      const text = JSON.stringify(audioDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "AUDIO LOG"; }, 1400);
+      } catch (_) {
+        window.prompt("Audio diagnostic log", text);
+      }
+    });
+    document.body.appendChild(button);
+    recordAudioDiagnostic("diagnostics-enabled");
+  }
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
   // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
@@ -2668,8 +2728,26 @@
   }
 
   function audioContext() {
-    if (!state.audio) state.audio = new (window.AudioContext || window.webkitAudioContext)();
-    if (state.audio.state === "suspended") state.audio.resume(); return state.audio;
+    if (!state.audio) {
+      state.audio = new (window.AudioContext || window.webkitAudioContext)();
+      recordAudioDiagnostic("audio-context-created");
+      state.audio.addEventListener?.("statechange", () => {
+        recordAudioDiagnostic("audio-context-statechange", { state: state.audio?.state ?? null });
+      });
+    }
+    if (state.audio.state === "suspended") {
+      recordAudioDiagnostic("audio-context-resume-request", { reason: "audioContext()" });
+      try {
+        const resumePromise = state.audio.resume();
+        Promise.resolve(resumePromise).then(
+          () => recordAudioDiagnostic("audio-context-resume-resolved", { state: state.audio?.state ?? null }),
+          (error) => recordAudioDiagnostic("audio-context-resume-rejected", { message: String(error?.message || error) })
+        );
+      } catch (error) {
+        recordAudioDiagnostic("audio-context-resume-threw", { message: String(error?.message || error) });
+      }
+    }
+    return state.audio;
   }
   function loadBgmEnabledPreference() {
     try { return localStorage.getItem(bgmConfig.storageKey) !== "false"; } catch (_) { return true; }
@@ -2728,9 +2806,13 @@
     source.loopStart = bounds.start;
     source.loopEnd = bounds.end;
     source.connect(gain);
-    source.onended = () => { if (state.bgmSource === source) state.bgmSource = null; };
+    source.onended = () => {
+      if (state.bgmSource === source) state.bgmSource = null;
+      recordAudioDiagnostic("bgm-source-ended");
+    };
     state.bgmSource = source;
     source.start(0, bounds.start);
+    recordAudioDiagnostic("bgm-source-started", { loopStart: bounds.start, loopEnd: bounds.end });
   }
   function updateBgmToggleButton() {
     const button = $("bgm-toggle-button");
@@ -2744,6 +2826,7 @@
     if (source) {
       try { source.stop(); } catch (_) {}
       try { source.disconnect(); } catch (_) {}
+      recordAudioDiagnostic("bgm-source-stopped");
     }
     state.bgmDucked = false;
     if (state.bgmGain) state.bgmGain.gain.value = bgmConfig.normalVolume;
@@ -2845,6 +2928,7 @@
   }
 
   setupViewportDiagnostics();
+  setupAudioDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   ensureBackgroundMusic();
@@ -2853,7 +2937,10 @@
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
-  window.addEventListener("pageshow", () => schedulePlayStageSize("pageshow"));
+  window.addEventListener("pageshow", (event) => {
+    recordAudioDiagnostic("pageshow", { persisted: event.persisted });
+    schedulePlayStageSize("pageshow");
+  });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
@@ -2879,17 +2966,24 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
+    recordAudioDiagnostic("visibilitychange", { hidden: document.hidden });
     if (!document.hidden) {
       schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
   });
-  window.addEventListener("pagehide", (event) => recordViewportDiagnostic("pagehide", { persisted: event.persisted }));
+  window.addEventListener("pagehide", (event) => {
+    recordViewportDiagnostic("pagehide", { persisted: event.persisted });
+    recordAudioDiagnostic("pagehide", { persisted: event.persisted });
+  });
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
+    recordAudioDiagnostic("focus");
     checkQuestionTimeout();
   });
+  document.addEventListener("pointerdown", () => recordAudioDiagnostic("pointerdown"), { passive: true });
+  document.addEventListener("touchstart", () => recordAudioDiagnostic("touchstart"), { passive: true });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
   $("detail-picture").addEventListener("touchend", (event) => {
