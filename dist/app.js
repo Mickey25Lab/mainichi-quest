@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.122";
+  const appVersion = "0.0.123";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -528,134 +528,6 @@
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
-  const audioDiagnosticsEnabled = new URLSearchParams(window.location.search).get("audio-diagnostics") === "1";
-  const audioDiagnosticsStorageKey = "mq-audio:diagnostics-v1";
-  let audioDiagnostics = [];
-  function audioDiagnosticSnapshot() {
-    const ctx = state.audio;
-    return {
-      contextExists: Boolean(ctx),
-      contextState: ctx?.state ?? null,
-      contextCurrentTime: ctx?.currentTime ?? null,
-      bgmEnabled: state.bgmEnabled,
-      bgmPriming: state.bgmPriming,
-      bgmDucked: state.bgmDucked,
-      bgmSourceExists: Boolean(state.bgmSource),
-      bgmGainExists: Boolean(state.bgmGain),
-      bgmBufferExists: Boolean(state.bgmBuffer),
-      canPlayBgm: typeof canPlayBackgroundMusic === "function" ? canPlayBackgroundMusic() : null,
-      phase: state.phase,
-      pageHidden: document.hidden,
-      visibilityState: document.visibilityState,
-      hasFocus: document.hasFocus()
-    };
-  }
-  function recordAudioDiagnostic(event, detail = {}) {
-    if (!audioDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: audioDiagnosticSnapshot() };
-    audioDiagnostics.push(entry);
-    if (audioDiagnostics.length > 240) audioDiagnostics = audioDiagnostics.slice(-240);
-    try { localStorage.setItem(audioDiagnosticsStorageKey, JSON.stringify(audioDiagnostics)); } catch (_) {}
-  }
-  function setupAudioDiagnostics() {
-    if (!audioDiagnosticsEnabled) return;
-    try {
-      const stored = JSON.parse(localStorage.getItem(audioDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) audioDiagnostics = stored.slice(-240);
-    } catch (_) {}
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "AUDIO LOG";
-    Object.assign(button.style, {
-      position: "fixed",
-      right: "8px",
-      top: viewportDiagnosticsEnabled ? "46px" : "8px",
-      zIndex: "2147483647",
-      fontSize: "12px",
-      padding: "6px 8px",
-      opacity: "0.85"
-    });
-    button.addEventListener("click", async () => {
-      const text = JSON.stringify(audioDiagnostics, null, 2);
-      try {
-        await navigator.clipboard.writeText(text);
-        button.textContent = "LOG COPIED";
-        window.setTimeout(() => { button.textContent = "AUDIO LOG"; }, 1400);
-      } catch (_) {
-        window.prompt("Audio diagnostic log", text);
-      }
-    });
-    document.body.appendChild(button);
-    recordAudioDiagnostic("diagnostics-enabled");
-  }
-  const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
-  // B-line preview auto-deploy verification: no runtime behavior change.
-  let viewportDiagnostics = [];
-  function viewportSnapshot() {
-    const visualViewport = window.visualViewport;
-    const playStage = $("play-stage");
-    const playStageRect = playStage?.getBoundingClientRect();
-    return {
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      clientWidth: document.documentElement.clientWidth,
-      clientHeight: document.documentElement.clientHeight,
-      visualViewportWidth: visualViewport?.width ?? null,
-      visualViewportHeight: visualViewport?.height ?? null,
-      visualViewportScale: visualViewport?.scale ?? null,
-      visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
-      visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
-      devicePixelRatio: window.devicePixelRatio,
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      pageHidden: document.hidden,
-      stageScale: getComputedStyle(playStage).getPropertyValue("--stage-scale").trim() || null,
-      stageRect: playStageRect ? {
-        x: playStageRect.x,
-        y: playStageRect.y,
-        width: playStageRect.width,
-        height: playStageRect.height
-      } : null
-    };
-  }
-  function recordViewportDiagnostic(event, detail = {}) {
-    if (!viewportDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
-    viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
-    try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
-  }
-  function setupViewportDiagnostics() {
-    if (!viewportDiagnosticsEnabled) return;
-    try {
-      const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
-    } catch (_) {}
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "MQ-001 LOG";
-    Object.assign(button.style, {
-      position: "fixed",
-      right: "8px",
-      top: "8px",
-      zIndex: "2147483647",
-      fontSize: "12px",
-      padding: "6px 8px",
-      opacity: "0.85"
-    });
-    button.addEventListener("click", async () => {
-      const text = JSON.stringify(viewportDiagnostics, null, 2);
-      try {
-        await navigator.clipboard.writeText(text);
-        button.textContent = "LOG COPIED";
-        window.setTimeout(() => { button.textContent = "MQ-001 LOG"; }, 1400);
-      } catch (_) {
-        window.prompt("MQ-001 viewport log", text);
-      }
-    });
-    document.body.appendChild(button);
-    recordViewportDiagnostic("diagnostics-enabled");
-  }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
     versionLabel.textContent = `Version ${appVersion}`;
@@ -2730,32 +2602,23 @@
   let audioVisibilitySuspendTimer = null;
   let audioResumePromise = null;
   let audioMutedForBackground = false;
-  function restoreAudioGainAfterVisibility(reason) {
+  function restoreAudioGainAfterVisibility() {
     const ctx = state.audio, gain = state.bgmGain;
     if (!audioMutedForBackground || !ctx || ctx.state !== "running" || document.hidden || !gain) return;
     gain.gain.cancelScheduledValues(ctx.currentTime);
     gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
     gain.gain.linearRampToValueAtTime(backgroundMusicVolume(), ctx.currentTime + 0.06);
     audioMutedForBackground = false;
-    recordAudioDiagnostic("audio-visibility-gain-restored", { reason });
   }
-  function resumeAudioContext(reason) {
+  function resumeAudioContext() {
     const ctx = state.audio;
     if (!ctx || ctx.state === "running" || ctx.state === "closed" || document.hidden) return;
     if (audioResumePromise) return audioResumePromise;
-    recordAudioDiagnostic("audio-context-resume-request", { reason, fromState: ctx.state });
     try {
-      audioResumePromise = Promise.resolve(ctx.resume()).then(
-        () => {
-          recordAudioDiagnostic("audio-context-resume-resolved", { reason, state: ctx.state });
-          restoreAudioGainAfterVisibility(reason);
-        },
-        (error) => recordAudioDiagnostic("audio-context-resume-rejected", { reason, message: String(error?.message || error) })
-      ).finally(() => { audioResumePromise = null; });
+      audioResumePromise = Promise.resolve(ctx.resume()).finally(() => { audioResumePromise = null; });
       return audioResumePromise;
-    } catch (error) {
+    } catch (_) {
       audioResumePromise = null;
-      recordAudioDiagnostic("audio-context-resume-threw", { reason, message: String(error?.message || error) });
     }
   }
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
@@ -2768,20 +2631,11 @@
       gain.setValueAtTime(Math.max(0.0001, gain.value), ctx.currentTime);
       gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
       audioMutedForBackground = true;
-      recordAudioDiagnostic("audio-visibility-fade-start", { reason, fadeMs });
     }
     audioVisibilitySuspendTimer = window.setTimeout(() => {
       audioVisibilitySuspendTimer = null;
       if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
-      recordAudioDiagnostic("audio-context-suspend-request", { reason, fromState: state.audio.state });
-      try {
-        Promise.resolve(state.audio.suspend()).then(
-          () => recordAudioDiagnostic("audio-context-suspend-resolved", { reason, state: state.audio?.state ?? null }),
-          (error) => recordAudioDiagnostic("audio-context-suspend-rejected", { reason, message: String(error?.message || error) })
-        );
-      } catch (error) {
-        recordAudioDiagnostic("audio-context-suspend-threw", { reason, message: String(error?.message || error) });
-      }
+      try { state.audio.suspend(); } catch (_) {}
     }, suspendDelayMs);
   }
   function resumeAudioAfterVisible(reason) {
@@ -2790,18 +2644,16 @@
       audioVisibilitySuspendTimer = null;
     }
     resumeAudioContext(reason);
-    restoreAudioGainAfterVisibility(reason);
+    restoreAudioGainAfterVisibility();
   }
   function audioContext() {
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
-      recordAudioDiagnostic("audio-context-created");
       state.audio.addEventListener?.("statechange", () => {
-        recordAudioDiagnostic("audio-context-statechange", { state: state.audio?.state ?? null });
-        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility("statechange:running");
+        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
       });
     }
-    if (state.audio.state === "suspended" && !document.hidden) resumeAudioContext("audioContext()");
+    if (state.audio.state === "suspended" && !document.hidden) resumeAudioContext();
     return state.audio;
   }
   function loadBgmEnabledPreference() {
@@ -2863,11 +2715,9 @@
     source.connect(gain);
     source.onended = () => {
       if (state.bgmSource === source) state.bgmSource = null;
-      recordAudioDiagnostic("bgm-source-ended");
     };
     state.bgmSource = source;
     source.start(0, bounds.start);
-    recordAudioDiagnostic("bgm-source-started", { loopStart: bounds.start, loopEnd: bounds.end });
   }
   function updateBgmToggleButton() {
     const button = $("bgm-toggle-button");
@@ -2881,7 +2731,6 @@
     if (source) {
       try { source.stop(); } catch (_) {}
       try { source.disconnect(); } catch (_) {}
-      recordAudioDiagnostic("bgm-source-stopped");
     }
     state.bgmDucked = false;
     if (state.bgmGain) state.bgmGain.gain.value = bgmConfig.normalVolume;
@@ -2983,7 +2832,6 @@
   }
 
   setupViewportDiagnostics();
-  setupAudioDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   ensureBackgroundMusic();
@@ -2993,7 +2841,6 @@
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
-    recordAudioDiagnostic("pageshow", { persisted: event.persisted });
     resumeAudioAfterVisible("pageshow");
     schedulePlayStageSize("pageshow");
   });
@@ -3022,7 +2869,6 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
-    recordAudioDiagnostic("visibilitychange", { hidden: document.hidden });
     if (document.hidden) {
       suspendAudioForBackground("visibilitychange:hidden");
     } else {
@@ -3034,26 +2880,21 @@
   });
   window.addEventListener("pagehide", (event) => {
     recordViewportDiagnostic("pagehide", { persisted: event.persisted });
-    recordAudioDiagnostic("pagehide", { persisted: event.persisted });
   });
   window.addEventListener("blur", () => {
-    recordAudioDiagnostic("blur");
     // iOS can interrupt Web Audio before visibilitychange fires when switching
     // to another app. Fade and suspend on blur first so the OS handoff is silent.
     suspendAudioForBackground("blur", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
   });
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
-    recordAudioDiagnostic("focus");
     resumeAudioAfterVisible("focus");
     checkQuestionTimeout();
   });
   document.addEventListener("pointerdown", () => {
-    recordAudioDiagnostic("pointerdown");
     resumeAudioAfterVisible("pointerdown");
   }, { passive: true });
   document.addEventListener("touchstart", () => {
-    recordAudioDiagnostic("touchstart");
     resumeAudioAfterVisible("touchstart");
   }, { passive: true });
   let touchStartX = 0;
