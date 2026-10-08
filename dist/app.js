@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.122";
+  const appVersion = "0.0.123";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -528,74 +528,6 @@
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
-  const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
-  // B-line preview auto-deploy verification: no runtime behavior change.
-  let viewportDiagnostics = [];
-  function viewportSnapshot() {
-    const visualViewport = window.visualViewport;
-    const playStage = $("play-stage");
-    const playStageRect = playStage?.getBoundingClientRect();
-    return {
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      clientWidth: document.documentElement.clientWidth,
-      clientHeight: document.documentElement.clientHeight,
-      visualViewportWidth: visualViewport?.width ?? null,
-      visualViewportHeight: visualViewport?.height ?? null,
-      visualViewportScale: visualViewport?.scale ?? null,
-      visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
-      visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
-      devicePixelRatio: window.devicePixelRatio,
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      pageHidden: document.hidden,
-      stageScale: getComputedStyle(playStage).getPropertyValue("--stage-scale").trim() || null,
-      stageRect: playStageRect ? {
-        x: playStageRect.x,
-        y: playStageRect.y,
-        width: playStageRect.width,
-        height: playStageRect.height
-      } : null
-    };
-  }
-  function recordViewportDiagnostic(event, detail = {}) {
-    if (!viewportDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
-    viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
-    try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
-  }
-  function setupViewportDiagnostics() {
-    if (!viewportDiagnosticsEnabled) return;
-    try {
-      const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
-    } catch (_) {}
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "MQ-001 LOG";
-    Object.assign(button.style, {
-      position: "fixed",
-      right: "8px",
-      top: "8px",
-      zIndex: "2147483647",
-      fontSize: "12px",
-      padding: "6px 8px",
-      opacity: "0.85"
-    });
-    button.addEventListener("click", async () => {
-      const text = JSON.stringify(viewportDiagnostics, null, 2);
-      try {
-        await navigator.clipboard.writeText(text);
-        button.textContent = "LOG COPIED";
-        window.setTimeout(() => { button.textContent = "MQ-001 LOG"; }, 1400);
-      } catch (_) {
-        window.prompt("MQ-001 viewport log", text);
-      }
-    });
-    document.body.appendChild(button);
-    recordViewportDiagnostic("diagnostics-enabled");
-  }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
     versionLabel.textContent = `Version ${appVersion}`;
@@ -2667,9 +2599,62 @@
     state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
   }
 
+  let audioVisibilitySuspendTimer = null;
+  let audioResumePromise = null;
+  let audioMutedForBackground = false;
+  function restoreAudioGainAfterVisibility() {
+    const ctx = state.audio, gain = state.bgmGain;
+    if (!audioMutedForBackground || !ctx || ctx.state !== "running" || document.hidden || !gain) return;
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(backgroundMusicVolume(), ctx.currentTime + 0.06);
+    audioMutedForBackground = false;
+  }
+  function resumeAudioContext() {
+    const ctx = state.audio;
+    if (!ctx || ctx.state === "running" || ctx.state === "closed" || document.hidden) return;
+    if (audioResumePromise) return audioResumePromise;
+    try {
+      audioResumePromise = Promise.resolve(ctx.resume()).finally(() => { audioResumePromise = null; });
+      return audioResumePromise;
+    } catch (_) {
+      audioResumePromise = null;
+    }
+  }
+  function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
+    const ctx = state.audio;
+    if (!ctx || ctx.state === "closed") return;
+    if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+    if (state.bgmGain && ctx.state === "running") {
+      const gain = state.bgmGain.gain;
+      gain.cancelScheduledValues(ctx.currentTime);
+      gain.setValueAtTime(Math.max(0.0001, gain.value), ctx.currentTime);
+      gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
+      audioMutedForBackground = true;
+    }
+    audioVisibilitySuspendTimer = window.setTimeout(() => {
+      audioVisibilitySuspendTimer = null;
+      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      try { state.audio.suspend(); } catch (_) {}
+    }, suspendDelayMs);
+  }
+  function resumeAudioAfterVisible(reason) {
+    if (audioVisibilitySuspendTimer !== null) {
+      window.clearTimeout(audioVisibilitySuspendTimer);
+      audioVisibilitySuspendTimer = null;
+    }
+    resumeAudioContext(reason);
+    restoreAudioGainAfterVisibility();
+  }
   function audioContext() {
-    if (!state.audio) state.audio = new (window.AudioContext || window.webkitAudioContext)();
-    if (state.audio.state === "suspended") state.audio.resume(); return state.audio;
+    if (!state.audio) {
+      state.audio = new (window.AudioContext || window.webkitAudioContext)();
+      state.audio.addEventListener?.("statechange", () => {
+        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
+      });
+    }
+    if (state.audio.state === "suspended" && !document.hidden) resumeAudioContext();
+    return state.audio;
   }
   function loadBgmEnabledPreference() {
     try { return localStorage.getItem(bgmConfig.storageKey) !== "false"; } catch (_) { return true; }
@@ -2728,7 +2713,9 @@
     source.loopStart = bounds.start;
     source.loopEnd = bounds.end;
     source.connect(gain);
-    source.onended = () => { if (state.bgmSource === source) state.bgmSource = null; };
+    source.onended = () => {
+      if (state.bgmSource === source) state.bgmSource = null;
+    };
     state.bgmSource = source;
     source.start(0, bounds.start);
   }
@@ -2757,7 +2744,7 @@
     }
   }
   function canPlayBackgroundMusic() {
-    return state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
+    return !document.hidden && state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
   }
   function startBackgroundMusic() {
     if (!canPlayBackgroundMusic()) return;
@@ -2853,7 +2840,10 @@
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
-  window.addEventListener("pageshow", () => schedulePlayStageSize("pageshow"));
+  window.addEventListener("pageshow", (event) => {
+    resumeAudioAfterVisible("pageshow");
+    schedulePlayStageSize("pageshow");
+  });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
@@ -2879,17 +2869,34 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
-    if (!document.hidden) {
+    if (document.hidden) {
+      suspendAudioForBackground("visibilitychange:hidden");
+    } else {
+      resumeAudioAfterVisible("visibilitychange:visible");
       schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
   });
-  window.addEventListener("pagehide", (event) => recordViewportDiagnostic("pagehide", { persisted: event.persisted }));
+  window.addEventListener("pagehide", (event) => {
+    recordViewportDiagnostic("pagehide", { persisted: event.persisted });
+  });
+  window.addEventListener("blur", () => {
+    // iOS can interrupt Web Audio before visibilitychange fires when switching
+    // to another app. Fade and suspend on blur first so the OS handoff is silent.
+    suspendAudioForBackground("blur", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
+  });
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
+    resumeAudioAfterVisible("focus");
     checkQuestionTimeout();
   });
+  document.addEventListener("pointerdown", () => {
+    resumeAudioAfterVisible("pointerdown");
+  }, { passive: true });
+  document.addEventListener("touchstart", () => {
+    resumeAudioAfterVisible("touchstart");
+  }, { passive: true });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
   $("detail-picture").addEventListener("touchend", (event) => {
