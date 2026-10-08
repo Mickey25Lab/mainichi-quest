@@ -1215,6 +1215,7 @@
     state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isCounting ? "counting" : "normal";
     state.longDivision = null;
     state.numberCards = null;
+    state.counting = null;
     state.multiplication = null;
     state.inputMode = "quotient";
     state.quotientInput = "";
@@ -1344,7 +1345,7 @@
       await playPreparedCharacterEntry(prepared, shouldAnimateCharacter);
       if (runId !== state.runId || state.current !== question) return;
       if (onRevealed) onRevealed();
-      if (state.mode !== "counting") startQuestionTimeout();
+      startQuestionTimeout();
       state.transitioning = false;
       if (state.phase === "initial" || state.phase === "retry") startBackgroundMusic();
       // Start the per-question bonus clock only after the rendered question is
@@ -1397,7 +1398,7 @@
   function formatAnswer(answer) { return answer.usedRemainder ? `${answer.quotient}…${answer.remainder}` : String(answer.quotient); }
   function setKeypadDisabled(disabled) { $("keypad").setAttribute("aria-busy", disabled ? "true" : "false"); }
   function updateAssistButton() {
-    if (state.mode === "numbercards") {
+    if (state.mode === "numbercards" || state.mode === "counting") {
       $("assist-button").textContent = "ヒントを見る";
       $("assist-button").classList.remove("is-answer");
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
@@ -1426,6 +1427,7 @@
   }
   function setupCounting(question) {
     $("counting-panel").hidden = false;
+    state.counting = { hinted: false };
     $("counting-dots").replaceChildren(...Array.from({ length: question.value }, () => {
       const dot = document.createElement("span");
       dot.className = "counting-dot";
@@ -1433,25 +1435,51 @@
       return dot;
     }));
     $("counting-keypad-grid").hidden = false;
+    renderCounting();
+  }
+  function renderCounting() {
+    const model = state.counting; if (!model || !state.current) return;
+    $("counting-keypad-grid").querySelectorAll(".counting-key").forEach((key) => {
+      const number = Number(key.dataset.countingNumber);
+      key.classList.toggle("is-hinted", model.hinted && number === state.current.value);
+      key.disabled = state.transitioning;
+    });
   }
   function inputCountingAnswer(value) {
     if (state.transitioning || !state.current) return;
+    noteQuestionActivity();
     state.transitioning = true;
     const correct = value === state.current.value;
     setQuestionCardState(correct ? "correct" : "wrong");
+    const question = state.current;
+    let reward = null, progression = null;
     if (correct) {
+      stopQuestionTimeout();
+      question.resultType = question.hintUsed ? "hint_correct" : "self_correct";
       state.initialCorrect += 1;
-      playSimpleCorrectSound();
+      if (question.hadWrong) state.correctStreak = 0;
+      else state.correctStreak += 1;
+      progression = progressCollectionForCorrect(question, { friendshipAmount: 3 });
+      reward = progression.reward;
+      renderVehicleProgressUi(question.vehicleIndex);
+      if (progression.friendshipGain) playProgressGainAnimation({ kind: "friendship", amount: progression.friendshipGain });
+      else if (progression.energyGain) playProgressGainAnimation({ kind: "energy", amount: progression.energyGain, completed: Boolean(reward) });
+      if (reward && reward.stage < 5) preloadRewardVisuals(reward.stage, reward.vehicleIndex, reward.kind).catch(() => {});
+      if (reward?.isNew || reward?.replay) playCorrectSound(); else playSimpleCorrectSound();
     } else {
-      state.current.hadWrong = true;
+      question.resultType = "self_wrong";
+      question.hadWrong = true;
+      progression = progressCollectionForCorrect(question, { friendshipAmount: 1, suppressReward: true, allowEnergyGain: false });
+      if (progression.friendshipGain) playProgressGainAnimation({ kind: "friendship", amount: progression.friendshipGain });
+      renderVehicleProgressUi(question.vehicleIndex);
       playWrongSound();
     }
     const runId = state.runId;
     window.setTimeout(() => {
       if (runId !== state.runId || !state.current) return;
-      if (correct) advance();
-      else { setQuestionCardState(); state.transitioning = false; }
-    }, correct ? correctFeedbackDurationMs : wrongFeedbackDurationMs);
+      if (correct) finishInitialQuestion({ reward, challengeEnds: challengeMustEndAfterCorrect(question, reward) });
+      else { setQuestionCardState(); state.transitioning = false; renderCounting(); resetIdleGuideTimer(); }
+    }, correct ? Math.max(correctFeedbackDurationMs, progressGainTotalDurationMs) : wrongFeedbackDurationMs);
   }
   function setupLongDivision(question) {
     const slots = String(question.dividend).length;
@@ -1791,6 +1819,12 @@
   }
   function useHint() {
     if (state.transitioning || !state.current) return;
+    if (state.mode === "counting") {
+      state.current.hintUsed = true;
+      state.counting.hinted = true;
+      renderCounting();
+      return;
+    }
     if (state.mode === "numbercards") {
       state.current.hintUsed = true;
       state.numberCards.hinted = true;
@@ -1878,7 +1912,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || state.mode === "multiplication") { useHint(); return; }
+    if (state.mode === "numbercards" || state.mode === "counting" || state.mode === "multiplication") { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -2124,24 +2158,28 @@
       }
     }), 600);
   }
-  function progressCollectionForCorrect(question = state.current) {
+  function progressCollectionForCorrect(question = state.current, { friendshipAmount = 1, suppressReward = false, allowEnergyGain = true } = {}) {
     const vehicleIndex = question.vehicleIndex ?? state.currentVehicleIndex;
     const progress = vehicleProgress(vehicleIndex);
     let reward = null, energyGain = 0, friendshipGain = 0, deferredTimeBonus = null, energyVisual = null;
-    if (!progress.discovered) {
-      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
-      reward = { stage: 1, vehicleIndex, isNew: true, kind: "discovery", endsChallenge: false };
-    } else if (!progress.friendly) {
-      progress.friendship = Math.min(5, progress.friendship + 1);
-      friendshipGain = 1;
+    const addFriendship = () => {
+      friendshipGain = Math.min(5 - progress.friendship, friendshipAmount);
+      progress.friendship += friendshipGain;
       if (progress.friendship === 5) {
         // Friendship itself awards the vehicle. Energy starts on the next
         // encounter, never on this fifth-heart answer.
         progress.friendly = true;
         state.sessionUnlocks[1] += 1;
-        reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
+        if (!suppressReward) reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
       }
-    } else if (!progress.masterMedal) {
+    };
+    if (!progress.discovered) {
+      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
+      if (!suppressReward) reward = { stage: 1, vehicleIndex, isNew: true, kind: "discovery", endsChallenge: false };
+      if (friendshipAmount !== 1 || suppressReward) addFriendship();
+    } else if (!progress.friendly) {
+      addFriendship();
+    } else if (allowEnergyGain && !progress.masterMedal) {
       energyGain = question.hintUsed || question.hadWrong || question.progressPenalty ? 1 : 3;
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
@@ -2175,7 +2213,7 @@
       return;
     }
     if (!finalQuestion && challengeEnds) {
-      if (state.current?.hadWrong && state.mode !== "numbercards") { showIncorrectNextVehicleNotice(); return; }
+      if (state.current?.hadWrong && state.mode !== "numbercards" && state.mode !== "counting") { showIncorrectNextVehicleNotice(); return; }
       if (state.vehicleChallengeQuestionCount >= 5) { showFiveQuestionClearTransition(); return; }
       startNextVehicleChallenge();
     }
@@ -2582,7 +2620,9 @@
     const stage = $("play-stage");
     const target = state.mode === "numbercards"
       ? $("number-card-grid").querySelector(`.number-card[data-number="${state.numberCards?.nextNumber}"]`)
-      : $("assist-button");
+      : state.mode === "counting"
+        ? $("counting-keypad-grid").querySelector(`.counting-key[data-counting-number="${state.current?.value}"]`)
+        : $("assist-button");
     if (!target || target.disabled) return;
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
