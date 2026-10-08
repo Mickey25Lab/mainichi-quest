@@ -1,0 +1,21 @@
+﻿vehicle_no,slug,vehicle_name_ja_reference_only,vehicle_name_en,equipment_name_ja,source_filename,status,vehicle_status,robot_status,super_robot_status,super_robot_equipped_status,equipment_status,medal_status,vehicle_logo_title_status,background_status,all_assets_complete,last_updated
+01,patrol_car,パトカー,Patrol Car,スターポリス・シールド,01_Patrol_Car_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+02,fire_engine,消防車,Fire Engine,レスキュー・ブレード,02_Fire_Engine_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+03,ambulance,救急車,Ambulance,メディカル・ニードル,03_Ambulance_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+04,delivery_truck,宅配便車,Delivery Truck,パーセル・ランチャー,04_Delivery_Truck_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+05,mail_van,郵便車,Mail Van,レター・ビームライフル,05_Mail_Van_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+06,garbage_truck,ゴミ収集車,Garbage Truck,リサイクル・キャノン,06_Garbage_Truck_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+07,tow_truck,レッカー車,Tow Truck,レスキューフック・ランス,07_Tow_Truck_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+08,crane_truck,クレーン車,Crane Truck,パワークレーン・アーム,08_Crane_Truck_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+09,concrete_mixer,コンクリートミキサー車,Concrete Mixer,セメント・ハンマー,09_Concrete_Mixer_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+10,bulldozer,ブルドーザー,Bulldozer,ドーザー・ブレード,10_Bulldozer_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+11,road_roller,ロードローラー,Road Roller,ローリング・ブレイカー,11_Road_Roller_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+12,tank_lorry,タンクローリー,Tank Lorry,フューエル・キャノン,12_Tank_Lorry_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+13,watering_truck,散水車,Watering Truck,アクアノズル・キャノン,13_Watering_Truck_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+14,kindergarten_bus,幼稚園バス,Kindergarten Bus,ハッピー・ガードウイング,14_Kindergarten_Bus_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+15,sightseeing_bus,観光バス,Sightseeing Bus,ガイディング・シールド,15_Sightseeing_Bus_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+16,formula_racer,F1カー,Formula Racer,ターボ・ツインソード,16_Formula_Racer_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+17,racing_bike,レーシングバイク,Racing Bike,スピード・スピア,17_Racing_Bike_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+18,snowmobile,スノーモービル,Snowmobile,フロスト・スラスター,18_Snowmobile_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+19,helicopter,ヘリコプター,Helicopter,スカイ・シューター,19_Helicopter_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00
+20,airplane,飛行機,Airplane,ジェット・ニンジャスター,20_Airplane_complete.png,not_started,fixed,fixed,fixed,fixed,fixed,fixed,fixed,fixed,YES,2026-09-22T20:56:37+00:00

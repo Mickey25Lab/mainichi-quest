@@ -1,0 +1,79 @@
+{
+  "tool": "Pillow",
+  "pillow_version": "12.3.0",
+  "libwebp_version": "1.6.0",
+  "settings": {
+    "size": [
+      480,
+      480
+    ],
+    "lossless": false,
+    "quality": 30,
+    "alpha_quality_tested": [
+      20,
+      60
+    ],
+    "method": 6,
+    "exact": false,
+    "resample": "LANCZOS",
+    "metadata": "none passed"
+  },
+  "records": [
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "filename": "01_patrol_car_robot_480_q30_alpha20.webp",
+      "alpha_quality": 20,
+      "bytes": 16918,
+      "size": [
+        480,
+        480
+      ],
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "filename": "01_patrol_car_robot_480_q30_alpha60.webp",
+      "alpha_quality": 60,
+      "bytes": 17692,
+      "size": [
+        480,
+        480
+      ],
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "filename": "19_helicopter_robot_480_q30_alpha20.webp",
+      "alpha_quality": 20,
+      "bytes": 21644,
+      "size": [
+        480,
+        480
+      ],
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "display_canvas_css_px": 439
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "filename": "19_helicopter_robot_480_q30_alpha60.webp",
+      "alpha_quality": 60,
+      "bytes": 23008,
+      "size": [
+        480,
+        480
+      ],
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "display_canvas_css_px": 439
+    }
+  ]
+}
