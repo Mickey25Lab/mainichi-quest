@@ -128,11 +128,12 @@ button { touch-action: manipulation; }
   background:linear-gradient(180deg,rgba(19,78,151,.94),rgba(5,33,91,.96));
   box-shadow:inset 0 0 22px rgba(120,232,255,.75),0 5px 15px rgba(0,8,32,.6);
 }
-.mode-select-number-cards { left:10%; top:28%; }
-.mode-select-counting { right:10%; top:28%; }
-.mode-select-multiplication { left:31%; top:47%; }
-.mode-select-normal { left:10%; top:66%; }
-.mode-select-long-division { right:10%; top:66%; }
+.mode-select-number-cards { left:31%; top:21%; }
+.mode-select-counting-1 { left:10%; top:37%; }
+.mode-select-counting-2 { right:10%; top:37%; }
+.mode-select-multiplication { left:31%; top:53%; }
+.mode-select-normal { left:10%; top:69%; }
+.mode-select-long-division { right:10%; top:69%; }
 .top-image-buttons {
   position:absolute;
   z-index:1;
