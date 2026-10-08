@@ -167,6 +167,9 @@ button { touch-action: manipulation; }
 .top-image-button:focus-visible { outline:7px solid rgba(255,225,50,.95); outline-offset:5px; }
 .top-image-button:active:not(:disabled) { transform:translateY(3px); }
 .top-image-button:disabled { cursor:default; }
+.counting-start-button { position:absolute; z-index:3; top:3.2%; right:3.2%; min-width:210px; min-height:74px; padding:10px 22px; border:4px solid #fff; border-radius:24px; color:#fff; background:linear-gradient(#ffad39,#f06e26); box-shadow:0 6px 0 #b84b1d,0 10px 18px rgba(3,35,91,.3); font-family:"Noto Sans JP",sans-serif; font-size:32px; font-weight:1000; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.counting-start-button:active { transform:translateY(4px); box-shadow:0 2px 0 #b84b1d; }
+.counting-start-button:focus-visible { outline:7px solid rgba(255,225,50,.95); outline-offset:4px; }
 .start-version,
 .start-developer {
   position:absolute;
@@ -1058,6 +1061,17 @@ button { touch-action: manipulation; }
   -webkit-font-smoothing:antialiased;
   text-rendering:geometricPrecision;
 }
+.counting-panel { display:none; }
+.play-screen .question-answer-card.counting-mode { display:block; }
+.play-screen .question-answer-card.counting-mode .problem-card,
+.play-screen .question-answer-card.counting-mode .answer-card,
+.play-screen .question-answer-card.counting-mode .long-division-panel,
+.play-screen .question-answer-card.counting-mode .number-card-panel,
+.play-screen .question-answer-card.counting-mode .multiplication-panel { display:none !important; }
+.play-screen .question-answer-card.counting-mode .counting-panel:not([hidden]) { position:absolute; inset:0; display:grid; grid-template-rows:auto 1fr; align-items:center; padding:20px 50px 24px; color:var(--navy); text-align:center; }
+.counting-panel p { margin:0; font-size:52px; font-weight:1000; line-height:1.1; }
+.counting-dots { display:grid; grid-template-columns:repeat(5, 42px); grid-template-rows:repeat(2, 42px); justify-content:start; align-content:center; gap:15px 18px; width:max-content; margin:5px auto 0; }
+.counting-dot { width:42px; height:42px; border-radius:50%; background:#f06e26; box-shadow:inset 0 -3px 0 rgba(157,50,16,.2); }
 .multiplication-panel {
   --multiplication-column:64px;
   --multiplication-gap:13px;
@@ -1097,6 +1111,15 @@ button { touch-action: manipulation; }
 .keypad:not(.long-division-mode) .long-division-skip-key { display:none !important; }
 .keypad.number-card-mode .number-grid,
 .keypad.number-card-mode .answer-actions { display:none; }
+.keypad.counting-mode .number-grid,
+.keypad.counting-mode .answer-actions { display:none; }
+.keypad.counting-mode { grid-template-columns:repeat(3, minmax(0, 1fr)); grid-template-rows:repeat(4, minmax(0, 1fr)); }
+.keypad.counting-mode .counting-keypad-grid:not([hidden]) { display:grid; grid-area:1 / 1 / 5 / 4; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-template-rows:repeat(4, minmax(0, 1fr)); gap:14px; }
+.counting-key { display:grid; place-items:center; min-width:0; min-height:0; margin:0; padding:0; border:3px solid var(--key-border); border-radius:22px; color:var(--navy); background:linear-gradient(#fff,#f5f5f5); box-shadow:0 4px 0 #b8b8b8; font-size:72px; font-weight:1000; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.counting-key:active { transform:translateY(3px); box-shadow:0 1px 0 #b8b8b8; }
+.counting-key-ten { grid-column:1 / 4; font-size:66px; }
+.keypad[aria-busy="true"] .counting-key { pointer-events:none; }
+.play-screen:has(.keypad.counting-mode) .assist-button { display:none; }
 .keypad.number-card-mode {
   /* The card canvas shares the 640px game column with the instruction above. */
   --number-card-size:136px;
