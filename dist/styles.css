@@ -90,7 +90,7 @@ button { touch-action: manipulation; }
   position:relative;
   width:var(--content-stage-width);
   height:var(--content-stage-height);
-  aspect-ratio:1448 / 1086;
+  aspect-ratio:4 / 3;
   overflow:hidden;
 }
 .mode-select-stage > #mode-select-image { display:block; width:100%; height:100%; object-fit:contain; }
@@ -109,23 +109,29 @@ button { touch-action: manipulation; }
 .mode-select-hit:hover, .mode-select-hit:active { background:transparent; box-shadow:none; transform:none; }
 .mode-select-hit:focus-visible { outline:6px solid rgba(255,255,255,.92); outline-offset:-6px; }
 .mode-select-back { left:2.6%; top:3.1%; width:16.6%; height:9.1%; }
-.mode-select-number-cards { left:15.2%; top:27.9%; width:33.7%; height:29.5%; }
-.mode-select-multiplication { left:51.1%; top:27.9%; width:33.7%; height:29.5%; }
-.mode-select-normal { left:15.2%; top:60.1%; width:33.7%; height:29.5%; }
-.mode-select-long-division { left:51.1%; top:60.1%; width:33.7%; height:29.5%; }
-.mode-select-hit::after {
-  position:absolute; z-index:1; left:-3%; right:-3%; bottom:1%; height:33%;
+.mode-select-choice {
   display:flex; align-items:center; justify-content:center;
-  border:3px solid rgba(214,246,255,.82); border-radius:18px;
-  color:#fff; background:linear-gradient(180deg,rgba(8,48,118,.97),rgba(4,17,55,.97));
-  box-shadow:inset 0 0 14px rgba(85,218,255,.54),0 3px 0 rgba(0,8,32,.65);
-  font-family:"Noto Sans JP",sans-serif; font-size:clamp(25px,3.2vw,46px); font-weight:1000; line-height:1;
-  text-shadow:0 3px 0 #001b51,0 0 7px #28d5ff; white-space:nowrap; pointer-events:none;
+  width:38%; height:13%;
+  border:3px solid rgba(214,246,255,.9);
+  border-radius:22px;
+  color:#fff;
+  background:linear-gradient(180deg,rgba(8,48,118,.88),rgba(4,17,55,.91));
+  box-shadow:inset 0 0 18px rgba(85,218,255,.55),0 5px 12px rgba(0,8,32,.55);
+  font-family:"Noto Sans JP",sans-serif;
+  font-size:clamp(20px,3.3vw,48px);
+  font-weight:900;
+  line-height:1.1;
+  text-shadow:0 3px 0 #001b51,0 0 8px #28d5ff;
+  white-space:nowrap;
 }
-.mode-select-number-cards::after { content:"すうじあつめ"; }
-.mode-select-multiplication::after { content:"かけ算ひっ算"; }
-.mode-select-normal::after { content:"わり算計算"; }
-.mode-select-long-division::after { content:"わり算ひっ算"; }
+.mode-select-choice:hover, .mode-select-choice:active {
+  background:linear-gradient(180deg,rgba(19,78,151,.94),rgba(5,33,91,.96));
+  box-shadow:inset 0 0 22px rgba(120,232,255,.75),0 5px 15px rgba(0,8,32,.6);
+}
+.mode-select-number-cards { left:10%; top:36%; }
+.mode-select-multiplication { right:10%; top:36%; }
+.mode-select-normal { left:10%; top:56%; }
+.mode-select-long-division { right:10%; top:56%; }
 .top-image-buttons {
   position:absolute;
   z-index:1;

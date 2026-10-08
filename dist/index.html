@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/ui/top/top_key_visual.webp" fetchpriority="high">
   <link rel="preload" as="image" href="./assets/ui/top/top_button_start.webp">
   <link rel="preload" as="image" href="./assets/ui/top/top_button_collection.webp">
-  <link rel="preload" as="image" href="./assets/ui/top/mode_select_titleless.png">
+  <link rel="preload" as="image" href="./assets/ui/top/mode_select_background.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;800;900&display=block" rel="stylesheet">
@@ -34,12 +34,12 @@
 
     <section class="screen mode-select-screen" id="mode-select-screen" aria-label="学習モードを選ぶ">
       <div class="mode-select-stage">
-        <img id="mode-select-image" src="./assets/ui/top/mode_select_titleless.png" width="1448" height="1086" decoding="async" alt="学習モードを選ぶ">
+        <img id="mode-select-image" src="./assets/ui/top/mode_select_background.webp" width="1400" height="1050" decoding="async" alt="">
         <button class="mode-select-hit mode-select-back" id="mode-select-back" type="button" aria-label="もどる"></button>
-        <button class="mode-select-hit mode-select-number-cards" id="mode-select-number-cards" type="button" aria-label="すうじあつめ"></button>
-        <button class="mode-select-hit mode-select-multiplication" id="mode-select-multiplication" type="button" aria-label="かけ算ひっ算"></button>
-        <button class="mode-select-hit mode-select-normal" id="mode-select-normal" type="button" aria-label="わり算計算"></button>
-        <button class="mode-select-hit mode-select-long-division" id="mode-select-long-division" type="button" aria-label="わり算ひっ算"></button>
+        <button class="mode-select-hit mode-select-choice mode-select-number-cards" id="mode-select-number-cards" type="button">すうじあつめ</button>
+        <button class="mode-select-hit mode-select-choice mode-select-multiplication" id="mode-select-multiplication" type="button">かけ算ひっ算</button>
+        <button class="mode-select-hit mode-select-choice mode-select-normal" id="mode-select-normal" type="button">わり算計算</button>
+        <button class="mode-select-hit mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button">わり算ひっ算</button>
       </div>
     </section>
 
