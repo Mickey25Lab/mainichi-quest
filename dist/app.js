@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.123";
+  const appVersion = "0.0.124";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -528,6 +528,74 @@
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
+  const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
+  // B-line preview auto-deploy verification: no runtime behavior change.
+  let viewportDiagnostics = [];
+  function viewportSnapshot() {
+    const visualViewport = window.visualViewport;
+    const playStage = $("play-stage");
+    const playStageRect = playStage?.getBoundingClientRect();
+    return {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      clientWidth: document.documentElement.clientWidth,
+      clientHeight: document.documentElement.clientHeight,
+      visualViewportWidth: visualViewport?.width ?? null,
+      visualViewportHeight: visualViewport?.height ?? null,
+      visualViewportScale: visualViewport?.scale ?? null,
+      visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
+      visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
+      devicePixelRatio: window.devicePixelRatio,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      pageHidden: document.hidden,
+      stageScale: getComputedStyle(playStage).getPropertyValue("--stage-scale").trim() || null,
+      stageRect: playStageRect ? {
+        x: playStageRect.x,
+        y: playStageRect.y,
+        width: playStageRect.width,
+        height: playStageRect.height
+      } : null
+    };
+  }
+  function recordViewportDiagnostic(event, detail = {}) {
+    if (!viewportDiagnosticsEnabled) return;
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
+    viewportDiagnostics.push(entry);
+    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
+    try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
+  }
+  function setupViewportDiagnostics() {
+    if (!viewportDiagnosticsEnabled) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
+    } catch (_) {}
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "MQ-001 LOG";
+    Object.assign(button.style, {
+      position: "fixed",
+      right: "8px",
+      top: "8px",
+      zIndex: "2147483647",
+      fontSize: "12px",
+      padding: "6px 8px",
+      opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      const text = JSON.stringify(viewportDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "MQ-001 LOG"; }, 1400);
+      } catch (_) {
+        window.prompt("MQ-001 viewport log", text);
+      }
+    });
+    document.body.appendChild(button);
+    recordViewportDiagnostic("diagnostics-enabled");
+  }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
     versionLabel.textContent = `Version ${appVersion}`;
