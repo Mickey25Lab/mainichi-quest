@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.124";
+  const appVersion = "0.0.125";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1172,6 +1172,14 @@
       hintUsed:false, answerRevealed:false, assistedCorrect:false, resultType:null, isReview:false
     }));
   }
+  function makeCountingQuestions() {
+    const values = Array.from({ length: 10 }, (_, index) => index + 1);
+    for (let index = values.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
+    }
+    return values.map((value) => ({ kind: "counting", id: `counting-${value}`, value, quotient: value, remainder: 0 }));
+  }
 
   function makeMultiplicationQuestions() {
     const digitCounts = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4];
@@ -1203,9 +1211,11 @@
     const isLongDivision = mode === "longdivision";
     const isNumberCards = mode === "numbercards";
     const isMultiplication = mode === "multiplication";
-    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : "normal";
+    const isCounting = mode === "counting";
+    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isCounting ? "counting" : "normal";
     state.longDivision = null;
     state.numberCards = null;
+    state.counting = null;
     state.multiplication = null;
     state.inputMode = "quotient";
     state.quotientInput = "";
@@ -1220,6 +1230,9 @@
     $("number-card-panel").hidden = !isNumberCards;
     $("number-card-grid").hidden = !isNumberCards;
     $("number-card-grid").replaceChildren();
+    $("counting-panel").hidden = !isCounting;
+    $("counting-dots").replaceChildren();
+    $("counting-keypad-grid").hidden = !isCounting;
     $("multiplication-panel").hidden = !isMultiplication;
     $("multiplication-multiplicand").replaceChildren();
     $("multiplication-multiplier").replaceChildren();
@@ -1230,9 +1243,11 @@
     $("question-answer-card").classList.toggle("long-division-mode", isLongDivision);
     $("question-answer-card").classList.toggle("number-card-mode", isNumberCards);
     $("question-answer-card").classList.toggle("multiplication-mode", isMultiplication);
+    $("question-answer-card").classList.toggle("counting-mode", isCounting);
     $("keypad").classList.toggle("long-division-mode", isLongDivision);
     $("keypad").classList.toggle("number-card-mode", isNumberCards);
     $("keypad").classList.toggle("multiplication-mode", isMultiplication);
+    $("keypad").classList.toggle("counting-mode", isCounting);
     $("long-division-skip-key").disabled = !isLongDivision;
   }
   function resetAnswerCard() {
@@ -1244,7 +1259,7 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "counting" ? " counting-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
@@ -1310,11 +1325,12 @@
       if (runId !== state.runId || state.current !== question) return;
       await transitionQuestionBackground(prepared);
       if (runId !== state.runId || state.current !== question) return;
-      $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" ? "" : `${question.dividend} ÷ ${question.divisor}`;
+      $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" || question.kind === "counting" ? "" : `${question.dividend} ÷ ${question.divisor}`;
       resetAnswerCard(); setProgress();
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
+      if (state.mode === "counting") setupCounting(question);
       commitQuestionVisuals(prepared);
       renderVehicleProgressUi(question.vehicleIndex);
       $("incorrect-next-vehicle-notice").hidden = true;
@@ -1338,6 +1354,7 @@
       // Number cards are initially rendered while the next-question transition is
       // locked. Reflect the unlock immediately, independently of hint rendering.
       if (state.mode === "numbercards") renderNumberCards();
+      if (state.mode === "counting") renderCounting();
       updateAssistButton();
       resumeGameTimer();
       resetIdleGuideTimer();
@@ -1349,7 +1366,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : makeQuestions(); state.queue = []; state.phase = "initial";
+    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "counting" ? makeCountingQuestions() : makeQuestions(); state.queue = []; state.phase = "initial";
     state.initialIndex = 0; state.initialCorrect = 0; state.missed = []; state.retrySetPosition = 0; state.retrySetTotal = 0; state.vehicleChallengeQuestionCount = 0;
     state.finalElapsedMs = 0; state.confirmingAnswer = false;
     state.sessionUnlocks = [0, 0, 0, 0, 0, 0];
@@ -1378,10 +1395,11 @@
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
   function startMultiplicationApp() { startGameFromGesture("multiplication"); }
+  function startCountingApp() { startGameFromGesture("counting"); }
   function formatAnswer(answer) { return answer.usedRemainder ? `${answer.quotient}…${answer.remainder}` : String(answer.quotient); }
   function setKeypadDisabled(disabled) { $("keypad").setAttribute("aria-busy", disabled ? "true" : "false"); }
   function updateAssistButton() {
-    if (state.mode === "numbercards") {
+    if (state.mode === "numbercards" || state.mode === "counting") {
       $("assist-button").textContent = "ヒントを見る";
       $("assist-button").classList.remove("is-answer");
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
@@ -1401,11 +1419,50 @@
     $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
   }
   function renderInput() {
+    if (state.mode === "counting") return;
     if (state.mode === "numbercards") { renderNumberCards(); return; }
     if (state.mode === "multiplication") { renderMultiplication(); return; }
     if (state.mode === "longdivision") { renderLongDivision(); return; }
     if (!state.quotientInput) { $("answer-text").textContent = ""; return; }
     $("answer-text").textContent = state.inputMode === "remainder" ? `${state.quotientInput}…${state.remainderInput || "_"}` : state.quotientInput;
+  }
+  function setupCounting(question) {
+    $("counting-panel").hidden = false;
+    state.counting = { hinted: false };
+    $("counting-dots").replaceChildren(...Array.from({ length: question.value }, () => {
+      const dot = document.createElement("span");
+      dot.className = "counting-dot";
+      dot.setAttribute("aria-hidden", "true");
+      return dot;
+    }));
+    $("counting-keypad-grid").hidden = false;
+    renderCounting();
+  }
+  function renderCounting() {
+    const model = state.counting; if (!model || !state.current) return;
+    $("counting-keypad-grid").querySelectorAll(".counting-key").forEach((key) => {
+      const number = Number(key.dataset.countingNumber);
+      key.classList.toggle("is-hinted", model.hinted && number === state.current.value);
+      key.disabled = state.transitioning;
+    });
+  }
+  function inputCountingAnswer(value) {
+    if (state.transitioning || !state.current) return;
+    noteQuestionActivity();
+    if (value === state.current.value) {
+      judge({ quotient: value, remainder: 0, usedRemainder: false });
+      return;
+    }
+    state.transitioning = true;
+    state.current.resultType = "self_wrong";
+    state.current.hadWrong = true;
+    setQuestionCardState("wrong");
+    playWrongSound();
+    const runId = state.runId;
+    window.setTimeout(() => {
+      if (runId !== state.runId || !state.current) return;
+      setQuestionCardState(); state.transitioning = false; renderCounting(); resetIdleGuideTimer();
+    }, wrongFeedbackDurationMs);
   }
   function setupLongDivision(question) {
     const slots = String(question.dividend).length;
@@ -1745,6 +1802,12 @@
   }
   function useHint() {
     if (state.transitioning || !state.current) return;
+    if (state.mode === "counting") {
+      state.current.hintUsed = true;
+      state.counting.hinted = true;
+      renderCounting();
+      return;
+    }
     if (state.mode === "numbercards") {
       state.current.hintUsed = true;
       state.numberCards.hinted = true;
@@ -1832,7 +1895,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || state.mode === "multiplication") { useHint(); return; }
+    if (state.mode === "numbercards" || state.mode === "counting" || state.mode === "multiplication") { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -2129,7 +2192,7 @@
       return;
     }
     if (!finalQuestion && challengeEnds) {
-      if (state.current?.hadWrong && state.mode !== "numbercards") { showIncorrectNextVehicleNotice(); return; }
+      if (state.current?.hadWrong && state.mode !== "numbercards" && state.mode !== "counting") { showIncorrectNextVehicleNotice(); return; }
       if (state.vehicleChallengeQuestionCount >= 5) { showFiveQuestionClearTransition(); return; }
       startNextVehicleChallenge();
     }
@@ -2393,7 +2456,7 @@
       if (state.initialIndex < state.questions.length) {
         displayQuestion(state.questions[state.initialIndex]); return;
       }
-      if (state.mode === "numbercards") { finishRound(); return; }
+      if (state.mode === "numbercards" || state.mode === "counting") { finishRound(); return; }
       if (state.missed.length === 0) { finishRound(); return; }
       state.phase = "retry"; state.queue = [...state.missed]; state.retrySetPosition = 1; state.retrySetTotal = state.queue.length;
       stopBackgroundMusic();
@@ -2537,7 +2600,9 @@
     const stage = $("play-stage");
     const target = state.mode === "numbercards"
       ? $("number-card-grid").querySelector(`.number-card[data-number="${state.numberCards?.nextNumber}"]`)
-      : $("assist-button");
+      : state.mode === "counting"
+        ? $("counting-keypad-grid").querySelector(`.counting-key[data-counting-number="${state.current?.value}"]`)
+        : $("assist-button");
     if (!target || target.disabled) return;
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
     const scale = stageRect.width / 1448 || 1;
@@ -2917,7 +2982,7 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting").addEventListener("click", startCountingApp); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToStart); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
@@ -2930,6 +2995,7 @@
   $("detail-back").addEventListener("click", () => { sizeCollectionStage(); showScreen("collection-screen"); });
   $("detail-previous").addEventListener("click", () => moveVehicleDetail(-1)); $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
+  document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
   $("assist-button").addEventListener("click", useAssist);
   $("answer-confirm-back").addEventListener("click", closeAnswerConfirmation);

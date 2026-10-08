@@ -128,10 +128,11 @@ button { touch-action: manipulation; }
   background:linear-gradient(180deg,rgba(19,78,151,.94),rgba(5,33,91,.96));
   box-shadow:inset 0 0 22px rgba(120,232,255,.75),0 5px 15px rgba(0,8,32,.6);
 }
-.mode-select-number-cards { left:10%; top:36%; }
-.mode-select-multiplication { right:10%; top:36%; }
-.mode-select-normal { left:10%; top:56%; }
-.mode-select-long-division { right:10%; top:56%; }
+.mode-select-number-cards { left:10%; top:28%; }
+.mode-select-counting { right:10%; top:28%; }
+.mode-select-multiplication { left:31%; top:47%; }
+.mode-select-normal { left:10%; top:66%; }
+.mode-select-long-division { right:10%; top:66%; }
 .top-image-buttons {
   position:absolute;
   z-index:1;
@@ -1058,6 +1059,17 @@ button { touch-action: manipulation; }
   -webkit-font-smoothing:antialiased;
   text-rendering:geometricPrecision;
 }
+.counting-panel { display:none; }
+.play-screen .question-answer-card.counting-mode { display:block; }
+.play-screen .question-answer-card.counting-mode .problem-card,
+.play-screen .question-answer-card.counting-mode .answer-card,
+.play-screen .question-answer-card.counting-mode .long-division-panel,
+.play-screen .question-answer-card.counting-mode .number-card-panel,
+.play-screen .question-answer-card.counting-mode .multiplication-panel { display:none !important; }
+.play-screen .question-answer-card.counting-mode .counting-panel:not([hidden]) { position:absolute; inset:0; display:grid; grid-template-rows:auto 1fr; align-items:center; padding:20px 50px 24px; color:var(--navy); text-align:center; }
+.counting-panel p { margin:0; font-size:52px; font-weight:1000; line-height:1.1; }
+.counting-dots { display:grid; grid-template-columns:repeat(5, 42px); grid-template-rows:repeat(2, 42px); justify-content:start; align-content:center; gap:15px 18px; width:max-content; margin:5px auto 0; }
+.counting-dot { width:42px; height:42px; border-radius:50%; background:#f06e26; box-shadow:inset 0 -3px 0 rgba(157,50,16,.2); }
 .multiplication-panel {
   --multiplication-column:64px;
   --multiplication-gap:13px;
@@ -1097,6 +1109,14 @@ button { touch-action: manipulation; }
 .keypad:not(.long-division-mode) .long-division-skip-key { display:none !important; }
 .keypad.number-card-mode .number-grid,
 .keypad.number-card-mode .answer-actions { display:none; }
+.keypad.counting-mode .number-grid,
+.keypad.counting-mode .answer-actions { display:none; }
+.keypad.counting-mode { grid-template-columns:repeat(3, minmax(0, 1fr)); grid-template-rows:repeat(4, minmax(0, 1fr)); }
+.keypad.counting-mode .counting-keypad-grid:not([hidden]) { display:grid; grid-area:1 / 1 / 5 / 4; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-template-rows:repeat(4, minmax(0, 1fr)); gap:14px; }
+.counting-key { display:grid; place-items:center; min-width:0; min-height:0; margin:0; padding:0; border:3px solid var(--key-border); border-radius:22px; color:var(--navy); background:linear-gradient(#fff,#f5f5f5); box-shadow:0 4px 0 #b8b8b8; font-size:72px; font-weight:1000; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.counting-key:active { transform:translateY(3px); box-shadow:0 1px 0 #b8b8b8; }
+.counting-key-ten { grid-column:1 / 4; font-size:66px; }
+.keypad[aria-busy="true"] .counting-key { pointer-events:none; }
 .keypad.number-card-mode {
   /* The card canvas shares the 640px game column with the instruction above. */
   --number-card-size:136px;
@@ -1138,7 +1158,7 @@ button { touch-action: manipulation; }
   background:#e8f8ed;
   box-shadow:0 0 0 5px rgba(61,154,99,.20),0 5px 0 #2c7448;
 }
-.number-card.is-hinted { border-color:#e8a916; background:#fff4c9; box-shadow:0 0 0 5px rgba(232,169,22,.22),0 5px 0 #c5900d; }
+.number-card.is-hinted, .counting-key.is-hinted { border-color:#e8a916; background:#fff4c9; box-shadow:0 0 0 5px rgba(232,169,22,.22),0 5px 0 #c5900d; }
 .number-card.is-wrong { position:relative; border-color:#d24e5a; background:#ffe1e5; box-shadow:0 0 0 5px rgba(210,78,90,.18),0 5px 0 #a93643; }
 .number-card.is-wrong::after { content:"×"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#c72f40; font-size:124px; font-weight:1000; line-height:1; text-shadow:0 2px 0 #fff,0 0 12px rgba(255,255,255,.95); pointer-events:none; }
 .number-card:disabled { pointer-events:none; }

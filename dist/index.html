@@ -37,6 +37,7 @@
         <img id="mode-select-image" src="./assets/ui/top/mode_select_background.webp" width="1400" height="1050" decoding="async" alt="">
         <button class="mode-select-hit mode-select-back" id="mode-select-back" type="button" aria-label="もどる"></button>
         <button class="mode-select-hit mode-select-choice mode-select-number-cards" id="mode-select-number-cards" type="button">すうじあつめ</button>
+        <button class="mode-select-hit mode-select-choice mode-select-counting" id="mode-select-counting" type="button">かずかぞえ</button>
         <button class="mode-select-hit mode-select-choice mode-select-multiplication" id="mode-select-multiplication" type="button">かけ算ひっ算</button>
         <button class="mode-select-hit mode-select-choice mode-select-normal" id="mode-select-normal" type="button">わり算計算</button>
         <button class="mode-select-hit mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button">わり算ひっ算</button>
@@ -88,6 +89,7 @@
             <div class="long-division-problem"><span class="long-division-divisor" id="long-division-divisor"></span><span class="long-division-bracket">)</span><span class="long-division-dividend" id="long-division-dividend"></span></div>
           </div>
           <div class="number-card-panel" id="number-card-panel" hidden aria-live="polite"><p>1から じゅんばんに<br>おしてね！</p></div>
+          <div class="counting-panel" id="counting-panel" hidden aria-live="polite"><p>いくつ ある？</p><div class="counting-dots" id="counting-dots" aria-label="数を数える点"></div></div>
           <div class="multiplication-panel" id="multiplication-panel" hidden aria-live="polite">
             <div class="multiplication-multiplicand" id="multiplication-multiplicand"></div>
             <span class="multiplication-operator" aria-hidden="true">×</span>
@@ -118,6 +120,7 @@
             <button class="no-remainder-key" id="no-remainder-key"><span>あまり</span><span>なし</span></button>
           </div>
           <div class="number-card-grid" id="number-card-grid" hidden aria-label="すうじカード"></div>
+          <div class="counting-keypad-grid" id="counting-keypad-grid" hidden aria-label="数を選ぶ"><button class="counting-key" data-counting-number="1" type="button">1</button><button class="counting-key" data-counting-number="2" type="button">2</button><button class="counting-key" data-counting-number="3" type="button">3</button><button class="counting-key" data-counting-number="4" type="button">4</button><button class="counting-key" data-counting-number="5" type="button">5</button><button class="counting-key" data-counting-number="6" type="button">6</button><button class="counting-key" data-counting-number="7" type="button">7</button><button class="counting-key" data-counting-number="8" type="button">8</button><button class="counting-key" data-counting-number="9" type="button">9</button><button class="counting-key counting-key-ten" data-counting-number="10" type="button">10</button></div>
         </div>
       </div>
       <button class="quit-button" id="quit-button">やめる</button>
