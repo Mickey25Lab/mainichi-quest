@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.6",
+  "status": "draft",
+  "canvas": {"width": 1400, "height": 1050},
+  "layers": [
+    {"category": "08_background", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "common", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "07_vehicle_logo_title", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "06_medal", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "01_vehicle", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "02_robot", "x": null, "y": null, "max_width": null, "max_height": null},
+    {"category": "03_super_robot", "x": null, "y": null, "max_width": null, "max_height": null}
+  ]
+}

@@ -1,0 +1,988 @@
+{
+  "01_patrol_car": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/01_patrol_car_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/01_patrol_car_vehicle.webp"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/01_patrol_car_robot.png",
+      "webp": "03_assets/webp/02_robot/01_patrol_car_robot.webp"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/01_patrol_car_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/01_patrol_car_super_robot.webp"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/01_patrol_car_equipment.png",
+      "webp": "03_assets/webp/05_equipment/01_patrol_car_equipment.webp"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/01_patrol_car_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/01_patrol_car_super_robot_equipped.webp"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/01_patrol_car_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/01_patrol_car_vehicle_logo_title.webp"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/01_patrol_car_background.png",
+      "webp": "03_assets/webp/08_background/01_patrol_car_background.webp"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/01_patrol_car_medal.png",
+      "webp": "03_assets/webp/06_medal/01_patrol_car_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:19.212384+00:00"
+    }
+  },
+  "02_fire_engine": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/02_fire_engine_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/02_fire_engine_vehicle.webp"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/02_fire_engine_robot.png",
+      "webp": "03_assets/webp/02_robot/02_fire_engine_robot.webp"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/02_fire_engine_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/02_fire_engine_super_robot.webp"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/02_fire_engine_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/02_fire_engine_super_robot_equipped.webp"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/02_fire_engine_equipment.png",
+      "webp": "03_assets/webp/05_equipment/02_fire_engine_equipment.webp"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/02_fire_engine_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/02_fire_engine_vehicle_logo_title.webp"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/02_fire_engine_background.png",
+      "webp": "03_assets/webp/08_background/02_fire_engine_background.webp"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/02_fire_engine_medal.png",
+      "webp": "03_assets/webp/06_medal/02_fire_engine_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:22.236833+00:00"
+    }
+  },
+  "03_ambulance": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/03_ambulance_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/03_ambulance_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T06:08:54.222721+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/03_ambulance_robot.png",
+      "webp": "03_assets/webp/02_robot/03_ambulance_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:08:56.946306+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/03_ambulance_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/03_ambulance_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:08:59.713576+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/03_ambulance_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/03_ambulance_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T06:09:02.568146+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/03_ambulance_equipment.png",
+      "webp": "03_assets/webp/05_equipment/03_ambulance_equipment.webp",
+      "fixed_at_utc": "2026-09-22T06:09:04.828701+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/03_ambulance_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/03_ambulance_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T06:09:06.626690+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/03_ambulance_background.png",
+      "webp": "03_assets/webp/08_background/03_ambulance_background.webp",
+      "fixed_at_utc": "2026-09-22T06:10:12.671859+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/03_ambulance_medal.png",
+      "webp": "03_assets/webp/06_medal/03_ambulance_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:25.248991+00:00"
+    }
+  },
+  "04_delivery_truck": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/04_delivery_truck_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/04_delivery_truck_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T06:10:15.250552+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/04_delivery_truck_robot.png",
+      "webp": "03_assets/webp/02_robot/04_delivery_truck_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:10:18.111162+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/04_delivery_truck_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/04_delivery_truck_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:10:20.910680+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/04_delivery_truck_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/04_delivery_truck_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T06:10:23.855494+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/04_delivery_truck_equipment.png",
+      "webp": "03_assets/webp/05_equipment/04_delivery_truck_equipment.webp",
+      "fixed_at_utc": "2026-09-22T06:10:26.397762+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/04_delivery_truck_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/04_delivery_truck_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T06:10:28.286521+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/04_delivery_truck_background.png",
+      "webp": "03_assets/webp/08_background/04_delivery_truck_background.webp",
+      "fixed_at_utc": "2026-09-22T06:10:31.277915+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/04_delivery_truck_medal.png",
+      "webp": "03_assets/webp/06_medal/04_delivery_truck_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:28.230029+00:00"
+    }
+  },
+  "05_mail_van": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/05_mail_van_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/05_mail_van_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T06:10:33.932814+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/05_mail_van_robot.png",
+      "webp": "03_assets/webp/02_robot/05_mail_van_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:10:37.204890+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/05_mail_van_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/05_mail_van_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T06:10:40.762850+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/05_mail_van_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/05_mail_van_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T06:10:44.140641+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/05_mail_van_equipment.png",
+      "webp": "03_assets/webp/05_equipment/05_mail_van_equipment.webp",
+      "fixed_at_utc": "2026-09-22T06:10:46.907501+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/05_mail_van_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/05_mail_van_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T06:10:48.959019+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/05_mail_van_background.png",
+      "webp": "03_assets/webp/08_background/05_mail_van_background.webp",
+      "fixed_at_utc": "2026-09-22T06:10:52.291862+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/05_mail_van_medal.png",
+      "webp": "03_assets/webp/06_medal/05_mail_van_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:31.280271+00:00"
+    }
+  },
+  "06_garbage_truck": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/06_garbage_truck_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/06_garbage_truck_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:46:26.313518+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/06_garbage_truck_robot.png",
+      "webp": "03_assets/webp/02_robot/06_garbage_truck_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:27.684630+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/06_garbage_truck_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/06_garbage_truck_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:29.055444+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/06_garbage_truck_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/06_garbage_truck_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:46:30.607108+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/06_garbage_truck_equipment.png",
+      "webp": "03_assets/webp/05_equipment/06_garbage_truck_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:46:31.927807+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/06_garbage_truck_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/06_garbage_truck_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:46:32.669093+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/06_garbage_truck_background.png",
+      "webp": "03_assets/webp/08_background/06_garbage_truck_background.webp",
+      "fixed_at_utc": "2026-09-22T15:46:34.594784+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/06_garbage_truck_medal.png",
+      "webp": "03_assets/webp/06_medal/06_garbage_truck_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:34.475911+00:00"
+    }
+  },
+  "07_tow_truck": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/07_tow_truck_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/07_tow_truck_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:46:36.027314+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/07_tow_truck_robot.png",
+      "webp": "03_assets/webp/02_robot/07_tow_truck_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:37.366983+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/07_tow_truck_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/07_tow_truck_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:38.620286+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/07_tow_truck_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/07_tow_truck_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:46:39.999881+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/07_tow_truck_equipment.png",
+      "webp": "03_assets/webp/05_equipment/07_tow_truck_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:46:40.945855+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/07_tow_truck_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/07_tow_truck_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:46:41.698355+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/07_tow_truck_background.png",
+      "webp": "03_assets/webp/08_background/07_tow_truck_background.webp",
+      "fixed_at_utc": "2026-09-22T15:46:43.531405+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/07_tow_truck_medal.png",
+      "webp": "03_assets/webp/06_medal/07_tow_truck_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:37.645026+00:00"
+    }
+  },
+  "08_crane_truck": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/08_crane_truck_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/08_crane_truck_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:46:45.133473+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/08_crane_truck_robot.png",
+      "webp": "03_assets/webp/02_robot/08_crane_truck_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:46.534532+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/08_crane_truck_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/08_crane_truck_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:47.919631+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/08_crane_truck_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/08_crane_truck_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:46:49.452081+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/08_crane_truck_equipment.png",
+      "webp": "03_assets/webp/05_equipment/08_crane_truck_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:46:50.627877+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/08_crane_truck_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/08_crane_truck_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:46:51.450842+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/08_crane_truck_background.png",
+      "webp": "03_assets/webp/08_background/08_crane_truck_background.webp",
+      "fixed_at_utc": "2026-09-22T15:46:53.660939+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/08_crane_truck_medal.png",
+      "webp": "03_assets/webp/06_medal/08_crane_truck_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:40.779921+00:00"
+    }
+  },
+  "09_concrete_mixer": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/09_concrete_mixer_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/09_concrete_mixer_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:46:56.027287+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/09_concrete_mixer_robot.png",
+      "webp": "03_assets/webp/02_robot/09_concrete_mixer_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:57.993757+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/09_concrete_mixer_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/09_concrete_mixer_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:46:59.764338+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/09_concrete_mixer_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/09_concrete_mixer_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:47:01.385902+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/09_concrete_mixer_equipment.png",
+      "webp": "03_assets/webp/05_equipment/09_concrete_mixer_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:47:02.929803+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/09_concrete_mixer_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/09_concrete_mixer_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:47:04.035927+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/09_concrete_mixer_background.png",
+      "webp": "03_assets/webp/08_background/09_concrete_mixer_background.webp",
+      "fixed_at_utc": "2026-09-22T15:47:07.266441+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/09_concrete_mixer_medal.png",
+      "webp": "03_assets/webp/06_medal/09_concrete_mixer_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:43.891707+00:00"
+    }
+  },
+  "10_bulldozer": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/10_bulldozer_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/10_bulldozer_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:47:09.272860+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/10_bulldozer_robot.png",
+      "webp": "03_assets/webp/02_robot/10_bulldozer_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:11.163518+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/10_bulldozer_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/10_bulldozer_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:12.921073+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/10_bulldozer_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/10_bulldozer_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:47:15.207891+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/10_bulldozer_equipment.png",
+      "webp": "03_assets/webp/05_equipment/10_bulldozer_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:47:17.285886+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/10_bulldozer_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/10_bulldozer_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:47:18.276949+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/10_bulldozer_background.png",
+      "webp": "03_assets/webp/08_background/10_bulldozer_background.webp",
+      "fixed_at_utc": "2026-09-22T15:47:21.101577+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/10_bulldozer_medal.png",
+      "webp": "03_assets/webp/06_medal/10_bulldozer_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:47.296233+00:00"
+    }
+  },
+  "11_road_roller": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/11_road_roller_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/11_road_roller_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:47:23.266977+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/11_road_roller_robot.png",
+      "webp": "03_assets/webp/02_robot/11_road_roller_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:25.152461+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/11_road_roller_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/11_road_roller_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:27.309493+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/11_road_roller_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/11_road_roller_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:47:29.627038+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/11_road_roller_equipment.png",
+      "webp": "03_assets/webp/05_equipment/11_road_roller_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:47:32.869018+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/11_road_roller_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/11_road_roller_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:47:34.939996+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/11_road_roller_background.png",
+      "webp": "03_assets/webp/08_background/11_road_roller_background.webp",
+      "fixed_at_utc": "2026-09-22T15:47:38.607457+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/11_road_roller_medal.png",
+      "webp": "03_assets/webp/06_medal/11_road_roller_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:50.554360+00:00"
+    }
+  },
+  "12_tank_lorry": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/12_tank_lorry_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/12_tank_lorry_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:47:40.978555+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/12_tank_lorry_robot.png",
+      "webp": "03_assets/webp/02_robot/12_tank_lorry_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:43.718626+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/12_tank_lorry_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/12_tank_lorry_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:45.785323+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/12_tank_lorry_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/12_tank_lorry_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:47:48.169296+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/12_tank_lorry_equipment.png",
+      "webp": "03_assets/webp/05_equipment/12_tank_lorry_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:47:51.206884+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/12_tank_lorry_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/12_tank_lorry_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:47:52.555734+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/12_tank_lorry_background.png",
+      "webp": "03_assets/webp/08_background/12_tank_lorry_background.webp",
+      "fixed_at_utc": "2026-09-22T15:47:55.614366+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/12_tank_lorry_medal.png",
+      "webp": "03_assets/webp/06_medal/12_tank_lorry_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:53.673444+00:00"
+    }
+  },
+  "13_watering_truck": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/13_watering_truck_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/13_watering_truck_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:47:57.365455+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/13_watering_truck_robot.png",
+      "webp": "03_assets/webp/02_robot/13_watering_truck_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:47:59.411552+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/13_watering_truck_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/13_watering_truck_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:01.106881+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/13_watering_truck_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/13_watering_truck_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:48:02.929173+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/13_watering_truck_equipment.png",
+      "webp": "03_assets/webp/05_equipment/13_watering_truck_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:48:04.937235+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/13_watering_truck_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/13_watering_truck_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:48:06.014441+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/13_watering_truck_background.png",
+      "webp": "03_assets/webp/08_background/13_watering_truck_background.webp",
+      "fixed_at_utc": "2026-09-22T15:48:09.205330+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/13_watering_truck_medal.png",
+      "webp": "03_assets/webp/06_medal/13_watering_truck_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:55:57.214902+00:00"
+    }
+  },
+  "14_kindergarten_bus": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/14_kindergarten_bus_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/14_kindergarten_bus_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:48:11.214348+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/14_kindergarten_bus_robot.png",
+      "webp": "03_assets/webp/02_robot/14_kindergarten_bus_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:13.157135+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/14_kindergarten_bus_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/14_kindergarten_bus_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:15.216213+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/14_kindergarten_bus_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/14_kindergarten_bus_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:48:17.215621+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/14_kindergarten_bus_equipment.png",
+      "webp": "03_assets/webp/05_equipment/14_kindergarten_bus_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:48:18.899211+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/14_kindergarten_bus_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/14_kindergarten_bus_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:48:19.924177+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/14_kindergarten_bus_background.png",
+      "webp": "03_assets/webp/08_background/14_kindergarten_bus_background.webp",
+      "fixed_at_utc": "2026-09-22T15:48:23.164145+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/14_kindergarten_bus_medal.png",
+      "webp": "03_assets/webp/06_medal/14_kindergarten_bus_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:00.558397+00:00"
+    }
+  },
+  "15_sightseeing_bus": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/15_sightseeing_bus_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/15_sightseeing_bus_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:48:25.085313+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/15_sightseeing_bus_robot.png",
+      "webp": "03_assets/webp/02_robot/15_sightseeing_bus_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:27.056576+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/15_sightseeing_bus_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/15_sightseeing_bus_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:29.014096+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/15_sightseeing_bus_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/15_sightseeing_bus_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:48:31.687102+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/15_sightseeing_bus_equipment.png",
+      "webp": "03_assets/webp/05_equipment/15_sightseeing_bus_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:48:33.350623+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/15_sightseeing_bus_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/15_sightseeing_bus_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:48:34.439127+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/15_sightseeing_bus_background.png",
+      "webp": "03_assets/webp/08_background/15_sightseeing_bus_background.webp",
+      "fixed_at_utc": "2026-09-22T15:48:37.428323+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/15_sightseeing_bus_medal.png",
+      "webp": "03_assets/webp/06_medal/15_sightseeing_bus_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:03.911223+00:00"
+    }
+  },
+  "16_formula_racer": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/16_formula_racer_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/16_formula_racer_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:48:38.988060+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/16_formula_racer_robot.png",
+      "webp": "03_assets/webp/02_robot/16_formula_racer_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:41.226780+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/16_formula_racer_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/16_formula_racer_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:43.425639+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/16_formula_racer_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/16_formula_racer_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:48:45.585962+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/16_formula_racer_equipment.png",
+      "webp": "03_assets/webp/05_equipment/16_formula_racer_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:48:47.072187+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/16_formula_racer_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/16_formula_racer_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:48:48.138510+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/16_formula_racer_background.png",
+      "webp": "03_assets/webp/08_background/16_formula_racer_background.webp",
+      "fixed_at_utc": "2026-09-22T15:48:50.911690+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/16_formula_racer_medal.png",
+      "webp": "03_assets/webp/06_medal/16_formula_racer_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:07.163054+00:00"
+    }
+  },
+  "17_racing_bike": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/17_racing_bike_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/17_racing_bike_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:48:52.819922+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/17_racing_bike_robot.png",
+      "webp": "03_assets/webp/02_robot/17_racing_bike_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:55.239774+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/17_racing_bike_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/17_racing_bike_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:48:56.891344+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/17_racing_bike_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/17_racing_bike_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:48:58.609399+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/17_racing_bike_equipment.png",
+      "webp": "03_assets/webp/05_equipment/17_racing_bike_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:48:59.459492+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/17_racing_bike_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/17_racing_bike_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:49:00.329881+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/17_racing_bike_background.png",
+      "webp": "03_assets/webp/08_background/17_racing_bike_background.webp",
+      "fixed_at_utc": "2026-09-22T15:49:02.620969+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/17_racing_bike_medal.png",
+      "webp": "03_assets/webp/06_medal/17_racing_bike_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:10.405799+00:00"
+    }
+  },
+  "18_snowmobile": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/18_snowmobile_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/18_snowmobile_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:49:03.950616+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/18_snowmobile_robot.png",
+      "webp": "03_assets/webp/02_robot/18_snowmobile_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:05.294836+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/18_snowmobile_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/18_snowmobile_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:06.613584+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/18_snowmobile_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/18_snowmobile_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:49:07.973125+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/18_snowmobile_equipment.png",
+      "webp": "03_assets/webp/05_equipment/18_snowmobile_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:49:09.353277+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/18_snowmobile_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/18_snowmobile_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:49:10.099421+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/18_snowmobile_background.png",
+      "webp": "03_assets/webp/08_background/18_snowmobile_background.webp",
+      "fixed_at_utc": "2026-09-22T15:49:11.895322+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/18_snowmobile_medal.png",
+      "webp": "03_assets/webp/06_medal/18_snowmobile_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:14.174819+00:00"
+    }
+  },
+  "19_helicopter": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/19_helicopter_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/19_helicopter_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:49:13.239729+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/19_helicopter_robot.png",
+      "webp": "03_assets/webp/02_robot/19_helicopter_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:14.670603+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/19_helicopter_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/19_helicopter_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:15.909710+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/19_helicopter_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/19_helicopter_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:49:17.237104+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/19_helicopter_equipment.png",
+      "webp": "03_assets/webp/05_equipment/19_helicopter_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:49:18.283382+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/19_helicopter_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/19_helicopter_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:49:19.061771+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/19_helicopter_background.png",
+      "webp": "03_assets/webp/08_background/19_helicopter_background.webp",
+      "fixed_at_utc": "2026-09-22T15:49:21.040271+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/19_helicopter_medal.png",
+      "webp": "03_assets/webp/06_medal/19_helicopter_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:17.582951+00:00"
+    }
+  },
+  "20_airplane": {
+    "vehicle": {
+      "status": "fixed",
+      "png": "03_assets/png/01_vehicle/20_airplane_vehicle.png",
+      "webp": "03_assets/webp/01_vehicle/20_airplane_vehicle.webp",
+      "fixed_at_utc": "2026-09-22T15:49:22.246914+00:00"
+    },
+    "robot": {
+      "status": "fixed",
+      "png": "03_assets/png/02_robot/20_airplane_robot.png",
+      "webp": "03_assets/webp/02_robot/20_airplane_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:23.656131+00:00"
+    },
+    "super_robot": {
+      "status": "fixed",
+      "png": "03_assets/png/03_super_robot/20_airplane_super_robot.png",
+      "webp": "03_assets/webp/03_super_robot/20_airplane_super_robot.webp",
+      "fixed_at_utc": "2026-09-22T15:49:24.978201+00:00"
+    },
+    "super_robot_equipped": {
+      "status": "fixed",
+      "png": "03_assets/png/04_super_robot_equipped/20_airplane_super_robot_equipped.png",
+      "webp": "03_assets/webp/04_super_robot_equipped/20_airplane_super_robot_equipped.webp",
+      "fixed_at_utc": "2026-09-22T15:49:26.280879+00:00"
+    },
+    "equipment": {
+      "status": "fixed",
+      "png": "03_assets/png/05_equipment/20_airplane_equipment.png",
+      "webp": "03_assets/webp/05_equipment/20_airplane_equipment.webp",
+      "fixed_at_utc": "2026-09-22T15:49:27.457370+00:00"
+    },
+    "vehicle_logo_title": {
+      "status": "fixed",
+      "png": "03_assets/png/07_vehicle_logo_title/20_airplane_vehicle_logo_title.png",
+      "webp": "03_assets/webp/07_vehicle_logo_title/20_airplane_vehicle_logo_title.webp",
+      "fixed_at_utc": "2026-09-22T15:49:28.284350+00:00"
+    },
+    "background": {
+      "status": "fixed",
+      "png": "03_assets/png/08_background/20_airplane_background.png",
+      "webp": "03_assets/webp/08_background/20_airplane_background.webp",
+      "fixed_at_utc": "2026-09-22T15:49:30.407977+00:00"
+    },
+    "medal": {
+      "status": "fixed",
+      "png": "03_assets/png/06_medal/20_airplane_medal.png",
+      "webp": "03_assets/webp/06_medal/20_airplane_medal.webp",
+      "fixed_at_utc": "2026-09-22T20:56:20.824314+00:00"
+    }
+  }
+}

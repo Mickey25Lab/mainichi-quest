@@ -1,0 +1,126 @@
+{
+  "tool": "Pillow",
+  "pillow_version": "12.3.0",
+  "libwebp_version": "1.6.0",
+  "settings": {
+    "lossless": false,
+    "quality": 90,
+    "alpha_quality": 100,
+    "method": 6,
+    "exact": false,
+    "resample": "LANCZOS",
+    "metadata": "none passed"
+  },
+  "entries": [
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "file": "01_patrol_car_robot_896.webp",
+      "edge": 896,
+      "bytes": 124660,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "visible_source_height": 1098,
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "file": "01_patrol_car_robot_768.webp",
+      "edge": 768,
+      "bytes": 102964,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "visible_source_height": 1098,
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "file": "01_patrol_car_robot_640.webp",
+      "edge": 640,
+      "bytes": 79578,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "visible_source_height": 1098,
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "file": "01_patrol_car_robot_480.webp",
+      "edge": 480,
+      "bytes": 54554,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "visible_source_height": 1098,
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_robot",
+      "file": "01_patrol_car_robot_384.webp",
+      "edge": 384,
+      "bytes": 40202,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\01_patrol_car_robot.png",
+      "source_sha256": "b4a52e2fe9ab0d8763f8d3088f44a9be4b90a1b3d3dd74924518f3cd3498c7b9",
+      "visible_source_height": 1098,
+      "display_canvas_css_px": 457
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "file": "19_helicopter_robot_896.webp",
+      "edge": 896,
+      "bytes": 163016,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "visible_source_height": 1143,
+      "display_canvas_css_px": 439
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "file": "19_helicopter_robot_768.webp",
+      "edge": 768,
+      "bytes": 132414,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "visible_source_height": 1143,
+      "display_canvas_css_px": 439
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "file": "19_helicopter_robot_640.webp",
+      "edge": 640,
+      "bytes": 103132,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "visible_source_height": 1143,
+      "display_canvas_css_px": 439
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "file": "19_helicopter_robot_480.webp",
+      "edge": 480,
+      "bytes": 68600,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "visible_source_height": 1143,
+      "display_canvas_css_px": 439
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_robot",
+      "file": "19_helicopter_robot_384.webp",
+      "edge": 384,
+      "bytes": 50206,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\02_robot\\png\\19_helicopter_robot.png",
+      "source_sha256": "3de215225c80ec14c24b23425270a62a51b41b0b46003b6de3da3cfe0b7173f1",
+      "visible_source_height": 1143,
+      "display_canvas_css_px": 439
+    }
+  ]
+}
