@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.125";
+  const appVersion = "0.0.126";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1173,12 +1173,19 @@
     }));
   }
   function makeCountingQuestions(maxValue = 10) {
-    const values = maxValue === 5
+    const baseValues = maxValue === 5
       ? [...Array.from({ length: 5 }, (_, index) => index + 1), ...Array.from({ length: 5 }, (_, index) => index + 1)]
       : Array.from({ length: 10 }, (_, index) => index + 1);
-    for (let index = values.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(Math.random() * (index + 1));
-      [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
+    let values = [];
+    for (let attempt = 0; attempt < 1000; attempt += 1) {
+      values = [...baseValues];
+      for (let index = values.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
+      }
+      const startsEasy = values[0] <= 3 && values[1] <= 3;
+      const hasAdjacentRepeat = values.some((value, index) => index > 0 && value === values[index - 1]);
+      if (startsEasy && !hasAdjacentRepeat) break;
     }
     return values.map((value, index) => ({ kind: "counting", id: `counting-${maxValue}-${index + 1}-${value}`, value, quotient: value, remainder: 0 }));
   }
@@ -2659,6 +2666,21 @@
     });
   }
 
+  function endToModeSelect() {
+    if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
+    state.pendingNextVehicleOverlay = null;
+    state.preparedNextQuestionVisual = null;
+    state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
+    state.confirmingAnswer = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
+    window.speechSynthesis?.cancel();
+    prepareInitialVehicle();
+    $("answer-confirm").hidden = true;
+    $("time-up").hidden = true;
+    showFixedScreenWhenReady("mode-select-screen", [], () => {
+      state.collectionClosing = false;
+    });
+  }
+
   async function openCollection({ showSessionMarkers = true } = {}) {
     if (state.collectionUsed || state.collectionClosing) return;
     state.collectionUsed = true;
@@ -2987,7 +3009,7 @@
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToStart); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToModeSelect); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
