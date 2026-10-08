@@ -1354,6 +1354,7 @@
       // Number cards are initially rendered while the next-question transition is
       // locked. Reflect the unlock immediately, independently of hint rendering.
       if (state.mode === "numbercards") renderNumberCards();
+      if (state.mode === "counting") renderCounting();
       updateAssistButton();
       resumeGameTimer();
       resetIdleGuideTimer();
@@ -1448,38 +1449,20 @@
   function inputCountingAnswer(value) {
     if (state.transitioning || !state.current) return;
     noteQuestionActivity();
-    state.transitioning = true;
-    const correct = value === state.current.value;
-    setQuestionCardState(correct ? "correct" : "wrong");
-    const question = state.current;
-    let reward = null, progression = null;
-    if (correct) {
-      stopQuestionTimeout();
-      question.resultType = question.hintUsed ? "hint_correct" : "self_correct";
-      state.initialCorrect += 1;
-      if (question.hadWrong) state.correctStreak = 0;
-      else state.correctStreak += 1;
-      progression = progressCollectionForCorrect(question, { friendshipAmount: 3 });
-      reward = progression.reward;
-      renderVehicleProgressUi(question.vehicleIndex);
-      if (progression.friendshipGain) playProgressGainAnimation({ kind: "friendship", amount: progression.friendshipGain });
-      else if (progression.energyGain) playProgressGainAnimation({ kind: "energy", amount: progression.energyGain, completed: Boolean(reward) });
-      if (reward && reward.stage < 5) preloadRewardVisuals(reward.stage, reward.vehicleIndex, reward.kind).catch(() => {});
-      if (reward?.isNew || reward?.replay) playCorrectSound(); else playSimpleCorrectSound();
-    } else {
-      question.resultType = "self_wrong";
-      question.hadWrong = true;
-      progression = progressCollectionForCorrect(question, { friendshipAmount: 1, suppressReward: true, allowEnergyGain: false });
-      if (progression.friendshipGain) playProgressGainAnimation({ kind: "friendship", amount: progression.friendshipGain });
-      renderVehicleProgressUi(question.vehicleIndex);
-      playWrongSound();
+    if (value === state.current.value) {
+      judge({ quotient: value, remainder: 0, usedRemainder: false });
+      return;
     }
+    state.transitioning = true;
+    state.current.resultType = "self_wrong";
+    state.current.hadWrong = true;
+    setQuestionCardState("wrong");
+    playWrongSound();
     const runId = state.runId;
     window.setTimeout(() => {
       if (runId !== state.runId || !state.current) return;
-      if (correct) finishInitialQuestion({ reward, challengeEnds: challengeMustEndAfterCorrect(question, reward) });
-      else { setQuestionCardState(); state.transitioning = false; renderCounting(); resetIdleGuideTimer(); }
-    }, correct ? Math.max(correctFeedbackDurationMs, progressGainTotalDurationMs) : wrongFeedbackDurationMs);
+      setQuestionCardState(); state.transitioning = false; renderCounting(); resetIdleGuideTimer();
+    }, wrongFeedbackDurationMs);
   }
   function setupLongDivision(question) {
     const slots = String(question.dividend).length;
@@ -2158,28 +2141,24 @@
       }
     }), 600);
   }
-  function progressCollectionForCorrect(question = state.current, { friendshipAmount = 1, suppressReward = false, allowEnergyGain = true } = {}) {
+  function progressCollectionForCorrect(question = state.current) {
     const vehicleIndex = question.vehicleIndex ?? state.currentVehicleIndex;
     const progress = vehicleProgress(vehicleIndex);
     let reward = null, energyGain = 0, friendshipGain = 0, deferredTimeBonus = null, energyVisual = null;
-    const addFriendship = () => {
-      friendshipGain = Math.min(5 - progress.friendship, friendshipAmount);
-      progress.friendship += friendshipGain;
+    if (!progress.discovered) {
+      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
+      reward = { stage: 1, vehicleIndex, isNew: true, kind: "discovery", endsChallenge: false };
+    } else if (!progress.friendly) {
+      progress.friendship = Math.min(5, progress.friendship + 1);
+      friendshipGain = 1;
       if (progress.friendship === 5) {
         // Friendship itself awards the vehicle. Energy starts on the next
         // encounter, never on this fifth-heart answer.
         progress.friendly = true;
         state.sessionUnlocks[1] += 1;
-        if (!suppressReward) reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
+        reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
       }
-    };
-    if (!progress.discovered) {
-      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
-      if (!suppressReward) reward = { stage: 1, vehicleIndex, isNew: true, kind: "discovery", endsChallenge: false };
-      if (friendshipAmount !== 1 || suppressReward) addFriendship();
-    } else if (!progress.friendly) {
-      addFriendship();
-    } else if (allowEnergyGain && !progress.masterMedal) {
+    } else if (!progress.masterMedal) {
       energyGain = question.hintUsed || question.hadWrong || question.progressPenalty ? 1 : 3;
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
@@ -2495,10 +2474,11 @@
   function finishRound() {
     state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer(); stopBackgroundMusic();
     $("elapsed-time").textContent = formatTime(state.finalElapsedMs); $("result-time").textContent = formatTime(state.finalElapsedMs);
-    if (state.mode !== "counting") {
-      const previousBest = getBestTime();
-      if (previousBest === null) saveBestTime(state.finalElapsedMs);
-      else if (state.finalElapsedMs < previousBest) saveBestTime(state.finalElapsedMs);
+    const previousBest = getBestTime();
+    if (previousBest === null) {
+      saveBestTime(state.finalElapsedMs);
+    } else if (state.finalElapsedMs < previousBest) {
+      saveBestTime(state.finalElapsedMs);
     }
     renderResultSummary();
     $("collection-button").disabled = false;
