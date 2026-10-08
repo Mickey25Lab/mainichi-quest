@@ -168,9 +168,6 @@ button { touch-action: manipulation; }
 .top-image-button:focus-visible { outline:7px solid rgba(255,225,50,.95); outline-offset:5px; }
 .top-image-button:active:not(:disabled) { transform:translateY(3px); }
 .top-image-button:disabled { cursor:default; }
-.counting-start-button { position:absolute; z-index:3; top:3.2%; right:3.2%; min-width:210px; min-height:74px; padding:10px 22px; border:4px solid #fff; border-radius:24px; color:#fff; background:linear-gradient(#ffad39,#f06e26); box-shadow:0 6px 0 #b84b1d,0 10px 18px rgba(3,35,91,.3); font-family:"Noto Sans JP",sans-serif; font-size:32px; font-weight:1000; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.counting-start-button:active { transform:translateY(4px); box-shadow:0 2px 0 #b84b1d; }
-.counting-start-button:focus-visible { outline:7px solid rgba(255,225,50,.95); outline-offset:4px; }
 .start-version,
 .start-developer {
   position:absolute;
