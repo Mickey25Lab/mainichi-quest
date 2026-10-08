@@ -12,8 +12,8 @@
   const topCollectionButtonPath = "./assets/ui/top/top_button_collection.webp";
   const topCollectionUsedButtonPath = "./assets/ui/top/top_button_no_collection.webp";
   const modeSelectPath = "./assets/ui/top/mode_select_titleless.png";
-  const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.png";
-  const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.png";
+  const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.webp";
+  const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.webp";
   const discoveryBubblePath = "./assets/ui/speech_bubble/stage1_no_vehicle_speech_bubble.webp";
   const rewardNextVehicleOverlayDurationMs = 2000;
   const incorrectNextVehicleNoticeDurationMs = 2000;
