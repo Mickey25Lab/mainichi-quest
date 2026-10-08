@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>モード選択背景 WebP 9条件比較</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; background: #101827; color: #fff; overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+    header { min-height: 74px; display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px max(18px, env(safe-area-inset-right)) 10px max(18px, env(safe-area-inset-left)); background: #121b2c; border-bottom: 1px solid #344257; }
+    .heading { min-width: 0; }
+    h1 { margin: 0; font-size: clamp(15px, 2.2vw, 21px); line-height: 1.25; }
+    .hint { margin: 4px 0 0; font-size: 12px; color: #bac8d8; }
+    .stats { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+    .condition { font-size: clamp(17px, 2.5vw, 24px); font-weight: 800; white-space: nowrap; }
+    .size { color: #d7e5f3; font-size: 13px; }
+    .viewport { position: relative; flex: 1; min-height: 0; }
+    .slides { width: 100%; height: 100%; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-x; }
+    .slides::-webkit-scrollbar { display: none; }
+    .slide { flex: 0 0 100%; width: 100%; height: 100%; display: grid; place-items: center; scroll-snap-align: start; scroll-snap-stop: always; padding: 10px 12px 55px; }
+    .slide img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; box-shadow: 0 8px 35px #0008; }
+    .controls { position: absolute; left: 0; right: 0; bottom: max(10px, env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; gap: 12px; pointer-events: none; }
+    button { pointer-events: auto; border: 1px solid #8ea8c5; background: #152640e8; color: white; border-radius: 10px; min-width: 46px; min-height: 40px; font-size: 21px; cursor: pointer; }
+    button:disabled { opacity: .35; cursor: default; }
+    #position { min-width: 64px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .note { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px); background: #13233bd9; border: 1px solid #b6c5d166; border-radius: 8px; padding: 5px 10px; color: #e8f1fc; text-align: center; font-size: 12px; pointer-events: none; }
+    @media (max-width: 650px) { header { min-height: 83px; } .hint { font-size: 11px; } .note { font-size: 10px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="heading">
+      <h1>モード選択背景｜WebP 9条件</h1>
+      <p class="hint">左右にスワイプして比較 · 1400×1050 · 元PNGから直接生成</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div class="condition" id="condition">Q80 / alpha 100</div>
+      <div class="size" id="size">320,114 B · 320.1 KB</div>
+    </div>
+  </header>
+  <main class="viewport">
+    <div class="slides" id="slides" aria-label="9条件の画像比較"></div>
+    <div class="note">元PNGは透過なし。alpha値を変えても、同じQでは画像・容量が一致します。</div>
+    <div class="controls">
+      <button id="prev" type="button" aria-label="前の条件">‹</button>
+      <span id="position" aria-live="polite">1 / 9</span>
+      <button id="next" type="button" aria-label="次の条件">›</button>
+    </div>
+  </main>
+  <script>
+    const items = [
+      {q:80,a:100,bytes:320114},{q:80,a:70,bytes:320114},{q:80,a:40,bytes:320114},
+      {q:60,a:100,bytes:236602},{q:60,a:70,bytes:236602},{q:60,a:40,bytes:236602},
+      {q:40,a:100,bytes:187968},{q:40,a:70,bytes:187968},{q:40,a:40,bytes:187968}
+    ];
+    const slides = document.getElementById('slides');
+    const condition = document.getElementById('condition');
+    const size = document.getElementById('size');
+    const position = document.getElementById('position');
+    const prev = document.getElementById('prev');
+    const next = document.getElementById('next');
+    items.forEach((item, i) => {
+      const slide = document.createElement('section');
+      slide.className = 'slide';
+      slide.setAttribute('aria-label', `条件 ${i + 1}、Q${item.q}、alpha ${item.a}`);
+      const img = document.createElement('img');
+      img.src = `mode_select_background_q${item.q}_a${item.a}.webp`;
+      img.alt = `モード選択背景 Q${item.q} alpha ${item.a}`;
+      img.width = 1400;
+      img.height = 1050;
+      img.decoding = 'async';
+      if (i === 0) img.fetchPriority = 'high';
+      slide.append(img);
+      slides.append(slide);
+    });
+    let index = 0;
+    function update() {
+      const item = items[index];
+      condition.textContent = `Q${item.q} / alpha ${item.a}`;
+      size.textContent = `${item.bytes.toLocaleString('ja-JP')} B · ${(item.bytes / 1000).toFixed(1)} KB`;
+      position.textContent = `${index + 1} / ${items.length}`;
+      prev.disabled = index === 0;
+      next.disabled = index === items.length - 1;
+    }
+    function go(to) {
+      index = Math.max(0, Math.min(items.length - 1, to));
+      slides.scrollTo({left: slides.clientWidth * index, behavior: 'smooth'});
+      update();
+    }
+    prev.addEventListener('click', () => go(index - 1));
+    next.addEventListener('click', () => go(index + 1));
+    let scheduled = false;
+    slides.addEventListener('scroll', () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        index = Math.max(0, Math.min(items.length - 1, Math.round(slides.scrollLeft / slides.clientWidth)));
+        update();
+        scheduled = false;
+      });
+    }, {passive:true});
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') go(index + 1);
+      if (event.key === 'ArrowLeft') go(index - 1);
+    });
+    window.addEventListener('resize', () => slides.scrollTo({left: slides.clientWidth * index}));
+    update();
+  </script>
+</body>
+</html>
