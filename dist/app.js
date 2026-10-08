@@ -2727,6 +2727,20 @@
     state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
   }
 
+  function resumeAudioContext(reason) {
+    const ctx = state.audio;
+    if (!ctx || ctx.state === "running" || ctx.state === "closed") return;
+    recordAudioDiagnostic("audio-context-resume-request", { reason, fromState: ctx.state });
+    try {
+      const resumePromise = ctx.resume();
+      Promise.resolve(resumePromise).then(
+        () => recordAudioDiagnostic("audio-context-resume-resolved", { reason, state: ctx.state }),
+        (error) => recordAudioDiagnostic("audio-context-resume-rejected", { reason, message: String(error?.message || error) })
+      );
+    } catch (error) {
+      recordAudioDiagnostic("audio-context-resume-threw", { reason, message: String(error?.message || error) });
+    }
+  }
   function audioContext() {
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
@@ -2735,18 +2749,7 @@
         recordAudioDiagnostic("audio-context-statechange", { state: state.audio?.state ?? null });
       });
     }
-    if (state.audio.state === "suspended") {
-      recordAudioDiagnostic("audio-context-resume-request", { reason: "audioContext()" });
-      try {
-        const resumePromise = state.audio.resume();
-        Promise.resolve(resumePromise).then(
-          () => recordAudioDiagnostic("audio-context-resume-resolved", { state: state.audio?.state ?? null }),
-          (error) => recordAudioDiagnostic("audio-context-resume-rejected", { message: String(error?.message || error) })
-        );
-      } catch (error) {
-        recordAudioDiagnostic("audio-context-resume-threw", { message: String(error?.message || error) });
-      }
-    }
+    if (state.audio.state === "suspended") resumeAudioContext("audioContext()");
     return state.audio;
   }
   function loadBgmEnabledPreference() {
@@ -2939,6 +2942,7 @@
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
     recordAudioDiagnostic("pageshow", { persisted: event.persisted });
+    resumeAudioContext("pageshow");
     schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
@@ -2968,6 +2972,7 @@
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     recordAudioDiagnostic("visibilitychange", { hidden: document.hidden });
     if (!document.hidden) {
+      resumeAudioContext("visibilitychange:visible");
       schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
@@ -2980,10 +2985,17 @@
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
     recordAudioDiagnostic("focus");
+    resumeAudioContext("focus");
     checkQuestionTimeout();
   });
-  document.addEventListener("pointerdown", () => recordAudioDiagnostic("pointerdown"), { passive: true });
-  document.addEventListener("touchstart", () => recordAudioDiagnostic("touchstart"), { passive: true });
+  document.addEventListener("pointerdown", () => {
+    recordAudioDiagnostic("pointerdown");
+    resumeAudioContext("pointerdown");
+  }, { passive: true });
+  document.addEventListener("touchstart", () => {
+    recordAudioDiagnostic("touchstart");
+    resumeAudioContext("touchstart");
+  }, { passive: true });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
   $("detail-picture").addEventListener("touchend", (event) => {
