@@ -2727,19 +2727,67 @@
     state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
   }
 
+  let audioVisibilitySuspendTimer = null;
+  let audioResumePromise = null;
+  function restoreAudioGainAfterVisibility(reason) {
+    const ctx = state.audio, gain = state.bgmGain;
+    if (!ctx || ctx.state !== "running" || document.hidden || !gain) return;
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(backgroundMusicVolume(), ctx.currentTime + 0.06);
+    recordAudioDiagnostic("audio-visibility-gain-restored", { reason });
+  }
   function resumeAudioContext(reason) {
     const ctx = state.audio;
-    if (!ctx || ctx.state === "running" || ctx.state === "closed") return;
+    if (!ctx || ctx.state === "running" || ctx.state === "closed" || document.hidden) return;
+    if (audioResumePromise) return audioResumePromise;
     recordAudioDiagnostic("audio-context-resume-request", { reason, fromState: ctx.state });
     try {
-      const resumePromise = ctx.resume();
-      Promise.resolve(resumePromise).then(
-        () => recordAudioDiagnostic("audio-context-resume-resolved", { reason, state: ctx.state }),
+      audioResumePromise = Promise.resolve(ctx.resume()).then(
+        () => {
+          recordAudioDiagnostic("audio-context-resume-resolved", { reason, state: ctx.state });
+          restoreAudioGainAfterVisibility(reason);
+        },
         (error) => recordAudioDiagnostic("audio-context-resume-rejected", { reason, message: String(error?.message || error) })
-      );
+      ).finally(() => { audioResumePromise = null; });
+      return audioResumePromise;
     } catch (error) {
+      audioResumePromise = null;
       recordAudioDiagnostic("audio-context-resume-threw", { reason, message: String(error?.message || error) });
     }
+  }
+  function suspendAudioForHiddenPage(reason) {
+    const ctx = state.audio;
+    if (!ctx || ctx.state === "closed") return;
+    if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+    if (state.bgmGain && ctx.state === "running") {
+      const gain = state.bgmGain.gain;
+      gain.cancelScheduledValues(ctx.currentTime);
+      gain.setValueAtTime(Math.max(0.0001, gain.value), ctx.currentTime);
+      gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+      recordAudioDiagnostic("audio-visibility-fade-start", { reason });
+    }
+    audioVisibilitySuspendTimer = window.setTimeout(() => {
+      audioVisibilitySuspendTimer = null;
+      if (!document.hidden || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      recordAudioDiagnostic("audio-context-suspend-request", { reason, fromState: state.audio.state });
+      try {
+        Promise.resolve(state.audio.suspend()).then(
+          () => recordAudioDiagnostic("audio-context-suspend-resolved", { reason, state: state.audio?.state ?? null }),
+          (error) => recordAudioDiagnostic("audio-context-suspend-rejected", { reason, message: String(error?.message || error) })
+        );
+      } catch (error) {
+        recordAudioDiagnostic("audio-context-suspend-threw", { reason, message: String(error?.message || error) });
+      }
+    }, 100);
+  }
+  function resumeAudioAfterVisible(reason) {
+    if (audioVisibilitySuspendTimer !== null) {
+      window.clearTimeout(audioVisibilitySuspendTimer);
+      audioVisibilitySuspendTimer = null;
+    }
+    resumeAudioContext(reason);
+    restoreAudioGainAfterVisibility(reason);
   }
   function audioContext() {
     if (!state.audio) {
@@ -2747,9 +2795,10 @@
       recordAudioDiagnostic("audio-context-created");
       state.audio.addEventListener?.("statechange", () => {
         recordAudioDiagnostic("audio-context-statechange", { state: state.audio?.state ?? null });
+        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility("statechange:running");
       });
     }
-    if (state.audio.state === "suspended") resumeAudioContext("audioContext()");
+    if (state.audio.state === "suspended" && !document.hidden) resumeAudioContext("audioContext()");
     return state.audio;
   }
   function loadBgmEnabledPreference() {
@@ -2843,7 +2892,7 @@
     }
   }
   function canPlayBackgroundMusic() {
-    return state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
+    return !document.hidden && state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
   }
   function startBackgroundMusic() {
     if (!canPlayBackgroundMusic()) return;
@@ -2942,7 +2991,7 @@
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
     recordAudioDiagnostic("pageshow", { persisted: event.persisted });
-    resumeAudioContext("pageshow");
+    resumeAudioAfterVisible("pageshow");
     schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
@@ -2971,8 +3020,10 @@
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     recordAudioDiagnostic("visibilitychange", { hidden: document.hidden });
-    if (!document.hidden) {
-      resumeAudioContext("visibilitychange:visible");
+    if (document.hidden) {
+      suspendAudioForHiddenPage("visibilitychange:hidden");
+    } else {
+      resumeAudioAfterVisible("visibilitychange:visible");
       schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
@@ -2985,16 +3036,16 @@
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
     recordAudioDiagnostic("focus");
-    resumeAudioContext("focus");
+    resumeAudioAfterVisible("focus");
     checkQuestionTimeout();
   });
   document.addEventListener("pointerdown", () => {
     recordAudioDiagnostic("pointerdown");
-    resumeAudioContext("pointerdown");
+    resumeAudioAfterVisible("pointerdown");
   }, { passive: true });
   document.addEventListener("touchstart", () => {
     recordAudioDiagnostic("touchstart");
-    resumeAudioContext("touchstart");
+    resumeAudioAfterVisible("touchstart");
   }, { passive: true });
   let touchStartX = 0;
   $("detail-picture").addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
