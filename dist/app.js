@@ -2729,12 +2729,14 @@
 
   let audioVisibilitySuspendTimer = null;
   let audioResumePromise = null;
+  let audioMutedForBackground = false;
   function restoreAudioGainAfterVisibility(reason) {
     const ctx = state.audio, gain = state.bgmGain;
-    if (!ctx || ctx.state !== "running" || document.hidden || !gain) return;
+    if (!audioMutedForBackground || !ctx || ctx.state !== "running" || document.hidden || !gain) return;
     gain.gain.cancelScheduledValues(ctx.currentTime);
     gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
     gain.gain.linearRampToValueAtTime(backgroundMusicVolume(), ctx.currentTime + 0.06);
+    audioMutedForBackground = false;
     recordAudioDiagnostic("audio-visibility-gain-restored", { reason });
   }
   function resumeAudioContext(reason) {
@@ -2756,7 +2758,7 @@
       recordAudioDiagnostic("audio-context-resume-threw", { reason, message: String(error?.message || error) });
     }
   }
-  function suspendAudioForHiddenPage(reason) {
+  function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
     if (!ctx || ctx.state === "closed") return;
     if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
@@ -2764,12 +2766,13 @@
       const gain = state.bgmGain.gain;
       gain.cancelScheduledValues(ctx.currentTime);
       gain.setValueAtTime(Math.max(0.0001, gain.value), ctx.currentTime);
-      gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
-      recordAudioDiagnostic("audio-visibility-fade-start", { reason });
+      gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
+      audioMutedForBackground = true;
+      recordAudioDiagnostic("audio-visibility-fade-start", { reason, fadeMs });
     }
     audioVisibilitySuspendTimer = window.setTimeout(() => {
       audioVisibilitySuspendTimer = null;
-      if (!document.hidden || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
       recordAudioDiagnostic("audio-context-suspend-request", { reason, fromState: state.audio.state });
       try {
         Promise.resolve(state.audio.suspend()).then(
@@ -2779,7 +2782,7 @@
       } catch (error) {
         recordAudioDiagnostic("audio-context-suspend-threw", { reason, message: String(error?.message || error) });
       }
-    }, 100);
+    }, suspendDelayMs);
   }
   function resumeAudioAfterVisible(reason) {
     if (audioVisibilitySuspendTimer !== null) {
@@ -3021,7 +3024,7 @@
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     recordAudioDiagnostic("visibilitychange", { hidden: document.hidden });
     if (document.hidden) {
-      suspendAudioForHiddenPage("visibilitychange:hidden");
+      suspendAudioForBackground("visibilitychange:hidden");
     } else {
       resumeAudioAfterVisible("visibilitychange:visible");
       schedulePlayStageSize("visibilitychange:visible");
@@ -3032,6 +3035,12 @@
   window.addEventListener("pagehide", (event) => {
     recordViewportDiagnostic("pagehide", { persisted: event.persisted });
     recordAudioDiagnostic("pagehide", { persisted: event.persisted });
+  });
+  window.addEventListener("blur", () => {
+    recordAudioDiagnostic("blur");
+    // iOS can interrupt Web Audio before visibilitychange fires when switching
+    // to another app. Fade and suspend on blur first so the OS handoff is silent.
+    suspendAudioForBackground("blur", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
   });
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
