@@ -108,7 +108,7 @@
   const answerArtFolders = [null, "", "assets/collection/01_vehicle", "assets/collection/02_robot", "assets/collection/03_super_robot", "assets/collection/04_super_robot_equipped"];
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
-  const answerBubblePositions = [null, null, [82, 305, 400], [82, 235, 410], [82, 160, 420], [82, 125, 420]];
+  const answerBubblePositions = [null, null, { top:305, width:400 }, { top:235, width:410 }, { top:null, width:420 }, { top:null, width:420 }];
   const answerArtCanvasScales = [0, 0, 0.39, 0.36, 0.55, 0.55];
   const listedTwoDigitQuotientProblems = [
     [20, 2], [22, 2], [24, 2], [26, 2], [28, 2], [40, 2], [42, 2], [44, 2], [46, 2], [48, 2],
@@ -208,6 +208,18 @@
     return progress.discovered ? progress.stage : 1;
   }
   function requiredEnergyForStage(stage) { return ({ 2: 30, 3: 50, 4: 70, 5: 100 })[stage] || 0; }
+  function energyStageForRequired(required) { return ({ 30: 2, 50: 3, 70: 4, 100: 5 })[required] || 0; }
+  function progressSpeechBubbleSpec(vehicleIndex) {
+    const progress = vehicleProgress(vehicleIndex);
+    if (!progress.discovered || !progress.friendly || progress.masterMedal) return null;
+    const visualEnergy = state.energyDisplayOverride?.vehicleIndex === vehicleIndex ? state.energyDisplayOverride : null;
+    const required = visualEnergy?.required ?? requiredEnergyForStage(progress.stage);
+    const energy = visualEnergy?.energy ?? progress.energy;
+    const stage = visualEnergy ? energyStageForRequired(required) : progress.stage;
+    const threshold = Math.floor(required * 0.8);
+    if (!required || stage < 2 || stage > 5 || energy < threshold) return null;
+    return { stage, energy, required, threshold, path: `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` };
+  }
   function loadCollection() {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKeys.collection));
@@ -668,8 +680,9 @@
     const progress = vehicleProgress(question.vehicleIndex);
     const backgroundPath = playBackgroundPath(question.vehicleIndex);
     const path = vehicle && progress.discovered ? answerArtworkPath(question.vehicleIndex, stage) : null;
-    const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && stage > state.collection[vehicle.index]
-      ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
+    const bubbleSpec = progressSpeechBubbleSpec(question.vehicleIndex);
+    const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && bubbleSpec?.stage === stage
+      ? bubbleSpec.path : null;
     return { stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage: Boolean(vehicle && !progress.discovered) };
   }
   function preloadQuestionVisuals(question) {
@@ -682,6 +695,29 @@
     element.style.visibility = "hidden";
     return decodeImageElement(element, path);
   }
+  function positionAnswerBubble(bubble, stage, character) {
+    const position = answerBubblePositions[stage];
+    if (!bubble || !position || !character) return;
+    const characterLeft = Number.parseFloat(character.style.left);
+    const characterWidth = Number.parseFloat(character.style.width);
+    if (Number.isFinite(characterLeft) && Number.isFinite(characterWidth)) {
+      bubble.style.left = `${characterLeft + characterWidth / 2 - position.width / 2}px`;
+    }
+    let top = position.top;
+    if (stage >= 4) {
+      const playStage = $("play-stage");
+      const timer = $("elapsed-time");
+      const stageRect = playStage?.getBoundingClientRect();
+      const timerRect = timer?.getBoundingClientRect();
+      const stageScale = stageRect?.width ? stageRect.width / 1448 : 0;
+      if (stageRect && timerRect && stageScale) {
+        top = (timerRect.top + timerRect.height / 2 - stageRect.top) / stageScale;
+      }
+    }
+    if (Number.isFinite(top)) bubble.style.top = `${top}px`;
+    bubble.style.width = `${position.width}px`;
+  }
+
   function clearCharacterMotion(element) {
     element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting");
   }
@@ -857,8 +893,7 @@
       clearCharacterMotion(stagedCharacter);
       elementPrepares.push(prepareStagedImage(stagedCharacter, characterPath));
       if (bubblePath) {
-        const [x, y, bubbleWidth] = answerBubblePositions[stage];
-        stagedBubble.style.left = `${x}px`; stagedBubble.style.top = `${y}px`; stagedBubble.style.width = `${bubbleWidth}px`;
+        positionAnswerBubble(stagedBubble, stage, stagedCharacter);
         elementPrepares.push(prepareStagedImage(stagedBubble, bubblePath));
       } else stagedBubble.hidden = true;
       await Promise.all(elementPrepares);
@@ -1822,6 +1857,28 @@
     $("energy-current").textContent = String(currentEnergy);
     $("energy-required").textContent = String(needed);
   }
+  function showProgressSpeechBubbleForCurrentQuestion(vehicleIndex) {
+    const question = state.current;
+    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.answerRevealed) return;
+    const spec = progressSpeechBubbleSpec(vehicleIndex);
+    if (!spec || spec.stage !== question.answerStage) return;
+    const bubble = $("answer-bubble");
+    const character = $("answer-character");
+    if (!bubble || !character) return;
+    positionAnswerBubble(bubble, spec.stage, character);
+    const reveal = () => {
+      if (state.current !== question) return;
+      const currentSpec = progressSpeechBubbleSpec(vehicleIndex);
+      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.answerRevealed) return;
+      bubble.style.visibility = "";
+      bubble.hidden = false;
+    };
+    preloadDecodedImage(spec.path)
+      .then(() => decodeImageElement(bubble, spec.path))
+      .then(reveal)
+      .catch(() => {});
+  }
+
   function flashEnergyCapsule() {
     const capsule = $("energy-capsule");
     capsule.classList.remove("is-complete");
@@ -1998,6 +2055,7 @@
       const gain = applyEnergyGain(progress, deferred.vehicleIndex, deferred.energyGain, { completeStage: false });
       state.energyDisplayOverride = { vehicleIndex: deferred.vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
       renderVehicleProgressUi(deferred.vehicleIndex);
+      showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
     }});
     // Announce the extra reward as +3 starts moving, then let it join the
     // flight after a short, readable 0.3 second pause.
@@ -2009,6 +2067,7 @@
         timeBonusReward = resolved.reward;
         state.energyDisplayOverride = resolved.energyVisual;
         renderVehicleProgressUi(deferred.vehicleIndex);
+        showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
         if (timeBonusReward) flashEnergyCapsule();
       },
       onComplete: () => {
@@ -2107,6 +2166,7 @@
           onArrive: () => {
             if (progression.energyVisual) state.energyDisplayOverride = progression.energyVisual;
             renderVehicleProgressUi(state.current.vehicleIndex);
+            showProgressSpeechBubbleForCurrentQuestion(state.current.vehicleIndex);
           }
         });
       }

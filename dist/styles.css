@@ -857,7 +857,6 @@ button { touch-action: manipulation; }
 @keyframes robot-sparkle-rise-line { 0% { top:calc(100% - 2px); opacity:0; } 11%,84% { opacity:.94; } 100% { top:0; opacity:0; } }
 @keyframes robot-sparkle-fall { 0% { top:0; opacity:0; } 12%,86% { opacity:1; } 100% { top:calc(100% - 28px); opacity:0; } }
 @keyframes robot-sparkle-fall-line { 0% { top:0; opacity:0; } 12%,86% { opacity:.94; } 100% { top:calc(100% - 2px); opacity:0; } }
-.play-screen .answer-bubble { display:none !important; }
 .play-screen .answer-discovery-bubble { position:absolute; z-index:4; left:178px; top:330px; width:430px; height:auto; display:block; pointer-events:none; }
 .play-screen .answer-discovery-bubble[hidden], .play-screen .vehicle-progress-ui[hidden], .play-screen .friendship-progress[hidden], .play-screen .energy-progress[hidden], .play-screen .progress-gain-fly[hidden], .play-screen .incorrect-next-vehicle-notice[hidden], .play-screen .vehicle-transition-five-clear[hidden] { display:none; }
 .play-screen .vehicle-progress-ui { position:absolute; z-index:5; left:42px; top:132px; width:166px; display:flex; justify-content:center; text-align:center; pointer-events:none; font-family:"Noto Sans JP",sans-serif; color:var(--navy); text-shadow:none; }
