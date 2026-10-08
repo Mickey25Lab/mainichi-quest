@@ -1172,13 +1172,15 @@
       hintUsed:false, answerRevealed:false, assistedCorrect:false, resultType:null, isReview:false
     }));
   }
-  function makeCountingQuestions() {
-    const values = Array.from({ length: 10 }, (_, index) => index + 1);
+  function makeCountingQuestions(maxValue = 10) {
+    const values = maxValue === 5
+      ? [...Array.from({ length: 5 }, (_, index) => index + 1), ...Array.from({ length: 5 }, (_, index) => index + 1)]
+      : Array.from({ length: 10 }, (_, index) => index + 1);
     for (let index = values.length - 1; index > 0; index -= 1) {
       const swapIndex = Math.floor(Math.random() * (index + 1));
       [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
     }
-    return values.map((value) => ({ kind: "counting", id: `counting-${value}`, value, quotient: value, remainder: 0 }));
+    return values.map((value, index) => ({ kind: "counting", id: `counting-${maxValue}-${index + 1}-${value}`, value, quotient: value, remainder: 0 }));
   }
 
   function makeMultiplicationQuestions() {
@@ -1211,8 +1213,8 @@
     const isLongDivision = mode === "longdivision";
     const isNumberCards = mode === "numbercards";
     const isMultiplication = mode === "multiplication";
-    const isCounting = mode === "counting";
-    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isCounting ? "counting" : "normal";
+    const isCounting = mode === "counting1" || mode === "counting2";
+    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isCounting ? mode : "normal";
     state.longDivision = null;
     state.numberCards = null;
     state.counting = null;
@@ -1259,7 +1261,7 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "counting" ? " counting-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
@@ -1330,7 +1332,7 @@
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
-      if (state.mode === "counting") setupCounting(question);
+      if ((state.mode === "counting1" || state.mode === "counting2")) setupCounting(question);
       commitQuestionVisuals(prepared);
       renderVehicleProgressUi(question.vehicleIndex);
       $("incorrect-next-vehicle-notice").hidden = true;
@@ -1354,7 +1356,7 @@
       // Number cards are initially rendered while the next-question transition is
       // locked. Reflect the unlock immediately, independently of hint rendering.
       if (state.mode === "numbercards") renderNumberCards();
-      if (state.mode === "counting") renderCounting();
+      if ((state.mode === "counting1" || state.mode === "counting2")) renderCounting();
       updateAssistButton();
       resumeGameTimer();
       resetIdleGuideTimer();
@@ -1366,7 +1368,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "counting" ? makeCountingQuestions() : makeQuestions(); state.queue = []; state.phase = "initial";
+    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
     state.initialIndex = 0; state.initialCorrect = 0; state.missed = []; state.retrySetPosition = 0; state.retrySetTotal = 0; state.vehicleChallengeQuestionCount = 0;
     state.finalElapsedMs = 0; state.confirmingAnswer = false;
     state.sessionUnlocks = [0, 0, 0, 0, 0, 0];
@@ -1395,11 +1397,12 @@
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
   function startMultiplicationApp() { startGameFromGesture("multiplication"); }
-  function startCountingApp() { startGameFromGesture("counting"); }
+  function startCounting1App() { startGameFromGesture("counting1"); }
+  function startCounting2App() { startGameFromGesture("counting2"); }
   function formatAnswer(answer) { return answer.usedRemainder ? `${answer.quotient}…${answer.remainder}` : String(answer.quotient); }
   function setKeypadDisabled(disabled) { $("keypad").setAttribute("aria-busy", disabled ? "true" : "false"); }
   function updateAssistButton() {
-    if (state.mode === "numbercards" || state.mode === "counting") {
+    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2")) {
       $("assist-button").textContent = "ヒントを見る";
       $("assist-button").classList.remove("is-answer");
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
@@ -1419,7 +1422,7 @@
     $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
   }
   function renderInput() {
-    if (state.mode === "counting") return;
+    if ((state.mode === "counting1" || state.mode === "counting2")) return;
     if (state.mode === "numbercards") { renderNumberCards(); return; }
     if (state.mode === "multiplication") { renderMultiplication(); return; }
     if (state.mode === "longdivision") { renderLongDivision(); return; }
@@ -1802,7 +1805,7 @@
   }
   function useHint() {
     if (state.transitioning || !state.current) return;
-    if (state.mode === "counting") {
+    if ((state.mode === "counting1" || state.mode === "counting2")) {
       state.current.hintUsed = true;
       state.counting.hinted = true;
       renderCounting();
@@ -1895,7 +1898,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || state.mode === "counting" || state.mode === "multiplication") { useHint(); return; }
+    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication") { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -2192,7 +2195,7 @@
       return;
     }
     if (!finalQuestion && challengeEnds) {
-      if (state.current?.hadWrong && state.mode !== "numbercards" && state.mode !== "counting") { showIncorrectNextVehicleNotice(); return; }
+      if (state.current?.hadWrong && state.mode !== "numbercards" && (state.mode !== "counting1" && state.mode !== "counting2")) { showIncorrectNextVehicleNotice(); return; }
       if (state.vehicleChallengeQuestionCount >= 5) { showFiveQuestionClearTransition(); return; }
       startNextVehicleChallenge();
     }
@@ -2456,7 +2459,7 @@
       if (state.initialIndex < state.questions.length) {
         displayQuestion(state.questions[state.initialIndex]); return;
       }
-      if (state.mode === "numbercards" || state.mode === "counting") { finishRound(); return; }
+      if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2")) { finishRound(); return; }
       if (state.missed.length === 0) { finishRound(); return; }
       state.phase = "retry"; state.queue = [...state.missed]; state.retrySetPosition = 1; state.retrySetTotal = state.queue.length;
       stopBackgroundMusic();
@@ -2600,7 +2603,7 @@
     const stage = $("play-stage");
     const target = state.mode === "numbercards"
       ? $("number-card-grid").querySelector(`.number-card[data-number="${state.numberCards?.nextNumber}"]`)
-      : state.mode === "counting"
+      : (state.mode === "counting1" || state.mode === "counting2")
         ? $("counting-keypad-grid").querySelector(`.counting-key[data-counting-number="${state.current?.value}"]`)
         : $("assist-button");
     if (!target || target.disabled) return;
@@ -2982,7 +2985,7 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting").addEventListener("click", startCountingApp); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToStart); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
