@@ -255,15 +255,24 @@
         </header>
         <div class="detail-view">
           <div class="detail-picture" id="detail-picture">
-            <img id="detail-image" alt="">
-            <div class="detail-lock-message" id="detail-lock-message" hidden>まだ みつけていないよ</div>
-            <div class="detail-get detail-get-vehicle">GET!</div>
-            <div class="detail-get detail-get-robot">GET!</div>
-            <div class="detail-get detail-get-super">GET!</div>
-            <div class="detail-special-get"><span>スペシャル装備</span><b>GET!</b></div>
-            <div class="detail-get detail-get-medal">GET!</div>
-            <button class="detail-arrow previous" id="detail-previous" aria-label="前の車種"><span>‹</span></button>
-            <button class="detail-arrow next" id="detail-next" aria-label="次の車種"><span>›</span></button>
+            <img class="detail-background" id="detail-background" alt="">
+            <img class="detail-vehicle-logo" id="detail-vehicle-logo" alt="" hidden>
+            <div class="detail-evolution-layout" id="detail-evolution-layout" hidden>
+              <article class="detail-evolution-slot detail-slot-vehicle">
+                <div class="detail-art-box"><img class="detail-character" id="detail-vehicle-art" alt=""></div>
+                <div class="detail-evolution-label"><span>のりもの</span></div>
+              </article>
+              <div class="detail-evolution-chevron detail-chevron-one" aria-hidden="true"><i></i><i></i></div>
+              <article class="detail-evolution-slot detail-slot-robot">
+                <div class="detail-art-box"><img class="detail-character" id="detail-robot-art" alt=""></div>
+                <div class="detail-evolution-label"><span>ロボット</span></div>
+              </article>
+              <div class="detail-evolution-chevron detail-chevron-two" aria-hidden="true"><i></i><i></i></div>
+              <article class="detail-evolution-slot detail-slot-super">
+                <div class="detail-art-box"><img class="detail-character" id="detail-super-art" alt=""></div>
+                <div class="detail-evolution-label detail-evolution-label-long"><span>スーパーロボット</span></div>
+              </article>
+            </div>
           </div>
         </div>
       </div>

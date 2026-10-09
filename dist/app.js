@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.127";
+  const appVersion = "0.0.128";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -245,7 +245,9 @@
         { discovered: true, friendship: 3, friendly: false, stage: 2, energy: 0, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 0, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 25, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 45, masterMedal: false }
+        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 45, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 80, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 100, masterMedal: true }
       ];
       normalVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
         const progress = progressStates[displayIndex % progressStates.length];
@@ -282,6 +284,10 @@
     return `${values.year}-${values.month}-${values.day}`;
   }
   function topCollectionAlreadyUsedToday() {
+    const host = window.location.hostname;
+    const previewQa = new URLSearchParams(window.location.search).get("qa") === "progress"
+      && ((host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev") || host === "localhost" || host === "127.0.0.1");
+    if (previewQa) return false;
     try { return localStorage.getItem(storageKeys.topCollectionLastUsedJst) === japanDateKey(); } catch (_) { return false; }
   }
   function updateTopCollectionButton() {
@@ -433,6 +439,22 @@
   function vehicleArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/01_vehicle/${stem}_vehicle.webp`;
+  }
+  function robotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/02_robot/${stem}_robot.webp`;
+  }
+  function superRobotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/03_super_robot/${stem}_super_robot.webp`;
+  }
+  function equippedSuperRobotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/04_super_robot_equipped/${stem}_super_robot_equipped.webp`;
+  }
+  function vehicleLogoTitlePath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.png`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
@@ -2937,10 +2959,40 @@
   }
   function openVehicleDetail(index) { state.detailVehicleIndex = index; renderVehicleDetail(); showScreen("collection-detail-screen"); }
   function renderVehicleDetail() {
-    const vehicle = vehicles[state.detailVehicleIndex], stage = state.collection[state.detailVehicleIndex];
-    $("detail-image").src = vehicle.image; $("detail-image").alt = `${vehicle.nameJa}の進化コレクション`;
-    $("detail-picture").className = `detail-picture stage-${stage}`;
-    $("detail-lock-message").hidden = stage > 0;
+    const vehicleIndex = state.detailVehicleIndex;
+    const vehicle = vehicles[vehicleIndex];
+    const progress = vehicleProgress(vehicleIndex);
+    const discovered = progress.discovered;
+    const threeUp = discovered && progress.stage >= 4;
+    const picture = $("detail-picture");
+    const layout = $("detail-evolution-layout");
+    const logo = $("detail-vehicle-logo");
+    const vehicleArt = $("detail-vehicle-art");
+    const robotArt = $("detail-robot-art");
+    const superArt = $("detail-super-art");
+
+    $("detail-background").src = playBackgroundPath(vehicleIndex);
+    $("detail-background").alt = `${vehicle.nameJa}の背景`;
+    picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
+    logo.hidden = !discovered;
+    layout.hidden = !discovered;
+    if (!discovered) return;
+
+    logo.src = vehicleLogoTitlePath(vehicleIndex);
+    logo.alt = vehicle.nameEn;
+    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
+    vehicleArt.src = vehicleArtworkPath(vehicleIndex);
+    vehicleArt.alt = vehicle.nameJa;
+    vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
+    robotArt.src = robotArtworkPath(vehicleIndex);
+    robotArt.alt = `${vehicle.nameJa}のロボット`;
+    robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
+    $("detail-evolution-layout").querySelector(".detail-slot-super").hidden = !threeUp;
+    $("detail-evolution-layout").querySelector(".detail-chevron-two").hidden = !threeUp;
+    if (threeUp) {
+      superArt.src = progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex);
+      superArt.alt = progress.stage >= 5 ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット` : `${vehicle.nameJa}のスーパーロボット`;
+    }
   }
   function moveVehicleDetail(direction) {
     state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
@@ -3207,7 +3259,6 @@
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => setCollectionCategory(button.dataset.category)));
   $("detail-back").addEventListener("click", () => { sizeCollectionStage(); showScreen("collection-screen"); });
-  $("detail-previous").addEventListener("click", () => moveVehicleDetail(-1)); $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
