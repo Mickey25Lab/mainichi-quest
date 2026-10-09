@@ -1158,10 +1158,6 @@ button { touch-action: manipulation; }
 .multiplication-2x2-bar-first { grid-row:3; }
 .multiplication-2x2-bar-sum { grid-row:6; grid-column:1 / 5; }
 .multiplication-2x2-row { justify-self:end; }
-#multiple-placeholder {}
-#blub {}
-#none {}
-.multiplication-2x2-row:nth-of-type(3) {}
 .multiplication-2x2-slot {
   width:var(--multiplication-2x2-column); height:62px; display:flex; align-items:center; justify-content:center;
   box-sizing:border-box; border:4px solid #8b949d; border-radius:12px; background:#fff; color:var(--navy);
@@ -1169,7 +1165,6 @@ button { touch-action: manipulation; }
 }
 .multiplication-2x2-slot.is-active { border-color:#e8a916; background:#fff4c9; box-shadow:0 0 0 4px rgba(232,169,22,.22); }
 .multiplication-2x2-slot.is-hinted { background:#e8f8ff; }
-#multiple-placeholder {}
 .long-division-panel { --long-division-column:77px; --long-division-problem-left:77px; --long-division-left:128px; position:absolute; inset:0; display:block; contain:layout paint; color:var(--navy); font-weight:900; }
 .question-answer-card:not(.long-division-mode) .long-division-panel,
 .long-division-panel[hidden] { display:none !important; }
