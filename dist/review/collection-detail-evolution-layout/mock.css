@@ -23,6 +23,8 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .vehicle-logo { position:absolute; z-index:3; left:3.4%; top:3.2%; width:36%; height:auto; filter:drop-shadow(0 5px 7px rgba(0,7,25,.6)); }
 .evolution-layout { position:absolute; z-index:2; left:7.5%; right:7.5%; top:19%; bottom:6.8%; display:grid; align-items:end; }
 .two-up .evolution-layout { grid-template-columns:minmax(0,1fr) 13% minmax(0,1fr); }
+.two-up .slot-vehicle { grid-column:1; }
+.two-up .slot-robot { grid-column:3; }
 .three-up .evolution-layout { left:2%; right:2%; top:13%; bottom:3.5%; display:block; }
 .three-up .evolution-slot { position:absolute; z-index:2; bottom:0; width:33%; height:72%; display:block; }
 .three-up .slot-vehicle { left:-3.5%; }
@@ -30,7 +32,7 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .three-up .slot-super { left:56%; z-index:2; }
 .three-up .art-box { position:absolute; inset:0; overflow:visible; transform:translateY(-12.5%); }
 .three-up .evolution-label { display:grid; position:absolute; left:50%; bottom:0; width:49%; min-width:0; height:28px; transform:translateX(-50%); font-size:15px; white-space:nowrap; }
-.three-up .slot-vehicle .evolution-label { left:50%; }
+.three-up .slot-vehicle .evolution-label { left:43.5%; }
 .three-up .slot-robot .evolution-label { left:47%; }
 .three-up .slot-super .evolution-label { left:60.5%; width:70%; font-size:13.5px; }
 .three-up .evolution-chevron { display:block; position:absolute; z-index:1; bottom:28%; width:4%; height:6%; margin:0; }
@@ -55,7 +57,7 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .evolution-label span { position:relative; z-index:1; }
 .evolution-label-long { font-size:14px; }
 .evolution-chevron { align-self:end; position:relative; z-index:1; width:100%; height:44px; margin-bottom:34px; filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px rgba(68,225,255,1)) drop-shadow(0 0 14px rgba(24,102,255,.82)); }
-.two-up .evolution-chevron { width:60%; margin-right:auto; margin-bottom:82px; margin-left:auto; }
+.two-up .evolution-chevron { position:absolute; left:46.25%; bottom:36%; width:7.5%; height:12%; margin:0; }
 .evolution-chevron::before { content:""; position:absolute; inset:16% -15%; border-radius:50%; background:radial-gradient(ellipse,rgba(48,219,255,.34),rgba(20,93,255,0) 68%); }
 .evolution-chevron i { position:absolute; top:8%; width:61%; height:84%; border:0; background:linear-gradient(135deg,#fff 0 16%,#82f3ff 28%,#1599ff 58%,#244dcb 100%); clip-path:polygon(0 0,48% 0,100% 50%,48% 100%,0 100%,52% 50%); transform:none; box-shadow:none; }
 .evolution-chevron i:first-child { left:0; opacity:.66; }
