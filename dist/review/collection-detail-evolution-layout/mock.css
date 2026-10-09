@@ -29,9 +29,11 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .three-up .slot-robot { left:21%; z-index:2; }
 .three-up .slot-super { left:56%; z-index:2; }
 .three-up .art-box { position:absolute; inset:0; overflow:visible; transform:translateY(-12.5%); }
-.three-up .evolution-label { display:grid; position:absolute; left:50%; bottom:0; width:70%; min-width:0; height:28px; transform:translateX(-50%); font-size:10px; }
-.three-up .slot-super .evolution-label { font-size:9px; }
-.three-up .evolution-chevron { display:block; position:absolute; z-index:1; bottom:41.6%; width:4%; height:6%; margin:0; }
+.three-up .evolution-label { display:grid; position:absolute; left:50%; bottom:0; width:49%; min-width:0; height:28px; transform:translateX(-50%); font-size:15px; white-space:nowrap; }
+.three-up .slot-vehicle .evolution-label { left:50%; }
+.three-up .slot-robot .evolution-label { left:47%; }
+.three-up .slot-super .evolution-label { left:60.5%; width:70%; font-size:13.5px; }
+.three-up .evolution-chevron { display:block; position:absolute; z-index:1; bottom:28%; width:4%; height:6%; margin:0; }
 .three-up .chevron-one { left:22.8%; }
 .three-up .chevron-two { left:49.7%; }
 .evolution-slot { min-width:0; height:100%; display:grid; grid-template-rows:minmax(0,1fr) 9.5%; align-items:end; }
@@ -44,12 +46,14 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .three-up .slot-super .character { transform:translateY(8%) scale(2); }
 .is-grayscale { filter:grayscale(1) drop-shadow(0 10px 9px rgba(0,7,25,.42)); }
 .is-silhouette { filter:brightness(0) drop-shadow(0 0 8px rgba(82,220,255,.5)) drop-shadow(0 10px 9px rgba(0,7,25,.52)); }
-.evolution-label { position:relative; isolation:isolate; align-self:end; width:56%; min-width:0; height:28px; margin:0 auto; display:grid; place-items:center; border:1px solid #252a2f; border-radius:15px; background:linear-gradient(180deg,#fff 0%,#f9faf9 34%,#d9dddf 58%,#f4f6f6 100%); box-shadow:inset 0 2px 1px rgba(255,255,255,.95),inset 0 -2px 2px rgba(79,91,99,.22),0 1px 2px rgba(18,25,29,.28); color:#111519; text-shadow:0 1px 0 rgba(255,255,255,.92); font-size:12px; font-weight:900; letter-spacing:.07em; white-space:nowrap; }
+.evolution-label { position:relative; isolation:isolate; align-self:end; width:39.2%; min-width:0; height:28px; margin:0 auto; display:grid; place-items:center; border:1px solid #252a2f; border-radius:15px; background:linear-gradient(180deg,#fff 0%,#f9faf9 34%,#d9dddf 58%,#f4f6f6 100%); box-shadow:inset 0 2px 1px rgba(255,255,255,.95),inset 0 -2px 2px rgba(79,91,99,.22),0 1px 2px rgba(18,25,29,.28); color:#111519; text-shadow:0 1px 0 rgba(255,255,255,.92); font-size:18px; font-weight:900; letter-spacing:.07em; white-space:nowrap; }
+.two-up .slot-vehicle .evolution-label { transform:translateX(-14%); }
+.two-up .slot-robot .evolution-label { transform:translateX(-9%); }
 .evolution-label::before,.evolution-label::after { content:""; position:absolute; z-index:-1; top:7px; width:5px; height:14px; border-radius:2px; background:linear-gradient(180deg,#f8fafb,#858f96 48%,#e7ebed); box-shadow:inset 0 0 0 1px rgba(31,38,43,.55); }
 .evolution-label::before { left:-3px; }
 .evolution-label::after { right:-3px; }
 .evolution-label span { position:relative; z-index:1; }
-.evolution-label-long { font-size:10px; }
+.evolution-label-long { font-size:14px; }
 .evolution-chevron { align-self:end; position:relative; z-index:1; width:100%; height:44px; margin-bottom:34px; filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px rgba(68,225,255,1)) drop-shadow(0 0 14px rgba(24,102,255,.82)); }
 .two-up .evolution-chevron { width:60%; margin-right:auto; margin-bottom:82px; margin-left:auto; }
 .evolution-chevron::before { content:""; position:absolute; inset:16% -15%; border-radius:50%; background:radial-gradient(ellipse,rgba(48,219,255,.34),rgba(20,93,255,0) 68%); }
@@ -94,8 +98,8 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
   .review-card { padding:8px; border-radius:15px; }
   .review-card-heading { padding:6px 5px 10px; }
   .review-card-heading p { display:none; }
-  .evolution-label { min-width:0; height:28px; border-width:1px; border-radius:15px; font-size:12px; }
-  .evolution-label-long { font-size:10px; }
+  .evolution-label { min-width:0; height:28px; border-width:1px; border-radius:15px; font-size:18px; }
+  .evolution-label-long { font-size:14px; }
   .evolution-label::before,.evolution-label::after { width:10px; height:18px; }
   .evolution-chevron { height:45px; margin-bottom:18px; }
   .evolution-chevron i { border-width:4px; }
