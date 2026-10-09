@@ -19,7 +19,7 @@ body { margin:0; min-height:100vh; padding:34px; background:radial-gradient(circ
 .review-card-heading p { margin:0; color:#bcd8e8; font-weight:800; }
 .stage { position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; border:2px solid rgba(145,237,255,.75); border-radius:18px; background:#061632; box-shadow:0 0 28px rgba(39,199,255,.25); }
 .stage-background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.stage-shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(3,21,51,.08) 0,rgba(3,18,45,.03) 35%,rgba(2,12,34,.24) 70%,rgba(2,9,27,.62) 100%); }
+.stage-shade { display:none; }
 .vehicle-logo { position:absolute; z-index:3; left:3.4%; top:3.2%; width:36%; height:auto; filter:drop-shadow(0 5px 7px rgba(0,7,25,.6)); }
 .evolution-layout { position:absolute; z-index:2; left:7.5%; right:7.5%; top:19%; bottom:6.8%; display:grid; align-items:end; }
 .two-up .evolution-layout { grid-template-columns:minmax(0,1fr) 13% minmax(0,1fr); }
