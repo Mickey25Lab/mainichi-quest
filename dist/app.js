@@ -742,7 +742,31 @@
   }
 
   function clearCharacterMotion(element) {
-    element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting");
+    element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting", "is-super-summoning");
+  }
+  function clearSuperRobotSummon() {
+    const summon = $("super-robot-summon");
+    if (!summon) return;
+    summon.classList.remove("is-running", "is-stage5");
+    summon.hidden = true;
+  }
+  function playSuperRobotSummon(character, stageNumber) {
+    const summon = $("super-robot-summon"), playStage = $("play-stage");
+    if (!summon || !playStage || character.hidden) return false;
+    const stageRect = playStage.getBoundingClientRect();
+    const characterRect = character.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    if (!stageRect.width || !characterRect.width || !characterRect.height || !scale) return false;
+    const centerX = (characterRect.left - stageRect.left + characterRect.width / 2) / scale;
+    const footY = Math.min(1086, Math.max(120, (characterRect.bottom - stageRect.top) / scale));
+    summon.style.setProperty("--summon-x", `${centerX.toFixed(1)}px`);
+    summon.style.setProperty("--summon-foot-y", `${footY.toFixed(1)}px`);
+    summon.classList.toggle("is-stage5", stageNumber === 5);
+    summon.hidden = false;
+    summon.classList.remove("is-running");
+    void summon.offsetWidth;
+    summon.classList.add("is-running");
+    return true;
   }
   function clearRobotDissolveSparkle() {
     const sparkle = $("robot-dissolve-sparkle");
@@ -878,6 +902,21 @@
       playRobotDissolveSparkle(character, "enter");
       await waitForCharacterAnimation(character, "is-robot-entering", 1020);
       clearRobotDissolveSparkle();
+    } else if (prepared.characterStage === 4 || prepared.characterStage === 5) {
+      clearSuperRobotSummon();
+      const summonStarted = playSuperRobotSummon(character, prepared.characterStage);
+      const reducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+      const settleMs = reducedMotion ? 320 : 1120;
+      const characterMotion = waitForCharacterAnimation(character, "is-super-summoning", settleMs + 120);
+      if (summonStarted) {
+        await Promise.all([
+          characterMotion,
+          new Promise((resolve) => window.setTimeout(resolve, settleMs))
+        ]);
+        clearSuperRobotSummon();
+      } else {
+        await characterMotion;
+      }
     }
   }
   function prepareQuestionVisuals(question, allowFutureQuestion = false) {
@@ -1426,9 +1465,8 @@
         state.pendingNextVehicleOverlay = null;
       }
       showScreen("play-screen");
-      // Only the two early collection forms receive new character motion.
-      // Super-robot and equipped-super-robot retain their existing static
-      // presentation, including their final size and position.
+      // Stage2/3 keep their current motion. Stage4/5 use the dedicated
+      // lightweight summon sequence while preserving the same final placement.
       await playPreparedCharacterEntry(prepared, shouldAnimateCharacter);
       if (runId !== state.runId || state.current !== question) return;
       if (onRevealed) onRevealed();
