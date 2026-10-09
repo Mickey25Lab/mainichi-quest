@@ -1017,6 +1017,14 @@ button { touch-action: manipulation; }
   padding: 0;
   grid-template-rows:165px 1fr;
 }
+.play-screen .question-answer-card.multiplication-2x2-mode {
+  height: 430px;
+  margin-bottom: 8px;
+}
+.play-screen .keypad.multiplication-2x2-mode {
+  height: 320px;
+  gap: 8px;
+}
 .play-screen .question-answer-card .problem-card {
   z-index:auto;
   width:auto;
