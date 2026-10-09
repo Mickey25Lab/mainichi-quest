@@ -40,6 +40,7 @@
         <button class="mode-select-hit mode-select-choice mode-select-counting-1" id="mode-select-counting-1" type="button">かずかぞえ1</button>
         <button class="mode-select-hit mode-select-choice mode-select-counting-2" id="mode-select-counting-2" type="button">かずかぞえ2</button>
         <button class="mode-select-hit mode-select-choice mode-select-multiplication" id="mode-select-multiplication" type="button">かけ算ひっ算</button>
+        <button class="mode-select-hit mode-select-choice mode-select-multiplication-2x2" id="mode-select-multiplication-2x2" type="button"><span>かけ算ひっ算</span><small>二桁かける二桁</small></button>
         <button class="mode-select-hit mode-select-choice mode-select-normal" id="mode-select-normal" type="button">わり算計算</button>
         <button class="mode-select-hit mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button">わり算ひっ算</button>
       </div>
@@ -97,6 +98,16 @@
             <div class="multiplication-multiplier" id="multiplication-multiplier"></div>
             <div class="multiplication-bar" aria-hidden="true"></div>
             <div class="multiplication-answer-row" id="multiplication-answer-row"></div>
+          </div>
+          <div class="multiplication-2x2-panel" id="multiplication-2x2-panel" hidden aria-live="polite">
+            <div class="multiplication-2x2-multiplicand" id="multiplication-2x2-multiplicand"></div>
+            <span class="multiplication-2x2-operator" aria-hidden="true">×</span>
+            <div class="multiplication-2x2-multiplier" id="multiplication-2x2-multiplier"></div>
+            <div class="multiplication-2x2-bar multiplication-2x2-bar-first" aria-hidden="true"></div>
+            <div class="multiplication-2x2-row" id="multiplication-2x2-partial-1"></div>
+            <div class="multiplication-2x2-row" id="multiplication-2x2-partial-2"></div>
+            <div class="multiplication-2x2-bar multiplication-2x2-bar-sum" aria-hidden="true"></div>
+            <div class="multiplication-2x2-row multiplication-2x2-total" id="multiplication-2x2-total"></div>
           </div>
           <span class="answer-mark" id="answer-mark" aria-hidden="true"></span>
         </div>
