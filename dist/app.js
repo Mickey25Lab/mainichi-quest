@@ -1173,19 +1173,32 @@
     }));
   }
   function makeCountingQuestions(maxValue = 10) {
-    const baseValues = maxValue === 5
-      ? [...Array.from({ length: 5 }, (_, index) => index + 1), ...Array.from({ length: 5 }, (_, index) => index + 1)]
-      : Array.from({ length: 10 }, (_, index) => index + 1);
     let values = [];
-    for (let attempt = 0; attempt < 1000; attempt += 1) {
-      values = [...baseValues];
-      for (let index = values.length - 1; index > 0; index -= 1) {
-        const swapIndex = Math.floor(Math.random() * (index + 1));
-        [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
+    if (maxValue === 5) {
+      const baseValues = [...Array.from({ length: 5 }, (_, index) => index + 1), ...Array.from({ length: 5 }, (_, index) => index + 1)];
+      for (let attempt = 0; attempt < 1000; attempt += 1) {
+        values = [...baseValues];
+        for (let index = values.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [values[index], values[swapIndex]] = [values[swapIndex], values[index]];
+        }
+        const startsEasy = values[0] <= 3 && values[1] <= 3;
+        const hasAdjacentRepeat = values.some((value, index) => index > 0 && value === values[index - 1]);
+        if (startsEasy && !hasAdjacentRepeat) break;
       }
-      const startsEasy = values[0] <= 3 && values[1] <= 3;
-      const hasAdjacentRepeat = values.some((value, index) => index > 0 && value === values[index - 1]);
-      if (startsEasy && !hasAdjacentRepeat) break;
+    } else {
+      const easyValues = Array.from({ length: 5 }, (_, index) => index + 1);
+      for (let index = easyValues.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [easyValues[index], easyValues[swapIndex]] = [easyValues[swapIndex], easyValues[index]];
+      }
+      const firstThree = easyValues.slice(0, 3);
+      const remaining = Array.from({ length: 10 }, (_, index) => index + 1).filter((value) => !firstThree.includes(value));
+      for (let index = remaining.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [remaining[index], remaining[swapIndex]] = [remaining[swapIndex], remaining[index]];
+      }
+      values = [...firstThree, ...remaining];
     }
     return values.map((value, index) => ({ kind: "counting", id: `counting-${maxValue}-${index + 1}-${value}`, value, quotient: value, remainder: 0 }));
   }
