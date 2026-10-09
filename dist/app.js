@@ -302,7 +302,7 @@
   function showScreen(id) {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
     if (id !== "play-screen") stopBackgroundMusic();
-    recordVisualDiagnostic("show-screen", { screenId });
+    recordVisualDiagnostic("show-screen", { screenId: id });
   }
   function showRewardOverPlay() {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === "play-screen" || screenId === "reward-screen"));
