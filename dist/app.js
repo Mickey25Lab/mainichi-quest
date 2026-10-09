@@ -979,6 +979,7 @@
         await Promise.all(elementPrepares);
         recordVisualDiagnostic("prepare-question-promise-all-end", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt) });
         if (requestId !== visualRequestId || (!allowFutureQuestion && state.current !== question)) return false;
+        recordVisualDiagnostic("prepare-question-visuals-success", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt), hasCharacter: false });
         return { backgroundPath, hasCharacter: false, hasBubble: false, hasDiscoveryMessage };
       }
       const characterPath = path.startsWith("./") ? path : `./${path}`;
