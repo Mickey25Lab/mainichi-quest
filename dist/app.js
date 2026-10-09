@@ -1809,13 +1809,13 @@
         slot.textContent = row.cells[cellIndex];
         slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
         slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
-        slot.classList.toggle("is-crossed", rowIndex === 0 && cellIndex === row.cells.length - 1 && model.secondRowGuideVisible);
       });
     });
     const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
     multiplierDigits.forEach((digit, index) => {
       digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
     });
+    $("multiplication-2x2-shift-guide").hidden = !model.secondRowGuideVisible;
   }
   function showTwoDigitSecondRowGuides(model) {
     if (!model || model.firstRowGuideVisible) return;
