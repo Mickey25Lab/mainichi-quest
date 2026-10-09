@@ -1060,7 +1060,9 @@ button { touch-action: manipulation; }
 }
 .number-card-panel p { margin:0; font-size:56px; font-weight:900; line-height:1.2; letter-spacing:.015em; white-space:nowrap; }
 .number-card-panel p,
+.counting-panel,
 .multiplication-panel,
+.multiplication-2x2-panel,
 .long-division-panel {
   font-family:"Noto Sans JP",sans-serif;
   font-style:normal;
@@ -2421,3 +2423,26 @@ button { touch-action: manipulation; }
 .multiplication-2x2-panel #multiplication-2x2-partial-1 { grid-row:4; }
 .multiplication-2x2-panel #multiplication-2x2-partial-2 { grid-row:5; }
 .multiplication-2x2-panel #multiplication-2x2-total { grid-row:7; }
+
+.mode-select-multiplication { flex-direction:column; gap:2px; }
+.mode-select-multiplication small,
+.mode-select-multiplication-2x2 small { display:block; font-size:.48em; font-weight:800; line-height:1; }
+
+.multiplication-2x2-multiplier span,
+.multiplication-2x2-slot { position:relative; }
+.multiplication-2x2-multiplier span.is-crossed::after,
+.multiplication-2x2-slot.is-crossed::after {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118%;
+  height:6px;
+  border-radius:999px;
+  background:#e22929;
+  box-shadow:0 1px 0 rgba(120,0,0,.15);
+  transform:translate(-50%,-50%) rotate(45deg);
+  transform-origin:center;
+  pointer-events:none;
+  z-index:3;
+}
