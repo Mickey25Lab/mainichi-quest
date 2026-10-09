@@ -131,7 +131,9 @@ button { touch-action: manipulation; }
 .mode-select-number-cards { left:31%; top:21%; }
 .mode-select-counting-1 { left:10%; top:37%; }
 .mode-select-counting-2 { right:10%; top:37%; }
-.mode-select-multiplication { left:31%; top:53%; }
+.mode-select-multiplication { left:10%; top:53%; }
+.mode-select-multiplication-2x2 { right:10%; top:53%; flex-direction:column; gap:2px; }
+.mode-select-multiplication-2x2 small { display:block; font-size:.48em; font-weight:800; line-height:1; }
 .mode-select-normal { left:10%; top:69%; }
 .mode-select-long-division { right:10%; top:69%; }
 .top-image-buttons {
@@ -1122,6 +1124,52 @@ button { touch-action: manipulation; }
 .multiplication-answer-row { grid-column:var(--multiplication-answer-start) / -1; grid-row:4; height:78px; grid-template-columns:repeat(var(--multiplication-answer-slots), var(--multiplication-column)); }
 .multiplication-answer-slot { width:var(--multiplication-column); height:78px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; border:4px solid #8b949d; border-radius:13px; background:#fff; color:var(--navy); font-size:57px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }
 .multiplication-answer-slot.is-active { border-color:#e8a916; background:#fff4c9; box-shadow:0 0 0 5px rgba(232,169,22,.22); }
+.multiplication-2x2-panel {
+  --multiplication-2x2-column:64px;
+  --multiplication-2x2-gap:12px;
+  position:absolute; inset:0; display:none; contain:layout paint; color:var(--navy); font-weight:900;
+  grid-template-columns:repeat(4, var(--multiplication-2x2-column));
+  grid-template-rows:48px 48px 8px 62px 62px 8px 70px;
+  column-gap:var(--multiplication-2x2-gap); row-gap:5px;
+  align-content:center; justify-content:center;
+}
+.question-answer-card:not(.multiplication-2x2-mode) .multiplication-2x2-panel,
+.multiplication-2x2-panel[hidden] { display:none !important; }
+.question-answer-card.multiplication-2x2-mode .multiplication-2x2-panel:not([hidden]) { display:grid; }
+.play-screen .question-answer-card.multiplication-2x2-mode { display:block; }
+.play-screen .question-answer-card.multiplication-2x2-mode .problem-card,
+.play-screen .question-answer-card.multiplication-2x2-mode .answer-card,
+.play-screen .question-answer-card.multiplication-2x2-mode .long-division-panel,
+.play-screen .question-answer-card.multiplication-2x2-mode .number-card-panel,
+.play-screen .question-answer-card.multiplication-2x2-mode .counting-panel,
+.play-screen .question-answer-card.multiplication-2x2-mode .multiplication-panel { display:none !important; }
+.multiplication-2x2-multiplicand,
+.multiplication-2x2-multiplier,
+.multiplication-2x2-row { display:grid; grid-auto-flow:column; grid-auto-columns:var(--multiplication-2x2-column); column-gap:var(--multiplication-2x2-gap); min-width:0; }
+.multiplication-2x2-multiplicand { grid-column:3 / 5; grid-row:1; }
+.multiplication-2x2-multiplier { grid-column:3 / 5; grid-row:2; }
+.multiplication-2x2-multiplicand span,
+.multiplication-2x2-multiplier span {
+  display:flex; align-items:center; justify-content:center; width:var(--multiplication-2x2-column); height:48px;
+  font-size:62px; line-height:1; font-variant-numeric:tabular-nums;
+}
+.multiplication-2x2-operator { grid-column:2; grid-row:2; display:flex; align-items:center; justify-content:center; font-size:62px; line-height:1; }
+.multiplication-2x2-bar { grid-column:2 / 5; height:8px; align-self:center; border-radius:999px; background:var(--navy); }
+.multiplication-2x2-bar-first { grid-row:3; }
+.multiplication-2x2-bar-sum { grid-row:6; grid-column:1 / 5; }
+.multiplication-2x2-row { justify-self:end; }
+#multiple-placeholder {}
+#blub {}
+#none {}
+.multiplication-2x2-row:nth-of-type(3) {}
+.multiplication-2x2-slot {
+  width:var(--multiplication-2x2-column); height:62px; display:flex; align-items:center; justify-content:center;
+  box-sizing:border-box; border:4px solid #8b949d; border-radius:12px; background:#fff; color:var(--navy);
+  font-size:48px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+}
+.multiplication-2x2-slot.is-active { border-color:#e8a916; background:#fff4c9; box-shadow:0 0 0 4px rgba(232,169,22,.22); }
+.multiplication-2x2-slot.is-hinted { background:#e8f8ff; }
+#multiple-placeholder {}
 .long-division-panel { --long-division-column:77px; --long-division-problem-left:77px; --long-division-left:128px; position:absolute; inset:0; display:block; contain:layout paint; color:var(--navy); font-weight:900; }
 .question-answer-card:not(.long-division-mode) .long-division-panel,
 .long-division-panel[hidden] { display:none !important; }
@@ -1170,9 +1218,12 @@ button { touch-action: manipulation; }
   background:#fff;
   overflow:hidden;
 }
-.keypad.multiplication-mode { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-.keypad.multiplication-mode .answer-actions { display:none; }
-.keypad.multiplication-mode .clear-key { grid-area:4 / 2 / 5 / 4; }
+.keypad.multiplication-mode,
+.keypad.multiplication-2x2-mode { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.keypad.multiplication-mode .answer-actions,
+.keypad.multiplication-2x2-mode .answer-actions { display:none; }
+.keypad.multiplication-mode .clear-key,
+.keypad.multiplication-2x2-mode .clear-key { grid-area:4 / 2 / 5 / 4; }
 .keypad.number-card-mode .number-card-grid:not([hidden]) {
   display:grid; grid-area:1 / 1 / 5 / 4; position:relative; z-index:1; min-width:0; min-height:0; width:100%; height:100%; padding:0; box-sizing:border-box; pointer-events:auto; touch-action:manipulation;
   grid-template-columns:repeat(var(--number-card-columns), var(--number-card-size));
@@ -2363,3 +2414,7 @@ button { touch-action: manipulation; }
 @media (max-height: 760px) {
   .result-actions { --result-action-height:60px; }
 }
+
+.multiplication-2x2-panel #multiplication-2x2-partial-1 { grid-row:4; }
+.multiplication-2x2-panel #multiplication-2x2-partial-2 { grid-row:5; }
+.multiplication-2x2-panel #multiplication-2x2-total { grid-row:7; }
