@@ -1231,14 +1231,16 @@
 
   function makeTwoDigitMultiplicationQuestions() {
     const values = [];
+    const multiplierValues = [];
     for (let tens = 1; tens <= 5; tens += 1) {
       for (let ones = 0; ones <= 5; ones += 1) values.push(tens * 10 + ones);
+      for (let ones = 1; ones <= 5; ones += 1) multiplierValues.push(tens * 10 + ones);
     }
     const pairs = [];
     const used = new Set();
     while (pairs.length < 10) {
       const multiplicand = values[Math.floor(Math.random() * values.length)];
-      const multiplier = values[Math.floor(Math.random() * values.length)];
+      const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
       const key = `${multiplicand}*${multiplier}`;
       if (used.has(key)) continue;
       used.add(key);
