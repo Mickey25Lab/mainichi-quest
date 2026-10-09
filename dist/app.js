@@ -1825,8 +1825,9 @@
     advanceTwoDigitMultiplicationStep(model);
     renderTwoDigitMultiplication();
     if (model.inputStep >= model.inputOrder.length) {
+      const allRowsCorrect = model.rows.every((row) => row.cells.join("") === row.value);
       const total = Number(model.rows[2].cells.join(""));
-      judge({ quotient: total, remainder: 0, usedRemainder: false });
+      judge({ quotient: allRowsCorrect ? total : total + 1, remainder: 0, usedRemainder: false });
     }
   }
   function clearTwoDigitMultiplicationInput() {
