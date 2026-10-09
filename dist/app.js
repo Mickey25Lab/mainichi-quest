@@ -742,7 +742,11 @@
   }
 
   function clearCharacterMotion(element) {
-    element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting");
+    element.classList.remove(
+      "is-vehicle-entering", "is-vehicle-exiting",
+      "is-robot-entering", "is-robot-exiting",
+      "is-super-robot-arriving"
+    );
   }
   function clearRobotDissolveSparkle() {
     const sparkle = $("robot-dissolve-sparkle");
@@ -868,6 +872,67 @@
     currentCharacter.hidden = true;
     currentBubble.hidden = true;
   }
+  function playSuperRobotArrivalFx(character, stage) {
+    const playStage = $("play-stage");
+    if (!playStage || !character || character.hidden) return Promise.resolve();
+
+    const existing = $("super-robot-arrival-fx");
+    if (existing) existing.remove();
+
+    const fx = document.createElement("div");
+    fx.id = "super-robot-arrival-fx";
+    fx.className = `super-robot-arrival-fx ${stage === 5 ? "is-equipped" : ""}`;
+    fx.setAttribute("aria-hidden", "true");
+
+    const characterLeft = Number.parseFloat(character.style.left);
+    const characterTop = Number.parseFloat(character.style.top);
+    const characterWidth = Number.parseFloat(character.style.width);
+    const centerX = Number.isFinite(characterLeft) && Number.isFinite(characterWidth)
+      ? characterLeft + characterWidth / 2
+      : 390;
+    const floorY = Number.isFinite(characterTop) && Number.isFinite(characterWidth)
+      ? characterTop + characterWidth
+      : 968;
+    fx.style.setProperty("--arrival-x", `${centerX}px`);
+    fx.style.setProperty("--arrival-floor-y", `${floorY}px`);
+
+    ["beam-halo", "beam-core", "floor-ring", "shock-ring", "flash"].forEach((className) => {
+      const layer = document.createElement("span");
+      layer.className = `super-robot-arrival-${className}`;
+      fx.appendChild(layer);
+    });
+
+    const particleCount = stage === 5 ? 34 : 26;
+    for (let index = 0; index < particleCount; index += 1) {
+      const particle = document.createElement("i");
+      const hash = (seed) => {
+        const value = Math.sin((index + 1) * seed) * 43758.5453123;
+        return value - Math.floor(value);
+      };
+      const spread = stage === 5 ? 330 : 285;
+      particle.style.setProperty("--arrival-particle-x", `${(-spread / 2 + hash(12.9898) * spread).toFixed(1)}px`);
+      particle.style.setProperty("--arrival-particle-y", `${(-24 - hash(78.233) * 610).toFixed(1)}px`);
+      particle.style.setProperty("--arrival-particle-size", `${(5 + hash(39.425) * (stage === 5 ? 13 : 10)).toFixed(1)}px`);
+      particle.style.setProperty("--arrival-particle-delay", `${(220 + hash(91.117) * 480).toFixed(0)}ms`);
+      particle.style.setProperty("--arrival-particle-drift", `${(-30 + hash(51.913) * 60).toFixed(1)}px`);
+      fx.appendChild(particle);
+    }
+
+    playStage.appendChild(fx);
+    character.classList.remove("is-super-robot-arriving");
+    void character.offsetWidth;
+    character.classList.add("is-super-robot-arriving");
+    void fx.offsetWidth;
+    fx.classList.add("is-active");
+
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        character.classList.remove("is-super-robot-arriving");
+        fx.remove();
+        resolve();
+      }, 1180);
+    });
+  }
   async function playPreparedCharacterEntry(prepared, shouldAnimate) {
     if (!prepared.hasCharacter || !shouldAnimate) return;
     const character = $("answer-character");
@@ -878,6 +943,8 @@
       playRobotDissolveSparkle(character, "enter");
       await waitForCharacterAnimation(character, "is-robot-entering", 1020);
       clearRobotDissolveSparkle();
+    } else if (prepared.characterStage === 4 || prepared.characterStage === 5) {
+      await playSuperRobotArrivalFx(character, prepared.characterStage);
     }
   }
   function prepareQuestionVisuals(question, allowFutureQuestion = false) {
@@ -1426,9 +1493,9 @@
         state.pendingNextVehicleOverlay = null;
       }
       showScreen("play-screen");
-      // Only the two early collection forms receive new character motion.
-      // Super-robot and equipped-super-robot retain their existing static
-      // presentation, including their final size and position.
+      // Vehicles and robots keep their current entry motion. Super-robot forms
+      // use a dedicated light-column summon while preserving their final size
+      // and position.
       await playPreparedCharacterEntry(prepared, shouldAnimateCharacter);
       if (runId !== state.runId || state.current !== question) return;
       if (onRevealed) onRevealed();
