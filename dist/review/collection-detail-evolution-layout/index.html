@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>コレクション詳細｜進化レイヤー比較</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./mock.css">
+</head>
+<body>
+  <header class="review-header">
+    <div>
+      <p class="eyebrow">COLLECTION DETAIL / LAYOUT REVIEW</p>
+      <h1>ヘリコプター｜進化レイヤー共通化</h1>
+    </div>
+    <p class="note">左右ボタンなし・横スワイプ前提／1400×1050基準</p>
+  </header>
+
+  <main class="review-grid">
+    <section class="review-card">
+      <div class="review-card-heading">
+        <div><span>LAYOUT A</span><h2>2体表示</h2></div>
+        <p>発見〜ロボット獲得</p>
+      </div>
+      <div class="stage two-up">
+        <img class="stage-background" src="../../assets/backgrounds/play/19_helicopter_background.webp" alt="">
+        <div class="stage-shade"></div>
+        <img class="vehicle-logo" src="./19_helicopter_logo.png" alt="ヘリコプター">
+        <div class="evolution-layout">
+          <article class="evolution-slot slot-vehicle">
+            <div class="art-box"><img class="character is-grayscale" src="../../assets/collection/01_vehicle/19_helicopter_vehicle.webp" alt="グレースケールのヘリコプター"></div>
+            <div class="evolution-label"><span>のりもの</span></div>
+          </article>
+          <div class="evolution-chevron" aria-hidden="true"><i></i><i></i></div>
+          <article class="evolution-slot slot-robot">
+            <div class="art-box"><img class="character is-silhouette" src="../../assets/collection/02_robot/19_helicopter_robot.webp" alt="ロボットのシルエット"></div>
+            <div class="evolution-label"><span>ロボット</span></div>
+          </article>
+        </div>
+      </div>
+      <div class="legend"><span><i class="gray-dot"></i>乗り物：CSSグレースケール</span><span><i class="black-dot"></i>ロボット：CSS黒シルエット</span></div>
+    </section>
+
+    <section class="review-card">
+      <div class="review-card-heading">
+        <div><span>LAYOUT B</span><h2>3体表示</h2></div>
+        <p>進化レイヤーを約80px上げ、小型サイバーラベルを追加</p>
+      </div>
+      <div class="stage three-up">
+        <img class="stage-background" src="../../assets/backgrounds/play/19_helicopter_background.webp" alt="">
+        <div class="stage-shade"></div>
+        <img class="vehicle-logo" src="./19_helicopter_logo.png" alt="ヘリコプター">
+        <div class="evolution-layout">
+          <article class="evolution-slot slot-vehicle">
+            <div class="art-box"><img class="character" src="../../assets/collection/01_vehicle/19_helicopter_vehicle.webp" alt="ヘリコプター"></div>
+            <div class="evolution-label"><span>のりもの</span></div>
+          </article>
+          <div class="evolution-chevron chevron-one" aria-hidden="true"><i></i><i></i></div>
+          <article class="evolution-slot slot-robot">
+            <div class="art-box"><img class="character" src="../../assets/collection/02_robot/19_helicopter_robot.webp" alt="ヘリコプターのロボット"></div>
+            <div class="evolution-label"><span>ロボット</span></div>
+          </article>
+          <div class="evolution-chevron chevron-two" aria-hidden="true"><i></i><i></i></div>
+          <article class="evolution-slot slot-super">
+            <div class="art-box"><img class="character" src="../../assets/collection/03_super_robot/19_helicopter_super_robot.webp" alt="ヘリコプターのスーパーロボット"></div>
+            <div class="evolution-label evolution-label-long"><span>スーパーロボット</span></div>
+          </article>
+        </div>
+      </div>
+      <div class="legend"><span>乗り物 70%</span><span>ロボット 90%</span><span>スーパーロボット 200%</span><span>足元基準を統一</span></div>
+    </section>
+  </main>
+
+</body>
+</html>
