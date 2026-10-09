@@ -1,0 +1,286 @@
+{
+  "category": "03_super_robot",
+  "phase": "resolution comparison",
+  "created": "2026-10-09",
+  "tool": "Pillow",
+  "pillow_version": "12.3.0",
+  "libwebp_version": "1.6.0",
+  "settings": {
+    "lossless": false,
+    "quality": 90,
+    "alpha_quality": 100,
+    "method": 6,
+    "exact": false,
+    "resample": "LANCZOS",
+    "metadata": "none passed"
+  },
+  "candidate_edges": [
+    1254,
+    896,
+    768,
+    640,
+    480
+  ],
+  "actual_display_presets_css_px": {
+    "answer": 690,
+    "reward": 330,
+    "collection": 200
+  },
+  "entries": [
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_super_robot",
+      "file": "01_patrol_car_super_robot_1254.webp",
+      "edge": 1254,
+      "bytes": 176976,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\01_patrol_car_super_robot.png",
+      "source_sha256": "034b83c673c9f4bf077a671934dc6547afbe4d98f2fef88a1553b9839d244a43",
+      "source_visible_bbox": [
+        232,
+        180,
+        1023,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_super_robot",
+      "file": "01_patrol_car_super_robot_896.webp",
+      "edge": 896,
+      "bytes": 123826,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\01_patrol_car_super_robot.png",
+      "source_sha256": "034b83c673c9f4bf077a671934dc6547afbe4d98f2fef88a1553b9839d244a43",
+      "source_visible_bbox": [
+        232,
+        180,
+        1023,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_super_robot",
+      "file": "01_patrol_car_super_robot_768.webp",
+      "edge": 768,
+      "bytes": 99304,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\01_patrol_car_super_robot.png",
+      "source_sha256": "034b83c673c9f4bf077a671934dc6547afbe4d98f2fef88a1553b9839d244a43",
+      "source_visible_bbox": [
+        232,
+        180,
+        1023,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_super_robot",
+      "file": "01_patrol_car_super_robot_640.webp",
+      "edge": 640,
+      "bytes": 76574,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\01_patrol_car_super_robot.png",
+      "source_sha256": "034b83c673c9f4bf077a671934dc6547afbe4d98f2fef88a1553b9839d244a43",
+      "source_visible_bbox": [
+        232,
+        180,
+        1023,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "パトカー",
+      "stem": "01_patrol_car_super_robot",
+      "file": "01_patrol_car_super_robot_480.webp",
+      "edge": 480,
+      "bytes": 50910,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\01_patrol_car_super_robot.png",
+      "source_sha256": "034b83c673c9f4bf077a671934dc6547afbe4d98f2fef88a1553b9839d244a43",
+      "source_visible_bbox": [
+        232,
+        180,
+        1023,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "フォーミュラカー",
+      "stem": "16_formula_racer_super_robot",
+      "file": "16_formula_racer_super_robot_1254.webp",
+      "edge": 1254,
+      "bytes": 235422,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\16_formula_racer_super_robot.png",
+      "source_sha256": "8385e4c6023f3841677725e7903c36080d49985fa3e8ca3c018c811d52e76af2",
+      "source_visible_bbox": [
+        135,
+        106,
+        1119,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "フォーミュラカー",
+      "stem": "16_formula_racer_super_robot",
+      "file": "16_formula_racer_super_robot_896.webp",
+      "edge": 896,
+      "bytes": 159306,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\16_formula_racer_super_robot.png",
+      "source_sha256": "8385e4c6023f3841677725e7903c36080d49985fa3e8ca3c018c811d52e76af2",
+      "source_visible_bbox": [
+        135,
+        106,
+        1119,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "フォーミュラカー",
+      "stem": "16_formula_racer_super_robot",
+      "file": "16_formula_racer_super_robot_768.webp",
+      "edge": 768,
+      "bytes": 125384,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\16_formula_racer_super_robot.png",
+      "source_sha256": "8385e4c6023f3841677725e7903c36080d49985fa3e8ca3c018c811d52e76af2",
+      "source_visible_bbox": [
+        135,
+        106,
+        1119,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "フォーミュラカー",
+      "stem": "16_formula_racer_super_robot",
+      "file": "16_formula_racer_super_robot_640.webp",
+      "edge": 640,
+      "bytes": 95814,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\16_formula_racer_super_robot.png",
+      "source_sha256": "8385e4c6023f3841677725e7903c36080d49985fa3e8ca3c018c811d52e76af2",
+      "source_visible_bbox": [
+        135,
+        106,
+        1119,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "フォーミュラカー",
+      "stem": "16_formula_racer_super_robot",
+      "file": "16_formula_racer_super_robot_480.webp",
+      "edge": 480,
+      "bytes": 62442,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\16_formula_racer_super_robot.png",
+      "source_sha256": "8385e4c6023f3841677725e7903c36080d49985fa3e8ca3c018c811d52e76af2",
+      "source_visible_bbox": [
+        135,
+        106,
+        1119,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_super_robot",
+      "file": "19_helicopter_super_robot_1254.webp",
+      "edge": 1254,
+      "bytes": 239170,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\19_helicopter_super_robot.png",
+      "source_sha256": "9e23eb071a310417c27c54ef91b267f358a97224985e9748c024aef95ba35ca4",
+      "source_visible_bbox": [
+        144,
+        11,
+        1110,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_super_robot",
+      "file": "19_helicopter_super_robot_896.webp",
+      "edge": 896,
+      "bytes": 166256,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\19_helicopter_super_robot.png",
+      "source_sha256": "9e23eb071a310417c27c54ef91b267f358a97224985e9748c024aef95ba35ca4",
+      "source_visible_bbox": [
+        144,
+        11,
+        1110,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_super_robot",
+      "file": "19_helicopter_super_robot_768.webp",
+      "edge": 768,
+      "bytes": 131794,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\19_helicopter_super_robot.png",
+      "source_sha256": "9e23eb071a310417c27c54ef91b267f358a97224985e9748c024aef95ba35ca4",
+      "source_visible_bbox": [
+        144,
+        11,
+        1110,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_super_robot",
+      "file": "19_helicopter_super_robot_640.webp",
+      "edge": 640,
+      "bytes": 101410,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\19_helicopter_super_robot.png",
+      "source_sha256": "9e23eb071a310417c27c54ef91b267f358a97224985e9748c024aef95ba35ca4",
+      "source_visible_bbox": [
+        144,
+        11,
+        1110,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    },
+    {
+      "vehicle": "ヘリコプター",
+      "stem": "19_helicopter_super_robot",
+      "file": "19_helicopter_super_robot_480.webp",
+      "edge": 480,
+      "bytes": 65586,
+      "source_png": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\asset-source\\collection\\03_super_robot\\png\\19_helicopter_super_robot.png",
+      "source_sha256": "9e23eb071a310417c27c54ef91b267f358a97224985e9748c024aef95ba35ca4",
+      "source_visible_bbox": [
+        144,
+        11,
+        1110,
+        1171
+      ],
+      "mode": "RGBA",
+      "has_alpha": true
+    }
+  ]
+}

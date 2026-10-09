@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.127";
+  const appVersion = "0.0.128";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -873,21 +873,20 @@
         return { backgroundPath, hasCharacter: false, hasBubble: false, hasDiscoveryMessage };
       }
       const characterPath = path.startsWith("./") ? path : `./${path}`;
-      // All current answer artwork uses the same 1254×1254 canvas. Use one
-      // common scale and one common placement per evolution stage so no vehicle
-      // receives a per-asset size/position adjustment. The artwork itself now
-      // owns its internal framing.
-      const sourceCanvasSize = 1254;
+      // Artwork may use a smaller encoded resolution, but every evolution image
+      // keeps the approved 1254-square logical framing. Use that logical size
+      // for common placement so encoded resolution does not alter screen size.
+      const logicalCanvasSize = 1254;
       const scale = answerArtCanvasScales[stage];
       const flip = stage <= 3;
       stagedCharacter.alt = `${vehicle.nameJa}の${["", "", "乗り物", "ロボット", "スーパーロボット", "装備付きスーパーロボット"][stage]}`;
-      stagedCharacter.style.width = `${sourceCanvasSize * scale}px`;
+      stagedCharacter.style.width = `${logicalCanvasSize * scale}px`;
       // Keep every stage on the same centre line: halfway between the play
       // stage's left edge and the existing keyboard area's left edge.
       const keypadLeft = Number.parseFloat(window.getComputedStyle(document.querySelector(".game-area")).left);
       const characterCenterX = (Number.isFinite(keypadLeft) ? keypadLeft / 2 : 380) + 100;
-      stagedCharacter.style.left = `${characterCenterX - sourceCanvasSize * scale / 2}px`;
-      stagedCharacter.style.top = `${968 - sourceCanvasSize * scale}px`;
+      stagedCharacter.style.left = `${characterCenterX - logicalCanvasSize * scale / 2}px`;
+      stagedCharacter.style.top = `${968 - logicalCanvasSize * scale}px`;
       stagedCharacter.style.setProperty("--character-static-transform", flip ? "scaleX(-1)" : "none");
       stagedCharacter.style.transform = "var(--character-static-transform)";
       stagedCharacter.dataset.answerStage = String(stage);
