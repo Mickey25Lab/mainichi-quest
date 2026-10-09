@@ -22,7 +22,7 @@
   const collectionEndTransitionDurationMs = 1000 * 3;
   const correctFeedbackDurationMs = 560 * 1.5;
   const progressGainHoldDurationMs = 0;
-  const timeBonusHoldDurationMs = 500;
+  const timeBonusHoldDurationMs = 400;
   const progressGainAnimationDurationMs = 1180;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
@@ -2146,7 +2146,7 @@
       renderVehicleProgressUi(deferred.vehicleIndex);
       showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
     }});
-    // Show the longer time-bonus label still for half a second before it flies.
+    // Show the longer time-bonus label still for 0.4 seconds before it flies.
     window.setTimeout(() => playProgressGainAnimation({
       kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: timeBonusHoldDurationMs,
       onArrive: () => {
