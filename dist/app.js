@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.126";
+  const appVersion = "0.0.127";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -22,6 +22,7 @@
   const collectionEndTransitionDurationMs = 1000 * 3;
   const correctFeedbackDurationMs = 560 * 1.5;
   const progressGainHoldDurationMs = 0;
+  const timeBonusHoldDurationMs = 400;
   const progressGainAnimationDurationMs = 1180;
   const progressGainTotalDurationMs = progressGainHoldDurationMs + progressGainAnimationDurationMs;
   const progressGainCleanupDurationMs = 40;
@@ -2145,10 +2146,9 @@
       renderVehicleProgressUi(deferred.vehicleIndex);
       showProgressSpeechBubbleForCurrentQuestion(deferred.vehicleIndex);
     }});
-    // Announce the extra reward as +3 starts moving, then let it join the
-    // flight after a short, readable 0.3 second pause.
+    // Show the longer time-bonus label still for 0.4 seconds before it flies.
     window.setTimeout(() => playProgressGainAnimation({
-      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: 0,
+      kind: "time-bonus", amount: deferred.timeBonus.amount, holdDurationMs: timeBonusHoldDurationMs,
       onArrive: () => {
         if (runId !== state.runId) return;
         const resolved = finishDeferredTimeBonusProgress(deferred);
