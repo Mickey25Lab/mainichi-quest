@@ -2446,3 +2446,28 @@ button { touch-action: manipulation; }
   pointer-events:none;
   z-index:3;
 }
+
+.multiplication-2x2-shift-guide {
+  grid-column:4;
+  grid-row:5;
+  position:relative;
+  width:var(--multiplication-2x2-column);
+  height:62px;
+  align-self:center;
+  justify-self:center;
+  pointer-events:none;
+}
+.multiplication-2x2-shift-guide[hidden] { display:none !important; }
+.multiplication-2x2-shift-guide::after {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118%;
+  height:6px;
+  border-radius:999px;
+  background:#e22929;
+  box-shadow:0 1px 0 rgba(120,0,0,.15);
+  transform:translate(-50%,-50%) rotate(45deg);
+  transform-origin:center;
+}
