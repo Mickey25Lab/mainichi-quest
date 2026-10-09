@@ -1253,10 +1253,12 @@
     $("question-answer-card").classList.toggle("number-card-mode", isNumberCards);
     $("question-answer-card").classList.toggle("multiplication-mode", isMultiplication);
     $("question-answer-card").classList.toggle("counting-mode", isCounting);
+    $("question-answer-card").classList.toggle("counting1-mode", mode === "counting1");
     $("keypad").classList.toggle("long-division-mode", isLongDivision);
     $("keypad").classList.toggle("number-card-mode", isNumberCards);
     $("keypad").classList.toggle("multiplication-mode", isMultiplication);
     $("keypad").classList.toggle("counting-mode", isCounting);
+    $("keypad").classList.toggle("counting1-mode", mode === "counting1");
     $("long-division-skip-key").disabled = !isLongDivision;
   }
   function resetAnswerCard() {
@@ -1268,7 +1270,7 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
