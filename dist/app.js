@@ -1794,7 +1794,10 @@
     rows.forEach((row, rowIndex) => row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })));
     state.multiplication2x2 = {
       rows: rows.map((row) => ({ ...row, cells: Array(row.value.length).fill(""), hintedIndexes: new Set() })),
-      inputOrder, inputStep: 0, history: []
+      inputOrder, inputStep: 0, history: [],
+      firstRowGuideVisible: false,
+      secondRowGuideVisible: false,
+      secondGuideTimer: null
     };
     renderTwoDigitMultiplication();
   }
@@ -1806,8 +1809,23 @@
         slot.textContent = row.cells[cellIndex];
         slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
         slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
+        slot.classList.toggle("is-crossed", rowIndex === 0 && cellIndex === row.cells.length - 1 && model.secondRowGuideVisible);
       });
     });
+    const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
+    multiplierDigits.forEach((digit, index) => {
+      digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
+    });
+  }
+  function showTwoDigitSecondRowGuides(model) {
+    if (!model || model.firstRowGuideVisible) return;
+    model.firstRowGuideVisible = true;
+    renderTwoDigitMultiplication();
+    model.secondGuideTimer = window.setTimeout(() => {
+      if (state.multiplication2x2 !== model) return;
+      model.secondRowGuideVisible = true;
+      renderTwoDigitMultiplication();
+    }, 500);
   }
   function advanceTwoDigitMultiplicationStep(model) {
     while (model.inputStep < model.inputOrder.length) {
@@ -1825,6 +1843,8 @@
     model.history.push({ ...step });
     model.inputStep += 1;
     advanceTwoDigitMultiplicationStep(model);
+    const nextStep = model.inputOrder[model.inputStep] || null;
+    if (step.rowIndex === 0 && (!nextStep || nextStep.rowIndex !== 0)) showTwoDigitSecondRowGuides(model);
     renderTwoDigitMultiplication();
     if (model.inputStep >= model.inputOrder.length) {
       const allRowsCorrect = model.rows.every((row) => row.cells.join("") === row.value);
