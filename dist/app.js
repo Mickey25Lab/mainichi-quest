@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.133";
+  const appVersion = "0.0.134";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -123,7 +123,7 @@
   const state = {
     questions: [], queue: [], current: null, phase: "start", initialIndex: 0, initialCorrect: 0,
     missed: [], startedAt: 0, finalElapsedMs: 0, timerId: null, timerPaused: false, timerPausedAt: 0, pausedTimerMs: 0,
-    transitioning: false, confirmingAnswer: false, runId: 0,
+    transitioning: false, confirmingAnswer: false, confirmingQuit: false, runId: 0,
     inputMode: "quotient", quotientInput: "", remainderInput: "", correctSoundBuffers: [],
     correctSoundsLoading: null, lastCorrectSoundIndex: -1, startSound: null,
     collection: Array(20).fill(0), rewardProgress: [], currentVehicleIndex: 0, currentStage: 1, preparedInitialVehicleIndex: null,
@@ -2262,6 +2262,30 @@
     state.confirmingAnswer = false; $("answer-confirm").hidden = true; setKeypadDisabled(false); updateAssistButton();
     $("assist-button").focus();
   }
+  function openQuitConfirmation() {
+    if (state.transitioning || state.confirmingQuit) return;
+    state.confirmingQuit = true;
+    pauseGameTimer();
+    stopQuestionTimeout();
+    setKeypadDisabled(true);
+    $("quit-confirm").hidden = false;
+    $("quit-confirm-continue").focus();
+  }
+  function closeQuitConfirmation() {
+    if (!state.confirmingQuit) return;
+    state.confirmingQuit = false;
+    $("quit-confirm").hidden = true;
+    setKeypadDisabled(false);
+    resumeGameTimer();
+    if (state.current && (state.phase === "initial" || state.phase === "retry") && !state.transitioning) startQuestionTimeout();
+    $("quit-button").focus();
+  }
+  function confirmQuitToModeSelect() {
+    if (!state.confirmingQuit) return;
+    state.confirmingQuit = false;
+    $("quit-confirm").hidden = true;
+    endToModeSelect();
+  }
   function formatRevealedAnswer(question) {
     return question.remainder === 0 ? `${question.quotient}（あまりなし）` : `${question.quotient}…${question.remainder}`;
   }
@@ -3053,7 +3077,7 @@
     state.preparedInitialVehicleIndex = null;
     prepareInitialVehicle();
     clearRetryAutoStartTimer(); clearIdleGuide(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.collectionUsed = false; setKeypadDisabled(false);
-    $("answer-confirm").hidden = true; $("time-up").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true; $("time-up").hidden = true;
     showFixedScreenWhenReady("start-screen");
   }
   function endToStart({ keepTimeUp = false } = {}) {
@@ -3061,10 +3085,10 @@
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
     state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
-    state.confirmingAnswer = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
+    state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
-    $("answer-confirm").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     if (!keepTimeUp) $("time-up").hidden = true;
     showFixedScreenWhenReady("start-screen", [], () => {
       if (keepTimeUp) $("time-up").hidden = true;
@@ -3077,10 +3101,10 @@
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
     state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
-    state.confirmingAnswer = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
+    state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
-    $("answer-confirm").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     $("time-up").hidden = true;
     showFixedScreenWhenReady("mode-select-screen", [], () => {
       state.collectionClosing = false;
@@ -3448,7 +3472,7 @@
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
-  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToModeSelect); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
@@ -3463,7 +3487,13 @@
   $("assist-button").addEventListener("click", useAssist);
   $("answer-confirm-back").addEventListener("click", closeAnswerConfirmation);
   $("answer-confirm-proceed").addEventListener("click", revealAnswer);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
+  $("quit-confirm-cancel").addEventListener("click", confirmQuitToModeSelect);
+  $("quit-confirm-continue").addEventListener("click", closeQuitConfirmation);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (state.confirmingQuit) closeQuitConfirmation();
+    else if (state.confirmingAnswer) closeAnswerConfirmation();
+  });
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     if (document.hidden) {
