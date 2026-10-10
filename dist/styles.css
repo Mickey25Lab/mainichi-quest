@@ -2386,10 +2386,10 @@ button { touch-action: manipulation; }
 .detail-evolution-label::before { left:-3px; }
 .detail-evolution-label::after { right:-3px; }
 .detail-evolution-label span { position:relative; z-index:1; }
-.detail-evolution-layout.is-three-up .detail-evolution-label { display:grid; position:absolute; left:50%; bottom:0; width:49%; min-width:0; height:28px; transform:translateX(-50%); font-size:15px; white-space:nowrap; }
+.detail-evolution-layout.is-three-up .detail-evolution-label { display:grid; position:absolute; left:50%; bottom:0; width:42%; min-width:0; height:28px; transform:translateX(-50%); font-size:15px; white-space:nowrap; }
 .detail-evolution-layout.is-three-up .detail-slot-vehicle .detail-evolution-label { left:43.5%; }
 .detail-evolution-layout.is-three-up .detail-slot-robot .detail-evolution-label { left:47%; }
-.detail-evolution-layout.is-three-up .detail-slot-super .detail-evolution-label { left:60.5%; width:70%; font-size:13.5px; }
+.detail-evolution-layout.is-three-up .detail-slot-super .detail-evolution-label { left:60.5%; width:64%; font-size:13.5px; }
 .detail-evolution-chevron { align-self:end; position:relative; z-index:1; width:100%; height:44px; margin-bottom:34px; filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px rgba(68,225,255,1)) drop-shadow(0 0 14px rgba(24,102,255,.82)); }
 .detail-evolution-layout.is-two-up .detail-evolution-chevron { position:absolute; left:46.25%; bottom:36%; width:7.5%; height:12%; margin:0; }
 .detail-evolution-layout.is-three-up .detail-evolution-chevron { display:block; position:absolute; z-index:1; bottom:28%; width:4%; height:6%; margin:0; }
