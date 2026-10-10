@@ -440,8 +440,19 @@ button { touch-action: manipulation; }
   font-weight:1000;
   line-height:1.15;
 }
-.quit-confirm-card p { color:#123a69; }
-.quit-confirm-card p strong { color:#d34b2f; }
+.quit-confirm-card { white-space:nowrap; }
+.quit-confirm-card p {
+  color:#123a69;
+  font-size:clamp(21px,2.7vw,34px);
+  white-space:nowrap;
+}
+.quit-confirm-card p span,
+.quit-confirm-card p strong { display:block; white-space:nowrap; }
+.quit-confirm-card p strong { margin-top:12px; color:#d34b2f; }
+.quit-confirm-actions button {
+  width:260px;
+  min-width:260px;
+}
 .quit-confirm-actions .quit-confirm-cancel {
   border-color:#d74f43;
   color:#fff;
@@ -449,14 +460,14 @@ button { touch-action: manipulation; }
   box-shadow:0 6px 0 #a52c28,0 10px 20px rgba(165,44,40,.2);
 }
 .quit-confirm-actions .quit-confirm-continue {
-  border-color:#2e9b62;
-  color:#fff;
-  background:linear-gradient(#58c985,#24985a);
-  box-shadow:0 6px 0 #177040,0 10px 20px rgba(23,112,64,.2);
+  border-color:#9ebddd;
+  color:#0a428e;
+  background:#fff;
+  box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);
 }
 .quit-confirm-actions button:active { transform:translateY(4px); }
 .quit-confirm-actions .quit-confirm-cancel:active { box-shadow:0 2px 0 #a52c28; }
-.quit-confirm-actions .quit-confirm-continue:active { box-shadow:0 2px 0 #177040; }
+.quit-confirm-actions .quit-confirm-continue:active { box-shadow:0 2px 0 #8ca6bf; }
 
 .game-area {
   display: grid;
