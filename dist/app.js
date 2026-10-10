@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.132";
+  const appVersion = "0.0.133";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -335,7 +335,8 @@
   function openTopCollection() {
     if (state.collectionUsed || topCollectionAlreadyUsedToday()) { updateTopCollectionButton(); return; }
     try { localStorage.setItem(storageKeys.topCollectionLastUsedJst, japanDateKey()); } catch (_) {}
-    updateTopCollectionButton();
+    const button = $("top-collection-button");
+    button.disabled = true;
     openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
