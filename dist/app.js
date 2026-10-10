@@ -70,7 +70,7 @@
     rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
     rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done"
   };
-  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v1";
+  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v2";
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -239,23 +239,23 @@
     try {
       if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
-      const normalVehicleIndexes = collectionDisplayOrder.filter((index) => vehicles[index].rarity === "normal").slice(0, 10);
+      const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
       const progressStates = [
         null,
-        { discovered: true, friendship: 3, friendly: false, stage: 2, energy: 0, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 0, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 25, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 45, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 80, masterMedal: false },
+        { discovered: true, friendship: 4, friendly: false, stage: 2, energy: 0, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 2, energy: 23, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 39, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 55, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 79, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 100, masterMedal: true }
       ];
-      normalVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
+      qaVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
         const progress = progressStates[displayIndex % progressStates.length];
         if (progress) preset[vehicleIndex] = progress;
       });
       localStorage.setItem(storageKeys.rewardProgressPhase1, JSON.stringify(preset));
       localStorage.setItem(previewQaProgressPresetMarker, "done");
-      return normalVehicleIndexes[3];
+      return qaVehicleIndexes[3];
     } catch (_) { return null; }
   }
   function loadRecentVehicles() {
@@ -308,6 +308,7 @@
   function showScreen(id) {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
     if (id !== "play-screen") stopBackgroundMusic();
+    recordVisualDiagnostic("show-screen", { screenId: id });
   }
   function showRewardOverPlay() {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === "play-screen" || screenId === "reward-screen"));
@@ -339,6 +340,78 @@
   let activeDecodes = 0;
   const maxConcurrentDecodes = 2;
   let visualRequestId = 0;
+  const visualDiagnosticsEnabled = new URLSearchParams(window.location.search).get("visual-diagnostics") === "1";
+  const visualDiagnosticsStorageKey = "mq-001:visual-diagnostics-v1";
+  let visualDiagnostics = [];
+  let visualDiagnosticSequence = 0;
+  function visualPathKind(path) {
+    if (!path) return "unknown";
+    if (path.includes("/backgrounds/play/")) return "play background";
+    if (path.includes("/collection/01_vehicle/")) return "01_vehicle";
+    if (path.includes("/collection/02_robot/")) return "02_robot";
+    if (path.includes("/collection/03_super_robot/")) return "03_super_robot";
+    if (path.includes("/collection/04_super_robot_equipped/")) return "04_super_robot_equipped";
+    if (path.includes("/speech_bubble/")) return "speech bubble";
+    if (path.includes("mode_select_background")) return "mode select background";
+    return "other";
+  }
+  function visualQueueSnapshot() {
+    return { highQueue: decodeQueues.high.length, lowQueue: decodeQueues.low.length, activeDecodes, maxConcurrentDecodes };
+  }
+  function recordVisualDiagnostic(event, detail = {}) {
+    if (!visualDiagnosticsEnabled) return;
+    const entry = { sequence: ++visualDiagnosticSequence, ts: new Date().toISOString(), elapsedMs: Math.round(performance.now()), event, ...detail, queue: visualQueueSnapshot() };
+    visualDiagnostics.push(entry);
+    if (visualDiagnostics.length > 800) visualDiagnostics = visualDiagnostics.slice(-800);
+    try { localStorage.setItem(visualDiagnosticsStorageKey, JSON.stringify(visualDiagnostics)); } catch (_) {}
+  }
+  function recordVisualError(event, error, detail = {}) {
+    recordVisualDiagnostic(event, { ...detail, errorName: error?.name || "Error", errorMessage: error?.message || String(error) });
+  }
+  function visualVehicleSnapshot(vehicleIndex = state.currentVehicleIndex) {
+    const vehicle = vehicles[vehicleIndex];
+    return {
+      vehicleIndex,
+      vehicleStem: vehicle?.stem || null,
+      vehicleNameJa: vehicle?.nameJa || null,
+      currentStage: state.currentStage,
+      savedProgressStage: Number.isInteger(vehicleIndex) ? currentStageForVehicle(vehicleIndex) : null,
+      preparedInitialVehicleIndex: state.preparedInitialVehicleIndex,
+      previewQaInitialVehicleIndex: state.previewQaInitialVehicleIndex
+    };
+  }
+  function setupVisualDiagnostics() {
+    if (!visualDiagnosticsEnabled) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(visualDiagnosticsStorageKey) || "[]");
+      if (Array.isArray(stored)) visualDiagnostics = stored.slice(-800);
+    } catch (_) {}
+    visualDiagnosticSequence = visualDiagnostics.reduce((max, entry) => Math.max(max, Number(entry.sequence) || 0), 0);
+    const style = document.createElement("style");
+    style.textContent = ".visual-diagnostics-button{position:fixed;right:8px;top:8px;z-index:2147483647;padding:6px 8px;border:1px solid #fff;border-radius:6px;background:#152238;color:#fff;font:700 12px sans-serif}.visual-diagnostics-panel{position:fixed;inset:44px 8px 8px;z-index:2147483647;display:flex;flex-direction:column;padding:8px;border:1px solid #fff;border-radius:8px;background:rgba(8,16,28,.97);color:#fff;font:12px/1.35 ui-monospace,monospace}.visual-diagnostics-panel[hidden]{display:none}.visual-diagnostics-actions{display:flex;gap:6px;margin-bottom:6px}.visual-diagnostics-actions button{font:inherit}.visual-diagnostics-output{flex:1;min-height:0;margin:0;overflow:auto;white-space:pre-wrap;word-break:break-word}";
+    document.head.appendChild(style);
+    const button = document.createElement("button");
+    button.type = "button"; button.className = "visual-diagnostics-button"; button.textContent = "VISUAL LOG";
+    const panel = document.createElement("section");
+    panel.className = "visual-diagnostics-panel"; panel.hidden = true;
+    const actions = document.createElement("div"); actions.className = "visual-diagnostics-actions";
+    const latest = document.createElement("button"); latest.type = "button"; latest.textContent = "Latest Log";
+    const all = document.createElement("button"); all.type = "button"; all.textContent = "Full Log";
+    const copy = document.createElement("button"); copy.type = "button"; copy.textContent = "Copy Log";
+    const clear = document.createElement("button"); clear.type = "button"; clear.textContent = "Clear Log";
+    const close = document.createElement("button"); close.type = "button"; close.textContent = "Close";
+    const output = document.createElement("pre"); output.className = "visual-diagnostics-output";
+    let showingAll = false;
+    const render = () => { output.textContent = JSON.stringify(showingAll ? visualDiagnostics : visualDiagnostics.slice(-160), null, 2); };
+    latest.addEventListener("click", () => { showingAll = false; render(); });
+    all.addEventListener("click", () => { showingAll = true; render(); });
+    copy.addEventListener("click", async () => { const text = JSON.stringify(visualDiagnostics, null, 2); try { await navigator.clipboard.writeText(text); copy.textContent = "Copied"; window.setTimeout(() => { copy.textContent = "Copy Log"; }, 1200); } catch (_) { window.prompt("VISUAL LOG", text); } });
+    clear.addEventListener("click", () => { visualDiagnostics = []; try { localStorage.removeItem(visualDiagnosticsStorageKey); } catch (_) {} render(); recordVisualDiagnostic("log-cleared"); render(); });
+    close.addEventListener("click", () => { panel.hidden = true; });
+    button.addEventListener("click", () => { panel.hidden = false; render(); });
+    actions.append(latest, all, copy, clear, close); panel.append(actions, output); document.body.append(button, panel);
+    recordVisualDiagnostic("diagnostics-enabled", { href: window.location.href, ...visualVehicleSnapshot() });
+  }
   function imageCacheKey(path) { return new URL(path, document.baseURI).href; }
   function hasPreloadedImage(path) { return imagePreloads.has(imageCacheKey(path)); }
   function runDecodeQueue() {
@@ -347,9 +420,17 @@
       if (!task) return;
       task.started = true;
       activeDecodes += 1;
+      task.decodeStartedAt = performance.now();
+      recordVisualDiagnostic("decode-start", { path: task.path, kind: visualPathKind(task.path), priority: task.priority, taskStartedAtMs: Math.round(task.decodeStartedAt) });
       Promise.resolve().then(() => task.image.decode ? task.image.decode() : undefined)
-        .then(() => task.resolve(task.image), task.reject)
-        .finally(() => { activeDecodes -= 1; runDecodeQueue(); });
+        .then((image) => {
+          recordVisualDiagnostic("decode-success", { path: task.path, kind: visualPathKind(task.path), priority: task.priority, durationMs: Math.round(performance.now() - task.decodeStartedAt) });
+          task.resolve(image);
+        }, (error) => {
+          recordVisualError("decode-error", error, { path: task.path, kind: visualPathKind(task.path), priority: task.priority, durationMs: Math.round(performance.now() - task.decodeStartedAt) });
+          task.reject(error);
+        })
+        .finally(() => { activeDecodes -= 1; recordVisualDiagnostic("decode-finish", { path: task.path, kind: visualPathKind(task.path), priority: task.priority, taskEndedAtMs: Math.round(performance.now()) }); runDecodeQueue(); });
     }
   }
   function promoteQueuedDecode(path) {
@@ -359,6 +440,7 @@
     if (index >= 0) decodeQueues.low.splice(index, 1);
     task.priority = "high";
     decodeQueues.high.push(task);
+    recordVisualDiagnostic("decode-promoted", { path, kind: visualPathKind(path), priority: "high" });
   }
   function queueImageDecode(path, image) {
     return new Promise((resolve, reject) => {
@@ -366,30 +448,39 @@
       const task = { path, image, resolve, reject, priority };
       queuedDecodeTasks.set(path, task);
       (priority === "low" ? decodeQueues.low : decodeQueues.high).push(task);
+      recordVisualDiagnostic("decode-queue-enter", { path, kind: visualPathKind(path), priority });
       runDecodeQueue();
     });
   }
   function preloadImage(path, priority = "high") {
     const key = imageCacheKey(path);
+    const requestedAt = performance.now();
+    recordVisualDiagnostic("preload-request", { path, key, kind: visualPathKind(path), priority });
     if (imagePreloads.has(key)) {
       if (priority === "high") { imagePreloadPriorities.set(key, "high"); promoteQueuedDecode(key); }
+      recordVisualDiagnostic("preload-cache-hit", { path, key, kind: visualPathKind(path), priority });
       return imagePreloads.get(key);
     }
     imagePreloadPriorities.set(key, priority);
     const promise = new Promise((resolve, reject) => {
       const image = new Image();
       image.decoding = "async";
-      image.onload = () => queueImageDecode(key, image).then(resolve, reject);
-      image.onerror = () => reject(new Error(`Image failed to load: ${path}`));
+      image.onload = () => {
+        recordVisualDiagnostic("load-success", { path, key, kind: visualPathKind(path), durationMs: Math.round(performance.now() - requestedAt) });
+        queueImageDecode(key, image).then(resolve, reject);
+      };
+      image.onerror = () => { const error = new Error(`Image failed to load: ${path}`); recordVisualError("load-error", error, { path, key, kind: visualPathKind(path), durationMs: Math.round(performance.now() - requestedAt) }); reject(error); };
+      recordVisualDiagnostic("image-src-set", { path, key, kind: visualPathKind(path) });
+      recordVisualDiagnostic("load-start", { path, key, kind: visualPathKind(path) });
       image.src = path;
     });
     imagePreloads.set(key, promise);
-    promise.then(() => queuedDecodeTasks.delete(key), () => { imagePreloads.delete(key); imagePreloadPriorities.delete(key); queuedDecodeTasks.delete(key); });
+    promise.then(() => { recordVisualDiagnostic("preload-complete", { path, key, kind: visualPathKind(path), durationMs: Math.round(performance.now() - requestedAt) }); queuedDecodeTasks.delete(key); }, (error) => { recordVisualError("preload-error", error, { path, key, kind: visualPathKind(path), durationMs: Math.round(performance.now() - requestedAt) }); imagePreloads.delete(key); imagePreloadPriorities.delete(key); queuedDecodeTasks.delete(key); });
     return promise;
   }
   function withTimeout(promise, timeoutMs, label) {
     return new Promise((resolve, reject) => {
-      const timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
+      const timeoutId = window.setTimeout(() => { const error = new Error(`${label} timed out`); recordVisualError("timeout", error, { label, timeoutMs }); reject(error); }, timeoutMs);
       promise.then(
         (value) => { window.clearTimeout(timeoutId); resolve(value); },
         (error) => { window.clearTimeout(timeoutId); reject(error); }
@@ -420,6 +511,8 @@
     void question;
   }
   function decodeImageElement(element, path) {
+    const decodeStartedAt = performance.now();
+    recordVisualDiagnostic("element-decode-start", { path, kind: visualPathKind(path), elementId: element.id });
     element.src = path;
     let ready;
     if (typeof element.decode === "function") ready = element.decode();
@@ -430,7 +523,8 @@
     });
     return withTimeout(ready.then(() => {
       if (!element.naturalWidth) throw new Error(`Image is not drawable: ${path}`);
-    }), imagePreparationTimeoutMs, `Image element decode: ${path}`);
+      recordVisualDiagnostic("element-decode-success", { path, kind: visualPathKind(path), elementId: element.id, durationMs: Math.round(performance.now() - decodeStartedAt) });
+    }).catch((error) => { recordVisualError("element-decode-error", error, { path, kind: visualPathKind(path), elementId: element.id, durationMs: Math.round(performance.now() - decodeStartedAt) }); throw error; }), imagePreparationTimeoutMs, `Image element decode: ${path}`);
   }
   function playBackgroundPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
@@ -497,6 +591,8 @@
     const runId = state.runId;
     const fixedBackgroundPath = screenId === "start-screen" ? startKeyVisualPath : screenId === "mode-select-screen" ? modeSelectPath : screenId === "result-screen" ? topBackgroundPath : null;
     const paths = fixedBackgroundPath ? [fixedBackgroundPath, ...extraPaths] : extraPaths;
+    const transitionStartedAt = performance.now();
+    recordVisualDiagnostic("fixed-screen-prepare-start", { screenId, paths, requestId });
     return Promise.all(paths.map(preloadDecodedImage)).then(async () => {
       if (requestId !== visualRequestId || runId !== state.runId) return false;
       if (screenId === "start-screen") {
@@ -513,14 +609,17 @@
       setNeutralBackground();
       if (screenId === "start-screen") updateTopCollectionButton();
       showScreen(screenId);
+      recordVisualDiagnostic("fixed-screen-visible", { screenId, requestId, durationMs: Math.round(performance.now() - transitionStartedAt) });
       if (onShown) onShown();
       return true;
     }).catch((error) => {
+      recordVisualError("fixed-screen-error", error, { screenId, requestId, durationMs: Math.round(performance.now() - transitionStartedAt) });
       console.error(`Fixed screen failed to load: ${screenId}`, error);
       if (requestId !== visualRequestId || runId !== state.runId) return false;
       setNeutralBackground();
       if (screenId === "start-screen") updateTopCollectionButton();
       showScreen(screenId);
+      recordVisualDiagnostic("fixed-screen-visible-after-error", { screenId, requestId, durationMs: Math.round(performance.now() - transitionStartedAt) });
       if (onShown) onShown();
       return true;
     });
@@ -706,17 +805,23 @@
     const bubbleSpec = progressSpeechBubbleSpec(question.vehicleIndex);
     const bubblePath = path && !question.isReview && !question.hintUsed && !question.answerRevealed && bubbleSpec?.stage === stage
       ? bubbleSpec.path : null;
-    return { stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage: Boolean(vehicle && !progress.discovered) };
+    const spec = { stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage: Boolean(vehicle && !progress.discovered) };
+    recordVisualDiagnostic("question-visual-spec", { vehicleIndex: question.vehicleIndex, vehicleStem: vehicle?.stem || null, vehicleNameJa: vehicle?.nameJa || null, stage, backgroundPath, characterPath: path, bubblePath, discoveryBubblePath });
+    return spec;
   }
   function preloadQuestionVisuals(question) {
     const spec = questionVisualSpec(question);
     const paths = [spec.backgroundPath, spec.path, spec.bubblePath, spec.hasDiscoveryMessage ? spec.discoveryBubblePath : null].filter(Boolean);
-    return Promise.all(paths.map(preloadDecodedImage)).then(() => spec);
+    const startedAt = performance.now();
+    recordVisualDiagnostic("preload-question-visuals-start", { paths, stage: spec.stage, vehicleIndex: question.vehicleIndex });
+    return Promise.all(paths.map(preloadDecodedImage)).then(() => { recordVisualDiagnostic("preload-question-visuals-end", { paths, stage: spec.stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - startedAt) }); return spec; });
   }
   function prepareStagedImage(element, path) {
+    const startedAt = performance.now();
+    recordVisualDiagnostic("prepare-staged-image-start", { path, kind: visualPathKind(path), elementId: element.id });
     element.hidden = false;
     element.style.visibility = "hidden";
-    return decodeImageElement(element, path);
+    return decodeImageElement(element, path).then((value) => { recordVisualDiagnostic("prepare-staged-image-end", { path, kind: visualPathKind(path), elementId: element.id, durationMs: Math.round(performance.now() - startedAt) }); return value; });
   }
   function positionAnswerBubble(bubble, stage, character) {
     const position = answerBubblePositions[stage];
@@ -922,6 +1027,8 @@
   function prepareQuestionVisuals(question, allowFutureQuestion = false) {
     const stagedBackground = $("play-background-next"), stagedCharacter = $("answer-character-next"), stagedBubble = $("answer-bubble-next");
     const requestId = ++visualRequestId;
+    const prepareStartedAt = performance.now();
+    recordVisualDiagnostic("prepare-question-visuals-start", { requestId, allowFutureQuestion, ...visualVehicleSnapshot(question.vehicleIndex) });
     return preloadQuestionVisuals(question).then(async ({ stage, vehicle, backgroundPath, path, bubblePath, discoveryBubblePath, hasDiscoveryMessage }) => {
       if (requestId !== visualRequestId || (!allowFutureQuestion && state.current !== question)) return false;
       const discoveryBubble = $("answer-discovery-bubble");
@@ -929,26 +1036,28 @@
       if (hasDiscoveryMessage) elementPrepares.push(prepareStagedImage(discoveryBubble, discoveryBubblePath));
       else discoveryBubble.hidden = true;
       if (!path || !vehicle) {
+        recordVisualDiagnostic("prepare-question-promise-all-start", { requestId, stage, vehicleIndex: question.vehicleIndex, paths: [backgroundPath, discoveryBubblePath].filter(Boolean) });
         await Promise.all(elementPrepares);
+        recordVisualDiagnostic("prepare-question-promise-all-end", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt) });
         if (requestId !== visualRequestId || (!allowFutureQuestion && state.current !== question)) return false;
+        recordVisualDiagnostic("prepare-question-visuals-success", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt), hasCharacter: false });
         return { backgroundPath, hasCharacter: false, hasBubble: false, hasDiscoveryMessage };
       }
       const characterPath = path.startsWith("./") ? path : `./${path}`;
-      // All current answer artwork uses the same 1254×1254 canvas. Use one
-      // common scale and one common placement per evolution stage so no vehicle
-      // receives a per-asset size/position adjustment. The artwork itself now
-      // owns its internal framing.
-      const sourceCanvasSize = 1254;
+      // Artwork may use a smaller encoded resolution, but every evolution image
+      // keeps the approved 1254-square logical framing. Use that logical size
+      // for common placement so encoded resolution does not alter screen size.
+      const logicalCanvasSize = 1254;
       const scale = answerArtCanvasScales[stage];
       const flip = stage <= 3;
       stagedCharacter.alt = `${vehicle.nameJa}の${["", "", "乗り物", "ロボット", "スーパーロボット", "装備付きスーパーロボット"][stage]}`;
-      stagedCharacter.style.width = `${sourceCanvasSize * scale}px`;
+      stagedCharacter.style.width = `${logicalCanvasSize * scale}px`;
       // Keep every stage on the same centre line: halfway between the play
       // stage's left edge and the existing keyboard area's left edge.
       const keypadLeft = Number.parseFloat(window.getComputedStyle(document.querySelector(".game-area")).left);
       const characterCenterX = (Number.isFinite(keypadLeft) ? keypadLeft / 2 : 380) + 100;
-      stagedCharacter.style.left = `${characterCenterX - sourceCanvasSize * scale / 2}px`;
-      stagedCharacter.style.top = `${968 - sourceCanvasSize * scale}px`;
+      stagedCharacter.style.left = `${characterCenterX - logicalCanvasSize * scale / 2}px`;
+      stagedCharacter.style.top = `${968 - logicalCanvasSize * scale}px`;
       stagedCharacter.style.setProperty("--character-static-transform", flip ? "scaleX(-1)" : "none");
       stagedCharacter.style.transform = "var(--character-static-transform)";
       stagedCharacter.dataset.answerStage = String(stage);
@@ -958,13 +1067,18 @@
         positionAnswerBubble(stagedBubble, stage, stagedCharacter);
         elementPrepares.push(prepareStagedImage(stagedBubble, bubblePath));
       } else stagedBubble.hidden = true;
+      recordVisualDiagnostic("prepare-question-promise-all-start", { requestId, stage, vehicleIndex: question.vehicleIndex, paths: [backgroundPath, characterPath, bubblePath].filter(Boolean) });
       await Promise.all(elementPrepares);
+      recordVisualDiagnostic("prepare-question-promise-all-end", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt) });
       if (requestId !== visualRequestId || (!allowFutureQuestion && state.current !== question)) return false;
+      recordVisualDiagnostic("prepare-question-visuals-success", { requestId, stage, vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - prepareStartedAt) });
       return { backgroundPath, hasCharacter: true, characterStage: stage, hasBubble: Boolean(bubblePath), hasDiscoveryMessage: false };
     }).catch((error) => {
       console.error("Question visual failed to load", error);
+      recordVisualError("prepare-question-visuals-catch", error, { requestId, stage: question.answerStage, vehicleIndex: question.vehicleIndex, vehicleStem: vehicles[question.vehicleIndex]?.stem || null, durationMs: Math.round(performance.now() - prepareStartedAt) });
       if (requestId !== visualRequestId || (!allowFutureQuestion && state.current !== question)) return false;
       // Retain the complete old visual rather than exposing a partial fallback on failure.
+      recordVisualDiagnostic("prepare-question-preserve-current", { requestId, stage: question.answerStage, vehicleIndex: question.vehicleIndex });
       return { preserveCurrent: true };
     });
   }
@@ -1119,15 +1233,17 @@
     state.vehicleChallengeQuestionCount = 0;
   }
   function prepareInitialVehicle() {
+    recordVisualDiagnostic("prepare-initial-vehicle-start", visualVehicleSnapshot());
     if (Number.isInteger(state.previewQaInitialVehicleIndex)) {
       state.currentVehicleIndex = state.previewQaInitialVehicleIndex;
       state.currentStage = currentStageForVehicle(state.currentVehicleIndex);
       state.preparedInitialVehicleIndex = state.currentVehicleIndex;
       state.previewQaInitialVehicleIndex = null;
       preloadVehicleVisuals(state.currentVehicleIndex, state.currentStage);
+      recordVisualDiagnostic("prepare-initial-vehicle-preview-qa", visualVehicleSnapshot());
       return;
     }
-    if (Number.isInteger(state.preparedInitialVehicleIndex)) return;
+    if (Number.isInteger(state.preparedInitialVehicleIndex)) { recordVisualDiagnostic("prepare-initial-vehicle-reused", visualVehicleSnapshot(state.preparedInitialVehicleIndex)); return; }
     state.currentVehicleIndex = -1;
     state.currentStage = 1;
     state.correctStreak = 0;
@@ -1135,6 +1251,7 @@
     state.vehicleChallengeQuestionCount = 0;
     state.preparedInitialVehicleIndex = state.currentVehicleIndex;
     preloadVehicleVisuals(state.preparedInitialVehicleIndex, state.currentStage);
+    recordVisualDiagnostic("prepare-initial-vehicle-selected", visualVehicleSnapshot(state.preparedInitialVehicleIndex));
   }
 
   function makeQuestions() {
@@ -1410,6 +1527,8 @@
   ensureGameplayFontsReady();
 
   function displayQuestion(question, onRevealed = null) {
+    const displayStartedAt = performance.now();
+    recordVisualDiagnostic("display-question-start", { vehicleIndex: question.vehicleIndex, ...visualVehicleSnapshot(question.vehicleIndex) });
     clearIdleGuide();
     state.energyDisplayOverride = null;
     clearRobotDissolveSparkle();
@@ -1449,6 +1568,7 @@
       await playCurrentCharacterExit(prepared);
       if (runId !== state.runId || state.current !== question) return;
       await transitionQuestionBackground(prepared);
+      recordVisualDiagnostic("display-question-background-ready", { vehicleIndex: question.vehicleIndex, backgroundPath: prepared.backgroundPath, durationMs: Math.round(performance.now() - displayStartedAt) });
       if (runId !== state.runId || state.current !== question) return;
       $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" || question.kind === "multiplication2x2" || question.kind === "counting" ? "" : `${question.dividend} ÷ ${question.divisor}`;
       resetAnswerCard(); setProgress();
@@ -1458,6 +1578,7 @@
       if (state.mode === "multiplication2x2") setupTwoDigitMultiplication(question);
       if ((state.mode === "counting1" || state.mode === "counting2")) setupCounting(question);
       commitQuestionVisuals(prepared);
+      recordVisualDiagnostic("display-question-character-ready", { vehicleIndex: question.vehicleIndex, characterStage: prepared.characterStage || null, durationMs: Math.round(performance.now() - displayStartedAt) });
       renderVehicleProgressUi(question.vehicleIndex);
       $("incorrect-next-vehicle-notice").hidden = true;
       if (state.pendingNextVehicleOverlay) {
@@ -1465,6 +1586,7 @@
         state.pendingNextVehicleOverlay = null;
       }
       showScreen("play-screen");
+      recordVisualDiagnostic("display-question-play-screen-visible", { vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - displayStartedAt) });
       // Stage2/3 keep their current motion. Stage4/5 use the dedicated
       // lightweight summon sequence while preserving the same final placement.
       await playPreparedCharacterEntry(prepared, shouldAnimateCharacter);
@@ -1472,6 +1594,7 @@
       if (onRevealed) onRevealed();
       startQuestionTimeout();
       state.transitioning = false;
+      recordVisualDiagnostic("display-question-transitioning-false", { vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - displayStartedAt) });
       if (state.phase === "initial" || state.phase === "retry") startBackgroundMusic();
       // Start the per-question bonus clock only after the rendered question is
       // visible and the answer controls have been unlocked.
@@ -1514,8 +1637,8 @@
       startTimer();
     });
   }
-  function openModeSelect() { showFixedScreenWhenReady("mode-select-screen"); }
-  function startGameFromGesture(mode) { primeBackgroundMusicFromGesture(); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
+  function openModeSelect() { recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot()); showFixedScreenWhenReady("mode-select-screen"); }
+  function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture(); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
@@ -3268,6 +3391,7 @@
     window.location.reload();
   }
 
+  setupVisualDiagnostics();
   setupViewportDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
