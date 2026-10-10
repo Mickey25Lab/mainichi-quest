@@ -70,7 +70,7 @@
     rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
     rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done"
   };
-  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v1";
+  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v2";
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -239,21 +239,23 @@
     try {
       if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
-      const normalVehicleIndexes = collectionDisplayOrder.filter((index) => vehicles[index].rarity === "normal").slice(0, 10);
+      const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
       const progressStates = [
         null,
-        { discovered: true, friendship: 3, friendly: false, stage: 2, energy: 0, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 0, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 25, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 45, masterMedal: false }
+        { discovered: true, friendship: 4, friendly: false, stage: 2, energy: 0, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 2, energy: 23, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 39, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 55, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 79, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 100, masterMedal: true }
       ];
-      normalVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
+      qaVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
         const progress = progressStates[displayIndex % progressStates.length];
         if (progress) preset[vehicleIndex] = progress;
       });
       localStorage.setItem(storageKeys.rewardProgressPhase1, JSON.stringify(preset));
       localStorage.setItem(previewQaProgressPresetMarker, "done");
-      return normalVehicleIndexes[3];
+      return qaVehicleIndexes[3];
     } catch (_) { return null; }
   }
   function loadRecentVehicles() {
