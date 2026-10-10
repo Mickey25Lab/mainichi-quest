@@ -39,7 +39,8 @@
         <button class="mode-select-hit mode-select-choice mode-select-number-cards" id="mode-select-number-cards" type="button">すうじあつめ</button>
         <button class="mode-select-hit mode-select-choice mode-select-counting-1" id="mode-select-counting-1" type="button">かずかぞえ1</button>
         <button class="mode-select-hit mode-select-choice mode-select-counting-2" id="mode-select-counting-2" type="button">かずかぞえ2</button>
-        <button class="mode-select-hit mode-select-choice mode-select-multiplication" id="mode-select-multiplication" type="button">かけ算ひっ算</button>
+        <button class="mode-select-hit mode-select-choice mode-select-multiplication" id="mode-select-multiplication" type="button"><span>かけ算ひっ算</span><small>2けた×1けた</small></button>
+        <button class="mode-select-hit mode-select-choice mode-select-multiplication-2x2" id="mode-select-multiplication-2x2" type="button"><span>かけ算ひっ算</span><small>2けた×2けた</small></button>
         <button class="mode-select-hit mode-select-choice mode-select-normal" id="mode-select-normal" type="button">わり算計算</button>
         <button class="mode-select-hit mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button">わり算ひっ算</button>
       </div>
@@ -52,6 +53,13 @@
       <img class="answer-character" id="answer-character" alt="" hidden>
       <img class="answer-character" id="answer-character-next" alt="" hidden aria-hidden="true">
       <div class="robot-dissolve-sparkle" id="robot-dissolve-sparkle" hidden aria-hidden="true"></div>
+      <div class="super-robot-summon" id="super-robot-summon" hidden aria-hidden="true">
+        <i class="summon-beam summon-beam-outer"></i>
+        <i class="summon-beam summon-beam-core"></i>
+        <i class="summon-ring"></i>
+        <i class="summon-flash"></i>
+        <i class="summon-glitter"></i>
+      </div>
       <img class="answer-bubble" id="answer-bubble" alt="" hidden>
       <img class="answer-bubble" id="answer-bubble-next" alt="" hidden aria-hidden="true">
       <img class="answer-discovery-bubble" id="answer-discovery-bubble" alt="どんなのりものが出てくるかな？" hidden>
@@ -97,6 +105,17 @@
             <div class="multiplication-multiplier" id="multiplication-multiplier"></div>
             <div class="multiplication-bar" aria-hidden="true"></div>
             <div class="multiplication-answer-row" id="multiplication-answer-row"></div>
+          </div>
+          <div class="multiplication-2x2-panel" id="multiplication-2x2-panel" hidden aria-live="polite">
+            <div class="multiplication-2x2-multiplicand" id="multiplication-2x2-multiplicand"></div>
+            <span class="multiplication-2x2-operator" aria-hidden="true">×</span>
+            <div class="multiplication-2x2-multiplier" id="multiplication-2x2-multiplier"></div>
+            <div class="multiplication-2x2-bar multiplication-2x2-bar-first" aria-hidden="true"></div>
+            <div class="multiplication-2x2-row" id="multiplication-2x2-partial-1"></div>
+            <div class="multiplication-2x2-row" id="multiplication-2x2-partial-2"></div>
+            <span class="multiplication-2x2-shift-guide" id="multiplication-2x2-shift-guide" hidden aria-hidden="true"></span>
+            <div class="multiplication-2x2-bar multiplication-2x2-bar-sum" aria-hidden="true"></div>
+            <div class="multiplication-2x2-row multiplication-2x2-total" id="multiplication-2x2-total"></div>
           </div>
           <span class="answer-mark" id="answer-mark" aria-hidden="true"></span>
         </div>
@@ -243,15 +262,24 @@
         </header>
         <div class="detail-view">
           <div class="detail-picture" id="detail-picture">
-            <img id="detail-image" alt="">
-            <div class="detail-lock-message" id="detail-lock-message" hidden>まだ みつけていないよ</div>
-            <div class="detail-get detail-get-vehicle">GET!</div>
-            <div class="detail-get detail-get-robot">GET!</div>
-            <div class="detail-get detail-get-super">GET!</div>
-            <div class="detail-special-get"><span>スペシャル装備</span><b>GET!</b></div>
-            <div class="detail-get detail-get-medal">GET!</div>
-            <button class="detail-arrow previous" id="detail-previous" aria-label="前の車種"><span>‹</span></button>
-            <button class="detail-arrow next" id="detail-next" aria-label="次の車種"><span>›</span></button>
+            <img class="detail-background" id="detail-background" alt="">
+            <img class="detail-vehicle-logo" id="detail-vehicle-logo" alt="" hidden>
+            <div class="detail-evolution-layout" id="detail-evolution-layout" hidden>
+              <article class="detail-evolution-slot detail-slot-vehicle">
+                <div class="detail-art-box"><img class="detail-character" id="detail-vehicle-art" alt=""></div>
+                <div class="detail-evolution-label"><span>のりもの</span></div>
+              </article>
+              <div class="detail-evolution-chevron detail-chevron-one" aria-hidden="true"><i></i><i></i></div>
+              <article class="detail-evolution-slot detail-slot-robot">
+                <div class="detail-art-box"><img class="detail-character" id="detail-robot-art" alt=""></div>
+                <div class="detail-evolution-label"><span>ロボット</span></div>
+              </article>
+              <div class="detail-evolution-chevron detail-chevron-two" aria-hidden="true"><i></i><i></i></div>
+              <article class="detail-evolution-slot detail-slot-super">
+                <div class="detail-art-box"><img class="detail-character" id="detail-super-art" alt=""></div>
+                <div class="detail-evolution-label detail-evolution-label-long"><span>スーパーロボット</span></div>
+              </article>
+            </div>
           </div>
         </div>
       </div>

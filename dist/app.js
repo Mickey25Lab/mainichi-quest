@@ -34,7 +34,7 @@
     enabled: true,
     amount: 1,
     label: "タイムボーナス +1",
-    modes: Object.freeze(["normal", "longdivision", "multiplication"]),
+    modes: Object.freeze(["normal", "longdivision", "multiplication", "multiplication2x2"]),
     limitMsByAnswerDigits: Object.freeze({ 1: 4000, 2: 5000, 3: 10000, 4: 15000, 5: 20000 })
   });
   // Keep the music asset, levels, and preference key together so a future
@@ -129,7 +129,7 @@
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null,
-    mode: "normal", longDivision: null, numberCards: null, multiplication: null,
+    mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
   };
 
@@ -284,6 +284,10 @@
     return `${values.year}-${values.month}-${values.day}`;
   }
   function topCollectionAlreadyUsedToday() {
+    const host = window.location.hostname;
+    const previewQa = new URLSearchParams(window.location.search).get("qa") === "progress"
+      && ((host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev") || host === "localhost" || host === "127.0.0.1");
+    if (previewQa) return false;
     try { return localStorage.getItem(storageKeys.topCollectionLastUsedJst) === japanDateKey(); } catch (_) { return false; }
   }
   function updateTopCollectionButton() {
@@ -529,6 +533,22 @@
   function vehicleArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/01_vehicle/${stem}_vehicle.webp`;
+  }
+  function robotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/02_robot/${stem}_robot.webp`;
+  }
+  function superRobotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/03_super_robot/${stem}_super_robot.webp`;
+  }
+  function equippedSuperRobotArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/04_super_robot_equipped/${stem}_super_robot_equipped.webp`;
+  }
+  function vehicleLogoTitlePath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.png`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
@@ -827,7 +847,31 @@
   }
 
   function clearCharacterMotion(element) {
-    element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting");
+    element.classList.remove("is-vehicle-entering", "is-vehicle-exiting", "is-robot-entering", "is-robot-exiting", "is-super-summoning");
+  }
+  function clearSuperRobotSummon() {
+    const summon = $("super-robot-summon");
+    if (!summon) return;
+    summon.classList.remove("is-running", "is-stage5");
+    summon.hidden = true;
+  }
+  function playSuperRobotSummon(character, stageNumber) {
+    const summon = $("super-robot-summon"), playStage = $("play-stage");
+    if (!summon || !playStage || character.hidden) return false;
+    const stageRect = playStage.getBoundingClientRect();
+    const characterRect = character.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    if (!stageRect.width || !characterRect.width || !characterRect.height || !scale) return false;
+    const centerX = (characterRect.left - stageRect.left + characterRect.width / 2) / scale;
+    const footY = Math.min(1086, Math.max(120, (characterRect.bottom - stageRect.top) / scale));
+    summon.style.setProperty("--summon-x", `${centerX.toFixed(1)}px`);
+    summon.style.setProperty("--summon-foot-y", `${footY.toFixed(1)}px`);
+    summon.classList.toggle("is-stage5", stageNumber === 5);
+    summon.hidden = false;
+    summon.classList.remove("is-running");
+    void summon.offsetWidth;
+    summon.classList.add("is-running");
+    return true;
   }
   function clearRobotDissolveSparkle() {
     const sparkle = $("robot-dissolve-sparkle");
@@ -963,6 +1007,21 @@
       playRobotDissolveSparkle(character, "enter");
       await waitForCharacterAnimation(character, "is-robot-entering", 1020);
       clearRobotDissolveSparkle();
+    } else if (prepared.characterStage === 4 || prepared.characterStage === 5) {
+      clearSuperRobotSummon();
+      const summonStarted = playSuperRobotSummon(character, prepared.characterStage);
+      const reducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+      const settleMs = reducedMotion ? 320 : 1120;
+      const characterMotion = waitForCharacterAnimation(character, "is-super-summoning", settleMs + 120);
+      if (summonStarted) {
+        await Promise.all([
+          characterMotion,
+          new Promise((resolve) => window.setTimeout(resolve, settleMs))
+        ]);
+        clearSuperRobotSummon();
+      } else {
+        await characterMotion;
+      }
     }
   }
   function prepareQuestionVisuals(question, allowFutureQuestion = false) {
@@ -1349,16 +1408,47 @@
     });
   }
 
+  function makeTwoDigitMultiplicationQuestions() {
+    const values = [];
+    const multiplierValues = [];
+    for (let tens = 1; tens <= 5; tens += 1) {
+      for (let ones = 0; ones <= 5; ones += 1) values.push(tens * 10 + ones);
+      for (let ones = 1; ones <= 5; ones += 1) multiplierValues.push(tens * 10 + ones);
+    }
+    const pairs = [];
+    const used = new Set();
+    while (pairs.length < 10) {
+      const multiplicand = values[Math.floor(Math.random() * values.length)];
+      const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
+      const key = `${multiplicand}*${multiplier}`;
+      if (used.has(key)) continue;
+      used.add(key);
+      const onesMultiplier = multiplier % 10;
+      const tensMultiplier = Math.floor(multiplier / 10);
+      const partial1 = multiplicand * onesMultiplier;
+      const partial2 = multiplicand * tensMultiplier;
+      const product = multiplicand * multiplier;
+      pairs.push({
+        kind: "multiplication2x2", id: `multiplication2x2-${pairs.length + 1}-${key}`,
+        multiplicand, multiplier, partial1, partial2, product, quotient: product, remainder: 0,
+        hintUsed: false, answerRevealed: false, assistedCorrect: false, resultType: null, isReview: false
+      });
+    }
+    return pairs;
+  }
+
   function setGameMode(mode) {
     const isLongDivision = mode === "longdivision";
     const isNumberCards = mode === "numbercards";
     const isMultiplication = mode === "multiplication";
+    const isMultiplication2x2 = mode === "multiplication2x2";
     const isCounting = mode === "counting1" || mode === "counting2";
-    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isCounting ? mode : "normal";
+    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isMultiplication2x2 ? "multiplication2x2" : isCounting ? mode : "normal";
     state.longDivision = null;
     state.numberCards = null;
     state.counting = null;
     state.multiplication = null;
+    state.multiplication2x2 = null;
     state.inputMode = "quotient";
     state.quotientInput = "";
     state.remainderInput = "";
@@ -1376,6 +1466,12 @@
     $("counting-dots").replaceChildren();
     $("counting-keypad-grid").hidden = !isCounting;
     $("multiplication-panel").hidden = !isMultiplication;
+    $("multiplication-2x2-panel").hidden = !isMultiplication2x2;
+    $("multiplication-2x2-multiplicand").replaceChildren();
+    $("multiplication-2x2-multiplier").replaceChildren();
+    $("multiplication-2x2-partial-1").replaceChildren();
+    $("multiplication-2x2-partial-2").replaceChildren();
+    $("multiplication-2x2-total").replaceChildren();
     $("multiplication-multiplicand").replaceChildren();
     $("multiplication-multiplier").replaceChildren();
     $("multiplication-answer-row").replaceChildren();
@@ -1385,11 +1481,13 @@
     $("question-answer-card").classList.toggle("long-division-mode", isLongDivision);
     $("question-answer-card").classList.toggle("number-card-mode", isNumberCards);
     $("question-answer-card").classList.toggle("multiplication-mode", isMultiplication);
+    $("question-answer-card").classList.toggle("multiplication-2x2-mode", isMultiplication2x2);
     $("question-answer-card").classList.toggle("counting-mode", isCounting);
     $("question-answer-card").classList.toggle("counting1-mode", mode === "counting1");
     $("keypad").classList.toggle("long-division-mode", isLongDivision);
     $("keypad").classList.toggle("number-card-mode", isNumberCards);
     $("keypad").classList.toggle("multiplication-mode", isMultiplication);
+    $("keypad").classList.toggle("multiplication-2x2-mode", isMultiplication2x2);
     $("keypad").classList.toggle("counting-mode", isCounting);
     $("keypad").classList.toggle("counting1-mode", mode === "counting1");
     $("long-division-skip-key").disabled = !isLongDivision;
@@ -1403,7 +1501,7 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "multiplication2x2" ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
@@ -1472,11 +1570,12 @@
       await transitionQuestionBackground(prepared);
       recordVisualDiagnostic("display-question-background-ready", { vehicleIndex: question.vehicleIndex, backgroundPath: prepared.backgroundPath, durationMs: Math.round(performance.now() - displayStartedAt) });
       if (runId !== state.runId || state.current !== question) return;
-      $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" || question.kind === "counting" ? "" : `${question.dividend} ÷ ${question.divisor}`;
+      $("problem-card").textContent = question.kind === "numbercards" || question.kind === "multiplication" || question.kind === "multiplication2x2" || question.kind === "counting" ? "" : `${question.dividend} ÷ ${question.divisor}`;
       resetAnswerCard(); setProgress();
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
+      if (state.mode === "multiplication2x2") setupTwoDigitMultiplication(question);
       if ((state.mode === "counting1" || state.mode === "counting2")) setupCounting(question);
       commitQuestionVisuals(prepared);
       recordVisualDiagnostic("display-question-character-ready", { vehicleIndex: question.vehicleIndex, characterStage: prepared.characterStage || null, durationMs: Math.round(performance.now() - displayStartedAt) });
@@ -1488,9 +1587,8 @@
       }
       showScreen("play-screen");
       recordVisualDiagnostic("display-question-play-screen-visible", { vehicleIndex: question.vehicleIndex, durationMs: Math.round(performance.now() - displayStartedAt) });
-      // Only the two early collection forms receive new character motion.
-      // Super-robot and equipped-super-robot retain their existing static
-      // presentation, including their final size and position.
+      // Stage2/3 keep their current motion. Stage4/5 use the dedicated
+      // lightweight summon sequence while preserving the same final placement.
       await playPreparedCharacterEntry(prepared, shouldAnimateCharacter);
       if (runId !== state.runId || state.current !== question) return;
       if (onRevealed) onRevealed();
@@ -1516,7 +1614,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
+    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "multiplication2x2" ? makeTwoDigitMultiplicationQuestions() : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
     state.initialIndex = 0; state.initialCorrect = 0; state.missed = []; state.retrySetPosition = 0; state.retrySetTotal = 0; state.vehicleChallengeQuestionCount = 0;
     state.finalElapsedMs = 0; state.confirmingAnswer = false;
     state.sessionUnlocks = [0, 0, 0, 0, 0, 0];
@@ -1545,6 +1643,7 @@
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
   function startMultiplicationApp() { startGameFromGesture("multiplication"); }
+  function startTwoDigitMultiplicationApp() { startGameFromGesture("multiplication2x2"); }
   function startCounting1App() { startGameFromGesture("counting1"); }
   function startCounting2App() { startGameFromGesture("counting2"); }
   function formatAnswer(answer) { return answer.usedRemainder ? `${answer.quotient}…${answer.remainder}` : String(answer.quotient); }
@@ -1553,6 +1652,14 @@
     if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2")) {
       $("assist-button").textContent = "ヒントを見る";
       $("assist-button").classList.remove("is-answer");
+      $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
+      return;
+    }
+    if (state.mode === "multiplication2x2") {
+      const model = state.multiplication2x2;
+      const showAnswer = Boolean(model && model.inputStep >= model.inputOrder.length);
+      $("assist-button").textContent = showAnswer ? "答えを見る" : "ヒントを見る";
+      $("assist-button").classList.toggle("is-answer", showAnswer);
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
       return;
     }
@@ -1573,6 +1680,7 @@
     if ((state.mode === "counting1" || state.mode === "counting2")) return;
     if (state.mode === "numbercards") { renderNumberCards(); return; }
     if (state.mode === "multiplication") { renderMultiplication(); return; }
+    if (state.mode === "multiplication2x2") { renderTwoDigitMultiplication(); return; }
     if (state.mode === "longdivision") { renderLongDivision(); return; }
     if (!state.quotientInput) { $("answer-text").textContent = ""; return; }
     $("answer-text").textContent = state.inputMode === "remainder" ? `${state.quotientInput}…${state.remainderInput || "_"}` : state.quotientInput;
@@ -1841,6 +1949,110 @@
     renderMultiplication();
   }
 
+  function twoDigitRowOrder(multiplicand, value) {
+    return multiplicationInputOrder(multiplicand, value);
+  }
+  function makeTwoDigitSlots(holder, count) {
+    holder.replaceChildren(...Array.from({ length: count }, () => {
+      const slot = document.createElement("span");
+      slot.className = "multiplication-2x2-slot";
+      return slot;
+    }));
+  }
+  function setupTwoDigitMultiplication(question) {
+    const partial1Text = String(question.partial1);
+    const partial2Text = String(question.partial2);
+    const totalText = String(question.product);
+    const rows = [
+      { key: "partial1", value: partial1Text, holder: $("multiplication-2x2-partial-1"), order: twoDigitRowOrder(question.multiplicand, question.partial1) },
+      { key: "partial2", value: partial2Text, holder: $("multiplication-2x2-partial-2"), order: twoDigitRowOrder(question.multiplicand, question.partial2) },
+      { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: Array.from({ length: totalText.length }, (_, offset) => totalText.length - 1 - offset) }
+    ];
+    rows.forEach((row) => makeTwoDigitSlots(row.holder, row.value.length));
+    makeMultiplicationDigits($("multiplication-2x2-multiplicand"), question.multiplicand);
+    makeMultiplicationDigits($("multiplication-2x2-multiplier"), question.multiplier);
+    $("multiplication-2x2-partial-1").style.gridColumn = `${5 - partial1Text.length} / 5`;
+    $("multiplication-2x2-partial-2").style.gridColumn = `${4 - partial2Text.length} / 4`;
+    $("multiplication-2x2-total").style.gridColumn = `${5 - totalText.length} / 5`;
+    const inputOrder = [];
+    rows.forEach((row, rowIndex) => row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })));
+    state.multiplication2x2 = {
+      rows: rows.map((row) => ({ ...row, cells: Array(row.value.length).fill(""), hintedIndexes: new Set() })),
+      inputOrder, inputStep: 0, history: [],
+      firstRowGuideVisible: false,
+      secondRowGuideVisible: false,
+      secondGuideTimer: null
+    };
+    renderTwoDigitMultiplication();
+  }
+  function renderTwoDigitMultiplication() {
+    const model = state.multiplication2x2; if (!model) return;
+    const active = model.inputOrder[model.inputStep] || null;
+    model.rows.forEach((row, rowIndex) => {
+      Array.from(row.holder.children).forEach((slot, cellIndex) => {
+        slot.textContent = row.cells[cellIndex];
+        slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
+        slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
+      });
+    });
+    const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
+    multiplierDigits.forEach((digit, index) => {
+      digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
+    });
+    $("multiplication-2x2-shift-guide").hidden = !model.secondRowGuideVisible;
+  }
+  function showTwoDigitSecondRowGuides(model) {
+    if (!model || model.firstRowGuideVisible) return;
+    model.firstRowGuideVisible = true;
+    renderTwoDigitMultiplication();
+    model.secondGuideTimer = window.setTimeout(() => {
+      if (state.multiplication2x2 !== model) return;
+      model.secondRowGuideVisible = true;
+      renderTwoDigitMultiplication();
+    }, 500);
+  }
+  function advanceTwoDigitMultiplicationStep(model) {
+    while (model.inputStep < model.inputOrder.length) {
+      const step = model.inputOrder[model.inputStep];
+      if (!model.rows[step.rowIndex].cells[step.cellIndex]) break;
+      model.inputStep += 1;
+    }
+  }
+  function inputTwoDigitMultiplicationNumber(number) {
+    const model = state.multiplication2x2;
+    if (!model || model.inputStep >= model.inputOrder.length) return;
+    noteQuestionActivity();
+    const step = model.inputOrder[model.inputStep];
+    model.rows[step.rowIndex].cells[step.cellIndex] = String(number);
+    model.history.push({ ...step });
+    model.inputStep += 1;
+    advanceTwoDigitMultiplicationStep(model);
+    const nextStep = model.inputOrder[model.inputStep] || null;
+    if (step.rowIndex === 0 && (!nextStep || nextStep.rowIndex !== 0)) showTwoDigitSecondRowGuides(model);
+    renderTwoDigitMultiplication();
+    if (model.inputStep >= model.inputOrder.length) {
+      const allRowsCorrect = model.rows.every((row) => row.cells.join("") === row.value);
+      const total = Number(model.rows[2].cells.join(""));
+      judge({ quotient: allRowsCorrect ? total : total + 1, remainder: 0, usedRemainder: false });
+    }
+  }
+  function clearTwoDigitMultiplicationInput() {
+    const model = state.multiplication2x2;
+    if (!model || !model.history.length) return;
+    const step = model.history.pop();
+    model.rows[step.rowIndex].cells[step.cellIndex] = "";
+    model.inputStep = 0;
+    advanceTwoDigitMultiplicationStep(model);
+    renderTwoDigitMultiplication();
+  }
+  function fillTwoDigitMultiplicationAnswer(question) {
+    const model = state.multiplication2x2; if (!model) return;
+    const values = [String(question.partial1), String(question.partial2), String(question.product)];
+    model.rows.forEach((row, rowIndex) => { row.cells = values[rowIndex].split(""); });
+    model.inputStep = model.inputOrder.length;
+    renderTwoDigitMultiplication();
+  }
+
   function longDivisionQuotient() { return (state.longDivision?.cells || []).filter(Boolean).join(""); }
   function renderLongDivision() {
     const model = state.longDivision; if (!model) return;
@@ -1896,6 +2108,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { inputMultiplicationNumber(number); return; }
+    if (state.mode === "multiplication2x2") { inputTwoDigitMultiplicationNumber(number); return; }
     if (state.mode === "longdivision") { inputLongDivisionNumber(number); return; }
     if (state.current.hintUsed && state.inputMode === "quotient") {
       state.inputMode = "remainder"; state.remainderInput = number;
@@ -1928,6 +2141,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { clearMultiplicationInput(); return; }
+    if (state.mode === "multiplication2x2") { clearTwoDigitMultiplicationInput(); return; }
     if (state.mode === "longdivision") { clearLongDivisionInput(); return; }
     state.inputMode = "quotient"; state.quotientInput = state.current.hintUsed ? String(state.current.quotient) : ""; state.remainderInput = "";
     renderInput();
@@ -1941,7 +2155,7 @@
   }
 
   function questionKey(question) {
-    if (question.kind === "numbercards" || question.kind === "multiplication") return question.id;
+    if (question.kind === "numbercards" || question.kind === "multiplication" || question.kind === "multiplication2x2") return question.id;
     return `${question.dividend}/${question.divisor}`;
   }
   function makeReviewQuestion(question) {
@@ -1963,6 +2177,23 @@
       state.current.hintUsed = true;
       state.numberCards.hinted = true;
       renderNumberCards();
+      return;
+    }
+    if (state.mode === "multiplication2x2") {
+      state.current.hintUsed = true;
+      const model = state.multiplication2x2;
+      const step = model?.inputOrder[model.inputStep];
+      if (!step) {
+        if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
+        return;
+      }
+      const row = model.rows[step.rowIndex];
+      row.cells[step.cellIndex] = row.value[step.cellIndex];
+      row.hintedIndexes.add(step.cellIndex);
+      model.inputStep += 1;
+      advanceTwoDigitMultiplicationStep(model);
+      renderTwoDigitMultiplication();
+      updateAssistButton();
       return;
     }
     if (state.mode === "multiplication") {
@@ -2001,6 +2232,7 @@
     return question.remainder === 0 ? `${question.quotient}（あまりなし）` : `${question.quotient}…${question.remainder}`;
   }
   function renderRevealedAnswer(question) {
+    if (state.mode === "multiplication2x2") { fillTwoDigitMultiplicationAnswer(question); return; }
     if (state.mode === "multiplication") {
       const model = state.multiplication;
       if (model) {
@@ -2046,7 +2278,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication") { useHint(); return; }
+    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication" || state.mode === "multiplication2x2") { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -2209,7 +2441,7 @@
     else window.requestAnimationFrame(startFlight);
   }
   function timeBonusAnswerDigits(question) {
-    if (question.kind === "multiplication") return String(question.product).length;
+    if (question.kind === "multiplication" || question.kind === "multiplication2x2") return String(question.product).length;
     return String(question.quotient).length + (question.remainder === 0 ? 0 : String(question.remainder).length);
   }
   function getTimeBonusForCorrect(question = state.current) {
@@ -2888,10 +3120,40 @@
   }
   function openVehicleDetail(index) { state.detailVehicleIndex = index; renderVehicleDetail(); showScreen("collection-detail-screen"); }
   function renderVehicleDetail() {
-    const vehicle = vehicles[state.detailVehicleIndex], stage = state.collection[state.detailVehicleIndex];
-    $("detail-image").src = vehicle.image; $("detail-image").alt = `${vehicle.nameJa}の進化コレクション`;
-    $("detail-picture").className = `detail-picture stage-${stage}`;
-    $("detail-lock-message").hidden = stage > 0;
+    const vehicleIndex = state.detailVehicleIndex;
+    const vehicle = vehicles[vehicleIndex];
+    const progress = vehicleProgress(vehicleIndex);
+    const discovered = progress.discovered;
+    const threeUp = discovered && progress.stage >= 4;
+    const picture = $("detail-picture");
+    const layout = $("detail-evolution-layout");
+    const logo = $("detail-vehicle-logo");
+    const vehicleArt = $("detail-vehicle-art");
+    const robotArt = $("detail-robot-art");
+    const superArt = $("detail-super-art");
+
+    $("detail-background").src = playBackgroundPath(vehicleIndex);
+    $("detail-background").alt = `${vehicle.nameJa}の背景`;
+    picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
+    logo.hidden = !discovered;
+    layout.hidden = !discovered;
+    if (!discovered) return;
+
+    logo.src = vehicleLogoTitlePath(vehicleIndex);
+    logo.alt = vehicle.nameEn;
+    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
+    vehicleArt.src = vehicleArtworkPath(vehicleIndex);
+    vehicleArt.alt = vehicle.nameJa;
+    vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
+    robotArt.src = robotArtworkPath(vehicleIndex);
+    robotArt.alt = `${vehicle.nameJa}のロボット`;
+    robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
+    $("detail-evolution-layout").querySelector(".detail-slot-super").hidden = !threeUp;
+    $("detail-evolution-layout").querySelector(".detail-chevron-two").hidden = !threeUp;
+    if (threeUp) {
+      superArt.src = progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex);
+      superArt.alt = progress.stage >= 5 ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット` : `${vehicle.nameJa}のスーパーロボット`;
+    }
   }
   function moveVehicleDetail(direction) {
     state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
@@ -3148,7 +3410,7 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToModeSelect); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
@@ -3159,7 +3421,6 @@
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => setCollectionCategory(button.dataset.category)));
   $("detail-back").addEventListener("click", () => { sizeCollectionStage(); showScreen("collection-screen"); });
-  $("detail-previous").addEventListener("click", () => moveVehicleDetail(-1)); $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
