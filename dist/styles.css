@@ -85,6 +85,32 @@ button { touch-action: manipulation; }
   overflow:hidden;
 }
 .start-layer > #start-title { display:block; width:100%; height:100%; object-fit:contain; }
+.qa-mode-toggle {
+  position:absolute;
+  z-index:4;
+  top:6px;
+  right:6px;
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:3px 6px;
+  border:1px solid rgba(255,255,255,.42);
+  border-radius:5px;
+  color:rgba(255,255,255,.78);
+  background:rgba(4,24,53,.52);
+  box-shadow:none;
+  font-family:"Noto Sans JP",sans-serif;
+  font-size:8px;
+  font-weight:700;
+  line-height:1.2;
+  letter-spacing:.02em;
+  cursor:pointer;
+  opacity:.72;
+  -webkit-tap-highlight-color:transparent;
+}
+.qa-mode-toggle:hover,
+.qa-mode-toggle:focus-visible { opacity:1; border-color:rgba(255,255,255,.78); outline:none; }
+.qa-mode-toggle[aria-pressed="true"] { color:#fff7a6; border-color:rgba(255,235,82,.7); background:rgba(85,53,0,.62); opacity:.9; }
 .mode-select-screen { padding:0; background:#000; }
 .mode-select-stage {
   position:relative;
