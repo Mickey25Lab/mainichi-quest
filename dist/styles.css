@@ -440,7 +440,15 @@ button { touch-action: manipulation; }
   font-weight:1000;
   line-height:1.15;
 }
-.quit-confirm-card { white-space:nowrap; }
+.quit-confirm-card {
+  white-space:nowrap;
+  text-align:center;
+}
+.quit-confirm-card h2,
+.quit-confirm-card p,
+.quit-confirm-card p span,
+.quit-confirm-card p strong,
+.quit-confirm-actions button { text-align:center; }
 .quit-confirm-card p {
   color:#123a69;
   font-size:clamp(21px,2.7vw,34px);
