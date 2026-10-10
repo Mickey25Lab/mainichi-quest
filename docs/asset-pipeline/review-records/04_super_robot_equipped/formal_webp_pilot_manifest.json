@@ -1,0 +1,46 @@
+{
+  "category": "04_super_robot_equipped",
+  "status": "representative WebP pilot generated",
+  "scope": [
+    "01_patrol_car_super_robot_equipped",
+    "10_bulldozer_super_robot_equipped",
+    "19_helicopter_super_robot_equipped"
+  ],
+  "source": "formal PNG supplied from asset-source/collection/04_super_robot_equipped/png",
+  "output": "asset-source/collection/04_super_robot_equipped/webp",
+  "settings": {
+    "width": 768,
+    "height": 768,
+    "lossless": false,
+    "rgb_quality": 70,
+    "alpha_quality": 20,
+    "method": 6,
+    "exact": false,
+    "resample": "LANCZOS",
+    "metadata": "none passed"
+  },
+  "tool": {
+    "pillow_version": "12.3.0",
+    "libwebp_version": "1.6.0"
+  },
+  "files": [
+    {
+      "file": "01_patrol_car_super_robot_equipped.webp",
+      "source_png_sha256": "925826e879772d1d1ac87803aa6c8e57977d7f7698ba7ff76099265255362eab",
+      "webp_sha256": "46a6e7a1b61a8c9b5900fb94647598715d54933cfe1742e255a0706553930efa",
+      "bytes": 50214
+    },
+    {
+      "file": "10_bulldozer_super_robot_equipped.webp",
+      "source_png_sha256": "dc09eee75941921e6fb584b31e07b5344b6f761800d0ec16c57683e48aa3da42",
+      "webp_sha256": "103c3f2f339b89cfa5a7bbec81bd0ebea523a97524bdeb96c081c25a2d118b39",
+      "bytes": 62138
+    },
+    {
+      "file": "19_helicopter_super_robot_equipped.webp",
+      "source_png_sha256": "3a2b92d2c636d54863fe2a9f5654e963a535e46f3ab9cd76719f460fcd73fe50",
+      "webp_sha256": "a1be1effbad6899ac987d52ccbde14d07404e0e79a80d00553a7b41b385894f3",
+      "bytes": 60324
+    }
+  ]
+}
