@@ -2298,16 +2298,17 @@ button { touch-action: manipulation; }
 .collection-detail-stage .detail-header { position:absolute; z-index:6; inset:0; pointer-events:none; }
 .collection-detail-stage .detail-header > * { position:absolute; pointer-events:auto; }
 .collection-detail-stage #detail-back {
-  top:12px; right:12px; width:140px; min-width:140px; height:44px; padding:0 11px;
-  display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  border:3px solid #97edff; border-radius:12px; color:#fff;
-  background:linear-gradient(135deg,#0a75ca,#06316f); box-shadow:inset 0 0 12px rgba(100,229,255,.34),0 0 10px rgba(33,207,255,.42),0 3px 0 #021d4e;
-  font-family:inherit; font-size:18px; font-weight:900; line-height:1; text-shadow:0 2px 0 #001947;
+  top:6px; right:6px; width:126px; min-width:126px; height:38px; padding:0 9px;
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  border:2px solid #97edff; border-radius:10px; color:#fff;
+  background:linear-gradient(135deg,#0a75ca,#06316f);
+  box-shadow:inset 0 0 13px rgba(100,229,255,.38),0 0 15px rgba(33,207,255,.58),0 0 5px rgba(149,239,255,.7),0 3px 0 #021d4e;
+  font-family:inherit; font-size:16px; font-weight:900; line-height:1; text-shadow:0 2px 0 #001947;
 }
 .collection-detail-stage #detail-back .detail-back-icon {
-  width:18px;
-  height:14px;
-  flex:0 0 18px;
+  width:16px;
+  height:12px;
+  flex:0 0 16px;
   background:#effdff;
   clip-path:polygon(0 50%,39% 0,39% 34%,100% 34%,100% 66%,39% 66%,39% 100%);
   filter:drop-shadow(0 0 4px rgba(162,241,255,.72));
@@ -2315,9 +2316,9 @@ button { touch-action: manipulation; }
 .collection-detail-stage #detail-back .detail-back-icon::before,
 .collection-detail-stage #detail-back .detail-back-icon::after { content:none; }
 .collection-detail-stage .detail-header .collection-time {
-  left:auto; top:auto; right:12px; bottom:12px; width:140px; min-width:140px; height:44px; padding:4px 10px;
-  transform:none; border-radius:12px; box-sizing:border-box;
-  font-family:inherit; font-size:18px; font-weight:900;
+  left:auto; top:auto; right:6px; bottom:6px; width:126px; min-width:126px; height:38px; padding:3px 8px;
+  transform:none; border-radius:10px; box-sizing:border-box;
+  font-family:inherit; font-size:16px; font-weight:900;
 }
 .collection-detail-stage .detail-view { position:absolute; inset:0; z-index:1; display:block; }
 .collection-detail-stage .detail-picture { position:absolute; inset:0; width:100%; height:100%; overflow:hidden; border:0; border-radius:0; background:#061632; box-shadow:none; }
