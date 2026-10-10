@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.129";
+  const appVersion = "0.0.130";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -68,9 +68,11 @@
     collectionResetV60Marker: "warizan-robot:collection-reset-20260924-done",
     topCollectionAccessResetV60Marker: "warizan-robot:collection-access-reset-20260924-done",
     rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
-    rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done"
+    rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done",
+    qaProgressBackup: "warizan-robot:qa-progress-backup-v1"
   };
   const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v2";
+  const qaProgressMissingBackupValue = "__missing__";
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -230,13 +232,47 @@
   function saveCollection() {
     try { localStorage.setItem(storageKeys.collection, JSON.stringify(state.collection)); } catch (_) {}
   }
+  function qaProgressModeEnabled() {
+    return new URLSearchParams(window.location.search).get("qa") === "progress";
+  }
+  function updateQaModeButton() {
+    const button = $("qa-mode-toggle");
+    if (!button) return;
+    const enabled = qaProgressModeEnabled();
+    button.textContent = enabled ? "QAモード終了" : "QAモード開始";
+    button.setAttribute("aria-pressed", enabled ? "true" : "false");
+  }
+  function restoreQaProgressBackup() {
+    try {
+      const backup = localStorage.getItem(storageKeys.qaProgressBackup);
+      if (backup === null) return;
+      if (backup === qaProgressMissingBackupValue) localStorage.removeItem(storageKeys.rewardProgressPhase1);
+      else localStorage.setItem(storageKeys.rewardProgressPhase1, backup);
+      localStorage.removeItem(storageKeys.qaProgressBackup);
+      localStorage.removeItem(previewQaProgressPresetMarker);
+      localStorage.removeItem(storageKeys.collection);
+    } catch (_) {}
+  }
+  function toggleQaProgressMode() {
+    const url = new URL(window.location.href);
+    if (qaProgressModeEnabled()) {
+      restoreQaProgressBackup();
+      url.searchParams.delete("qa");
+      url.searchParams.delete("reset");
+    } else {
+      url.searchParams.set("qa", "progress");
+      url.searchParams.set("reset", "1");
+    }
+    window.location.assign(url.toString());
+  }
   function seedPreviewQaProgressPreset() {
     const params = new URLSearchParams(window.location.search);
-    const host = window.location.hostname;
-    const isCloudflarePreview = host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev";
-    const isLocalPreview = host === "localhost" || host === "127.0.0.1";
-    if (params.get("qa") !== "progress" || (!isCloudflarePreview && !isLocalPreview)) return null;
+    if (!qaProgressModeEnabled()) return null;
     try {
+      if (localStorage.getItem(storageKeys.qaProgressBackup) === null) {
+        const currentProgress = localStorage.getItem(storageKeys.rewardProgressPhase1);
+        localStorage.setItem(storageKeys.qaProgressBackup, currentProgress === null ? qaProgressMissingBackupValue : currentProgress);
+      }
       if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
       const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
@@ -284,10 +320,7 @@
     return `${values.year}-${values.month}-${values.day}`;
   }
   function topCollectionAlreadyUsedToday() {
-    const host = window.location.hostname;
-    const previewQa = new URLSearchParams(window.location.search).get("qa") === "progress"
-      && ((host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev") || host === "localhost" || host === "127.0.0.1");
-    if (previewQa) return false;
+    if (qaProgressModeEnabled()) return false;
     try { return localStorage.getItem(storageKeys.topCollectionLastUsedJst) === japanDateKey(); } catch (_) { return false; }
   }
   function updateTopCollectionButton() {
@@ -3397,6 +3430,7 @@
   updateBgmToggleButton();
   ensureBackgroundMusic();
   updateVersionLabelWithPreviewMetadata();
+  updateQaModeButton();
   resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset(); loadRewardProgress(); loadRecentVehicles(); state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex; setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
@@ -3412,6 +3446,7 @@
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
+  $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
   $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToModeSelect); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
