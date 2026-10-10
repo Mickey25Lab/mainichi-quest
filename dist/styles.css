@@ -2298,17 +2298,17 @@ button { touch-action: manipulation; }
 .collection-detail-stage .detail-header { position:absolute; z-index:6; inset:0; pointer-events:none; }
 .collection-detail-stage .detail-header > * { position:absolute; pointer-events:auto; }
 .collection-detail-stage #detail-back {
-  top:6px; right:6px; width:126px; min-width:126px; height:38px; padding:0 9px;
-  display:inline-flex; align-items:center; justify-content:center; gap:5px;
-  border:2px solid #97edff; border-radius:10px; color:#fff;
+  top:4px; right:4px; width:116px; min-width:116px; height:34px; padding:0 8px;
+  display:inline-flex; align-items:center; justify-content:center; gap:4px;
+  border:2px solid #97edff; border-radius:9px; color:#fff;
   background:linear-gradient(135deg,#0a75ca,#06316f);
   box-shadow:inset 0 0 13px rgba(100,229,255,.38),0 0 15px rgba(33,207,255,.58),0 0 5px rgba(149,239,255,.7),0 3px 0 #021d4e;
-  font-family:inherit; font-size:16px; font-weight:900; line-height:1; text-shadow:0 2px 0 #001947;
+  font-family:inherit; font-size:15px; font-weight:900; line-height:1; text-shadow:0 2px 0 #001947;
 }
 .collection-detail-stage #detail-back .detail-back-icon {
-  width:16px;
-  height:12px;
-  flex:0 0 16px;
+  width:15px;
+  height:11px;
+  flex:0 0 15px;
   background:#effdff;
   clip-path:polygon(0 50%,39% 0,39% 34%,100% 34%,100% 66%,39% 66%,39% 100%);
   filter:drop-shadow(0 0 4px rgba(162,241,255,.72));
@@ -2316,9 +2316,9 @@ button { touch-action: manipulation; }
 .collection-detail-stage #detail-back .detail-back-icon::before,
 .collection-detail-stage #detail-back .detail-back-icon::after { content:none; }
 .collection-detail-stage .detail-header .collection-time {
-  left:auto; top:auto; right:6px; bottom:6px; width:126px; min-width:126px; height:38px; padding:3px 8px;
-  transform:none; border-radius:10px; box-sizing:border-box;
-  font-family:inherit; font-size:16px; font-weight:900;
+  left:auto; top:auto; right:4px; bottom:4px; width:116px; min-width:116px; height:34px; padding:2px 7px;
+  transform:none; border-radius:9px; box-sizing:border-box;
+  font-family:inherit; font-size:15px; font-weight:900;
 }
 .collection-detail-stage .detail-view { position:absolute; inset:0; z-index:1; display:block; }
 .collection-detail-stage .detail-picture { position:absolute; inset:0; width:100%; height:100%; overflow:hidden; border:0; border-radius:0; background:#061632; box-shadow:none; }
