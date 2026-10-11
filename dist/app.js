@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.136";
+  const appVersion = "0.0.137";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1451,7 +1451,7 @@
     }
     const pairs = [];
     const used = new Set();
-    while (pairs.length < 10) {
+    while (pairs.length < 5) {
       const multiplicand = values[Math.floor(Math.random() * values.length)];
       const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
       const key = `${multiplicand}*${multiplier}`;
@@ -1540,7 +1540,7 @@
   function setProgress() {
     const isRetry = state.phase === "retry";
     const number = isRetry ? state.retrySetPosition : state.initialIndex + 1;
-    const total = isRetry ? state.retrySetTotal : 10;
+    const total = isRetry ? state.retrySetTotal : state.mode === "multiplication2x2" ? state.questions.length : 10;
     $("progress-mode").hidden = !isRetry;
     $("progress-badge").classList.toggle("is-retry", isRetry);
     $("progress-count").textContent = `${Math.min(number, total)} / ${total}`;
@@ -2502,17 +2502,25 @@
     if (question.kind === "multiplication" || question.kind === "multiplication2x2") return String(question.product).length;
     return String(question.quotient).length + (question.remainder === 0 ? 0 : String(question.remainder).length);
   }
+  function twoDigitMultiplicationInputCellCount(question) {
+    if (!question || question.kind !== "multiplication2x2") return 0;
+    return String(question.partial1).length + String(question.partial2).length + String(question.product).length;
+  }
   function getTimeBonusForCorrect(question = state.current) {
     if (!timeBonusConfig.enabled || state.phase !== "initial" || !question || question.isReview) return null;
     if (!timeBonusConfig.modes.includes(state.mode) || question.hintUsed || question.hadWrong || question.answerRevealed || question.progressPenalty) return null;
     const progress = vehicleProgress(question.vehicleIndex ?? state.currentVehicleIndex);
     if (!progress.friendly || progress.masterMedal) return null;
     const answerDigits = timeBonusAnswerDigits(question);
-    const limitMs = timeBonusConfig.limitMsByAnswerDigits[answerDigits];
+    const inputCellCount = twoDigitMultiplicationInputCellCount(question);
+    const limitMs = question.kind === "multiplication2x2"
+      ? inputCellCount * 2000
+      : timeBonusConfig.limitMsByAnswerDigits[answerDigits];
     const startedAt = Number(question.timeBonusStartedAt);
     const elapsedMs = performance.now() - startedAt;
-    if (!limitMs || !Number.isFinite(startedAt) || startedAt <= 0 || elapsedMs > limitMs) return null;
-    return { amount: timeBonusConfig.amount, answerDigits, limitMs, elapsedMs };
+    if (!limitMs || !Number.isFinite(startedAt) || startedAt <= 0) return null;
+    if (question.kind === "multiplication2x2" ? elapsedMs >= limitMs : elapsedMs > limitMs) return null;
+    return { amount: timeBonusConfig.amount, answerDigits, inputCellCount, limitMs, elapsedMs };
   }
   function addCompletedRewardToSession(reward) {
     if (!reward?.isNew) return;
@@ -2599,7 +2607,8 @@
         reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
       }
     } else if (!progress.masterMedal) {
-      energyGain = question.hintUsed || question.hadWrong || question.progressPenalty ? 1 : 3;
+      const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
+      energyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
       else {
