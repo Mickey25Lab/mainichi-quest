@@ -550,6 +550,10 @@
     const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.png`;
   }
+  function masterMedalArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/06_medal/${stem}_master_medal.png`;
+  }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
     if (stage === 2) return vehicleArtworkPath(vehicleIndex).replace(/^\.\//, "");
@@ -582,7 +586,11 @@
       const formStage = progress.masterMedal ? 5 : Math.max(2, Math.min(5, progress.stage));
       const paths = [vehicleArtworkPath(vehicle.index)];
       if (progress.discovered) paths.push(answerArtworkPath(vehicle.index, formStage));
-      if (progress.masterMedal) paths.push(resultArtworkPath(vehicle.index, formStage, true));
+      if (progress.masterMedal) paths.push(
+        resultArtworkPath(vehicle.index, formStage, true),
+        masterMedalArtworkPath(vehicle.index),
+        "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp"
+      );
       return paths.filter(Boolean).map((path) => preloadDecodedImage(path).catch(() => null));
     }));
   }
@@ -3128,6 +3136,8 @@
     const picture = $("detail-picture");
     const layout = $("detail-evolution-layout");
     const logo = $("detail-vehicle-logo");
+    const medalDisplay = $("detail-master-medal-display");
+    const medalArt = $("detail-master-medal-art");
     const vehicleArt = $("detail-vehicle-art");
     const robotArt = $("detail-robot-art");
     const superArt = $("detail-super-art");
@@ -3137,10 +3147,18 @@
     picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
     logo.hidden = !discovered;
     layout.hidden = !discovered;
+    medalDisplay.hidden = !discovered || !progress.masterMedal;
     if (!discovered) return;
 
     logo.src = vehicleLogoTitlePath(vehicleIndex);
     logo.alt = vehicle.nameEn;
+    if (progress.masterMedal) {
+      medalArt.src = masterMedalArtworkPath(vehicleIndex);
+      medalArt.alt = `${vehicle.nameJa}のマスターメダル`;
+    } else {
+      medalArt.removeAttribute("src");
+      medalArt.alt = "";
+    }
     layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
     vehicleArt.src = vehicleArtworkPath(vehicleIndex);
     vehicleArt.alt = vehicle.nameJa;
