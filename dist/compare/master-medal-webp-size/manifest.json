@@ -1,0 +1,93 @@
+{
+  "settings": {
+    "rgb_quality": 100,
+    "alpha_quality": 100,
+    "method": 6,
+    "resampling": "LANCZOS",
+    "exact": false,
+    "pillow": "12.3.0",
+    "libwebp": "1.6.0"
+  },
+  "files": {
+    "02_fire_engine_master_medal_s1254.webp": {
+      "bytes": 394540,
+      "width": 1254,
+      "height": 1254
+    },
+    "02_fire_engine_master_medal_s1024.webp": {
+      "bytes": 297062,
+      "width": 1024,
+      "height": 1024
+    },
+    "02_fire_engine_master_medal_s768.webp": {
+      "bytes": 179618,
+      "width": 768,
+      "height": 768
+    },
+    "02_fire_engine_master_medal_s640.webp": {
+      "bytes": 131646,
+      "width": 640,
+      "height": 640
+    },
+    "02_fire_engine_master_medal_s512.webp": {
+      "bytes": 91088,
+      "width": 512,
+      "height": 512
+    },
+    "02_fire_engine_master_medal_s448.webp": {
+      "bytes": 73080,
+      "width": 448,
+      "height": 448
+    },
+    "02_fire_engine_master_medal_s384.webp": {
+      "bytes": 57054,
+      "width": 384,
+      "height": 384
+    },
+    "11_road_roller_master_medal_s1254.webp": {
+      "bytes": 357106,
+      "width": 1254,
+      "height": 1254
+    },
+    "11_road_roller_master_medal_s1024.webp": {
+      "bytes": 267682,
+      "width": 1024,
+      "height": 1024
+    },
+    "11_road_roller_master_medal_s768.webp": {
+      "bytes": 172672,
+      "width": 768,
+      "height": 768
+    },
+    "11_road_roller_master_medal_s640.webp": {
+      "bytes": 128658,
+      "width": 640,
+      "height": 640
+    },
+    "11_road_roller_master_medal_s512.webp": {
+      "bytes": 91436,
+      "width": 512,
+      "height": 512
+    },
+    "11_road_roller_master_medal_s448.webp": {
+      "bytes": 74550,
+      "width": 448,
+      "height": 448
+    },
+    "11_road_roller_master_medal_s384.webp": {
+      "bytes": 58478,
+      "width": 384,
+      "height": 384
+    }
+  },
+  "originals": {
+    "02_fire_engine": {
+      "path": "../../assets/collection/06_medal/02_fire_engine_master_medal.png",
+      "bytes": 1227013
+    },
+    "11_road_roller": {
+      "path": "../../assets/collection/06_medal/11_road_roller_master_medal.png",
+      "bytes": 1335814
+    }
+  }
+}
