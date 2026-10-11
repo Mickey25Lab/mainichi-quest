@@ -2323,7 +2323,7 @@ button { touch-action: manipulation; }
 .detail-vehicle-logo { position:absolute; z-index:3; left:3.4%; top:3.2%; width:36%; height:auto; filter:drop-shadow(0 5px 7px rgba(0,7,25,.6)); }
 .detail-vehicle-logo[hidden], .detail-master-medal-display[hidden], .detail-evolution-layout[hidden], .detail-evolution-slot[hidden], .detail-evolution-chevron[hidden] { display:none !important; }
 .detail-master-medal-display {
-  position:absolute; z-index:4; left:14.5%; top:8.5%; width:31%; aspect-ratio:1;
+  position:absolute; z-index:4; left:25.8%; top:8.5%; width:31%; aspect-ratio:1; transform:translateX(-50%);
   isolation:isolate; pointer-events:none;
 }
 .detail-master-medal-display::before {
