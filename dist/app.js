@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.137";
+  const appVersion = "0.0.138";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -586,7 +586,7 @@
   }
   function masterMedalArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
-    return `./assets/collection/06_medal/${stem}_master_medal.png`;
+    return `./assets/collection/06_medal/${stem}_master_medal.webp`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
