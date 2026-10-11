@@ -1,0 +1,470 @@
+{
+  "category": "06_medal",
+  "status": "formal_webp",
+  "adopted_on": "2026-10-12",
+  "source": "asset-source/collection/06_medal/png",
+  "formal_output": "asset-source/collection/06_medal/webp",
+  "dist_output": "dist/assets/collection/06_medal",
+  "settings": {
+    "width": 512,
+    "height": 512,
+    "rgb_quality": 60,
+    "alpha_quality": 60,
+    "resampling": "LANCZOS",
+    "method": 6,
+    "lossless": false,
+    "exact": false,
+    "pillow": "12.3.0",
+    "libwebp": "1.6.0",
+    "metadata_policy": "not copied"
+  },
+  "qa": {
+    "file_count": 20,
+    "formal_dist_sha256_matches": 20,
+    "total_bytes": 746634,
+    "average_bytes": 37331.7,
+    "embedded_metadata_absent": 20
+  },
+  "files": [
+    {
+      "vehicle_stem": "01_patrol_car",
+      "source_png": "asset-source/collection/06_medal/png/01_patrol_car_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/01_patrol_car_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/01_patrol_car_master_medal.webp",
+      "bytes": 33592,
+      "sha256": "5fdba9a0dd65e229307cb6329d0783b90c3b79748e87494a3f5d5810bfb3d65d",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "02_fire_engine",
+      "source_png": "asset-source/collection/06_medal/png/02_fire_engine_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/02_fire_engine_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/02_fire_engine_master_medal.webp",
+      "bytes": 28142,
+      "sha256": "8feb94c4f24d22c03d9e2df33143ac9c3eb73cea2ed46f395d6e1b711bfa36f8",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "03_ambulance",
+      "source_png": "asset-source/collection/06_medal/png/03_ambulance_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/03_ambulance_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/03_ambulance_master_medal.webp",
+      "bytes": 32988,
+      "sha256": "0cade6796b3a52e90dd84e622902d154d9fbcd32a4fbe2e2adc61f8f59f6d54a",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "04_delivery_truck",
+      "source_png": "asset-source/collection/06_medal/png/04_delivery_truck_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/04_delivery_truck_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/04_delivery_truck_master_medal.webp",
+      "bytes": 36010,
+      "sha256": "af7dc49dd3d10085dc56814e11116e9737ce9008745569938deb7dbbdf9d4d18",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "05_mail_van",
+      "source_png": "asset-source/collection/06_medal/png/05_mail_van_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/05_mail_van_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/05_mail_van_master_medal.webp",
+      "bytes": 26022,
+      "sha256": "5cfd9da29378df397539ddbdae47e2fca2b2112781a655373421c458bf942257",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "06_garbage_truck",
+      "source_png": "asset-source/collection/06_medal/png/06_garbage_truck_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/06_garbage_truck_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/06_garbage_truck_master_medal.webp",
+      "bytes": 35218,
+      "sha256": "de64c30ba94d4711e7938f7653d8aeb4aefe2ef60d2c964d5e5f3e3479e951d0",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "07_tow_truck",
+      "source_png": "asset-source/collection/06_medal/png/07_tow_truck_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/07_tow_truck_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/07_tow_truck_master_medal.webp",
+      "bytes": 43300,
+      "sha256": "387a29fbf0a86faf164cf7adf35e8060b80715012e3fe5de7f32b8d73dce9db6",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "08_crane_truck",
+      "source_png": "asset-source/collection/06_medal/png/08_crane_truck_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/08_crane_truck_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/08_crane_truck_master_medal.webp",
+      "bytes": 36270,
+      "sha256": "3622171f964dee29ab8ee5eef9bcfc620c606995761c54e05bc1c55e90585fd9",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "09_concrete_mixer",
+      "source_png": "asset-source/collection/06_medal/png/09_concrete_mixer_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/09_concrete_mixer_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/09_concrete_mixer_master_medal.webp",
+      "bytes": 42600,
+      "sha256": "a35d57efcca4772b8d463d88341d5037bb0f06e20c3820e8b77805b378b0d645",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "10_bulldozer",
+      "source_png": "asset-source/collection/06_medal/png/10_bulldozer_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/10_bulldozer_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/10_bulldozer_master_medal.webp",
+      "bytes": 28528,
+      "sha256": "c476659ee1a9719840e1897f6780b38a959e23c1b91f0329a1f5b09f54a238e7",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "11_road_roller",
+      "source_png": "asset-source/collection/06_medal/png/11_road_roller_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/11_road_roller_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/11_road_roller_master_medal.webp",
+      "bytes": 28590,
+      "sha256": "1be38dbe904324261df66feb920336909d95ad5476a0ad514fd97323df2c2951",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "12_tank_lorry",
+      "source_png": "asset-source/collection/06_medal/png/12_tank_lorry_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/12_tank_lorry_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/12_tank_lorry_master_medal.webp",
+      "bytes": 34990,
+      "sha256": "918346d211007e81663d214594ba4a4fdc3ff2899079fc4cbee707d1ac2f9a2a",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "13_watering_truck",
+      "source_png": "asset-source/collection/06_medal/png/13_watering_truck_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/13_watering_truck_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/13_watering_truck_master_medal.webp",
+      "bytes": 41790,
+      "sha256": "2899f225a76f623e49f32bd00aae533732c646e2570df7f46d46cedb461cc145",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "14_kindergarten_bus",
+      "source_png": "asset-source/collection/06_medal/png/14_kindergarten_bus_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/14_kindergarten_bus_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/14_kindergarten_bus_master_medal.webp",
+      "bytes": 40164,
+      "sha256": "bb4dfdb564f22a6891cf936d48cac54364bdbea5fd99a25d2e4848219ca1237f",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "15_sightseeing_bus",
+      "source_png": "asset-source/collection/06_medal/png/15_sightseeing_bus_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/15_sightseeing_bus_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/15_sightseeing_bus_master_medal.webp",
+      "bytes": 27518,
+      "sha256": "bf61c425f0b7d91b70eeeafa79abcd99d694cca5da85f64500d8aa6edac57dab",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "16_formula_racer",
+      "source_png": "asset-source/collection/06_medal/png/16_formula_racer_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/16_formula_racer_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/16_formula_racer_master_medal.webp",
+      "bytes": 42902,
+      "sha256": "334f0d330d72cf91b4185f8945d5206250e1c89376ea36bffd6cde771bbcf035",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "17_racing_bike",
+      "source_png": "asset-source/collection/06_medal/png/17_racing_bike_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/17_racing_bike_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/17_racing_bike_master_medal.webp",
+      "bytes": 35820,
+      "sha256": "1e3e8cd1aef311cfd189c38c2b03d0085df9e753290a7ffa499c2752a2f339c4",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "18_snowmobile",
+      "source_png": "asset-source/collection/06_medal/png/18_snowmobile_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/18_snowmobile_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/18_snowmobile_master_medal.webp",
+      "bytes": 50542,
+      "sha256": "564831cd0fff4a6aa9570c36a7eee563f75445f7be97702efbbf1fd85ec62972",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "19_helicopter",
+      "source_png": "asset-source/collection/06_medal/png/19_helicopter_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/19_helicopter_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/19_helicopter_master_medal.webp",
+      "bytes": 46058,
+      "sha256": "1f9baa41b9588f28d36321af6122f1717436f021067a2bc099a10c5db54c377c",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    },
+    {
+      "vehicle_stem": "20_airplane",
+      "source_png": "asset-source/collection/06_medal/png/20_airplane_master_medal.png",
+      "formal_webp": "asset-source/collection/06_medal/webp/20_airplane_master_medal.webp",
+      "dist_webp": "dist/assets/collection/06_medal/20_airplane_master_medal.webp",
+      "bytes": 55590,
+      "sha256": "5287421393949104c913973d1b0fcae550dc41312ce4e9e07170bfd4f8939f6b",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "embedded_metadata": {
+        "exif": false,
+        "icc_profile": false,
+        "xmp": false
+      }
+    }
+  ]
+}

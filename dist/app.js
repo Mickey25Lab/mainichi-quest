@@ -586,7 +586,7 @@
   }
   function masterMedalArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
-    return `./assets/collection/06_medal/${stem}_master_medal.png`;
+    return `./assets/collection/06_medal/${stem}_master_medal.webp`;
   }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
