@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.134";
+  const appVersion = "0.0.135";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -3176,8 +3176,14 @@
     }).join("");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => openVehicleDetail(Number(card.dataset.vehicle))));
   }
-  function openVehicleDetail(index) { state.detailVehicleIndex = index; renderVehicleDetail(); showScreen("collection-detail-screen"); }
-  function renderVehicleDetail() {
+  let vehicleDetailRenderRequestId = 0;
+  function openVehicleDetail(index) {
+    state.detailVehicleIndex = index;
+    renderVehicleDetail();
+    showScreen("collection-detail-screen");
+  }
+  async function renderVehicleDetail() {
+    const requestId = ++vehicleDetailRenderRequestId;
     const vehicleIndex = state.detailVehicleIndex;
     const vehicle = vehicles[vehicleIndex];
     const progress = vehicleProgress(vehicleIndex);
@@ -3189,32 +3195,63 @@
     const vehicleArt = $("detail-vehicle-art");
     const robotArt = $("detail-robot-art");
     const superArt = $("detail-super-art");
+    const background = $("detail-background");
 
-    $("detail-background").src = playBackgroundPath(vehicleIndex);
-    $("detail-background").alt = `${vehicle.nameJa}の背景`;
+    // The background may appear immediately. Keep every foreground element
+    // hidden until all required artwork has loaded and decoded, then reveal
+    // the whole foreground composition in one frame.
+    background.src = playBackgroundPath(vehicleIndex);
+    background.alt = `${vehicle.nameJa}の背景`;
     picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
+    logo.style.visibility = "hidden";
+    layout.style.visibility = "hidden";
     logo.hidden = !discovered;
     layout.hidden = !discovered;
     if (!discovered) return;
 
-    logo.src = vehicleLogoTitlePath(vehicleIndex);
-    logo.alt = vehicle.nameEn;
     layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
-    vehicleArt.src = vehicleArtworkPath(vehicleIndex);
     vehicleArt.alt = vehicle.nameJa;
     vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
-    robotArt.src = robotArtworkPath(vehicleIndex);
     robotArt.alt = `${vehicle.nameJa}のロボット`;
     robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
-    $("detail-evolution-layout").querySelector(".detail-slot-super").hidden = !threeUp;
-    $("detail-evolution-layout").querySelector(".detail-chevron-two").hidden = !threeUp;
-    if (threeUp) {
-      superArt.src = progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex);
-      superArt.alt = progress.stage >= 5 ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット` : `${vehicle.nameJa}のスーパーロボット`;
+    layout.querySelector(".detail-slot-super").hidden = !threeUp;
+    layout.querySelector(".detail-chevron-two").hidden = !threeUp;
+
+    const logoPath = vehicleLogoTitlePath(vehicleIndex);
+    const vehiclePath = vehicleArtworkPath(vehicleIndex);
+    const robotPath = robotArtworkPath(vehicleIndex);
+    const superPath = threeUp
+      ? (progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex))
+      : null;
+    logo.alt = vehicle.nameEn;
+    if (threeUp) superArt.alt = progress.stage >= 5
+      ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット`
+      : `${vehicle.nameJa}のスーパーロボット`;
+
+    const foregroundPaths = [logoPath, vehiclePath, robotPath, superPath].filter(Boolean);
+    try {
+      await Promise.all(foregroundPaths.map((path) => preloadDecodedImage(path)));
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      await Promise.all([
+        decodeImageElement(logo, logoPath),
+        decodeImageElement(vehicleArt, vehiclePath),
+        decodeImageElement(robotArt, robotPath),
+        threeUp ? decodeImageElement(superArt, superPath) : Promise.resolve()
+      ]);
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      window.requestAnimationFrame(() => {
+        if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+        logo.style.visibility = "";
+        layout.style.visibility = "";
+      });
+    } catch (error) {
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      console.error("Collection detail foreground failed to load", error);
     }
   }
   function moveVehicleDetail(direction) {
-    state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
+    state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length;
+    renderVehicleDetail();
   }
 
   let audioVisibilitySuspendTimer = null;
