@@ -1,0 +1,264 @@
+{
+  "settings": {
+    "canvas": [
+      512,
+      512
+    ],
+    "method": 6,
+    "resampling": "LANCZOS",
+    "exact": false,
+    "lossless": false,
+    "pillow": "12.3.0",
+    "libwebp": "1.6.0"
+  },
+  "vehicles": {
+    "02_fire_engine": {
+      "label": "02 Fire Engine（消防車）",
+      "source": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\review\\collection\\06_medal_redesign_candidates\\freeform_all20_v4\\normalized_1254\\02_fire_engine_master_medal_freeform_review_v4.png",
+      "original": "../../assets/collection/06_medal/02_fire_engine_master_medal.png",
+      "original_bytes": 1227013
+    },
+    "11_road_roller": {
+      "label": "11 Road Roller（ロードローラー）",
+      "source": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\review\\collection\\06_medal_redesign_candidates\\freeform_all20_v4\\normalized_1254\\11_road_roller_master_medal_freeform_review_v4.png",
+      "original": "../../assets/collection/06_medal/11_road_roller_master_medal.png",
+      "original_bytes": 1335814
+    }
+  },
+  "files": {
+    "02_fire_engine_master_medal_q20_a20.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 20,
+      "alpha_quality": 20,
+      "bytes": 15440,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q20_a60.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 20,
+      "alpha_quality": 60,
+      "bytes": 17062,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q20_a100.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 20,
+      "alpha_quality": 100,
+      "bytes": 28034,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q40_a20.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 40,
+      "alpha_quality": 20,
+      "bytes": 21154,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q40_a60.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 40,
+      "alpha_quality": 60,
+      "bytes": 22776,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q40_a100.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 40,
+      "alpha_quality": 100,
+      "bytes": 33748,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q60_a20.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 60,
+      "alpha_quality": 20,
+      "bytes": 26520,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q60_a60.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 60,
+      "alpha_quality": 60,
+      "bytes": 28142,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "02_fire_engine_master_medal_q60_a100.webp": {
+      "vehicle": "02_fire_engine",
+      "rgb_quality": 60,
+      "alpha_quality": 100,
+      "bytes": 39114,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q20_a20.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 20,
+      "alpha_quality": 20,
+      "bytes": 16124,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q20_a60.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 20,
+      "alpha_quality": 60,
+      "bytes": 16936,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q20_a100.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 20,
+      "alpha_quality": 100,
+      "bytes": 22600,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q40_a20.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 40,
+      "alpha_quality": 20,
+      "bytes": 22290,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q40_a60.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 40,
+      "alpha_quality": 60,
+      "bytes": 23102,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q40_a100.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 40,
+      "alpha_quality": 100,
+      "bytes": 28766,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q60_a20.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 60,
+      "alpha_quality": 20,
+      "bytes": 27778,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q60_a60.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 60,
+      "alpha_quality": 60,
+      "bytes": 28590,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    "11_road_roller_master_medal_q60_a100.webp": {
+      "vehicle": "11_road_roller",
+      "rgb_quality": 60,
+      "alpha_quality": 100,
+      "bytes": 34254,
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    }
+  }
+}
