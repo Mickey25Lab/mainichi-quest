@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.128";
+  const appVersion = "0.0.137";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -68,9 +68,11 @@
     collectionResetV60Marker: "warizan-robot:collection-reset-20260924-done",
     topCollectionAccessResetV60Marker: "warizan-robot:collection-access-reset-20260924-done",
     rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
-    rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done"
+    rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done",
+    qaProgressBackup: "warizan-robot:qa-progress-backup-v1"
   };
   const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v2";
+  const qaProgressMissingBackupValue = "__missing__";
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -121,7 +123,7 @@
   const state = {
     questions: [], queue: [], current: null, phase: "start", initialIndex: 0, initialCorrect: 0,
     missed: [], startedAt: 0, finalElapsedMs: 0, timerId: null, timerPaused: false, timerPausedAt: 0, pausedTimerMs: 0,
-    transitioning: false, confirmingAnswer: false, runId: 0,
+    transitioning: false, confirmingAnswer: false, confirmingQuit: false, runId: 0,
     inputMode: "quotient", quotientInput: "", remainderInput: "", correctSoundBuffers: [],
     correctSoundsLoading: null, lastCorrectSoundIndex: -1, startSound: null,
     collection: Array(20).fill(0), rewardProgress: [], currentVehicleIndex: 0, currentStage: 1, preparedInitialVehicleIndex: null,
@@ -230,13 +232,47 @@
   function saveCollection() {
     try { localStorage.setItem(storageKeys.collection, JSON.stringify(state.collection)); } catch (_) {}
   }
+  function qaProgressModeEnabled() {
+    return new URLSearchParams(window.location.search).get("qa") === "progress";
+  }
+  function updateQaModeButton() {
+    const button = $("qa-mode-toggle");
+    if (!button) return;
+    const enabled = qaProgressModeEnabled();
+    button.textContent = enabled ? "QAモード終了" : "QAモード開始";
+    button.setAttribute("aria-pressed", enabled ? "true" : "false");
+  }
+  function restoreQaProgressBackup() {
+    try {
+      const backup = localStorage.getItem(storageKeys.qaProgressBackup);
+      if (backup === null) return;
+      if (backup === qaProgressMissingBackupValue) localStorage.removeItem(storageKeys.rewardProgressPhase1);
+      else localStorage.setItem(storageKeys.rewardProgressPhase1, backup);
+      localStorage.removeItem(storageKeys.qaProgressBackup);
+      localStorage.removeItem(previewQaProgressPresetMarker);
+      localStorage.removeItem(storageKeys.collection);
+    } catch (_) {}
+  }
+  function toggleQaProgressMode() {
+    const url = new URL(window.location.href);
+    if (qaProgressModeEnabled()) {
+      restoreQaProgressBackup();
+      url.searchParams.delete("qa");
+      url.searchParams.delete("reset");
+    } else {
+      url.searchParams.set("qa", "progress");
+      url.searchParams.set("reset", "1");
+    }
+    window.location.assign(url.toString());
+  }
   function seedPreviewQaProgressPreset() {
     const params = new URLSearchParams(window.location.search);
-    const host = window.location.hostname;
-    const isCloudflarePreview = host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev";
-    const isLocalPreview = host === "localhost" || host === "127.0.0.1";
-    if (params.get("qa") !== "progress" || (!isCloudflarePreview && !isLocalPreview)) return null;
+    if (!qaProgressModeEnabled()) return null;
     try {
+      if (localStorage.getItem(storageKeys.qaProgressBackup) === null) {
+        const currentProgress = localStorage.getItem(storageKeys.rewardProgressPhase1);
+        localStorage.setItem(storageKeys.qaProgressBackup, currentProgress === null ? qaProgressMissingBackupValue : currentProgress);
+      }
       if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
       const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
@@ -284,10 +320,7 @@
     return `${values.year}-${values.month}-${values.day}`;
   }
   function topCollectionAlreadyUsedToday() {
-    const host = window.location.hostname;
-    const previewQa = new URLSearchParams(window.location.search).get("qa") === "progress"
-      && ((host.endsWith(".mainichi-quest-63c.pages.dev") && host !== "mainichi-quest-63c.pages.dev") || host === "localhost" || host === "127.0.0.1");
-    if (previewQa) return false;
+    if (qaProgressModeEnabled()) return false;
     try { return localStorage.getItem(storageKeys.topCollectionLastUsedJst) === japanDateKey(); } catch (_) { return false; }
   }
   function updateTopCollectionButton() {
@@ -302,7 +335,8 @@
   function openTopCollection() {
     if (state.collectionUsed || topCollectionAlreadyUsedToday()) { updateTopCollectionButton(); return; }
     try { localStorage.setItem(storageKeys.topCollectionLastUsedJst, japanDateKey()); } catch (_) {}
-    updateTopCollectionButton();
+    const button = $("top-collection-button");
+    button.disabled = true;
     openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
@@ -1425,7 +1459,7 @@
     }
     const pairs = [];
     const used = new Set();
-    while (pairs.length < 10) {
+    while (pairs.length < 5) {
       const multiplicand = values[Math.floor(Math.random() * values.length)];
       const multiplier = multiplierValues[Math.floor(Math.random() * multiplierValues.length)];
       const key = `${multiplicand}*${multiplier}`;
@@ -1514,7 +1548,7 @@
   function setProgress() {
     const isRetry = state.phase === "retry";
     const number = isRetry ? state.retrySetPosition : state.initialIndex + 1;
-    const total = isRetry ? state.retrySetTotal : 10;
+    const total = isRetry ? state.retrySetTotal : state.mode === "multiplication2x2" ? state.questions.length : 10;
     $("progress-mode").hidden = !isRetry;
     $("progress-badge").classList.toggle("is-retry", isRetry);
     $("progress-count").textContent = `${Math.min(number, total)} / ${total}`;
@@ -2236,6 +2270,30 @@
     state.confirmingAnswer = false; $("answer-confirm").hidden = true; setKeypadDisabled(false); updateAssistButton();
     $("assist-button").focus();
   }
+  function openQuitConfirmation() {
+    if (state.transitioning || state.confirmingQuit) return;
+    state.confirmingQuit = true;
+    pauseGameTimer();
+    stopQuestionTimeout();
+    setKeypadDisabled(true);
+    $("quit-confirm").hidden = false;
+    $("quit-confirm-continue").focus();
+  }
+  function closeQuitConfirmation() {
+    if (!state.confirmingQuit) return;
+    state.confirmingQuit = false;
+    $("quit-confirm").hidden = true;
+    setKeypadDisabled(false);
+    resumeGameTimer();
+    if (state.current && (state.phase === "initial" || state.phase === "retry") && !state.transitioning) startQuestionTimeout();
+    $("quit-button").focus();
+  }
+  function confirmQuitToModeSelect() {
+    if (!state.confirmingQuit) return;
+    state.confirmingQuit = false;
+    $("quit-confirm").hidden = true;
+    endToModeSelect();
+  }
   function formatRevealedAnswer(question) {
     return question.remainder === 0 ? `${question.quotient}（あまりなし）` : `${question.quotient}…${question.remainder}`;
   }
@@ -2452,17 +2510,25 @@
     if (question.kind === "multiplication" || question.kind === "multiplication2x2") return String(question.product).length;
     return String(question.quotient).length + (question.remainder === 0 ? 0 : String(question.remainder).length);
   }
+  function twoDigitMultiplicationInputCellCount(question) {
+    if (!question || question.kind !== "multiplication2x2") return 0;
+    return String(question.partial1).length + String(question.partial2).length + String(question.product).length;
+  }
   function getTimeBonusForCorrect(question = state.current) {
     if (!timeBonusConfig.enabled || state.phase !== "initial" || !question || question.isReview) return null;
     if (!timeBonusConfig.modes.includes(state.mode) || question.hintUsed || question.hadWrong || question.answerRevealed || question.progressPenalty) return null;
     const progress = vehicleProgress(question.vehicleIndex ?? state.currentVehicleIndex);
     if (!progress.friendly || progress.masterMedal) return null;
     const answerDigits = timeBonusAnswerDigits(question);
-    const limitMs = timeBonusConfig.limitMsByAnswerDigits[answerDigits];
+    const inputCellCount = twoDigitMultiplicationInputCellCount(question);
+    const limitMs = question.kind === "multiplication2x2"
+      ? inputCellCount * 2000
+      : timeBonusConfig.limitMsByAnswerDigits[answerDigits];
     const startedAt = Number(question.timeBonusStartedAt);
     const elapsedMs = performance.now() - startedAt;
-    if (!limitMs || !Number.isFinite(startedAt) || startedAt <= 0 || elapsedMs > limitMs) return null;
-    return { amount: timeBonusConfig.amount, answerDigits, limitMs, elapsedMs };
+    if (!limitMs || !Number.isFinite(startedAt) || startedAt <= 0) return null;
+    if (question.kind === "multiplication2x2" ? elapsedMs >= limitMs : elapsedMs > limitMs) return null;
+    return { amount: timeBonusConfig.amount, answerDigits, inputCellCount, limitMs, elapsedMs };
   }
   function addCompletedRewardToSession(reward) {
     if (!reward?.isNew) return;
@@ -2549,7 +2615,8 @@
         reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
       }
     } else if (!progress.masterMedal) {
-      energyGain = question.hintUsed || question.hadWrong || question.progressPenalty ? 1 : 3;
+      const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
+      energyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
       else {
@@ -3027,7 +3094,7 @@
     state.preparedInitialVehicleIndex = null;
     prepareInitialVehicle();
     clearRetryAutoStartTimer(); clearIdleGuide(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.collectionUsed = false; setKeypadDisabled(false);
-    $("answer-confirm").hidden = true; $("time-up").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true; $("time-up").hidden = true;
     showFixedScreenWhenReady("start-screen");
   }
   function endToStart({ keepTimeUp = false } = {}) {
@@ -3035,10 +3102,10 @@
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
     state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
-    state.confirmingAnswer = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
+    state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
-    $("answer-confirm").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     if (!keepTimeUp) $("time-up").hidden = true;
     showFixedScreenWhenReady("start-screen", [], () => {
       if (keepTimeUp) $("time-up").hidden = true;
@@ -3051,10 +3118,10 @@
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
     state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
-    state.confirmingAnswer = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
+    state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
-    $("answer-confirm").hidden = true;
+    $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     $("time-up").hidden = true;
     showFixedScreenWhenReady("mode-select-screen", [], () => {
       state.collectionClosing = false;
@@ -3126,8 +3193,14 @@
     }).join("");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => openVehicleDetail(Number(card.dataset.vehicle))));
   }
-  function openVehicleDetail(index) { state.detailVehicleIndex = index; renderVehicleDetail(); showScreen("collection-detail-screen"); }
-  function renderVehicleDetail() {
+  let vehicleDetailRenderRequestId = 0;
+  function openVehicleDetail(index) {
+    state.detailVehicleIndex = index;
+    renderVehicleDetail();
+    showScreen("collection-detail-screen");
+  }
+  async function renderVehicleDetail() {
+    const requestId = ++vehicleDetailRenderRequestId;
     const vehicleIndex = state.detailVehicleIndex;
     const vehicle = vehicles[vehicleIndex];
     const progress = vehicleProgress(vehicleIndex);
@@ -3137,44 +3210,82 @@
     const layout = $("detail-evolution-layout");
     const logo = $("detail-vehicle-logo");
     const medalDisplay = $("detail-master-medal-display");
+    const medalHologram = medalDisplay.querySelector(".detail-master-medal-hologram");
     const medalArt = $("detail-master-medal-art");
     const vehicleArt = $("detail-vehicle-art");
     const robotArt = $("detail-robot-art");
     const superArt = $("detail-super-art");
+    const background = $("detail-background");
 
-    $("detail-background").src = playBackgroundPath(vehicleIndex);
-    $("detail-background").alt = `${vehicle.nameJa}の背景`;
+    // The background may appear immediately. Keep every foreground element
+    // hidden until all required artwork has loaded and decoded, then reveal
+    // the whole foreground composition in one frame.
+    background.src = playBackgroundPath(vehicleIndex);
+    background.alt = `${vehicle.nameJa}の背景`;
     picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
+    logo.style.visibility = "hidden";
+    layout.style.visibility = "hidden";
+    medalDisplay.style.visibility = "hidden";
     logo.hidden = !discovered;
     layout.hidden = !discovered;
     medalDisplay.hidden = !discovered || !progress.masterMedal;
     if (!discovered) return;
 
-    logo.src = vehicleLogoTitlePath(vehicleIndex);
+    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
+    vehicleArt.alt = vehicle.nameJa;
+    vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
+    robotArt.alt = `${vehicle.nameJa}のロボット`;
+    robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
+    layout.querySelector(".detail-slot-super").hidden = !threeUp;
+    layout.querySelector(".detail-chevron-two").hidden = !threeUp;
+
+    const logoPath = vehicleLogoTitlePath(vehicleIndex);
+    const vehiclePath = vehicleArtworkPath(vehicleIndex);
+    const robotPath = robotArtworkPath(vehicleIndex);
+    const superPath = threeUp
+      ? (progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex))
+      : null;
+    const medalPath = progress.masterMedal ? masterMedalArtworkPath(vehicleIndex) : null;
+    const medalHologramPath = progress.masterMedal
+      ? "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp"
+      : null;
     logo.alt = vehicle.nameEn;
-    if (progress.masterMedal) {
-      medalArt.src = masterMedalArtworkPath(vehicleIndex);
-      medalArt.alt = `${vehicle.nameJa}のマスターメダル`;
-    } else {
+    if (progress.masterMedal) medalArt.alt = `${vehicle.nameJa}のマスターメダル`;
+    else {
       medalArt.removeAttribute("src");
       medalArt.alt = "";
     }
-    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
-    vehicleArt.src = vehicleArtworkPath(vehicleIndex);
-    vehicleArt.alt = vehicle.nameJa;
-    vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
-    robotArt.src = robotArtworkPath(vehicleIndex);
-    robotArt.alt = `${vehicle.nameJa}のロボット`;
-    robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
-    $("detail-evolution-layout").querySelector(".detail-slot-super").hidden = !threeUp;
-    $("detail-evolution-layout").querySelector(".detail-chevron-two").hidden = !threeUp;
-    if (threeUp) {
-      superArt.src = progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex);
-      superArt.alt = progress.stage >= 5 ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット` : `${vehicle.nameJa}のスーパーロボット`;
+    if (threeUp) superArt.alt = progress.stage >= 5
+      ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット`
+      : `${vehicle.nameJa}のスーパーロボット`;
+
+    const foregroundPaths = [logoPath, vehiclePath, robotPath, superPath, medalPath, medalHologramPath].filter(Boolean);
+    try {
+      await Promise.all(foregroundPaths.map((path) => preloadDecodedImage(path)));
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      await Promise.all([
+        decodeImageElement(logo, logoPath),
+        decodeImageElement(vehicleArt, vehiclePath),
+        decodeImageElement(robotArt, robotPath),
+        threeUp ? decodeImageElement(superArt, superPath) : Promise.resolve(),
+        progress.masterMedal ? decodeImageElement(medalArt, medalPath) : Promise.resolve(),
+        progress.masterMedal ? decodeImageElement(medalHologram, medalHologramPath) : Promise.resolve()
+      ]);
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      window.requestAnimationFrame(() => {
+        if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+        logo.style.visibility = "";
+        layout.style.visibility = "";
+        if (progress.masterMedal) medalDisplay.style.visibility = "";
+      });
+    } catch (error) {
+      if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
+      console.error("Collection detail foreground failed to load", error);
     }
   }
   function moveVehicleDetail(direction) {
-    state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length; renderVehicleDetail();
+    state.detailVehicleIndex = (state.detailVehicleIndex + direction + vehicles.length) % vehicles.length;
+    renderVehicleDetail();
   }
 
   let audioVisibilitySuspendTimer = null;
@@ -3415,6 +3526,7 @@
   updateBgmToggleButton();
   ensureBackgroundMusic();
   updateVersionLabelWithPreviewMetadata();
+  updateQaModeButton();
   resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset(); loadRewardProgress(); loadRecentVehicles(); state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex; setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
@@ -3430,7 +3542,8 @@
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", endToModeSelect); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
+  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
@@ -3445,7 +3558,13 @@
   $("assist-button").addEventListener("click", useAssist);
   $("answer-confirm-back").addEventListener("click", closeAnswerConfirmation);
   $("answer-confirm-proceed").addEventListener("click", revealAnswer);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.confirmingAnswer) closeAnswerConfirmation(); });
+  $("quit-confirm-cancel").addEventListener("click", confirmQuitToModeSelect);
+  $("quit-confirm-continue").addEventListener("click", closeQuitConfirmation);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (state.confirmingQuit) closeQuitConfirmation();
+    else if (state.confirmingAnswer) closeAnswerConfirmation();
+  });
   document.addEventListener("visibilitychange", () => {
     recordViewportDiagnostic("visibilitychange", { hidden: document.hidden });
     if (document.hidden) {

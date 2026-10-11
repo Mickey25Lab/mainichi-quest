@@ -23,6 +23,7 @@
     <section class="screen start-screen active" id="start-screen" aria-labelledby="start-title">
       <div class="start-layer">
         <img src="./assets/ui/top/top_key_visual.webp" width="1400" height="1050" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
+        <button class="qa-mode-toggle" id="qa-mode-toggle" type="button" aria-pressed="false">QAモード開始</button>
         <div class="top-image-buttons" aria-label="ゲームを始めるメニュー">
           <button class="top-image-button" id="start-button" type="button" aria-label="はじめる"><img id="top-start-button-image" src="./assets/ui/top/top_button_start.webp" width="2048" height="682" decoding="async" alt=""></button>
           <button class="top-image-button" id="top-collection-button" type="button" aria-label="コレクションを見る"><img id="top-collection-button-image" src="./assets/ui/top/top_button_collection.webp" width="2048" height="682" decoding="async" alt="コレクションを見る"></button>
@@ -164,6 +165,17 @@
       </div>
     </div>
 
+    <div class="answer-confirm quit-confirm" id="quit-confirm" role="dialog" aria-modal="true" aria-labelledby="quit-confirm-title" hidden>
+      <div class="answer-confirm-card quit-confirm-card">
+        <h2 id="quit-confirm-title">問題をやめる？</h2>
+        <p><span>やめると、今ゲットしたポイントや<br>キャラクターがもらえないよ。</span><strong>やめていい？</strong></p>
+        <div class="answer-confirm-actions quit-confirm-actions">
+          <button class="quit-confirm-cancel" id="quit-confirm-cancel" type="button">やめる</button>
+          <button class="quit-confirm-continue" id="quit-confirm-continue" type="button">問題をつづける</button>
+        </div>
+      </div>
+    </div>
+
     <section class="screen transition-screen" id="transition-screen" aria-live="polite">
       <div class="transition-stage">
         <img class="transition-background" src="./assets/ui/top/top_background.webp" width="1400" height="1050" decoding="async" alt="">
@@ -257,7 +269,7 @@
     <section class="screen collection-detail-screen" id="collection-detail-screen" aria-label="コレクション詳細">
       <div class="collection-detail-stage">
         <header class="detail-header">
-          <button id="detail-back"><span class="detail-back-icon" aria-hidden="true">↩</span><span>もどる</span></button>
+          <button id="detail-back"><span class="detail-back-icon" aria-hidden="true"></span><span>もどる</span></button>
           <div class="collection-time collection-time-panel">あと<strong id="detail-seconds">60</strong>秒</div>
         </header>
         <div class="detail-view">
