@@ -379,7 +379,7 @@ button { touch-action: manipulation; }
 }
 
 .assist-button:active { transform: translateY(3px); box-shadow: 0 3px 0 #6b6b6b; }
-.assist-button:disabled { opacity: .62; cursor: default; transform: none; }
+.assist-button:disabled { opacity: 1; cursor: default; transform: none; }
 
 .answer-confirm {
   position: absolute;
@@ -2736,7 +2736,9 @@ button { touch-action: manipulation; }
 
 .multiplication-2x2-multiplier span,
 .multiplication-2x2-slot { position:relative; }
+.multiplication-2x2-multiplier span.is-crossed::before,
 .multiplication-2x2-multiplier span.is-crossed::after,
+.multiplication-2x2-slot.is-crossed::before,
 .multiplication-2x2-slot.is-crossed::after {
   content:"";
   position:absolute;
@@ -2745,12 +2747,19 @@ button { touch-action: manipulation; }
   width:118%;
   height:6px;
   border-radius:999px;
-  background:#e22929;
-  box-shadow:0 1px 0 rgba(120,0,0,.15);
-  transform:translate(-50%,-50%) rotate(45deg);
+  background:#8a9299;
+  box-shadow:0 1px 0 rgba(70,78,84,.15);
   transform-origin:center;
   pointer-events:none;
   z-index:3;
+}
+.multiplication-2x2-multiplier span.is-crossed::before,
+.multiplication-2x2-slot.is-crossed::before {
+  transform:translate(-50%,-50%) rotate(-45deg);
+}
+.multiplication-2x2-multiplier span.is-crossed::after,
+.multiplication-2x2-slot.is-crossed::after {
+  transform:translate(-50%,-50%) rotate(45deg);
 }
 
 .multiplication-2x2-shift-guide {
@@ -2764,6 +2773,7 @@ button { touch-action: manipulation; }
   pointer-events:none;
 }
 .multiplication-2x2-shift-guide[hidden] { display:none !important; }
+.multiplication-2x2-shift-guide::before,
 .multiplication-2x2-shift-guide::after {
   content:"";
   position:absolute;
@@ -2772,8 +2782,13 @@ button { touch-action: manipulation; }
   width:118%;
   height:6px;
   border-radius:999px;
-  background:#e22929;
-  box-shadow:0 1px 0 rgba(120,0,0,.15);
-  transform:translate(-50%,-50%) rotate(45deg);
+  background:#8a9299;
+  box-shadow:0 1px 0 rgba(70,78,84,.15);
   transform-origin:center;
+}
+.multiplication-2x2-shift-guide::before {
+  transform:translate(-50%,-50%) rotate(-45deg);
+}
+.multiplication-2x2-shift-guide::after {
+  transform:translate(-50%,-50%) rotate(45deg);
 }
