@@ -584,6 +584,10 @@
     const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.png`;
   }
+  function masterMedalArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/06_medal/${stem}_master_medal.png`;
+  }
   function answerArtworkPath(vehicleIndex, stage) {
     if (stage < 2) return null;
     if (stage === 2) return vehicleArtworkPath(vehicleIndex).replace(/^\.\//, "");
@@ -616,7 +620,11 @@
       const formStage = progress.masterMedal ? 5 : Math.max(2, Math.min(5, progress.stage));
       const paths = [vehicleArtworkPath(vehicle.index)];
       if (progress.discovered) paths.push(answerArtworkPath(vehicle.index, formStage));
-      if (progress.masterMedal) paths.push(resultArtworkPath(vehicle.index, formStage, true));
+      if (progress.masterMedal) paths.push(
+        resultArtworkPath(vehicle.index, formStage, true),
+        masterMedalArtworkPath(vehicle.index),
+        "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp"
+      );
       return paths.filter(Boolean).map((path) => preloadDecodedImage(path).catch(() => null));
     }));
   }
@@ -3201,6 +3209,9 @@
     const picture = $("detail-picture");
     const layout = $("detail-evolution-layout");
     const logo = $("detail-vehicle-logo");
+    const medalDisplay = $("detail-master-medal-display");
+    const medalHologram = medalDisplay.querySelector(".detail-master-medal-hologram");
+    const medalArt = $("detail-master-medal-art");
     const vehicleArt = $("detail-vehicle-art");
     const robotArt = $("detail-robot-art");
     const superArt = $("detail-super-art");
@@ -3214,8 +3225,10 @@
     picture.className = `detail-picture ${threeUp ? "is-three-up" : "is-two-up"}${discovered ? "" : " is-undiscovered"}`;
     logo.style.visibility = "hidden";
     layout.style.visibility = "hidden";
+    medalDisplay.style.visibility = "hidden";
     logo.hidden = !discovered;
     layout.hidden = !discovered;
+    medalDisplay.hidden = !discovered || !progress.masterMedal;
     if (!discovered) return;
 
     layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
@@ -3232,12 +3245,21 @@
     const superPath = threeUp
       ? (progress.stage >= 5 ? equippedSuperRobotArtworkPath(vehicleIndex) : superRobotArtworkPath(vehicleIndex))
       : null;
+    const medalPath = progress.masterMedal ? masterMedalArtworkPath(vehicleIndex) : null;
+    const medalHologramPath = progress.masterMedal
+      ? "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp"
+      : null;
     logo.alt = vehicle.nameEn;
+    if (progress.masterMedal) medalArt.alt = `${vehicle.nameJa}のマスターメダル`;
+    else {
+      medalArt.removeAttribute("src");
+      medalArt.alt = "";
+    }
     if (threeUp) superArt.alt = progress.stage >= 5
       ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット`
       : `${vehicle.nameJa}のスーパーロボット`;
 
-    const foregroundPaths = [logoPath, vehiclePath, robotPath, superPath].filter(Boolean);
+    const foregroundPaths = [logoPath, vehiclePath, robotPath, superPath, medalPath, medalHologramPath].filter(Boolean);
     try {
       await Promise.all(foregroundPaths.map((path) => preloadDecodedImage(path)));
       if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
@@ -3245,13 +3267,16 @@
         decodeImageElement(logo, logoPath),
         decodeImageElement(vehicleArt, vehiclePath),
         decodeImageElement(robotArt, robotPath),
-        threeUp ? decodeImageElement(superArt, superPath) : Promise.resolve()
+        threeUp ? decodeImageElement(superArt, superPath) : Promise.resolve(),
+        progress.masterMedal ? decodeImageElement(medalArt, medalPath) : Promise.resolve(),
+        progress.masterMedal ? decodeImageElement(medalHologram, medalHologramPath) : Promise.resolve()
       ]);
       if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
       window.requestAnimationFrame(() => {
         if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
         logo.style.visibility = "";
         layout.style.visibility = "";
+        if (progress.masterMedal) medalDisplay.style.visibility = "";
       });
     } catch (error) {
       if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
