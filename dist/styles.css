@@ -2295,8 +2295,8 @@ button { touch-action: manipulation; }
   position:absolute;
   z-index:8;
   left:24px;
-  bottom:-18px;
-  height:88px;
+  bottom:-10px;
+  height:60px;
   display:flex;
   align-items:flex-start;
   gap:6px;
@@ -2310,28 +2310,37 @@ button { touch-action: manipulation; }
   position:relative;
   display:grid;
   place-items:center;
-  width:64px;
-  height:78px;
-  padding:10px 11px 18px;
+  width:72px;
+  height:54px;
+  padding:5px 10px 7px;
   color:#effcff;
   border:2px solid #78b8da;
   border-bottom:0;
-  border-radius:13px 13px 5px 5px;
+  border-radius:12px 12px 4px 4px;
   background:linear-gradient(180deg,#245f9f 0%,#123b78 72%,#092955 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 12px rgba(255,255,255,.08),0 -3px 10px rgba(9,109,189,.28);
-  transform:translateY(12px);
+  transform:translateY(7px);
   transition:transform .14s ease,filter .14s ease,box-shadow .14s ease;
   cursor:pointer;
+  box-sizing:border-box;
 }
 .category-button.selected {
   z-index:1;
-  transform:translateY(4px);
+  transform:translateY(2px);
   border-color:#eaffff;
   background:linear-gradient(180deg,#55bdf4 0%,#2378c9 68%,#0d4a8f 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 15px rgba(221,251,255,.32),0 -3px 11px #8bedff,0 -6px 20px rgba(38,186,255,.72);
 }
-.category-button svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2.7; stroke-linejoin:round; stroke-linecap:round; }
-.category-button .ui-icon { width:100%; height:100%; }
+.category-button svg {
+  width:34px;
+  height:34px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.7;
+  stroke-linejoin:round;
+  stroke-linecap:round;
+}
+.category-button .ui-icon { width:34px; height:34px; }
 .category-button-summary {
   color:#fff7c8;
   border-color:#7ee8ff;
@@ -2340,10 +2349,10 @@ button { touch-action: manipulation; }
 .category-button-summary::before {
   content:"";
   position:absolute;
-  top:-5px;
-  left:12px;
-  right:12px;
-  height:4px;
+  top:-4px;
+  left:14px;
+  right:14px;
+  height:3px;
   border-radius:999px;
   background:#9df6ff;
   box-shadow:0 0 8px rgba(108,238,255,.9);
@@ -2354,18 +2363,12 @@ button { touch-action: manipulation; }
   background:linear-gradient(180deg,#3cbad5 0%,#1676ae 68%,#0b4a7d 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 -3px 11px rgba(134,246,255,.9),0 -6px 22px rgba(255,226,95,.35);
 }
-.category-tab-label {
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:8px;
-  font-size:9px;
-  font-weight:1000;
-  line-height:1;
-  letter-spacing:.08em;
-  text-align:center;
+.collection-categories-detail {
+  z-index:9;
+  left:24px;
+  bottom:-10px;
 }
-.collection-categories-detail { z-index:9; }
+
 .collection-time-panel {
   position:absolute;
   z-index:3;
@@ -2869,4 +2872,22 @@ button { touch-action: manipulation; }
 }
 .multiplication-2x2-shift-guide::after {
   transform:translate(-50%,-50%) rotate(45deg);
+}
+
+
+/* PR70 refinement: keep collection tabs pixel-identical on summary and detail stages. */
+.collection-stage > .collection-categories,
+.collection-detail-stage > .collection-categories {
+  width:auto;
+  height:60px;
+  transform:none;
+}
+.collection-stage > .collection-categories .category-button,
+.collection-detail-stage > .collection-categories .category-button {
+  width:72px;
+  height:54px;
+  min-width:72px;
+  min-height:54px;
+  max-width:72px;
+  max-height:54px;
 }
