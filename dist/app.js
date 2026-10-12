@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.0";
+  const appVersion = "0.1.1";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -3276,10 +3276,15 @@
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-current", selected ? "page" : "false");
     });
+    const paged = category === "robot";
+    $("collection-series-prev").hidden = !paged;
+    $("collection-series-next").hidden = !paged;
     items.querySelectorAll(".collection-scene-item").forEach((item) => item.addEventListener("click", () => openVehicleDetail(Number(item.dataset.vehicle))));
   }
   function setCollectionRobotPage(page) {
-    const nextPage = Math.max(0, Math.min(1, Number(page) || 0));
+    const pageCount = 2;
+    const rawPage = Number(page) || 0;
+    const nextPage = ((rawPage % pageCount) + pageCount) % pageCount;
     if (nextPage === state.collectionRobotPage) return;
     state.collectionRobotPage = nextPage;
     if (state.collectionCategory === "robot") renderCollectionCategoryScene("robot");
@@ -3702,6 +3707,12 @@
     showScreen("collection-screen");
   }));
   $("collection-page-indicator").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setCollectionRobotPage(button.dataset.collectionPage)));
+  $("collection-series-prev").addEventListener("click", () => {
+    if (state.collectionCategory === "robot") setCollectionRobotPage(state.collectionRobotPage - 1);
+  });
+  $("collection-series-next").addEventListener("click", () => {
+    if (state.collectionCategory === "robot") setCollectionRobotPage(state.collectionRobotPage + 1);
+  });
   $("collection-category-scene").addEventListener("pointerdown", (event) => {
     if (state.collectionCategory === "robot") state.collectionSwipeStartX = event.clientX;
   });
@@ -3712,6 +3723,8 @@
     if (Math.abs(deltaX) < 70) return;
     setCollectionRobotPage(deltaX > 0 ? state.collectionRobotPage + 1 : state.collectionRobotPage - 1);
   });
+  $("detail-prev").addEventListener("click", () => moveVehicleDetail(-1));
+  $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
   $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
