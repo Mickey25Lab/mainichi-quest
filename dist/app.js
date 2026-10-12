@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.141";
+  const appVersion = "0.0.142";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -49,6 +49,25 @@
   const revealedAnswerDurationMs = 2000 * 2;
   const collectionStageWidth = 1400;
   const collectionStageHeight = 1050;
+  const collectionCategoryBackgroundPaths = Object.freeze({
+    vehicle: "./assets/collection/category_backgrounds/01_vehicle_collection_background.png",
+    robot: "./assets/collection/category_backgrounds/02_robot_collection_background.png",
+    "super-robot": "./assets/collection/category_backgrounds/03_super_robot_collection_background.png",
+    equipment: "./assets/collection/category_backgrounds/05_special_equipment_collection_background.png",
+    medal: "./assets/collection/category_backgrounds/06_master_medal_collection_background.png"
+  });
+  const vehicleCollectionRows = Object.freeze([
+    Object.freeze({ ids:[16,17,18,19,20], size:160, contactY:360, centers:[354.4,527.2,700,872.8,1045.6] }),
+    Object.freeze({ ids:[11,12,13,14,15], size:190, contactY:508, centers:[289.6,494.8,700,905.2,1110.4] }),
+    Object.freeze({ ids:[6,7,8,9,10], size:220, contactY:689.3, centers:[224.8,462.4,700,937.6,1175.2] }),
+    Object.freeze({ ids:[1,2,3,4,5], size:250, contactY:921.7, centers:[160,430,700,970,1240] })
+  ]);
+  const robotCollectionRows = Object.freeze([
+    Object.freeze({ localIds:[9,10], size:205, contactY:349, centers:[520,880] }),
+    Object.freeze({ localIds:[6,7,8], size:250, contactY:499, centers:[325,700,1075] }),
+    Object.freeze({ localIds:[4,5], size:295, contactY:676, centers:[460,940] }),
+    Object.freeze({ localIds:[1,2,3], size:340, contactY:908, centers:[250,700,1150] })
+  ]);
   const questionTimeoutMs = 5 * 60 * 1000;
   const rarityConfig = Object.freeze({
     normal: { label: "ノーマル", stars: "★", weight: 10 },
@@ -147,7 +166,7 @@
     recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false,
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
-    energyDisplayOverride: null,
+    energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
   };
@@ -640,18 +659,22 @@
     });
   }
   function preloadCollectionVehicleArtwork() {
-    return Promise.all(vehicles.flatMap((vehicle) => {
+    const categoryBackgrounds = Object.values(collectionCategoryBackgroundPaths);
+    categoryBackgrounds.forEach((path) => preloadDecodedImage(path, "low").catch(() => null));
+    const artwork = vehicles.flatMap((vehicle) => {
       const progress = vehicleProgress(vehicle.index);
       const formStage = progress.masterMedal ? 5 : Math.max(2, Math.min(5, progress.stage));
       const paths = [vehicleArtworkPath(vehicle.index)];
+      if (progress.discovered && progress.stage >= 3) paths.push(robotArtworkPath(vehicle.index));
       if (progress.discovered) paths.push(answerArtworkPath(vehicle.index, formStage));
       if (progress.masterMedal) paths.push(
         resultArtworkPath(vehicle.index, formStage, true),
         masterMedalArtworkPath(vehicle.index),
         "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp"
       );
-      return paths.filter(Boolean).map((path) => preloadDecodedImage(path).catch(() => null));
-    }));
+      return paths.filter(Boolean);
+    });
+    return Promise.all(artwork.map((path) => preloadDecodedImage(path).catch(() => null)));
   }
   function showFixedScreenWhenReady(screenId, extraPaths = [], onShown = null) {
     const requestId = ++visualRequestId;
@@ -3192,14 +3215,74 @@
     if (state.collectionTimerId !== null) { window.clearInterval(state.collectionTimerId); state.collectionTimerId = null; }
   }
   function setCollectionCategory(category) {
+    const normalizedCategory = category || "summary";
+    if (normalizedCategory === "robot" && state.collectionCategory !== "robot") state.collectionRobotPage = 0;
+    state.collectionCategory = normalizedCategory;
     document.querySelectorAll(".category-button").forEach((button) => {
-      const selected = button.dataset.category === category;
+      const selected = button.dataset.category === normalizedCategory;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
-    // This PR establishes the persistent six-tab navigation only.
-    // Existing collection/detail content is intentionally left unchanged.
-    $("collection-grid").hidden = false;
+    const categoryView = normalizedCategory !== "summary";
+    $("collection-stage").classList.toggle("is-category-view", categoryView);
+    $("collection-grid").hidden = categoryView;
+    $("collection-category-scene").hidden = !categoryView;
+    if (categoryView) {
+      preloadDecodedImage(collectionCategoryBackgroundPaths[normalizedCategory]).catch(() => null);
+      renderCollectionCategoryScene(normalizedCategory);
+    }
+  }
+  function collectionItemMarkup(vehicleIndex, kind, layout, grayscale = false) {
+    const vehicle = vehicles[vehicleIndex];
+    const artworkPath = kind === "vehicle" ? vehicleArtworkPath(vehicleIndex) : robotArtworkPath(vehicleIndex);
+    const anchorY = kind === "vehicle" ? .925 : .955;
+    const shadowWidth = kind === "vehicle" ? layout.size * .70 : layout.size * .88;
+    const shadowHeight = kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13);
+    const shadowY = layout.contactY - (kind === "vehicle" ? 0 : 7);
+    const top = layout.contactY - layout.size * anchorY;
+    return `<button class="collection-scene-item collection-scene-item-${kind}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async"></button>`;
+  }
+  function renderVehicleCollectionScene() {
+    const markup = [];
+    vehicleCollectionRows.forEach((row) => row.ids.forEach((id, slotIndex) => {
+      const vehicleIndex = id - 1;
+      const progress = vehicleProgress(vehicleIndex);
+      if (!progress.discovered) return;
+      markup.push(collectionItemMarkup(vehicleIndex, "vehicle", { ...row, x:row.centers[slotIndex] }, !progress.friendly));
+    }));
+    return markup.join("");
+  }
+  function renderRobotCollectionScene() {
+    const pageOffset = state.collectionRobotPage * 10;
+    const markup = [];
+    robotCollectionRows.forEach((row) => row.localIds.forEach((localId, slotIndex) => {
+      const vehicleIndex = pageOffset + localId - 1;
+      const progress = vehicleProgress(vehicleIndex);
+      if (!progress.discovered || progress.stage < 3) return;
+      markup.push(collectionItemMarkup(vehicleIndex, "robot", { ...row, x:row.centers[slotIndex] }));
+    }));
+    return markup.join("");
+  }
+  function renderCollectionCategoryScene(category) {
+    const scene = $("collection-category-scene");
+    const items = $("collection-category-items");
+    const indicator = $("collection-page-indicator");
+    scene.dataset.category = category;
+    scene.style.backgroundImage = `url("${collectionCategoryBackgroundPaths[category]}")`;
+    items.innerHTML = category === "vehicle" ? renderVehicleCollectionScene() : category === "robot" ? renderRobotCollectionScene() : "";
+    indicator.hidden = category !== "robot";
+    indicator.querySelectorAll("button").forEach((button) => {
+      const selected = Number(button.dataset.collectionPage) === state.collectionRobotPage;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-current", selected ? "page" : "false");
+    });
+    items.querySelectorAll(".collection-scene-item").forEach((item) => item.addEventListener("click", () => openVehicleDetail(Number(item.dataset.vehicle))));
+  }
+  function setCollectionRobotPage(page) {
+    const nextPage = Math.max(0, Math.min(1, Number(page) || 0));
+    if (nextPage === state.collectionRobotPage) return;
+    state.collectionRobotPage = nextPage;
+    if (state.collectionCategory === "robot") renderCollectionCategoryScene("robot");
   }
   function detailCategoryForVehicle(index) {
     const progress = vehicleProgress(index);
@@ -3615,11 +3698,20 @@
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
     const category = button.dataset.category;
     setCollectionCategory(category);
-    if (category === "summary") {
-      sizeCollectionStage();
-      showScreen("collection-screen");
-    }
+    sizeCollectionStage();
+    showScreen("collection-screen");
   }));
+  $("collection-page-indicator").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setCollectionRobotPage(button.dataset.collectionPage)));
+  $("collection-category-scene").addEventListener("pointerdown", (event) => {
+    if (state.collectionCategory === "robot") state.collectionSwipeStartX = event.clientX;
+  });
+  $("collection-category-scene").addEventListener("pointerup", (event) => {
+    if (state.collectionCategory !== "robot" || state.collectionSwipeStartX === null) return;
+    const deltaX = event.clientX - state.collectionSwipeStartX;
+    state.collectionSwipeStartX = null;
+    if (Math.abs(deltaX) < 70) return;
+    setCollectionRobotPage(deltaX > 0 ? state.collectionRobotPage + 1 : state.collectionRobotPage - 1);
+  });
   $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
