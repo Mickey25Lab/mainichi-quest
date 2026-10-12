@@ -1695,6 +1695,14 @@ button { touch-action: manipulation; }
 .reward-stage[data-stage="2"] { --art-left:27%; --art-top:32%; --art-width:46%; --art-height:41%; }
 .reward-stage[data-stage="3"] { --art-left:28%; --art-top:22%; --art-width:44%; --art-height:55%; }
 .reward-stage[data-stage="4"] { --art-left:29%; --art-top:29%; --art-width:42%; --art-height:43%; }
+/* Keep the Stage 3 super robot and Stage 4 equipment artwork centred inside
+   their shared boxes. Earlier generic stage rules used right-aligned
+   object-position, which made square transparent artwork appear shifted even
+   though the box itself was centred. No vehicle-specific offsets are used. */
+.reward-stage[data-stage="3"] #reward-image,
+.reward-stage[data-stage="4"] #reward-image {
+  object-position:center center;
+}
 .reward-stage[data-stage="5"] #reward-backplate { object-fit:contain; }
 .reward-stage[data-stage="5"] #reward-image { left:12.43%; top:14.27%; width:68%; height:68%; object-fit:fill; }
 .reward-stage #reward-next-vehicle-overlay { position:absolute; display:block; z-index:4; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transform:none; transform-origin:center; animation:none; filter:none; pointer-events:none; }
