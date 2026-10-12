@@ -3242,7 +3242,7 @@
   let vehicleDetailRenderRequestId = 0;
   function openVehicleDetail(index) {
     state.detailVehicleIndex = index;
-    setCollectionCategory(detailCategoryForVehicle(index));
+    setCollectionCategory(null);
     renderVehicleDetail();
     showScreen("collection-detail-screen");
   }
