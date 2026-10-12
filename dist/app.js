@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.0.139";
+  const appVersion = "0.0.140";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -3640,6 +3640,10 @@
     resumeAudioAfterVisible("focus");
     checkQuestionTimeout();
   });
+  // WebKit can leave double-tap smart zoom enabled on non-interactive hit targets
+  // even when touch-action: manipulation is applied. A no-op click listener on
+  // the app root keeps the full app surface in the interactive hit-test path.
+  $("app").addEventListener("click", () => {});
   document.addEventListener("pointerdown", () => {
     resumeAudioAfterVisible("pointerdown");
   }, { passive: true });
