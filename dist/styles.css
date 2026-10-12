@@ -2640,6 +2640,99 @@ button, input { font: inherit; }
 .category-button { box-sizing:border-box; padding:10px; overflow:hidden; }
 .category-button svg { width:48px; height:48px; max-width:100%; max-height:100%; overflow:hidden; }
 
+/* Version 142: category-specific collection backgrounds and fixed layouts. */
+.collection-stage.is-category-view { background:#020814; box-shadow:none; }
+.collection-stage.is-category-view::before,
+.collection-stage.is-category-view::after { display:none; }
+.collection-stage.is-category-view .collection-header h2,
+.collection-stage.is-category-view .collection-header .medal-count { display:none; }
+.collection-category-scene {
+  position:absolute;
+  z-index:1;
+  inset:0;
+  overflow:hidden;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  touch-action:pan-y;
+  user-select:none;
+}
+.collection-category-scene[hidden] { display:none; }
+.collection-category-items { position:absolute; inset:0; }
+.collection-scene-item {
+  position:absolute;
+  left:calc(var(--item-x) - var(--item-size) / 2);
+  top:var(--item-y);
+  width:var(--item-size);
+  height:var(--item-size);
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:0;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  cursor:pointer;
+}
+.collection-scene-art {
+  position:absolute;
+  z-index:1;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  filter:none;
+}
+.collection-scene-art.is-pre-friendship { filter:grayscale(1); }
+.collection-scene-shadow {
+  position:absolute;
+  z-index:0;
+  left:50%;
+  top:calc(var(--shadow-y) - var(--item-y));
+  width:var(--shadow-width);
+  height:var(--shadow-height);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.collection-scene-item-vehicle .collection-scene-shadow {
+  background:rgba(20,34,48,.412);
+  filter:blur(7px);
+}
+.collection-scene-item-robot .collection-scene-shadow {
+  background:rgba(3,14,18,.439);
+  filter:blur(13px);
+}
+.collection-page-indicator {
+  position:absolute;
+  z-index:4;
+  left:50%;
+  top:24px;
+  display:flex;
+  gap:14px;
+  transform:translateX(-50%);
+}
+.collection-page-indicator[hidden] { display:none; }
+.collection-page-indicator button {
+  width:20px;
+  min-width:20px;
+  height:20px;
+  min-height:20px;
+  padding:0;
+  border:2px solid rgba(225,255,250,.9);
+  border-radius:50%;
+  background:rgba(4,27,30,.72);
+  box-shadow:0 0 8px rgba(67,255,214,.45);
+}
+.collection-page-indicator button.selected {
+  background:#70ffd2;
+  box-shadow:0 0 5px #fff,0 0 16px #35ffc2;
+}
+
 
 /* Version 66: targeted interaction and transition polish. */
 .play-screen .question-answer-card .answer-card {
