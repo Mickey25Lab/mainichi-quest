@@ -3173,7 +3173,7 @@
     await preloadCollectionVehicleArtwork();
     if (runId !== state.runId || !state.collectionUsed) return;
     state.collectionDeadline = Date.now() + 60000;
-    setCollectionCategory("vehicle"); renderCollectionGrid({ showSessionMarkers }); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
+    setCollectionCategory("summary"); renderCollectionGrid({ showSessionMarkers }); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
   function updateCollectionClock() {
@@ -3197,7 +3197,17 @@
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
-    $("collection-grid").hidden = category !== "vehicle";
+    // This PR establishes the persistent six-tab navigation only.
+    // Existing collection/detail content is intentionally left unchanged.
+    $("collection-grid").hidden = false;
+  }
+  function detailCategoryForVehicle(index) {
+    const progress = vehicleProgress(index);
+    if (progress.masterMedal) return "medal";
+    if (progress.stage >= 5) return "equipment";
+    if (progress.stage >= 4) return "super-robot";
+    if (progress.stage >= 3) return "robot";
+    return "vehicle";
   }
   function exitCollection() { $("collection-exit-confirm").hidden = false; $("collection-exit-no").focus(); }
   function closeCollectionExit() { $("collection-exit-confirm").hidden = true; $("collection-exit").focus(); }
@@ -3232,6 +3242,7 @@
   let vehicleDetailRenderRequestId = 0;
   function openVehicleDetail(index) {
     state.detailVehicleIndex = index;
+    setCollectionCategory(detailCategoryForVehicle(index));
     renderVehicleDetail();
     showScreen("collection-detail-screen");
   }
@@ -3601,8 +3612,15 @@
   $("developer-reset-confirm-button").addEventListener("click", resetDeveloperUserData);
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
-  document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => setCollectionCategory(button.dataset.category)));
-  $("detail-back").addEventListener("click", () => { sizeCollectionStage(); showScreen("collection-screen"); });
+  document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
+    const category = button.dataset.category;
+    setCollectionCategory(category);
+    if (category === "summary") {
+      sizeCollectionStage();
+      showScreen("collection-screen");
+    }
+  }));
+  $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
