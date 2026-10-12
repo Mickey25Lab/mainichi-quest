@@ -2733,6 +2733,42 @@ button, input { font: inherit; }
   box-shadow:0 0 5px #fff,0 0 16px #35ffc2;
 }
 
+.collection-nav-chevron {
+  position:absolute;
+  z-index:5;
+  top:50%;
+  width:72px;
+  height:124px;
+  min-width:72px;
+  min-height:124px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  transform:translateY(-50%);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.collection-nav-chevron[hidden] { display:none; }
+.collection-nav-chevron-left { left:22px; }
+.collection-nav-chevron-right { right:22px; }
+.collection-nav-chevron span {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:44px;
+  height:44px;
+  border-top:10px solid #ffd45e;
+  border-right:10px solid #ffd45e;
+  filter:drop-shadow(0 0 4px rgba(255,247,186,.98)) drop-shadow(0 0 12px rgba(255,173,47,.92)) drop-shadow(0 0 24px rgba(255,117,24,.62));
+}
+.collection-nav-chevron-left span { transform:translate(-36%,-50%) rotate(-135deg); }
+.collection-nav-chevron-right span { transform:translate(-64%,-50%) rotate(45deg); }
+.collection-nav-chevron:active span {
+  filter:drop-shadow(0 0 3px rgba(255,255,220,1)) drop-shadow(0 0 8px rgba(255,183,55,.95));
+}
+.detail-nav-chevron { z-index:7; }
+
 
 /* Version 66: targeted interaction and transition polish. */
 .play-screen .question-answer-card .answer-card {
