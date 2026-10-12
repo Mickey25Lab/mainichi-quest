@@ -1701,7 +1701,10 @@ button { touch-action: manipulation; }
    though the box itself was centred. No vehicle-specific offsets are used. */
 .reward-stage[data-stage="3"] #reward-image,
 .reward-stage[data-stage="4"] #reward-image {
+  left:50%;
   object-position:center center;
+  transform:translateX(-50%);
+  transform-origin:center center;
 }
 .reward-stage[data-stage="5"] #reward-backplate { object-fit:contain; }
 .reward-stage[data-stage="5"] #reward-image { left:12.43%; top:14.27%; width:68%; height:68%; object-fit:fill; }

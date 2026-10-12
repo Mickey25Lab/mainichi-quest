@@ -126,7 +126,7 @@
       superRobotEquipped: Object.freeze({ scale:0.55, x:138.15, y:278.3 })
     }),
     collectionDetail: Object.freeze({
-      superRobot: Object.freeze({ scale:2, x:"0%", y:"8%" }),
+      superRobot: Object.freeze({ scale:2, x:"10.5%", y:"8%" }),
       superRobotEquipped: Object.freeze({ scale:2 * equippedSuperRobotEyeScale, x:"10.5%", y:"8%" })
     })
   });
