@@ -2439,7 +2439,9 @@ button { touch-action: manipulation; }
 .detail-evolution-layout.is-three-up .detail-character { width:100%; height:100%; transform-origin:center bottom; }
 .detail-evolution-layout.is-three-up .detail-slot-vehicle .detail-character { transform:scale(.7); }
 .detail-evolution-layout.is-three-up .detail-slot-robot .detail-character { transform:scale(.9); }
-.detail-evolution-layout.is-three-up .detail-slot-super .detail-character { transform:translateY(8%) scale(2); }
+.detail-evolution-layout.is-three-up .detail-slot-super .detail-character {
+  transform:translate(var(--detail-super-x),var(--detail-super-y)) scale(var(--detail-super-scale));
+}
 .detail-character.is-grayscale { filter:grayscale(1) drop-shadow(0 10px 9px rgba(0,7,25,.42)); }
 .detail-character.is-silhouette { filter:brightness(0) drop-shadow(0 0 8px rgba(82,220,255,.5)) drop-shadow(0 10px 9px rgba(0,7,25,.52)); }
 .detail-evolution-label { position:relative; isolation:isolate; align-self:end; width:39.2%; min-width:0; height:28px; margin:0 auto; display:grid; place-items:center; border:1px solid #252a2f; border-radius:15px; background:linear-gradient(180deg,#fff 0%,#f9faf9 34%,#d9dddf 58%,#f4f6f6 100%); box-shadow:inset 0 2px 1px rgba(255,255,255,.95),inset 0 -2px 2px rgba(79,91,99,.22),0 1px 2px rgba(18,25,29,.28); color:#111519; text-shadow:0 1px 0 rgba(255,255,255,.92); font-size:18px; font-weight:900; letter-spacing:.07em; white-space:nowrap; }
