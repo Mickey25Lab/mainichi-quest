@@ -1,0 +1,27 @@
+{
+  "category": "04_super_robot_equipped",
+  "status": "formal display alignment",
+  "measured_vehicle": "01_patrol_car",
+  "measurement_canvas": [768, 768],
+  "reference": {
+    "category": "03_super_robot",
+    "source_eye_y_on_1254_canvas": 279,
+    "eye_y_on_768_canvas": 170.87081339712918,
+    "canvas_bottom_to_eye": 597.1291866028708
+  },
+  "equipped": {
+    "category": "04_super_robot_equipped",
+    "source_eye_y_on_1254_canvas": 374,
+    "eye_y_on_768_canvas": 229.05263157894737,
+    "canvas_bottom_to_eye": 538.9473684210526
+  },
+  "calculation": "(768 - 170.87081339712918) / (768 - 229.05263157894737)",
+  "common_scale": 1.1079545454545456,
+  "scaled_equipped_eye_y": 170.87081339712915,
+  "eye_difference_px": 0,
+  "transform_origin": "center bottom",
+  "y_translation": 0,
+  "per_vehicle_scale_adjustments": false,
+  "per_vehicle_x_adjustments": false,
+  "horizontal_rule": "The normalized PNG canvas center is aligned to the super-robot label region center."
+}

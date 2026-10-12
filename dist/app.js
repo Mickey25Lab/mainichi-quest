@@ -113,18 +113,21 @@
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
   const answerBubblePositions = [null, null, { top:305, width:400 }, { top:235, width:410 }, { top:null, width:420 }, { top:null, width:420 }];
   const answerArtCanvasScales = [0, 0, 0.39, 0.36];
-  // These four settings are the only placement inputs for the two super-robot
-  // series. They deliberately describe the full square image canvas; vehicle
-  // identity, alpha bounds, feet, centre of mass, and visible pixels never
-  // participate in placement.
+  // Patrol-car measurement on the 768 canvas: (768 - 170.8708134) / (768 - 229.0526316).
+  // This one factor is shared by all equipped-super-robot display surfaces.
+  const equippedSuperRobotEyeScale = 1.1079545454545456;
+  document.documentElement.style.setProperty("--equipped-super-robot-eye-scale", String(equippedSuperRobotEyeScale));
+  // These settings plus the one shared eye scale are the only placement inputs
+  // for the two super-robot series. They deliberately describe the full square
+  // image canvas; vehicle identity and visible alpha bounds never participate.
   const superRobotDisplaySettings = Object.freeze({
     answer: Object.freeze({
       superRobot: Object.freeze({ scale:0.55, x:138.15, y:278.3 }),
       superRobotEquipped: Object.freeze({ scale:0.55, x:138.15, y:278.3 })
     }),
     collectionDetail: Object.freeze({
-      superRobot: Object.freeze({ scale:2, x:"0%", y:"8%" }),
-      superRobotEquipped: Object.freeze({ scale:2, x:"0%", y:"8%" })
+      superRobot: Object.freeze({ scale:2, x:"10.5%", y:"8%" }),
+      superRobotEquipped: Object.freeze({ scale:2 * equippedSuperRobotEyeScale, x:"10.5%", y:"8%" })
     })
   });
   const listedTwoDigitQuotientProblems = [
@@ -612,6 +615,9 @@
     if (stage === 4) return "superRobot";
     if (stage === 5) return "superRobotEquipped";
     return null;
+  }
+  function isEquippedSuperRobotArtwork(path) {
+    return Boolean(path && path.includes("/collection/04_super_robot_equipped/"));
   }
   function preloadVehicleVisuals(vehicleIndex, stage) {
     const bubblePath = stage >= 2 ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
@@ -1126,8 +1132,10 @@
         stagedCharacter.style.left = `${characterCenterX - logicalCanvasSize * scale / 2}px`;
         stagedCharacter.style.top = `${968 - logicalCanvasSize * scale}px`;
       }
-      stagedCharacter.style.setProperty("--character-static-transform", flip ? "scaleX(-1)" : "none");
+      const staticTransform = flip ? "scaleX(-1)" : stage === 5 ? `scale(${equippedSuperRobotEyeScale})` : "none";
+      stagedCharacter.style.setProperty("--character-static-transform", staticTransform);
       stagedCharacter.style.transform = "var(--character-static-transform)";
+      stagedCharacter.classList.toggle("is-equipped-super-robot", stage === 5);
       stagedCharacter.dataset.answerStage = String(stage);
       clearCharacterMotion(stagedCharacter);
       elementPrepares.push(prepareStagedImage(stagedCharacter, characterPath));
@@ -3005,10 +3013,11 @@
     progressSection.hidden = progressItems.length === 0;
     $("result-progress-list").innerHTML = progressItems.map((item) => {
       const image = resultArtworkPath(item.vehicle.index, item.after.stage, item.after.masterMedal);
+      const imageClass = isEquippedSuperRobotArtwork(image) ? " class=\"is-equipped-super-robot\"" : "";
       const meter = item.type === "friendship"
         ? `<div class="result-new-hearts" aria-label="なかよし ${item.to} / 5">${[5,4,3,2,1].map((level) => `<span class="${level <= item.to ? "is-earned" : ""} ${level > item.from && level <= item.to ? "is-gained" : ""}">♥</span>`).join("")}</div>`
         : `<div class="result-new-energy" aria-label="エネルギー ${item.to} / ${item.required}"><div class="result-new-energy-tank"><span class="result-new-energy-stack${item.from ? "" : " is-only-gain"}"><i style="height:${Math.min(100, item.from / item.required * 100)}%"></i><b style="height:${Math.min(100, Math.max(0, item.to - item.from) / item.required * 100)}%"></b></span></div><strong>${item.to}<small>/ ${item.required}</small></strong></div>`;
-      return `<article class="result-new-progress-card"><div class="result-new-progress-vehicle"><img src="${image}" alt="${item.vehicle.nameJa}" decoding="async"><span>${item.vehicle.nameEn}</span></div><div class="result-new-meter"><b>${item.type === "friendship" ? "なかよし" : "エネルギー"}</b>${meter}</div></article>`;
+      return `<article class="result-new-progress-card"><div class="result-new-progress-vehicle"><img${imageClass} src="${image}" alt="${item.vehicle.nameJa}" decoding="async"><span>${item.vehicle.nameEn}</span></div><div class="result-new-meter"><b>${item.type === "friendship" ? "なかよし" : "エネルギー"}</b>${meter}</div></article>`;
     }).join("");
     const getSection = $("result-gets-section");
     getSection.hidden = state.sessionResultGets.length === 0;
@@ -3016,7 +3025,8 @@
       const vehicle = vehicles[item.vehicleIndex];
       const master = item.stage === 5;
       const image = resultArtworkPath(item.vehicleIndex, Math.min(5, item.stage + 1), master);
-      return `<article class="result-new-get-card"><img src="${image}" alt="${vehicle.nameJa}" decoding="async"><div><span>${resultRewardLabel(item)}</span><strong>GET!</strong></div><i aria-hidden="true">✦</i></article>`;
+      const imageClass = isEquippedSuperRobotArtwork(image) ? " class=\"is-equipped-super-robot\"" : "";
+      return `<article class="result-new-get-card"><img${imageClass} src="${image}" alt="${vehicle.nameJa}" decoding="async"><div><span>${resultRewardLabel(item)}</span><strong>GET!</strong></div><i aria-hidden="true">✦</i></article>`;
     }).join("");
     $("result-correct-count").textContent = `${state.initialCorrect} / ${state.questions.length}`;
   }
@@ -3202,7 +3212,7 @@
         ? `<span class="collection-card-status collection-card-hearts" aria-label="なかよし ${progress.friendship} / 5">${[5,4,3,2,1].map((level) => `<i class="${level <= progress.friendship ? "is-earned" : ""}">♥</i>`).join("")}</span>`
         : `<span class="collection-card-status collection-card-energy" aria-label="エネルギー ${progress.energy} / ${requiredEnergyForStage(progress.stage)}"><i style="height:${Math.min(100, progress.energy / requiredEnergyForStage(progress.stage) * 100)}%"></i></span>`;
       const artPath = discovered ? answerArtworkPath(vehicle.index, formStage) : vehicleArtworkPath(0);
-      const formClass = formStage === 2 ? "is-vehicle-form" : formStage === 3 ? "is-evolved-form is-robot-form" : "is-evolved-form";
+      const formClass = formStage === 2 ? "is-vehicle-form" : formStage === 3 ? "is-evolved-form is-robot-form" : formStage === 5 ? "is-evolved-form is-equipped-super-robot" : "is-evolved-form";
       const grayscaleClass = formStage === 2 && !progress.friendly ? " is-pre-friendship" : "";
       const artwork = discovered ? `<img class="card-vehicle ${formClass}${grayscaleClass}" src="${artPath}" alt="" decoding="async">`
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
@@ -3257,11 +3267,13 @@
     medalDisplay.hidden = !discovered || !progress.masterMedal;
     if (!discovered) return;
 
-    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}`;
+    const equippedSuperRobotVisible = threeUp && progress.stage >= 5;
+    layout.className = `detail-evolution-layout ${threeUp ? "is-three-up" : "is-two-up"}${equippedSuperRobotVisible ? " has-equipped-super-robot" : ""}`;
     vehicleArt.alt = vehicle.nameJa;
     vehicleArt.className = `detail-character${progress.friendly ? "" : " is-grayscale"}`;
     robotArt.alt = `${vehicle.nameJa}のロボット`;
     robotArt.className = `detail-character${progress.stage >= 3 ? "" : " is-silhouette"}`;
+    superArt.className = `detail-character${equippedSuperRobotVisible ? " is-equipped-super-robot" : ""}`;
     layout.querySelector(".detail-slot-super").hidden = !threeUp;
     layout.querySelector(".detail-chevron-two").hidden = !threeUp;
 

@@ -1,0 +1,532 @@
+{
+  "category": "04_super_robot_equipped",
+  "status": "formal",
+  "generated_on": "2026-10-12",
+  "source_policy": "Each WebP is generated directly from the corresponding formal PNG.",
+  "tool": {
+    "name": "Pillow",
+    "version": "12.3.0",
+    "libwebp_version": "1.6.0"
+  },
+  "settings": {
+    "format": "WebP",
+    "lossless": false,
+    "quality": 50,
+    "alpha_quality": 60,
+    "method": 6,
+    "resize": "LANCZOS",
+    "size": [
+      768,
+      768
+    ],
+    "transparency": "preserved",
+    "metadata": "EXIF/ICC/XMP not written"
+  },
+  "files": [
+    {
+      "id": "01",
+      "slug": "patrol_car",
+      "name_ja": "パトカー",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/01_patrol_car_super_robot_equipped.png",
+      "input_png_sha256": "925826e879772d1d1ac87803aa6c8e57977d7f7698ba7ff76099265255362eab",
+      "input_png_bytes": 953962,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/01_patrol_car_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/01_patrol_car_super_robot_equipped.webp",
+      "output_webp_sha256": "3f51298818e9c4cbc9bbb9cfa12c9a25dcf9495e61d0354a957a2337665a02f5",
+      "output_webp_bytes": 44910,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        161,
+        173,
+        622,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "02",
+      "slug": "fire_engine",
+      "name_ja": "消防車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/02_fire_engine_super_robot_equipped.png",
+      "input_png_sha256": "afd61ce82478139bfdf449cf823a81adc75eed53b48d14ad22c986340b83154e",
+      "input_png_bytes": 1086681,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/02_fire_engine_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/02_fire_engine_super_robot_equipped.webp",
+      "output_webp_sha256": "7374a44eff5ecad70830e2fcd2fb8f5117d5ece64c1b201f650b48eb48567c8d",
+      "output_webp_bytes": 47524,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        6,
+        121,
+        621,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "03",
+      "slug": "ambulance",
+      "name_ja": "救急車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/03_ambulance_super_robot_equipped.png",
+      "input_png_sha256": "9ce4f2ce4b9c356de49f0b7d4a9ca367ab696fe382f7599d7f52d6d274adb3b0",
+      "input_png_bytes": 1082152,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/03_ambulance_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/03_ambulance_super_robot_equipped.webp",
+      "output_webp_sha256": "c2faa0f974fc4202179270d5cdbc47870cde10688a3c58d96c1b71416af30427",
+      "output_webp_bytes": 50414,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        130,
+        112,
+        618,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "04",
+      "slug": "delivery_truck",
+      "name_ja": "宅配便車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/04_delivery_truck_super_robot_equipped.png",
+      "input_png_sha256": "50e077c53a2b1692105ca5003ae40c2eb04fc356e8854a890b13501e86014f4f",
+      "input_png_bytes": 923017,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/04_delivery_truck_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/04_delivery_truck_super_robot_equipped.webp",
+      "output_webp_sha256": "1ea8dd67475049f1a0ba4ec87484eb3a482f0af4df5fa94808f1cb532d7af55d",
+      "output_webp_bytes": 43162,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        169,
+        133,
+        612,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "05",
+      "slug": "mail_van",
+      "name_ja": "郵便車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/05_mail_van_super_robot_equipped.png",
+      "input_png_sha256": "123c50858f55ec6c47a374f3d8d7b17afed8e7b194584518d8b62d9dedfd8275",
+      "input_png_bytes": 1208126,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/05_mail_van_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/05_mail_van_super_robot_equipped.webp",
+      "output_webp_sha256": "7e3b3240a595e627a4cb1b80657aafc7b19880d415c3a14294d12aee53f32f44",
+      "output_webp_bytes": 58392,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        111,
+        124,
+        716,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "06",
+      "slug": "garbage_truck",
+      "name_ja": "ゴミ収集車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/06_garbage_truck_super_robot_equipped.png",
+      "input_png_sha256": "1234558f2b5e95ad0afdcb32834af36a0777769e423e5a1709c8449005550738",
+      "input_png_bytes": 1086280,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/06_garbage_truck_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/06_garbage_truck_super_robot_equipped.webp",
+      "output_webp_sha256": "cbd1879f93ce25065fcf6e7e544ac996d0f2ba67ab56467c878ea17361ead1b7",
+      "output_webp_bytes": 51548,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        127,
+        163,
+        623,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "07",
+      "slug": "tow_truck",
+      "name_ja": "レッカー車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/07_tow_truck_super_robot_equipped.png",
+      "input_png_sha256": "935be5770fcdb0d6b624d52456be0d602a7bd55777ec1b2945d76c517f8f411e",
+      "input_png_bytes": 1100735,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/07_tow_truck_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/07_tow_truck_super_robot_equipped.webp",
+      "output_webp_sha256": "d70cebce2c45cb889a4a6676f0c2e61bf5e2914061864e6f1fc13ee598cf178e",
+      "output_webp_bytes": 56100,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        78,
+        155,
+        649,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "08",
+      "slug": "crane_truck",
+      "name_ja": "クレーン車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/08_crane_truck_super_robot_equipped.png",
+      "input_png_sha256": "003d3fdde228eb8c4fa918df5677764fb51d66002799dbe4b27517b466e4fe50",
+      "input_png_bytes": 1275702,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/08_crane_truck_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/08_crane_truck_super_robot_equipped.webp",
+      "output_webp_sha256": "994fa89d9372fcb310c7d0ee71b95c90b4ba58169f9c812ee95c79cf2a7d023c",
+      "output_webp_bytes": 61326,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        141,
+        73,
+        649,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "09",
+      "slug": "concrete_mixer",
+      "name_ja": "コンクリートミキサー車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/09_concrete_mixer_super_robot_equipped.png",
+      "input_png_sha256": "d81e825d3d0d83de7577d3221323bba30b588e4a16c7ae384662f5283a26929b",
+      "input_png_bytes": 1452841,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/09_concrete_mixer_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/09_concrete_mixer_super_robot_equipped.webp",
+      "output_webp_sha256": "d8e95aba3ba909191452e56ecfefcdb9a218f6e1936f8dcc399ed01bd724652e",
+      "output_webp_bytes": 65254,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        7,
+        1,
+        632,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "10",
+      "slug": "bulldozer",
+      "name_ja": "ブルドーザー",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/10_bulldozer_super_robot_equipped.png",
+      "input_png_sha256": "dc09eee75941921e6fb584b31e07b5344b6f761800d0ec16c57683e48aa3da42",
+      "input_png_bytes": 1259685,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/10_bulldozer_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/10_bulldozer_super_robot_equipped.webp",
+      "output_webp_sha256": "a405f47af2fc532773f93ad4436c3184b8b223fa15d640acc2347d9d4c271bd0",
+      "output_webp_bytes": 54754,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        14,
+        56,
+        676,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "11",
+      "slug": "road_roller",
+      "name_ja": "ロードローラー",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/11_road_roller_super_robot_equipped.png",
+      "input_png_sha256": "8c1e0c91d9ad6d731f38d357172628dbed7d86ff10fe96e9a7163dcafdcc5201",
+      "input_png_bytes": 1134358,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/11_road_roller_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/11_road_roller_super_robot_equipped.webp",
+      "output_webp_sha256": "26c5611bd923a2ce215019b14b9758ec91cc86fcf82af7c6f89b0c3da3805773",
+      "output_webp_bytes": 45924,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        120,
+        140,
+        620,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "12",
+      "slug": "tank_lorry",
+      "name_ja": "タンクローリー",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/12_tank_lorry_super_robot_equipped.png",
+      "input_png_sha256": "7c37ecd8a18d19cb85f382c384c2239b53605c392ff5ac858a18dbe734e2d768",
+      "input_png_bytes": 1199583,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/12_tank_lorry_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/12_tank_lorry_super_robot_equipped.webp",
+      "output_webp_sha256": "aafb13a29133b5615d70a91525fcdba1816dd075ca0f603f2b9ccbf98cede639",
+      "output_webp_bytes": 55332,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        25,
+        146,
+        614,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "13",
+      "slug": "watering_truck",
+      "name_ja": "散水車",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/13_watering_truck_super_robot_equipped.png",
+      "input_png_sha256": "5d496d151ff955f9de206e46b3e3bbb15057838b22c02ee30200de8c5d6a055a",
+      "input_png_bytes": 1213888,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/13_watering_truck_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/13_watering_truck_super_robot_equipped.webp",
+      "output_webp_sha256": "37caca3dbdd3fae8c74f0d1f0a8c5e2bc6cfe9d87cbc29c7bde5a3c8be386e54",
+      "output_webp_bytes": 58252,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        115,
+        74,
+        642,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "14",
+      "slug": "kindergarten_bus",
+      "name_ja": "幼稚園バス",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/14_kindergarten_bus_super_robot_equipped.png",
+      "input_png_sha256": "4b3dbc0a15c679f51af3192a4d981d124f7362542de81f3877c7ae34ca88b242",
+      "input_png_bytes": 1288621,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/14_kindergarten_bus_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/14_kindergarten_bus_super_robot_equipped.webp",
+      "output_webp_sha256": "413e5ff62b1ece47a62def8411f80c4b9d2c7cfd6d173613e4f804a67e5d26e2",
+      "output_webp_bytes": 62102,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        41,
+        110,
+        677,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "15",
+      "slug": "sightseeing_bus",
+      "name_ja": "観光バス",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/15_sightseeing_bus_super_robot_equipped.png",
+      "input_png_sha256": "eb6457e4acaf5629c60201260fabe5a84c9c80ff8458e39619aa414795f89b1e",
+      "input_png_bytes": 1060003,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/15_sightseeing_bus_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/15_sightseeing_bus_super_robot_equipped.webp",
+      "output_webp_sha256": "7a59dafd66babffce77597738a32310e037da95c7d8aae276a3cbcdf563168ad",
+      "output_webp_bytes": 50524,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        156,
+        166,
+        643,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "16",
+      "slug": "formula_racer",
+      "name_ja": "F1カー",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/16_formula_racer_super_robot_equipped.png",
+      "input_png_sha256": "894818c954237dc264f49a4636cd828e58f271cd2864fcfa5b5fb3bb2492e92e",
+      "input_png_bytes": 1140143,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/16_formula_racer_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/16_formula_racer_super_robot_equipped.webp",
+      "output_webp_sha256": "4a40fc01cb430b8399d47be4540094ffed0516a900b9ce0128b455d610636bc9",
+      "output_webp_bytes": 53886,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        69,
+        135,
+        643,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "17",
+      "slug": "racing_bike",
+      "name_ja": "レーシングバイク",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/17_racing_bike_super_robot_equipped.png",
+      "input_png_sha256": "6ef0c370c5a0eef01bcc0fbfe1a16d47132ce01ca56d2e90ca215834b4dfdeb7",
+      "input_png_bytes": 1063839,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/17_racing_bike_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/17_racing_bike_super_robot_equipped.webp",
+      "output_webp_sha256": "1d773fbab22147274a6727fdf3c9f7a98d7537d44322daa7bf77906e5fbf82b8",
+      "output_webp_bytes": 50504,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        94,
+        144,
+        619,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "18",
+      "slug": "snowmobile",
+      "name_ja": "スノーモービル",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/18_snowmobile_super_robot_equipped.png",
+      "input_png_sha256": "9226ebf6ff9629c7b5093b6b5fe8bada395714ea3a88cf41113d1afa0697ace8",
+      "input_png_bytes": 1150736,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/18_snowmobile_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/18_snowmobile_super_robot_equipped.webp",
+      "output_webp_sha256": "51f8fd488bc95628603c9f823aaded60e1473922db0c30a6af107e4fd4b66164",
+      "output_webp_bytes": 57046,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        141,
+        81,
+        631,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "19",
+      "slug": "helicopter",
+      "name_ja": "ヘリコプター",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/19_helicopter_super_robot_equipped.png",
+      "input_png_sha256": "3a2b92d2c636d54863fe2a9f5654e963a535e46f3ab9cd76719f460fcd73fe50",
+      "input_png_bytes": 1164664,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/19_helicopter_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/19_helicopter_super_robot_equipped.webp",
+      "output_webp_sha256": "544c8f610c0cb61231baa533b221a9f09d465bd64f0c7b086873411665b44e7c",
+      "output_webp_bytes": 54222,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        73,
+        84,
+        668,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    },
+    {
+      "id": "20",
+      "slug": "airplane",
+      "name_ja": "飛行機",
+      "input_png": "asset-source/collection/04_super_robot_equipped/png/20_airplane_super_robot_equipped.png",
+      "input_png_sha256": "f8bce479be3b0d6f367d86c32e739460a21cb6b27a02f7bf252579c806498cbf",
+      "input_png_bytes": 1110474,
+      "output_webp": "asset-source/collection/04_super_robot_equipped/webp/20_airplane_super_robot_equipped.webp",
+      "dist_webp": "dist/assets/collection/04_super_robot_equipped/20_airplane_super_robot_equipped.webp",
+      "output_webp_sha256": "73115e3b6f450c7199fd04014da8f85aca31ac3ac0f491f9d179f2ee26e646e7",
+      "output_webp_bytes": 53114,
+      "decoded_size": [
+        768,
+        768
+      ],
+      "decoded_mode": "RGBA",
+      "alpha_bbox": [
+        54,
+        122,
+        627,
+        713
+      ],
+      "metadata_keys": [],
+      "asset_source_dist_byte_identical": true
+    }
+  ],
+  "summary": {
+    "count": 20,
+    "total_webp_bytes": 1074290,
+    "asset_source_dist_sha256_matches": 20
+  }
+}

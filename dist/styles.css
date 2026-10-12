@@ -755,6 +755,7 @@ button { touch-action: manipulation; }
   position: absolute; display: block; height: auto; pointer-events: none;
 }
 .play-screen .answer-character { z-index: 2; }
+.play-screen .answer-character.is-equipped-super-robot { transform-origin:center bottom; }
 .play-screen .answer-bubble { z-index: 3; }
 .play-screen .answer-character[hidden], .play-screen .answer-bubble[hidden] { display: none; }
 .play-screen .idle-guide { position:absolute; z-index:15; display:block; font-size:82px; line-height:1; pointer-events:none; transform:translate(-50%,-50%) rotate(-135deg); transform-origin:center; filter:drop-shadow(0 4px 3px rgba(0,35,90,.45)); animation:idle-guide-tap 0.9s ease-in-out infinite; }
@@ -1694,6 +1695,17 @@ button { touch-action: manipulation; }
 .reward-stage[data-stage="2"] { --art-left:27%; --art-top:32%; --art-width:46%; --art-height:41%; }
 .reward-stage[data-stage="3"] { --art-left:28%; --art-top:22%; --art-width:44%; --art-height:55%; }
 .reward-stage[data-stage="4"] { --art-left:29%; --art-top:29%; --art-width:42%; --art-height:43%; }
+/* Keep the Stage 3 super robot and Stage 4 equipment artwork centred inside
+   their shared boxes. Earlier generic stage rules used right-aligned
+   object-position, which made square transparent artwork appear shifted even
+   though the box itself was centred. No vehicle-specific offsets are used. */
+.reward-stage[data-stage="3"] #reward-image,
+.reward-stage[data-stage="4"] #reward-image {
+  left:50%;
+  object-position:center center;
+  transform:translateX(-50%);
+  transform-origin:center center;
+}
 .reward-stage[data-stage="5"] #reward-backplate { object-fit:contain; }
 .reward-stage[data-stage="5"] #reward-image { left:12.43%; top:14.27%; width:68%; height:68%; object-fit:fill; }
 .reward-stage #reward-next-vehicle-overlay { position:absolute; display:block; z-index:4; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; transform:none; transform-origin:center; animation:none; filter:none; pointer-events:none; }
@@ -1984,6 +1996,11 @@ button { touch-action: manipulation; }
 }
 .result-screen-new .result-new-progress-vehicle { display:grid; grid-template-rows:1fr auto; min-width:0; padding:17px 10px 12px; place-items:center; }
 .result-screen-new .result-new-progress-vehicle img { width:min(85%,250px); height:142px; object-fit:contain; filter:drop-shadow(0 6px 5px rgba(0,50,110,.2)); }
+.result-screen-new .result-new-progress-vehicle img.is-equipped-super-robot,
+.result-screen-new .result-new-get-card > img.is-equipped-super-robot {
+  transform:scale(var(--equipped-super-robot-eye-scale,1));
+  transform-origin:center bottom;
+}
 .result-screen-new .result-new-progress-vehicle span { width:220px; max-width:94%; padding:2px 0; border:0; border-radius:0; color:#073b91; background:transparent; box-shadow:none; font-size:clamp(20px,2.05vw,29px); font-weight:1000; line-height:1.15; text-align:center; text-shadow:none; white-space:nowrap; }
 .result-screen-new .result-new-meter { display:grid; grid-template-rows:auto 1fr; justify-items:center; padding:15px 14px 12px; border-left:2px solid #d8eaff; color:#073b91; }
 .result-screen-new .result-new-meter > b { font-size:clamp(20px,2vw,28px); line-height:1; }
@@ -2219,6 +2236,7 @@ button { touch-action: manipulation; }
    eight-pixel top/bottom safety zone without per-vehicle scaling rules. */
 .card-vehicle.is-evolved-form { width:100%; height:calc(100% - 16px); max-width:100%; max-height:calc(100% - 16px); align-self:center; }
 .card-vehicle.is-robot-form { transform:scale(1.5); transform-origin:center; }
+.card-vehicle.is-equipped-super-robot { transform:scale(var(--equipped-super-robot-eye-scale,1)); transform-origin:center bottom; }
 .card-vehicle.is-pre-friendship { filter:grayscale(1); }
 .card-master-medal-bg { position:absolute; z-index:0; inset:4px; width:calc(100% - 8px); height:calc(100% - 8px); object-fit:contain; opacity:.36; filter:brightness(1.35) saturate(1.2) drop-shadow(0 0 5px rgba(67,224,255,.9)); }
 /* Locked cards retain only their silhouette treatment.  Their geometry is
