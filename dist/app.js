@@ -112,7 +112,21 @@
   const answerArtSuffixes = [null, "", "vehicle", "robot", "super_robot", "super_robot_equipped"];
   const answerBubbleFiles = [null, null, "stage2_vehicle_speech_bubble.webp", "stage3_robot_speech_bubble.webp", "stage4_super_robot_speech_bubble.webp", "stage5_super_robot_equipped_speech_bubble.webp"];
   const answerBubblePositions = [null, null, { top:305, width:400 }, { top:235, width:410 }, { top:null, width:420 }, { top:null, width:420 }];
-  const answerArtCanvasScales = [0, 0, 0.39, 0.36, 0.55, 0.55];
+  const answerArtCanvasScales = [0, 0, 0.39, 0.36];
+  // These four settings are the only placement inputs for the two super-robot
+  // series. They deliberately describe the full square image canvas; vehicle
+  // identity, alpha bounds, feet, centre of mass, and visible pixels never
+  // participate in placement.
+  const superRobotDisplaySettings = Object.freeze({
+    answer: Object.freeze({
+      superRobot: Object.freeze({ scale:0.55, x:138.15, y:278.3 }),
+      superRobotEquipped: Object.freeze({ scale:0.55, x:138.15, y:278.3 })
+    }),
+    collectionDetail: Object.freeze({
+      superRobot: Object.freeze({ scale:2, x:"0%", y:"8%" }),
+      superRobotEquipped: Object.freeze({ scale:2, x:"0%", y:"8%" })
+    })
+  });
   const listedTwoDigitQuotientProblems = [
     [20, 2], [22, 2], [24, 2], [26, 2], [28, 2], [40, 2], [42, 2], [44, 2], [46, 2], [48, 2],
     [60, 2], [62, 2], [64, 2], [66, 2], [68, 2], [80, 2], [82, 2], [84, 2], [86, 2], [88, 2],
@@ -593,6 +607,11 @@
     if (stage === 2) return vehicleArtworkPath(vehicleIndex).replace(/^\.\//, "");
     const stem = vehicles[vehicleIndex].stem;
     return `${answerArtFolders[stage]}/${stem}_${answerArtSuffixes[stage]}.webp`;
+  }
+  function superRobotSeriesForStage(stage) {
+    if (stage === 4) return "superRobot";
+    if (stage === 5) return "superRobotEquipped";
+    return null;
   }
   function preloadVehicleVisuals(vehicleIndex, stage) {
     const bubblePath = stage >= 2 ? `./assets/ui/speech_bubble/${answerBubbleFiles[stage]}` : null;
@@ -1090,16 +1109,23 @@
       // keeps the approved 1254-square logical framing. Use that logical size
       // for common placement so encoded resolution does not alter screen size.
       const logicalCanvasSize = 1254;
-      const scale = answerArtCanvasScales[stage];
+      const superRobotSeries = superRobotSeriesForStage(stage);
+      const sharedDisplay = superRobotSeries ? superRobotDisplaySettings.answer[superRobotSeries] : null;
+      const scale = sharedDisplay?.scale ?? answerArtCanvasScales[stage];
       const flip = stage <= 3;
       stagedCharacter.alt = `${vehicle.nameJa}の${["", "", "乗り物", "ロボット", "スーパーロボット", "装備付きスーパーロボット"][stage]}`;
       stagedCharacter.style.width = `${logicalCanvasSize * scale}px`;
-      // Keep every stage on the same centre line: halfway between the play
-      // stage's left edge and the existing keyboard area's left edge.
-      const keypadLeft = Number.parseFloat(window.getComputedStyle(document.querySelector(".game-area")).left);
-      const characterCenterX = (Number.isFinite(keypadLeft) ? keypadLeft / 2 : 380) + 100;
-      stagedCharacter.style.left = `${characterCenterX - logicalCanvasSize * scale / 2}px`;
-      stagedCharacter.style.top = `${968 - logicalCanvasSize * scale}px`;
+      if (sharedDisplay) {
+        stagedCharacter.style.left = `${sharedDisplay.x}px`;
+        stagedCharacter.style.top = `${sharedDisplay.y}px`;
+      } else {
+        // Preserve the existing vehicle and robot placement. Only the two
+        // super-robot series use the explicit shared settings above.
+        const keypadLeft = Number.parseFloat(window.getComputedStyle(document.querySelector(".game-area")).left);
+        const characterCenterX = (Number.isFinite(keypadLeft) ? keypadLeft / 2 : 380) + 100;
+        stagedCharacter.style.left = `${characterCenterX - logicalCanvasSize * scale / 2}px`;
+        stagedCharacter.style.top = `${968 - logicalCanvasSize * scale}px`;
+      }
       stagedCharacter.style.setProperty("--character-static-transform", flip ? "scaleX(-1)" : "none");
       stagedCharacter.style.transform = "var(--character-static-transform)";
       stagedCharacter.dataset.answerStage = String(stage);
@@ -3258,6 +3284,19 @@
     if (threeUp) superArt.alt = progress.stage >= 5
       ? `${vehicle.nameJa}のスペシャル装備付きスーパーロボット`
       : `${vehicle.nameJa}のスーパーロボット`;
+    if (threeUp) {
+      const superRobotSeries = progress.stage >= 5 ? "superRobotEquipped" : "superRobot";
+      const sharedDisplay = superRobotDisplaySettings.collectionDetail[superRobotSeries];
+      superArt.dataset.displaySeries = superRobotSeries;
+      superArt.style.setProperty("--detail-super-scale", String(sharedDisplay.scale));
+      superArt.style.setProperty("--detail-super-x", sharedDisplay.x);
+      superArt.style.setProperty("--detail-super-y", sharedDisplay.y);
+    } else {
+      delete superArt.dataset.displaySeries;
+      superArt.style.removeProperty("--detail-super-scale");
+      superArt.style.removeProperty("--detail-super-x");
+      superArt.style.removeProperty("--detail-super-y");
+    }
 
     const foregroundPaths = [logoPath, vehiclePath, robotPath, superPath, medalPath, medalHologramPath].filter(Boolean);
     try {
