@@ -22,7 +22,7 @@
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; min-height: 100%; }
+html, body { margin: 0; min-height: 100%; touch-action: manipulation; }
 
 body {
   min-height: 100dvh;
@@ -36,6 +36,7 @@ button { touch-action: manipulation; }
 
 .app {
   position: relative;
+  touch-action: manipulation;
   width: 100vw;
   height: 100dvh;
   min-height: 520px;
