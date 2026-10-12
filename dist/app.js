@@ -127,7 +127,7 @@
     }),
     collectionDetail: Object.freeze({
       superRobot: Object.freeze({ scale:2, x:"0%", y:"8%" }),
-      superRobotEquipped: Object.freeze({ scale:2 * equippedSuperRobotEyeScale, x:"0%", y:"0%" })
+      superRobotEquipped: Object.freeze({ scale:2 * equippedSuperRobotEyeScale, x:"10.5%", y:"8%" })
     })
   });
   const listedTwoDigitQuotientProblems = [
