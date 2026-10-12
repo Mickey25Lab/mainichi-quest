@@ -22,6 +22,17 @@
 
 * { box-sizing: border-box; touch-action: manipulation; }
 
+#app {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
 html, body { margin: 0; min-height: 100%; }
 
 body {
