@@ -385,10 +385,11 @@
     $("play-background-next").hidden = true;
   }
   const touchZoomDiagnosticsEnabled = new URLSearchParams(window.location.search).get("touch-zoom-diagnostics") === "1";
-  const touchZoomDiagnosticsStorageKey = "touch-zoom-diagnostics-v1";
   let touchZoomDiagnostics = [];
   let touchZoomDiagnosticSequence = 0;
   let lastTouchEndAt = null;
+  let lastViewportResizeLogAt = 0;
+
   function touchZoomViewportSnapshot() {
     const vv = window.visualViewport;
     return {
@@ -400,26 +401,37 @@
       visualViewportHeight: vv?.height ?? null,
       visualViewportScale: vv?.scale ?? null,
       visualViewportOffsetLeft: vv?.offsetLeft ?? null,
-      visualViewportOffsetTop: vv?.offsetTop ?? null,
-      devicePixelRatio: window.devicePixelRatio,
-      scrollX: window.scrollX,
-      scrollY: window.scrollY
+      visualViewportOffsetTop: vv?.offsetTop ?? null
     };
   }
+
   function touchZoomTargetSnapshot(target) {
-    if (!(target instanceof Element)) return { tagName: null, id: null, className: null };
-    const style = getComputedStyle(target);
+    if (!(target instanceof Element)) return { tagName: null, id: null, className: null, touchAction: null };
     return {
       tagName: target.tagName,
       id: target.id || null,
       className: typeof target.className === "string" ? target.className : null,
-      touchAction: style.touchAction || null
+      touchAction: getComputedStyle(target).touchAction || null
     };
   }
+
   function recordTouchZoomDiagnostic(eventName, event = null, detail = {}) {
     if (!touchZoomDiagnosticsEnabled) return;
-    const changedTouch = event?.changedTouches?.[0] || null;
     const now = performance.now();
+
+    // visualViewport.resize can fire in bursts during zoom; cap it to 1 entry / 80ms.
+    if (eventName === "visualViewport.resize") {
+      if (now - lastViewportResizeLogAt < 80) return;
+      lastViewportResizeLogAt = now;
+    }
+
+    const changedTouch = event?.changedTouches?.[0] || null;
+    const includeViewport = eventName === "touchend"
+      || eventName === "dblclick"
+      || eventName.startsWith("gesture")
+      || eventName === "visualViewport.resize"
+      || eventName === "window.resize";
+
     const entry = {
       sequence: ++touchZoomDiagnosticSequence,
       ts: new Date().toISOString(),
@@ -437,45 +449,62 @@
       scale: event?.scale ?? null,
       rotation: event?.rotation ?? null,
       sincePreviousTouchEndMs: eventName === "touchend" && lastTouchEndAt !== null ? Math.round(now - lastTouchEndAt) : null,
-      viewport: touchZoomViewportSnapshot(),
+      viewport: includeViewport ? touchZoomViewportSnapshot() : null,
       ...detail
     };
+
     if (eventName === "touchend") lastTouchEndAt = now;
     touchZoomDiagnostics.push(entry);
-    if (touchZoomDiagnostics.length > 600) touchZoomDiagnostics = touchZoomDiagnostics.slice(-600);
-    try { localStorage.setItem(touchZoomDiagnosticsStorageKey, JSON.stringify(touchZoomDiagnostics)); } catch (_) {}
+    if (touchZoomDiagnostics.length > 240) touchZoomDiagnostics = touchZoomDiagnostics.slice(-240);
   }
+
   function setupTouchZoomDiagnostics() {
     if (!touchZoomDiagnosticsEnabled) return;
-    try {
-      const stored = JSON.parse(localStorage.getItem(touchZoomDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) touchZoomDiagnostics = stored.slice(-600);
-    } catch (_) {}
-    touchZoomDiagnosticSequence = touchZoomDiagnostics.reduce((max, entry) => Math.max(max, Number(entry.sequence) || 0), 0);
 
-    const eventNames = ["touchstart", "touchmove", "touchend", "touchcancel", "pointerdown", "pointerup", "click", "dblclick", "gesturestart", "gesturechange", "gestureend"];
-    eventNames.forEach((eventName) => {
-      document.addEventListener(eventName, (event) => recordTouchZoomDiagnostic(eventName, event), { capture: true, passive: true });
-    });
+    // Keep the diagnostic path intentionally light so it cannot starve image decode/preload.
+    ["touchstart", "touchend", "touchcancel", "pointerdown", "pointerup", "click", "dblclick", "gesturestart", "gesturechange", "gestureend"]
+      .forEach((eventName) => {
+        document.addEventListener(eventName, (event) => recordTouchZoomDiagnostic(eventName, event), { capture: true, passive: true });
+      });
+
     window.visualViewport?.addEventListener("resize", (event) => recordTouchZoomDiagnostic("visualViewport.resize", event), { passive: true });
-    window.visualViewport?.addEventListener("scroll", (event) => recordTouchZoomDiagnostic("visualViewport.scroll", event), { passive: true });
     window.addEventListener("resize", (event) => recordTouchZoomDiagnostic("window.resize", event), { passive: true });
 
     const style = document.createElement("style");
     style.textContent = ".touch-zoom-diagnostics-button{position:fixed;right:8px;top:44px;z-index:2147483647;padding:6px 8px;border:1px solid #fff;border-radius:6px;background:#3a1c5c;color:#fff;font:700 12px sans-serif}.touch-zoom-diagnostics-panel{position:fixed;inset:80px 8px 8px;z-index:2147483647;display:flex;flex-direction:column;padding:8px;border:1px solid #fff;border-radius:8px;background:rgba(20,8,32,.97);color:#fff;font:12px/1.35 ui-monospace,monospace}.touch-zoom-diagnostics-panel[hidden]{display:none}.touch-zoom-diagnostics-actions{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}.touch-zoom-diagnostics-actions button{font:inherit}.touch-zoom-diagnostics-output{flex:1;min-height:0;margin:0;overflow:auto;white-space:pre-wrap;word-break:break-word}";
     document.head.appendChild(style);
+
     const button = document.createElement("button");
-    button.type = "button"; button.className = "touch-zoom-diagnostics-button"; button.textContent = "TOUCH LOG";
+    button.type = "button";
+    button.className = "touch-zoom-diagnostics-button";
+    button.textContent = "TOUCH LOG";
+
     const panel = document.createElement("section");
-    panel.className = "touch-zoom-diagnostics-panel"; panel.hidden = true;
-    const actions = document.createElement("div"); actions.className = "touch-zoom-diagnostics-actions";
-    const latest = document.createElement("button"); latest.type = "button"; latest.textContent = "Latest";
-    const copy = document.createElement("button"); copy.type = "button"; copy.textContent = "Copy Log";
-    const clear = document.createElement("button"); clear.type = "button"; clear.textContent = "Clear";
-    const close = document.createElement("button"); close.type = "button"; close.textContent = "Close";
-    const output = document.createElement("pre"); output.className = "touch-zoom-diagnostics-output";
-    const render = () => { output.textContent = JSON.stringify(touchZoomDiagnostics.slice(-180), null, 2); };
-    latest.addEventListener("click", render);
+    panel.className = "touch-zoom-diagnostics-panel";
+    panel.hidden = true;
+
+    const actions = document.createElement("div");
+    actions.className = "touch-zoom-diagnostics-actions";
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy Log";
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Clear";
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Close";
+
+    const output = document.createElement("pre");
+    output.className = "touch-zoom-diagnostics-output";
+
+    const render = () => {
+      output.textContent = JSON.stringify(touchZoomDiagnostics.slice(-120), null, 2);
+    };
+
     copy.addEventListener("click", async () => {
       const text = JSON.stringify(touchZoomDiagnostics, null, 2);
       try {
@@ -486,19 +515,22 @@
         window.prompt("TOUCH LOG", text);
       }
     });
+
     clear.addEventListener("click", () => {
       touchZoomDiagnostics = [];
       lastTouchEndAt = null;
-      try { localStorage.removeItem(touchZoomDiagnosticsStorageKey); } catch (_) {}
+      lastViewportResizeLogAt = 0;
       recordTouchZoomDiagnostic("log-cleared");
       render();
     });
+
     close.addEventListener("click", () => { panel.hidden = true; });
     button.addEventListener("click", () => { panel.hidden = false; render(); });
-    actions.append(latest, copy, clear, close);
+
+    actions.append(copy, clear, close);
     panel.append(actions, output);
     document.body.append(button, panel);
-    recordTouchZoomDiagnostic("diagnostics-enabled", null, { href: window.location.href });
+    recordTouchZoomDiagnostic("diagnostics-enabled", null, { href: window.location.href, viewport: touchZoomViewportSnapshot() });
   }
 
   const imagePreloads = new Map();
