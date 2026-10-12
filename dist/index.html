@@ -252,18 +252,20 @@
           <button class="collection-end" id="collection-exit" aria-label="コレクションを閉じる">×</button>
         </header>
         <div class="collection-grid" id="collection-grid"></div>
-        <nav class="collection-categories" aria-label="コレクションのカテゴリ">
-          <button class="category-button selected" data-category="vehicle" aria-label="乗り物" aria-pressed="true"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19h22l-2-8H9l-4 8Zm3 0v3m16-3v3M9 25a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></button>
-          <button class="category-button" data-category="robot" aria-label="ロボット" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#robot"></use></svg></button>
-          <button class="category-button" data-category="super-robot" aria-label="スーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 2 2.5 7.5L26 7l-3 7 7 2-7 2 3 7-7.5-2.5L16 30l-2.5-7.5L6 25l3-7-7-2 7-2-3-7 7.5 2.5L16 2Z"/><path d="M11 14h10v7H11z"/></svg></button>
-          <button class="category-button" data-category="equipment" aria-label="スーパー装備" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m17 2-3 10h-8l10 18 2-12h8L17 2Z"/></svg></button>
-          <button class="category-button" data-category="medal" aria-label="メダル" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg></button>
-        </nav>
+        
         <div class="collection-time collection-time-panel">あと<strong id="collection-seconds">60</strong>秒</div>
         <div class="collection-exit-confirm" id="collection-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="collection-exit-question" hidden>
           <div class="collection-exit-box"><p id="collection-exit-question">コレクションを見るのをやめて<br>トップに戻りますか？</p><div><button id="collection-exit-yes">トップに戻る</button><button id="collection-exit-no">コレクションを見る</button></div></div>
         </div>
       </div>
+      <nav class="collection-categories collection-screen-nav" aria-label="コレクションのカテゴリ">
+          <button class="category-button category-button-summary selected" data-category="summary" aria-label="サマリ" aria-pressed="true"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="10" height="9" rx="1"/><rect x="18" y="5" width="10" height="9" rx="1"/><rect x="4" y="18" width="10" height="9" rx="1"/><rect x="18" y="18" width="10" height="9" rx="1"/></svg></button>
+          <button class="category-button" data-category="vehicle" aria-label="乗り物" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19h22l-2-8H9l-4 8Zm3 0v3m16-3v3M9 25a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></button>
+          <button class="category-button" data-category="robot" aria-label="ロボット" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#robot"></use></svg></button>
+          <button class="category-button" data-category="super-robot" aria-label="スーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 12 12 7l4 2 4-2 4 5-2 11-6 4-6-4-2-11Z"/><path d="M11 14h10M12 18h3m2 0h3M13 22h6"/><path d="m9 10-3-3m17 3 3-3"/></svg></button>
+          <button class="category-button" data-category="equipment" aria-label="スペシャル装備付きスーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 5l8 8-3 3-8-8 3-3Zm18 0-8 8 3 3 8-8-3-3ZM11 17l-5 5m15-5 5 5M5 21l3 3m19-3-3 3"/><path d="M13 13l6 6m0-6-6 6"/></svg></button>
+          <button class="category-button" data-category="medal" aria-label="マスターメダル" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg></button>
+        </nav>
     </section>
 
     <section class="screen collection-detail-screen" id="collection-detail-screen" aria-label="コレクション詳細">
@@ -298,7 +300,16 @@
             </div>
           </div>
         </div>
+        
       </div>
+      <nav class="collection-categories collection-screen-nav collection-categories-detail" aria-label="コレクションのカテゴリ">
+          <button class="category-button category-button-summary" data-category="summary" aria-label="サマリ" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="10" height="9" rx="1"/><rect x="18" y="5" width="10" height="9" rx="1"/><rect x="4" y="18" width="10" height="9" rx="1"/><rect x="18" y="18" width="10" height="9" rx="1"/></svg></button>
+          <button class="category-button" data-category="vehicle" aria-label="乗り物" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19h22l-2-8H9l-4 8Zm3 0v3m16-3v3M9 25a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></button>
+          <button class="category-button" data-category="robot" aria-label="ロボット" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#robot"></use></svg></button>
+          <button class="category-button" data-category="super-robot" aria-label="スーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 12 12 7l4 2 4-2 4 5-2 11-6 4-6-4-2-11Z"/><path d="M11 14h10M12 18h3m2 0h3M13 22h6"/><path d="m9 10-3-3m17 3 3-3"/></svg></button>
+          <button class="category-button" data-category="equipment" aria-label="スペシャル装備付きスーパーロボット" aria-pressed="false"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 5l8 8-3 3-8-8 3-3Zm18 0-8 8 3 3 8-8-3-3ZM11 17l-5 5m15-5 5 5M5 21l3 3m19-3-3 3"/><path d="M13 13l6 6m0-6-6 6"/></svg></button>
+          <button class="category-button" data-category="medal" aria-label="マスターメダル" aria-pressed="false"><svg class="ui-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg></button>
+        </nav>
     </section>
 
     <div class="time-up" id="time-up" hidden>じかんだよ！<br><span>またつぎにみよう！</span></div>
