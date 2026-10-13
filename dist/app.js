@@ -1727,8 +1727,116 @@
       startTimer();
     });
   }
-  function openModeSelect() { recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot()); showFixedScreenWhenReady("mode-select-screen"); }
-  function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
+  const childEnergyPresentation = Object.freeze({
+    "almost-zero": Object.freeze({ label:"ほんのちょっと", multiplier:.2, level:1 }),
+    small: Object.freeze({ label:"ちょっと", multiplier:.6, level:2 }),
+    medium: Object.freeze({ label:"ふつう", multiplier:1, level:3 }),
+    large: Object.freeze({ label:"いっぱい", multiplier:1.6, level:4 })
+  });
+
+  function activeLearningSettings() {
+    const profileId = profileStore.getActiveProfileId();
+    if (!profileId) return { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} };
+    try { return profileStore.getProfileLearningSettings(profileId); }
+    catch (_) { return { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} }; }
+  }
+
+  function normalizedMissionTarget(settings, modeId) {
+    const raw = Number(settings.dailyTargetCounts?.[modeId]);
+    if (Number.isInteger(raw)) return Math.max(0, Math.min(9, raw));
+    return settings.enabledModes?.[modeId] === false ? 0 : 1;
+  }
+
+  function dailyMissionState() {
+    const today = japanDateKey();
+    let mission;
+    try { mission = profileStore.getDailyMission(); } catch (_) { mission = null; }
+    if (!mission || mission.date !== today || !mission.completedCounts || typeof mission.completedCounts !== "object") {
+      mission = { date:today, completedCounts:{} };
+      try { profileStore.setDailyMission(mission); } catch (_) {}
+    }
+    return mission;
+  }
+
+  function missionOverview() {
+    const settings = activeLearningSettings();
+    const mission = dailyMissionState();
+    const items = parentModeDefinitions.map((mode) => {
+      const target = normalizedMissionTarget(settings, mode.id);
+      const completed = Math.max(0, Number(mission.completedCounts?.[mode.id]) || 0);
+      const remaining = Math.max(0, target - completed);
+      const energyId = childEnergyPresentation[settings.energyMultipliers?.[mode.id]]
+        ? settings.energyMultipliers[mode.id]
+        : "medium";
+      return { ...mode, target, completed, remaining, energyId };
+    }).filter((item) => item.target > 0);
+    return {
+      settings,
+      mission,
+      items,
+      allComplete: items.length > 0 && items.every((item) => item.remaining === 0)
+    };
+  }
+
+  function renderModeSelectMission() {
+    const overview = missionOverview();
+    document.querySelectorAll(".mode-select-choice[data-mode]").forEach((button) => {
+      const item = overview.items.find((entry) => entry.id === button.dataset.mode);
+      button.hidden = !item;
+      if (!item) return;
+      const completed = item.remaining === 0;
+      button.disabled = completed && !overview.allComplete;
+      button.classList.toggle("is-complete", completed);
+      button.classList.toggle("is-free-play", overview.allComplete);
+      const remaining = button.querySelector(".mode-select-remaining");
+      remaining.textContent = completed ? "できた！" : `あと${item.remaining}回`;
+      const energy = button.querySelector(".mode-select-energy");
+      const presentation = childEnergyPresentation[item.energyId];
+      energy.className = `mode-select-energy energy-level-${presentation.level}`;
+      energy.innerHTML = `<i aria-hidden="true"></i><span>${presentation.label}</span>`;
+      energy.setAttribute("aria-label", `エネルギーのたまりやすさ ${presentation.label}`);
+    });
+    const banner = $("mode-select-mission-complete");
+    banner.hidden = !overview.allComplete;
+  }
+
+  function isModeAvailableForMission(mode) {
+    const overview = missionOverview();
+    const item = overview.items.find((entry) => entry.id === mode);
+    if (!item) return false;
+    return overview.allComplete || item.remaining > 0;
+  }
+
+  function completeDailyMissionRound(mode) {
+    const overview = missionOverview();
+    const item = overview.items.find((entry) => entry.id === mode);
+    if (!item || overview.allComplete || item.remaining <= 0) return;
+    const mission = overview.mission;
+    mission.completedCounts[mode] = item.completed + 1;
+    try { profileStore.setDailyMission(mission); } catch (_) {}
+  }
+
+  function energyPresentationForMode(mode) {
+    const settings = activeLearningSettings();
+    return childEnergyPresentation[settings.energyMultipliers?.[mode]] || childEnergyPresentation.medium;
+  }
+
+  function scaledEnergyGain(baseAmount, mode = state.mode) {
+    const amount = Number(baseAmount) || 0;
+    if (amount <= 0) return 0;
+    return Math.max(1, Math.round(amount * energyPresentationForMode(mode).multiplier));
+  }
+
+  function openModeSelect() {
+    recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot());
+    renderModeSelectMission();
+    showFixedScreenWhenReady("mode-select-screen");
+  }
+  function startGameFromGesture(mode) {
+    if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
+    recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
+    primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode);
+  }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
@@ -2781,7 +2889,8 @@
       }
     } else if (!progress.masterMedal) {
       const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
-      energyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
+      const baseEnergyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
+      energyGain = scaledEnergyGain(baseEnergyGain, state.mode);
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
       else {
@@ -3092,6 +3201,7 @@
     displayQuestion(state.queue.shift());
   }
   function finishRound() {
+    completeDailyMissionRound(state.mode);
     state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer();
     $("elapsed-time").textContent = formatTime(state.finalElapsedMs); $("result-time").textContent = formatTime(state.finalElapsedMs);
     const previousBest = getBestTime();
@@ -4237,7 +4347,11 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture("game"); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => {
+    const mode = state.mode || "normal";
+    if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
+    primeBackgroundMusicFromGesture("game"); beginRound(mode);
+  });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
