@@ -138,6 +138,23 @@ button, input { font: inherit; }
 .admin-settings-button:hover,
 .admin-settings-button:focus-visible { opacity:.9; border-color:rgba(255,255,255,.78); outline:none; }
 .admin-card > button[type="submit"] { width:100%; margin-top:18px; }
+.admin-pin-keypad {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.profile-card .admin-pin-keypad button {
+  min-height:58px;
+  padding:8px;
+  font-size:26px;
+  border-radius:14px;
+  background:#167bd6;
+}
+.profile-card .admin-pin-keypad .admin-pin-keypad-action {
+  background:#60768a;
+  font-size:16px;
+}
 .admin-setting-row {
   display:flex; align-items:center; justify-content:space-between; gap:20px;
   margin:24px 0; padding:18px; border:1px solid #c8dbe8; border-radius:14px;
@@ -153,6 +170,9 @@ button, input { font: inherit; }
 }
 .profile-card .admin-qa-toggle[aria-checked="true"] { padding:4px 35px 4px 9px; background:#168650; text-align:left; }
 .profile-card .admin-qa-toggle[aria-checked="true"]::before { left:46px; }
+.admin-action-list { display:grid; gap:10px; margin:0 0 18px; }
+.profile-card .admin-action-button { width:100%; background:#167bd6; text-align:left; font-size:16px; }
+.admin-action-status { margin:0 0 16px!important; padding:10px 12px; border-radius:10px; background:#e8f5ff; color:#173e5e; font-size:14px; font-weight:700; }
 .profile-card .admin-reset-button { width:100%; background:#b9363e; }
 .admin-confirm-card { text-align:center; }
 .admin-confirm-card h2 { font-size:25px; line-height:1.45; }

@@ -45,11 +45,13 @@ async function createInitialProfile(page, name) {
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
+async function enterAdminPinDigits(page, pin) {
+  for (const digit of String(pin)) await page.locator(`[data-admin-pin-digit="${digit}"]`).click();
+}
 async function unlockAdmin(page, pin = "3710") {
   await page.locator("#admin-settings-button").click();
   await page.locator("#admin-pin-overlay").waitFor({ state: "visible" });
-  await page.locator("#admin-pin-input").fill(pin);
-  await page.locator("#admin-pin-form button[type=submit]").click();
+  await enterAdminPinDigits(page, pin);
   if (pin === "3710") await page.locator("#admin-panel-overlay").waitFor({ state: "visible" });
 }
 
@@ -81,17 +83,72 @@ test("admin PIN gates QA and the old direct controls are absent", async (t) => {
   assert.equal(await page.locator("#developer-reset-button").count(), 0);
   assert.equal(await page.locator("#developer-reset-confirm").count(), 0);
   assert.equal(await page.locator("#admin-settings-button").isVisible(), true);
+  await page.locator("#admin-settings-button").click();
+  await page.locator("#admin-pin-overlay").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#admin-pin-input").getAttribute("readonly"), "");
+  assert.equal(await page.locator("[data-admin-pin-digit]").count(), 10);
+  await page.locator("#admin-pin-cancel").click();
 
   await unlockAdmin(page, "1234");
   assert.equal(await page.locator("#admin-panel-overlay").isVisible(), false);
   assert.match(await page.locator("#admin-pin-error").textContent(), /ちがいます/);
-  await page.locator("#admin-pin-input").fill("371");
-  await page.locator("#admin-pin-form button[type=submit]").click();
+  assert.equal(await page.locator("#admin-pin-input").inputValue(), "");
+  await enterAdminPinDigits(page, "371");
   assert.equal(await page.locator("#admin-panel-overlay").isVisible(), false);
-  await page.locator("#admin-pin-input").fill("3710");
-  await page.locator("#admin-pin-form button[type=submit]").click();
+  await page.locator("#admin-pin-backspace").click();
+  await page.locator('[data-admin-pin-digit="1"]').click();
+  assert.equal(await page.locator("#admin-pin-input").inputValue(), "371");
+  await page.locator("#admin-pin-clear").click();
+  assert.equal(await page.locator("#admin-pin-input").inputValue(), "");
+  await enterAdminPinDigits(page, "3710");
   await page.locator("#admin-panel-overlay").waitFor({ state: "visible" });
   assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "false");
+  assert.deepEqual(errors, []);
+});
+
+test("admin can re-enable today's collection and opening movie only for the active profile", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "A");
+
+  const seeded = await page.evaluate(() => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const profileA = store.getActiveProfile();
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone:"Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit" }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]));
+    const dateKey = `${values.year}-${values.month}-${values.day}`;
+    store.setTopCollectionLastUsedJst(dateKey);
+    store.setOpeningMovieLastPlayedJst(dateKey);
+    const profileB = store.createProfile("B");
+    store.setTopCollectionLastUsedJst(dateKey);
+    store.setOpeningMovieLastPlayedJst(dateKey);
+    store.setActiveProfile(profileA.profileId);
+    return { profileAId: profileA.profileId, profileBId: profileB.profileId, dateKey };
+  });
+  await page.reload();
+  assert.equal(await page.locator("#top-collection-button").isDisabled(), true);
+
+  await unlockAdmin(page);
+  await page.locator("#admin-reenable-collection").click();
+  assert.equal(await page.locator("#top-collection-button").isDisabled(), false);
+  await page.locator("#admin-reenable-opening-movie").click();
+
+  const after = await page.evaluate(({ profileAId, profileBId }) => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const active = { collection: store.getTopCollectionLastUsedJst(), movie: store.getOpeningMovieLastPlayedJst() };
+    store.setActiveProfile(profileBId);
+    const other = { collection: store.getTopCollectionLastUsedJst(), movie: store.getOpeningMovieLastPlayedJst() };
+    store.setActiveProfile(profileAId);
+    return { active, other };
+  }, seeded);
+  assert.deepEqual(after.active, { collection: null, movie: null });
+  assert.deepEqual(after.other, { collection: seeded.dateKey, movie: seeded.dateKey });
+
+  await page.reload();
+  assert.equal(await page.locator("#top-collection-button").isDisabled(), false);
   assert.deepEqual(errors, []);
 });
 
