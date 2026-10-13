@@ -90,13 +90,15 @@ test("acquisition history is ordered, deduplicated, and isolated by profile", ()
     { sequence: 1, vehicleId: "01_patrol_car", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 },
     { sequence: 2, vehicleId: "01_patrol_car", acquisitionType: "friendship_complete", displayForm: "vehicle", displayStage: 2 }
   ]);
+  assert.equal(store.getAcquisitionHistory()[0].source, "normal");
   const profileB = store.createProfile("B");
   assert.deepEqual(store.getAcquisitionHistory(), []);
-  store.appendAcquisitionHistory({ mode: "multiplication", vehicleId: "02_fire_engine", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 });
+  store.appendAcquisitionHistory({ mode: "multiplication", source: "time_bonus", vehicleId: "02_fire_engine", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 });
   store.setActiveProfile(profileA.profileId);
   assert.equal(store.getAcquisitionHistory().length, 2);
   store.setActiveProfile(profileB.profileId);
   assert.equal(store.getAcquisitionHistory().length, 1);
+  assert.equal(store.getAcquisitionHistory()[0].source, "time_bonus");
 });
 
 test("migration and collection fallback do not synthesize acquisition history", () => {
