@@ -2440,11 +2440,13 @@ button, input { font: inherit; }
   font-size:31px;
 }
 .collection-time-panel strong { color:#fff23a; font-size:1.22em; }
-.collection-exit-confirm { position:absolute; inset:0; z-index:15; display:grid; place-items:center; background:rgba(2,11,30,.84); }
-.collection-exit-confirm[hidden] { display:none; }
-.collection-exit-box { width:700px; padding:36px; border:3px solid #86dfff; border-radius:20px; background:#0b316b; box-shadow:0 0 30px #2bc5ff; text-align:center; font-size:27px; font-weight:700; }
-.collection-exit-box div { display:flex; justify-content:center; gap:16px; margin-top:28px; }
-.collection-exit-box button { min-width:240px; padding:13px 22px; border:2px solid #7ddaff; border-radius:12px; color:white; background:#145eaa; cursor:pointer; white-space:nowrap; }
+.collection-exit-confirm { z-index:40; }
+.collection-exit-confirm .quit-confirm-card p { margin-bottom:22px; }
+.collection-exit-confirm .quit-confirm-actions button {
+  min-height:96px;
+  line-height:1.25;
+  white-space:normal;
+}
 
 /* The collection detail view shares the same centered 4:3 viewport as every other game screen. */
 .collection-detail-screen { padding:0; overflow:hidden; background:#000; }
