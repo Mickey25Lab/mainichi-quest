@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.10";
+  const appVersion = "0.1.11";
   const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -3866,6 +3866,19 @@
     $("admin-pin-overlay").hidden = false;
     document.querySelector("[data-admin-pin-digit]")?.focus();
   }
+  async function reloadApplication() {
+    const button = $("top-reload-button");
+    if (button.disabled) return;
+    button.disabled = true;
+    button.setAttribute("aria-label", "再読み込み中");
+    try {
+      const registration = await navigator.serviceWorker?.getRegistration?.();
+      await registration?.update?.();
+    } catch (error) {
+      console.warn("PWA update check failed; reloading current app", error);
+    }
+    window.location.reload();
+  }
   function submitAdminPin() {
     const input = $("admin-pin-input");
     const pin = input.value;
@@ -4010,6 +4023,7 @@
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
+  $("top-reload-button").addEventListener("click", reloadApplication);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
   document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
   $("admin-pin-clear").addEventListener("click", () => {
