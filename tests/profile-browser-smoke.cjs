@@ -138,6 +138,42 @@ test("new profile, profile separation, persistence, and game smoke", async (t) =
   assert.deepEqual(errors, []);
 });
 
+test("a real new acquisition is recorded once and QA preset does not add history", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "履歴確認");
+  await page.locator("#start-button").click();
+  await page.locator("#mode-select-normal").click();
+  await page.locator("#play-screen.active").waitFor();
+  const match = (await page.locator("#problem-card").textContent()).match(/(\d+)\s*÷\s*(\d+)/);
+  assert.ok(match);
+  const dividend = Number(match[1]);
+  const divisor = Number(match[2]);
+  const clickDigits = async (value) => {
+    for (const digit of String(value)) await page.locator(`.number-key[data-number="${digit}"]`).click();
+  };
+  await clickDigits(Math.floor(dividend / divisor));
+  const remainder = dividend % divisor;
+  if (remainder === 0) await page.locator("#no-remainder-key").click();
+  else {
+    await page.locator("#remainder-key").click();
+    await clickDigits(remainder);
+  }
+  await page.waitForFunction(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length === 1);
+  const first = await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory()[0]);
+  assert.equal(first.acquisitionType, "vehicle_discovered");
+  assert.equal(first.mode, "normal");
+  assert.equal(first.sequence, 1);
+  await page.reload();
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 1);
+  await enterQaMode(page);
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 1);
+  assert.deepEqual(errors, []);
+});
+
 test("legacy migration copies progress and keeps legacy keys", async (t) => {
   const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
   t.after(() => browser.close());

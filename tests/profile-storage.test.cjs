@@ -74,6 +74,39 @@ test("new environment creates an empty active profile and survives reload", () =
   assert.equal(reloaded.getActiveProfileId(), profile.profileId);
   assert.equal(reloaded.getActiveProfile().displayName, "すみれ");
   assert.deepEqual(reloaded.getCollectionStages(), [1, 0, 0]);
+  assert.deepEqual(reloaded.getAcquisitionHistory(), []);
+});
+
+test("acquisition history is ordered, deduplicated, and isolated by profile", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  const discovery = { mode: "normal", vehicleId: "01_patrol_car", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 };
+  const friendship = { mode: "normal", vehicleId: "01_patrol_car", acquisitionType: "friendship_complete", displayForm: "vehicle", displayStage: 2 };
+  assert.equal(store.appendAcquisitionHistory(discovery).added, true);
+  assert.equal(store.appendAcquisitionHistory(discovery).added, false);
+  assert.equal(store.appendAcquisitionHistory(friendship).added, true);
+  assert.deepEqual(store.getAcquisitionHistory().map(({ sequence, vehicleId, acquisitionType, displayForm, displayStage }) => ({ sequence, vehicleId, acquisitionType, displayForm, displayStage })), [
+    { sequence: 1, vehicleId: "01_patrol_car", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 },
+    { sequence: 2, vehicleId: "01_patrol_car", acquisitionType: "friendship_complete", displayForm: "vehicle", displayStage: 2 }
+  ]);
+  const profileB = store.createProfile("B");
+  assert.deepEqual(store.getAcquisitionHistory(), []);
+  store.appendAcquisitionHistory({ mode: "multiplication", vehicleId: "02_fire_engine", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 });
+  store.setActiveProfile(profileA.profileId);
+  assert.equal(store.getAcquisitionHistory().length, 2);
+  store.setActiveProfile(profileB.profileId);
+  assert.equal(store.getAcquisitionHistory().length, 1);
+});
+
+test("migration and collection fallback do not synthesize acquisition history", () => {
+  const storage = new MemoryStorage({
+    [legacyKeys.collection]: JSON.stringify([3, 0]),
+    [legacyKeys.rewardProgressPhase1]: JSON.stringify([{ discovered: true }])
+  });
+  const store = makeStore(storage);
+  store.migrateLegacyProfile("引継ぎ");
+  assert.deepEqual(store.getAcquisitionHistory(), []);
 });
 
 test("QA progress snapshots restore reward progress and collection exactly per profile", () => {
@@ -140,6 +173,7 @@ test("admin reset clears only the active profile child data", () => {
     legacyHistory: { played: 4 }, legacyRanking: ["rank"]
   };
   registry.profiles[0].bestRecords.bestTimeMs = 1234;
+  registry.profiles[0].acquisitionHistory = [{ eventKey: "01_patrol_car:vehicle_discovered", sequence: 1, timestamp: "2026-10-13T00:00:00.000Z", mode: "normal", vehicleId: "01_patrol_car", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 }];
   registry.profiles[0].enabledModes = { division: true };
   registry.profiles[0].energyMultipliers = { division: 0.5 };
   storage.setItem(keys.profiles, JSON.stringify(registry));
@@ -160,6 +194,7 @@ test("admin reset clears only the active profile child data", () => {
   assert.equal(resetA.progress.legacyHistory, null);
   assert.equal(resetA.progress.legacyRanking, null);
   assert.equal(resetA.bestRecords.bestTimeMs, null);
+  assert.deepEqual(resetA.acquisitionHistory, []);
   assert.deepEqual(resetA.enabledModes, originalA.enabledModes);
   assert.deepEqual(resetA.energyMultipliers, originalA.energyMultipliers);
   store.setActiveProfile(profileB.profileId);
