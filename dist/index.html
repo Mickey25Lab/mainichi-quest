@@ -25,6 +25,7 @@
         <img src="./assets/ui/top/top_key_visual.webp" width="1400" height="1050" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
         <button class="top-reload-button" id="top-reload-button" type="button" aria-label="アプリを再読み込み" title="再読み込み">↻</button>
         <button class="admin-settings-button" id="admin-settings-button" type="button" aria-label="管理設定">⚙️</button>
+        <button class="parent-settings-button" id="parent-settings-button" type="button">おうちの人へ</button>
         <button class="bgm-toggle-button top-bgm-toggle-button" id="top-bgm-toggle-button" type="button" data-bgm-toggle aria-label="BGMをオフにする" aria-pressed="true">🔊</button>
         <button class="profile-switch-button" id="profile-switch-button" type="button" hidden><span>プレイヤー</span><strong id="active-profile-name"></strong></button>
         <div class="top-image-buttons" aria-label="ゲームを始めるメニュー">
@@ -369,6 +370,56 @@
       <button class="profile-close-button" id="admin-pin-cancel" type="button">やめる</button>
     </form>
   </div>
+  <div class="profile-overlay" id="parent-pin-overlay" role="dialog" aria-modal="true" aria-labelledby="parent-pin-title" hidden>
+    <form class="profile-card admin-card parent-pin-card" id="parent-pin-form">
+      <h2 id="parent-pin-title">おうちの人へ</h2>
+      <label for="parent-pin-input">4桁PIN</label>
+      <input id="parent-pin-input" name="pin" type="password" maxlength="4" autocomplete="off" readonly aria-label="4桁PIN">
+      <div class="admin-pin-keypad" id="parent-pin-keypad" aria-label="PIN入力">
+        <button type="button" data-parent-pin-digit="1">1</button>
+        <button type="button" data-parent-pin-digit="2">2</button>
+        <button type="button" data-parent-pin-digit="3">3</button>
+        <button type="button" data-parent-pin-digit="4">4</button>
+        <button type="button" data-parent-pin-digit="5">5</button>
+        <button type="button" data-parent-pin-digit="6">6</button>
+        <button type="button" data-parent-pin-digit="7">7</button>
+        <button type="button" data-parent-pin-digit="8">8</button>
+        <button type="button" data-parent-pin-digit="9">9</button>
+        <button class="admin-pin-keypad-action" type="button" id="parent-pin-clear">クリア</button>
+        <button type="button" data-parent-pin-digit="0">0</button>
+        <button class="admin-pin-keypad-action" type="button" id="parent-pin-backspace" aria-label="1文字消す">⌫</button>
+      </div>
+      <p class="profile-error" id="parent-pin-error" role="alert" hidden></p>
+      <button class="profile-close-button" id="parent-pin-cancel" type="button">やめる</button>
+    </form>
+  </div>
+
+  <div class="profile-overlay parent-settings-overlay" id="parent-settings-overlay" role="dialog" aria-modal="true" aria-labelledby="parent-settings-title" hidden>
+    <section class="profile-card parent-settings-card">
+      <header class="parent-settings-header">
+        <div>
+          <p class="parent-settings-eyebrow">おうちの人へ</p>
+          <h2 id="parent-settings-title">毎日の学習設定</h2>
+        </div>
+        <button class="parent-settings-close" id="parent-settings-close" type="button" aria-label="閉じる">×</button>
+      </header>
+      <div class="parent-profile-section">
+        <span class="parent-settings-label">設定するプレイヤー</span>
+        <div class="parent-profile-tabs" id="parent-profile-tabs"></div>
+      </div>
+      <div class="parent-settings-table">
+        <div class="parent-settings-table-head" aria-hidden="true">
+          <span>モード</span>
+          <span>1日の目標</span>
+          <span>エネルギー</span>
+        </div>
+        <div class="parent-mode-settings" id="parent-mode-settings"></div>
+      </div>
+      <p class="parent-settings-note">設定はプロフィールごとに自動で保存されます。</p>
+      <button class="profile-close-button parent-settings-done" id="parent-settings-done" type="button">もどる</button>
+    </section>
+  </div>
+
   <div class="profile-overlay" id="admin-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-panel-title" hidden>
     <section class="profile-card admin-card">
       <h2 id="admin-panel-title">管理設定</h2>
