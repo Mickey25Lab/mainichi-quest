@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.2";
+  const appVersion = "0.1.6";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1926,14 +1926,26 @@
       return cell;
     }));
   }
-  function multiplicationInputOrder(multiplicand, product) {
-    const factorDigits = String(multiplicand).length;
-    const productDigits = String(product).length;
-    const lowerPlaceCount = Math.min(factorDigits - 1, productDigits - 1);
+  function calculationInputOrder(resultValue, lowerPlaceCount) {
+    const resultDigits = String(resultValue).length;
+    const lowerCount = Math.max(0, Math.min(lowerPlaceCount, resultDigits - 1));
     const order = [];
-    for (let index = productDigits - 1; index >= productDigits - lowerPlaceCount; index -= 1) order.push(index);
-    for (let index = 0; index < productDigits - lowerPlaceCount; index += 1) order.push(index);
+    // Ordinary column results are written from right to left. When the final
+    // calculation produces a multi-digit block (for example 10), that block is
+    // written as one number from left to right.
+    for (let index = resultDigits - 1; index >= resultDigits - lowerCount; index -= 1) order.push(index);
+    for (let index = 0; index < resultDigits - lowerCount; index += 1) order.push(index);
     return order;
+  }
+  function multiplicationInputOrder(multiplicand, product) {
+    return calculationInputOrder(product, String(multiplicand).length - 1);
+  }
+  function twoDigitTotalInputOrder(question) {
+    const partial1Places = String(question.partial1).length;
+    // The tens partial row is displayed one place to the left.
+    const partial2Places = String(question.partial2).length + 1;
+    const highestOccupiedPlace = Math.max(partial1Places, partial2Places) - 1;
+    return calculationInputOrder(question.product, highestOccupiedPlace);
   }
   function setupMultiplication(question) {
     const answerSlots = String(question.product).length;
@@ -2023,7 +2035,7 @@
     const rows = [
       { key: "partial1", value: partial1Text, holder: $("multiplication-2x2-partial-1"), order: twoDigitRowOrder(question.multiplicand, question.partial1) },
       { key: "partial2", value: partial2Text, holder: $("multiplication-2x2-partial-2"), order: twoDigitRowOrder(question.multiplicand, question.partial2) },
-      { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: Array.from({ length: totalText.length }, (_, offset) => totalText.length - 1 - offset) }
+      { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: twoDigitTotalInputOrder(question) }
     ];
     rows.forEach((row) => makeTwoDigitSlots(row.holder, row.value.length));
     makeMultiplicationDigits($("multiplication-2x2-multiplicand"), question.multiplicand);
@@ -2034,7 +2046,13 @@
     const inputOrder = [];
     rows.forEach((row, rowIndex) => row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })));
     state.multiplication2x2 = {
-      rows: rows.map((row) => ({ ...row, cells: Array(row.value.length).fill(""), hintedIndexes: new Set() })),
+      rows: rows.map((row) => ({
+        ...row,
+        cells: Array(row.value.length).fill(""),
+        hintedIndexes: new Set(),
+        wrongIndexes: new Set(),
+        feedback: null
+      })),
       inputOrder, inputStep: 0, history: [],
       firstRowGuideVisible: false,
       secondRowGuideVisible: false,
@@ -2046,10 +2064,12 @@
     const model = state.multiplication2x2; if (!model) return;
     const active = model.inputOrder[model.inputStep] || null;
     model.rows.forEach((row, rowIndex) => {
-      Array.from(row.holder.children).forEach((slot, cellIndex) => {
+      row.holder.classList.toggle("is-step-wrong", row.feedback === "wrong");
+      row.holder.querySelectorAll(".multiplication-2x2-slot").forEach((slot, cellIndex) => {
         slot.textContent = row.cells[cellIndex];
         slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
         slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
+        slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
       });
     });
     const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
@@ -2057,6 +2077,24 @@
       digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
     });
     $("multiplication-2x2-shift-guide").hidden = !model.secondRowGuideVisible;
+  }
+  function playTwoDigitRowCorrectEffect(row) {
+    if (!row?.holder) return;
+    row.holder.querySelector(".multiplication-2x2-row-sparkles")?.remove();
+    const trail = document.createElement("span");
+    trail.className = "multiplication-2x2-row-sparkles";
+    trail.setAttribute("aria-hidden", "true");
+    trail.style.setProperty("--row-spark-distance", `${Math.max(105, row.holder.offsetWidth + 26)}px`);
+    for (let index = 0; index < 28; index += 1) {
+      const sparkle = document.createElement("i");
+      sparkle.style.setProperty("--row-spark-y", `${-8 + (index % 5) * 4}px`);
+      sparkle.style.setProperty("--row-spark-delay", `${index * 28}ms`);
+      sparkle.style.setProperty("--row-spark-size", `${5 + (index % 4) * 2}px`);
+      sparkle.style.setProperty("--row-spark-drift", `${(index % 3 - 1) * 6}px`);
+      trail.appendChild(sparkle);
+    }
+    row.holder.appendChild(trail);
+    window.setTimeout(() => trail.remove(), 760);
   }
   function showTwoDigitSecondRowGuides(model) {
     if (!model || model.firstRowGuideVisible) return;
@@ -2067,6 +2105,36 @@
       model.secondRowGuideVisible = true;
       renderTwoDigitMultiplication();
     }, 500);
+  }
+  function checkTwoDigitIntermediateRow(model, rowIndex) {
+    if (!model || rowIndex < 0 || rowIndex >= model.rows.length - 1) return;
+    const row = model.rows[rowIndex];
+    if (row.cells.some((cell) => !cell)) return;
+    const wrongIndexes = new Set();
+    row.cells.forEach((digit, cellIndex) => {
+      if (digit !== row.value[cellIndex]) wrongIndexes.add(cellIndex);
+    });
+    if (!wrongIndexes.size) {
+      row.feedback = null;
+      row.wrongIndexes.clear();
+      renderTwoDigitMultiplication();
+      playTwoDigitRowCorrectEffect(row);
+      if (rowIndex === 0) {
+        window.setTimeout(() => {
+          if (state.multiplication2x2 !== model) return;
+          showTwoDigitSecondRowGuides(model);
+        }, 760);
+      }
+      return;
+    }
+    row.feedback = "wrong";
+    row.wrongIndexes = wrongIndexes;
+    if (state.current) {
+      state.current.stepCorrectionUsed = true;
+      state.current.progressPenalty = true;
+    }
+    renderTwoDigitMultiplication();
+    playWrongSound();
   }
   function advanceTwoDigitMultiplicationStep(model) {
     while (model.inputStep < model.inputOrder.length) {
@@ -2080,15 +2148,18 @@
     if (!model || model.inputStep >= model.inputOrder.length) return;
     noteQuestionActivity();
     const step = model.inputOrder[model.inputStep];
-    model.rows[step.rowIndex].cells[step.cellIndex] = String(number);
+    const row = model.rows[step.rowIndex];
+    row.cells[step.cellIndex] = String(number);
+    row.wrongIndexes.delete(step.cellIndex);
     model.history.push({ ...step });
     model.inputStep += 1;
     advanceTwoDigitMultiplicationStep(model);
-    const nextStep = model.inputOrder[model.inputStep] || null;
-    if (step.rowIndex === 0 && (!nextStep || nextStep.rowIndex !== 0)) showTwoDigitSecondRowGuides(model);
     renderTwoDigitMultiplication();
+    if (step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) {
+      checkTwoDigitIntermediateRow(model, step.rowIndex);
+    }
     if (model.inputStep >= model.inputOrder.length) {
-      const allRowsCorrect = model.rows.every((row) => row.cells.join("") === row.value);
+      const allRowsCorrect = model.rows.every((currentRow) => currentRow.cells.join("") === currentRow.value);
       const total = Number(model.rows[2].cells.join(""));
       judge({ quotient: allRowsCorrect ? total : total + 1, remainder: 0, usedRemainder: false });
     }
@@ -2097,7 +2168,9 @@
     const model = state.multiplication2x2;
     if (!model || !model.history.length) return;
     const step = model.history.pop();
-    model.rows[step.rowIndex].cells[step.cellIndex] = "";
+    const row = model.rows[step.rowIndex];
+    row.cells[step.cellIndex] = "";
+    row.wrongIndexes.delete(step.cellIndex);
     model.inputStep = 0;
     advanceTwoDigitMultiplicationStep(model);
     renderTwoDigitMultiplication();
@@ -2216,7 +2289,7 @@
     return `${question.dividend}/${question.divisor}`;
   }
   function makeReviewQuestion(question) {
-    return { ...question, hintUsed: false, hadWrong: false, progressPenalty: Boolean(question.progressPenalty || question.hintUsed || question.hadWrong || question.answerRevealed), answerRevealed: false, assistedCorrect: false, resultType: null, isReview: true };
+    return { ...question, hintUsed: false, hadWrong: false, stepCorrectionUsed: false, progressPenalty: Boolean(question.progressPenalty || question.hintUsed || question.hadWrong || question.answerRevealed || question.stepCorrectionUsed), answerRevealed: false, assistedCorrect: false, resultType: null, isReview: true };
   }
   function enqueueReview(target, question) {
     const key = questionKey(question);
@@ -2247,9 +2320,11 @@
       const row = model.rows[step.rowIndex];
       row.cells[step.cellIndex] = row.value[step.cellIndex];
       row.hintedIndexes.add(step.cellIndex);
+      row.wrongIndexes.delete(step.cellIndex);
       model.inputStep += 1;
       advanceTwoDigitMultiplicationStep(model);
       renderTwoDigitMultiplication();
+      if (step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) checkTwoDigitIntermediateRow(model, step.rowIndex);
       updateAssistButton();
       return;
     }
@@ -2386,7 +2461,7 @@
   }
   function showProgressSpeechBubbleForCurrentQuestion(vehicleIndex) {
     const question = state.current;
-    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.answerRevealed) return;
+    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.stepCorrectionUsed || question.answerRevealed) return;
     const spec = progressSpeechBubbleSpec(vehicleIndex);
     if (!spec || spec.stage !== question.answerStage) return;
     const bubble = $("answer-bubble");
@@ -2396,7 +2471,7 @@
     const reveal = () => {
       if (state.current !== question) return;
       const currentSpec = progressSpeechBubbleSpec(vehicleIndex);
-      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.answerRevealed) return;
+      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.stepCorrectionUsed || question.answerRevealed) return;
       bubble.style.visibility = "";
       bubble.hidden = false;
     };
@@ -2681,11 +2756,11 @@
     stopQuestionTimeout(); setKeypadDisabled(true); if (state.mode === "longdivision") renderLongDivision(); else $("answer-text").textContent = formatAnswer(answer);
     const hintInputTypeMatches = !state.current.hintUsed || Boolean(answer.usedRemainder) === (state.current.remainder !== 0);
     const correct = answer.quotient === state.current.quotient && answer.remainder === state.current.remainder && hintInputTypeMatches;
-    const assistedCorrect = correct && state.phase === "initial" && state.current.hintUsed;
+    const assistedCorrect = correct && state.phase === "initial" && (state.current.hintUsed || state.current.stepCorrectionUsed);
     let reward = null, progression = null;
     if (correct) {
       setQuestionCardState("correct");
-      state.current.resultType = state.current.hintUsed ? "hint_correct" : "self_correct";
+      state.current.resultType = assistedCorrect ? "hint_correct" : "self_correct";
       if (assistedCorrect) { state.current.assistedCorrect = true; enqueueReview(state.missed, state.current); }
       if (state.phase === "initial") {
         if (!assistedCorrect) {
@@ -3167,7 +3242,7 @@
     if (state.collectionClosing) return;
     state.collectionClosing = true;
     stopCollectionTimer(); playCollectionEndSound(); $("time-up").hidden = false;
-    window.setTimeout(() => endToStart({ keepTimeUp:true }), collectionEndTransitionDurationMs);
+    window.setTimeout(() => endToModeSelect(), collectionEndTransitionDurationMs);
   }
   function stopCollectionTimer() {
     if (state.collectionTimerId !== null) { window.clearInterval(state.collectionTimerId); state.collectionTimerId = null; }
@@ -3714,7 +3789,7 @@
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
-  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
@@ -3746,7 +3821,7 @@
     }
   });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
-  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
+  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToModeSelect(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
     const category = button.dataset.category;
     setCollectionCategory(category);

@@ -264,8 +264,15 @@
         </div>
         
         <div class="collection-time collection-time-panel">あと<strong id="collection-seconds">60</strong>秒</div>
-        <div class="collection-exit-confirm" id="collection-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="collection-exit-question" hidden>
-          <div class="collection-exit-box"><p id="collection-exit-question">コレクションを見るのをやめて<br>トップに戻りますか？</p><div><button id="collection-exit-yes">トップに戻る</button><button id="collection-exit-no">コレクションを見る</button></div></div>
+        <div class="answer-confirm quit-confirm collection-exit-confirm" id="collection-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="collection-exit-question" hidden>
+          <div class="answer-confirm-card quit-confirm-card collection-exit-box">
+            <h2 id="collection-exit-question">見るのをやめる？</h2>
+            <p><span>まだ時間はあるけど、<br>コレクションを見るのをやめる？</span></p>
+            <div class="answer-confirm-actions quit-confirm-actions">
+              <button class="quit-confirm-cancel" id="collection-exit-yes" type="button">見るのを<br>やめる</button>
+              <button class="quit-confirm-continue" id="collection-exit-no" type="button">コレクションを<br>見る</button>
+            </div>
+          </div>
         </div>
       </div>
       <nav class="collection-categories collection-screen-nav" aria-label="コレクションのカテゴリ">
