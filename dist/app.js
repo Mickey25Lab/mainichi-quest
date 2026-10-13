@@ -17,7 +17,6 @@
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" })
   ]);
   const parentEnergyLevels = Object.freeze([
-    Object.freeze({ id:"off", label:"OFF" }),
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
     Object.freeze({ id:"small", label:"小" }),
     Object.freeze({ id:"medium", label:"中" }),
@@ -3846,6 +3845,7 @@
   let adminResetInProgress = false;
   let gameInitialized = false;
   let parentSettingsProfileId = null;
+  let parentSettingsDrafts = new Map();
   function setProfileError(element, message) {
     element.textContent = message || "";
     element.hidden = !message;
@@ -3888,13 +3888,33 @@
   }
 
   function parentModeSetting(settings, modeId) {
-    const enabled = settings.enabledModes?.[modeId] !== false;
     const storedEnergy = settings.energyMultipliers?.[modeId];
-    const validEnergy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : null;
-    const energy = enabled ? (validEnergy && validEnergy !== "off" ? validEnergy : "medium") : "off";
+    const energy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : "medium";
     const rawTarget = Number(settings.dailyTargetCounts?.[modeId]);
-    const target = Number.isInteger(rawTarget) ? Math.max(1, Math.min(9, rawTarget)) : 1;
-    return { enabled: energy !== "off", energy, target };
+    const hasStoredTarget = Number.isInteger(rawTarget);
+    const target = hasStoredTarget
+      ? Math.max(0, Math.min(9, rawTarget))
+      : settings.enabledModes?.[modeId] === false ? 0 : 1;
+    return { enabled: target > 0, energy, target };
+  }
+
+  function cloneParentSettings(settings) {
+    return JSON.parse(JSON.stringify(settings || { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} }));
+  }
+
+  function initializeParentSettingsDrafts() {
+    parentSettingsDrafts = new Map();
+    profileStore.listProfiles().forEach((profile) => {
+      parentSettingsDrafts.set(profile.profileId, cloneParentSettings(profileStore.getProfileLearningSettings(profile.profileId)));
+    });
+  }
+
+  function parentDraftForProfile(profileId) {
+    if (!profileId) return null;
+    if (!parentSettingsDrafts.has(profileId)) {
+      parentSettingsDrafts.set(profileId, cloneParentSettings(profileStore.getProfileLearningSettings(profileId)));
+    }
+    return parentSettingsDrafts.get(profileId);
   }
 
   function renderParentProfileTabs() {
@@ -3926,12 +3946,13 @@
     const container = $("parent-mode-settings");
     container.replaceChildren();
     if (!parentSettingsProfileId) return;
-    const settings = profileStore.getProfileLearningSettings(parentSettingsProfileId);
+    const settings = parentDraftForProfile(parentSettingsProfileId);
     parentModeDefinitions.forEach((mode) => {
       const current = parentModeSetting(settings, mode.id);
       const row = document.createElement("div");
       row.className = "parent-mode-row";
       row.dataset.mode = mode.id;
+      row.classList.toggle("is-off", !current.enabled);
 
       const name = document.createElement("div");
       name.className = "parent-mode-name";
@@ -3946,31 +3967,32 @@
 
       const target = document.createElement("div");
       target.className = "parent-target-control";
-      target.classList.toggle("disabled", !current.enabled);
       const minus = document.createElement("button");
       minus.type = "button";
       minus.textContent = "−";
       minus.setAttribute("aria-label", mode.label + "の目標回数を減らす");
-      minus.disabled = !current.enabled || current.target <= 1;
+      minus.disabled = current.target <= 0;
       const value = document.createElement("strong");
-      value.textContent = current.target + "回";
+      value.textContent = current.target === 0 ? "OFF" : current.target + "回";
       const plus = document.createElement("button");
       plus.type = "button";
       plus.textContent = "＋";
       plus.setAttribute("aria-label", mode.label + "の目標回数を増やす");
-      plus.disabled = !current.enabled || current.target >= 9;
+      plus.disabled = current.target >= 9;
       minus.addEventListener("click", () => changeParentTarget(mode.id, -1));
       plus.addEventListener("click", () => changeParentTarget(mode.id, 1));
       target.append(minus, value, plus);
 
       const energy = document.createElement("div");
       energy.className = "parent-energy-options";
+      energy.classList.toggle("disabled", !current.enabled);
       energy.setAttribute("aria-label", mode.label + "のエネルギー");
       parentEnergyLevels.forEach((level) => {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = level.label;
         button.dataset.energy = level.id;
+        button.disabled = !current.enabled;
         const selected = current.energy === level.id;
         button.classList.toggle("selected", selected);
         button.setAttribute("aria-pressed", String(selected));
@@ -3983,28 +4005,34 @@
     });
   }
 
-  function saveParentModeSetting(modeId, updater) {
+  function updateParentDraftModeSetting(modeId, updater) {
     if (!parentSettingsProfileId) return;
-    const settings = profileStore.getProfileLearningSettings(parentSettingsProfileId);
+    const settings = parentDraftForProfile(parentSettingsProfileId);
     const current = parentModeSetting(settings, modeId);
     const next = updater(current);
-    settings.enabledModes[modeId] = next.energy !== "off";
+    settings.enabledModes[modeId] = next.target > 0;
     settings.energyMultipliers[modeId] = next.energy;
     settings.dailyTargetCounts[modeId] = next.target;
-    profileStore.setProfileLearningSettings(parentSettingsProfileId, settings);
     renderParentModeSettings();
   }
 
   function setParentEnergy(modeId, energy) {
     if (!parentEnergyLevels.some((level) => level.id === energy)) return;
-    saveParentModeSetting(modeId, (current) => ({ ...current, energy }));
+    updateParentDraftModeSetting(modeId, (current) => ({ ...current, energy }));
   }
 
   function changeParentTarget(modeId, delta) {
-    saveParentModeSetting(modeId, (current) => ({
+    updateParentDraftModeSetting(modeId, (current) => ({
       ...current,
-      target: Math.max(1, Math.min(9, current.target + delta))
+      target: Math.max(0, Math.min(9, current.target + delta))
     }));
+  }
+
+  function saveParentSettings() {
+    parentSettingsDrafts.forEach((settings, profileId) => {
+      profileStore.setProfileLearningSettings(profileId, settings);
+    });
+    closeParentSettings();
   }
 
   function openParentPin() {
@@ -4044,6 +4072,7 @@
 
   function openParentSettings() {
     parentSettingsProfileId = profileStore.getActiveProfileId() || profileStore.listProfiles()[0]?.profileId || null;
+    initializeParentSettingsDrafts();
     renderParentProfileTabs();
     renderParentModeSettings();
     $("parent-settings-overlay").hidden = false;
@@ -4052,6 +4081,7 @@
 
   function closeParentSettings() {
     $("parent-settings-overlay").hidden = true;
+    parentSettingsDrafts = new Map();
     $("parent-settings-button").focus();
   }
 
@@ -4226,7 +4256,8 @@
   });
   $("parent-pin-cancel").addEventListener("click", closeParentPin);
   $("parent-settings-close").addEventListener("click", closeParentSettings);
-  $("parent-settings-done").addEventListener("click", closeParentSettings);
+  $("parent-settings-cancel").addEventListener("click", closeParentSettings);
+  $("parent-settings-save").addEventListener("click", saveParentSettings);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
   document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
   $("admin-pin-clear").addEventListener("click", () => {
