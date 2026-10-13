@@ -323,9 +323,9 @@ button, input { font: inherit; }
 .parent-settings-table-head,
 .parent-mode-row {
   display:grid;
-  grid-template-columns:minmax(190px,1.05fr) 190px minmax(380px,1.7fr);
+  grid-template-columns:minmax(190px,1.05fr) 190px minmax(360px,1.6fr);
   align-items:center;
-  gap:14px;
+  column-gap:34px;
 }
 .parent-settings-table-head {
   padding:10px 16px;
@@ -379,16 +379,18 @@ button, input { font: inherit; }
   font-size:19px;
   white-space:nowrap;
 }
-.parent-target-control.disabled { opacity:.32; }
 .profile-card .parent-target-control button:disabled {
   cursor:default;
   opacity:.45;
 }
+.parent-mode-row.is-off .parent-mode-name { opacity:.55; }
 .parent-energy-options {
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:6px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
 }
+.parent-energy-options.disabled { opacity:.28; }
+.parent-energy-options.disabled button { cursor:default; }
 .profile-card .parent-energy-options button {
   min-width:0;
   min-height:40px;
@@ -405,10 +407,6 @@ button, input { font: inherit; }
   color:#fff;
   background:#167bd6;
   box-shadow:0 3px 9px rgba(22,123,214,.22);
-}
-.profile-card .parent-energy-options button[data-energy="off"].selected {
-  border-color:#6e7d89;
-  background:#6e7d89;
 }
 .profile-card .parent-energy-options button[data-energy="almost-zero"].selected {
   border-color:#6fa7c8;
@@ -432,15 +430,35 @@ button, input { font: inherit; }
   font-size:13px;
   font-weight:700;
 }
-.profile-card .parent-settings-done {
-  width:220px;
-  margin:16px auto 0;
-  display:block;
+.parent-settings-actions {
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:16px;
 }
+.profile-card .parent-settings-actions button {
+  min-width:220px;
+  min-height:52px;
+  font-size:17px;
+}
+.profile-card .parent-settings-cancel {
+  border:2px solid #bccbd6;
+  color:#506577;
+  background:#fff;
+  box-shadow:0 4px 0 #c3ced6,0 8px 16px rgba(40,63,80,.1);
+}
+.profile-card .parent-settings-save {
+  border:2px solid #0d68be;
+  color:#fff;
+  background:linear-gradient(#2c95ed,#167bd6);
+  box-shadow:0 4px 0 #0c5da5,0 8px 18px rgba(22,123,214,.2);
+}
+.profile-card .parent-settings-actions button:active { transform:translateY(3px); }
 @media (max-width: 840px) {
   .parent-settings-table-head,
   .parent-mode-row {
-    grid-template-columns:minmax(150px,.9fr) 160px minmax(310px,1.6fr);
+    grid-template-columns:minmax(150px,.9fr) 160px minmax(300px,1.5fr);
+    column-gap:24px;
   }
   .parent-settings-card { padding-inline:18px; }
   .parent-mode-row { padding-inline:12px; }
