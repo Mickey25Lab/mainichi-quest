@@ -2115,11 +2115,11 @@
     trail.className = "multiplication-2x2-row-sparkles";
     trail.setAttribute("aria-hidden", "true");
     trail.style.setProperty("--row-spark-distance", `${Math.max(105, row.holder.offsetWidth + 26)}px`);
-    for (let index = 0; index < 16; index += 1) {
+    for (let index = 0; index < 28; index += 1) {
       const sparkle = document.createElement("i");
       sparkle.style.setProperty("--row-spark-y", `${-8 + (index % 5) * 4}px`);
       sparkle.style.setProperty("--row-spark-delay", `${index * 28}ms`);
-      sparkle.style.setProperty("--row-spark-size", `${Math.round((5 + (index % 4) * 2) * 1.5)}px`);
+      sparkle.style.setProperty("--row-spark-size", `${5 + (index % 4) * 2}px`);
       sparkle.style.setProperty("--row-spark-drift", `${(index % 3 - 1) * 6}px`);
       trail.appendChild(sparkle);
     }
