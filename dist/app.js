@@ -2,9 +2,9 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.9";
+  const appVersion = "0.1.10";
   const adminPin = "3710";
-  const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
+  const screens = ["start-screen", "opening-movie-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
   const startKeyVisualPath = "./assets/ui/top/top_key_visual.webp";
@@ -334,9 +334,91 @@
     openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
+    if (id !== "opening-movie-screen") stopOpeningMoviePlayback();
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
     if (id !== "play-screen") stopBackgroundMusic();
     recordVisualDiagnostic("show-screen", { screenId: id });
+  }
+  const openingMovieSlideDurationMs = 1800;
+  let openingMovieTimerId = null;
+  let openingMovieRunId = 0;
+  function stopOpeningMoviePlayback() {
+    if (openingMovieTimerId !== null) window.clearTimeout(openingMovieTimerId);
+    openingMovieTimerId = null;
+    openingMovieRunId += 1;
+  }
+  function openingMovieEntryForHistory(item) {
+    const vehicleIndex = vehicles.findIndex((vehicle) => vehicle.stem === item.vehicleId);
+    const vehicle = vehicles[vehicleIndex];
+    if (!vehicle) return null;
+    const display = {
+      vehicle_discovered: { message: "あたらしい のりもの！", artworkPath: vehicleArtworkPath(vehicleIndex) },
+      friendship_complete: { message: "なかよしMAX！", artworkPath: vehicleArtworkPath(vehicleIndex) },
+      robot: { message: "ロボットに しんか！", artworkPath: robotArtworkPath(vehicleIndex) },
+      super_robot: { message: "スーパーロボットに しんか！", artworkPath: superRobotArtworkPath(vehicleIndex) },
+      super_robot_equipped: { message: "スーパーそうび GET！", artworkPath: equippedSuperRobotArtworkPath(vehicleIndex) },
+      master_medal: { message: "マスターメダル GET！", artworkPath: masterMedalArtworkPath(vehicleIndex) }
+    }[item.acquisitionType];
+    return display ? { ...display, vehicle } : null;
+  }
+  function recentOpeningMovieEntries() {
+    try {
+      return profileStore.getAcquisitionHistory().slice(-3).map(openingMovieEntryForHistory).filter(Boolean);
+    } catch (_) { return []; }
+  }
+  function renderOpeningMovieEntry(entry) {
+    const art = $("opening-movie-art");
+    const copy = $("opening-movie-copy");
+    art.classList.remove("is-playing");
+    copy.classList.remove("is-playing");
+    art.src = entry.artworkPath;
+    art.alt = entry.vehicle.nameJa;
+    $("opening-movie-vehicle-name").textContent = entry.vehicle.nameJa;
+    $("opening-movie-message").textContent = entry.message;
+    void art.offsetWidth;
+    art.classList.add("is-playing");
+    copy.classList.add("is-playing");
+  }
+  function finishOpeningMovie() {
+    stopOpeningMoviePlayback();
+    showScreen("start-screen");
+  }
+  function playOpeningMovie(entries) {
+    stopOpeningMoviePlayback();
+    const runId = ++openingMovieRunId;
+    let index = 0;
+    showScreen("opening-movie-screen");
+    const advance = () => {
+      if (runId !== openingMovieRunId) return;
+      renderOpeningMovieEntry(entries[index]);
+      openingMovieTimerId = window.setTimeout(() => {
+        if (runId !== openingMovieRunId) return;
+        index += 1;
+        if (index >= entries.length) finishOpeningMovie();
+        else advance();
+      }, openingMovieSlideDurationMs);
+    };
+    advance();
+  }
+  function startOpeningMovieForActiveProfile() {
+    if (qaProgressModeEnabled()) return false;
+    const entries = recentOpeningMovieEntries();
+    if (entries.length === 0) return false;
+    try {
+      if (profileStore.getOpeningMovieLastPlayedJst() === japanDateKey()) return false;
+    } catch (_) { return false; }
+    const preparationRunId = ++openingMovieRunId;
+    // Do not spend a short slide duration while a first-time artwork request is
+    // still pending.  Playback and the daily marker begin only once every
+    // selected image can be drawn.
+    Promise.all(entries.map((entry) => preloadDecodedImage(entry.artworkPath)))
+      .then(() => {
+        if (preparationRunId !== openingMovieRunId) return;
+        try { profileStore.setOpeningMovieLastPlayedJst(japanDateKey()); } catch (_) { return; }
+        playOpeningMovie(entries);
+      })
+      .catch(() => {});
+    return true;
   }
   function showRewardOverPlay() {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === "play-screen" || screenId === "reward-screen"));
@@ -3838,6 +3920,7 @@
     preloadStartSound();
     updateTopCollectionButton();
     schedulePlayStageSize("initial");
+    startOpeningMovieForActiveProfile();
   }
   function beginProfileExperience() {
     if (profileStore.listProfiles().length) {
@@ -3898,6 +3981,7 @@
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("opening-movie-skip").addEventListener("click", finishOpeningMovie);
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
@@ -3999,6 +4083,7 @@
     }
   });
   window.addEventListener("pagehide", (event) => {
+    stopOpeningMoviePlayback();
     recordViewportDiagnostic("pagehide", { persisted: event.persisted });
   });
   window.addEventListener("blur", () => {
