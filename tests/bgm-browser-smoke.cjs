@@ -100,6 +100,10 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await page.locator("#mode-select-normal").click();
   await page.locator("#play-screen.active").waitFor();
   await waitForBgmGroup(page, "game");
+  const gameSpeakerBox = await page.locator("#bgm-toggle-button").boundingBox();
+  assert.ok(gameSpeakerBox);
+  assert.ok(Math.abs(speakerBox.width - gameSpeakerBox.width) < 0.5);
+  assert.ok(Math.abs(speakerBox.height - gameSpeakerBox.height) < 0.5);
   assert.equal(await bgmStarts(page), reloadedHeroicStartCount + 1);
   assert.equal(await page.locator("#bgm-toggle-button").getAttribute("aria-pressed"), "true");
   assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");

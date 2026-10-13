@@ -58,6 +58,8 @@ test("startup audio unlock retries on user gestures instead of reusing a blocked
 test("top speaker is scoped and developer credit is removed", () => {
   assert.match(html, /id="top-bgm-toggle-button"/);
   assert.match(css, /\.start-screen \.top-bgm-toggle-button/);
+  assert.match(css, /width:calc\(var\(--content-stage-width\) \* \.052486188\)/);
+  assert.match(css, /height:calc\(var\(--content-stage-width\) \* \.052486188\)/);
   assert.doesNotMatch(html, /開発者: Papa, Chuppy and Minato/);
   assert.doesNotMatch(css, /(^|\n)button\s*\{/);
 });

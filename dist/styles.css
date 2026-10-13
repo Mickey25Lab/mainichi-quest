@@ -154,9 +154,9 @@ button, input { font: inherit; }
   display:flex;
   align-items:center;
   justify-content:center;
-  width:76px;
-  height:76px;
-  min-width:76px;
+  width:calc(var(--content-stage-width) * .052486188);
+  height:calc(var(--content-stage-width) * .052486188);
+  min-width:0;
   margin:0;
   padding:0;
   border:3px solid #9ebddd;
@@ -164,7 +164,7 @@ button, input { font: inherit; }
   color:#173e5e;
   background:rgba(255,255,255,.94);
   box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);
-  font-size:38px;
+  font-size:calc(var(--content-stage-width) * .026243094);
   line-height:1;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
