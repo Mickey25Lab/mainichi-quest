@@ -104,6 +104,7 @@
         sequence: history.length + 1,
         timestamp: typeof raw.timestamp === "string" ? raw.timestamp : new Date(0).toISOString(),
         mode,
+        source: typeof raw.source === "string" ? raw.source : "normal",
         vehicleId,
         acquisitionType,
         displayForm: typeof raw.displayForm === "string" ? raw.displayForm : null,
@@ -296,6 +297,7 @@
       const vehicleId = typeof entry.vehicleId === "string" ? entry.vehicleId : "";
       const acquisitionType = typeof entry.acquisitionType === "string" ? entry.acquisitionType : "";
       const mode = typeof entry.mode === "string" ? entry.mode : "";
+      const source = typeof entry.source === "string" ? entry.source : "normal";
       const eventKey = typeof entry.eventKey === "string" ? entry.eventKey : `${vehicleId}:${acquisitionType}`;
       const displayStage = Number(entry.displayStage);
       if (!vehicleId || !acquisitionType || !mode || !eventKey) throw new Error("acquisition entry is incomplete");
@@ -310,6 +312,7 @@
           sequence: history.length + 1,
           timestamp: isoNow(now),
           mode,
+          source,
           vehicleId,
           acquisitionType,
           displayForm: typeof entry.displayForm === "string" ? entry.displayForm : null,

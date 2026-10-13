@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.7";
+  const appVersion = "0.1.8";
   const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -2620,52 +2620,71 @@
     if (question.kind === "multiplication2x2" ? elapsedMs >= limitMs : elapsedMs > limitMs) return null;
     return { amount: timeBonusConfig.amount, answerDigits, inputCellCount, limitMs, elapsedMs };
   }
+  const acquisitionDefinitions = Object.freeze({
+    vehicle_discovered: Object.freeze({ rewardStage: 1, rewardKind: "discovery", displayForm: "vehicle", endsChallenge: false }),
+    friendship_complete: Object.freeze({ rewardStage: 1, rewardKind: "friendship", displayForm: "vehicle", endsChallenge: true }),
+    robot: Object.freeze({ rewardStage: 2, rewardKind: "evolution", displayForm: "robot", endsChallenge: true }),
+    super_robot: Object.freeze({ rewardStage: 3, rewardKind: "evolution", displayForm: "super_robot", endsChallenge: true }),
+    super_robot_equipped: Object.freeze({ rewardStage: 4, rewardKind: "evolution", displayForm: "super_robot_equipped", endsChallenge: true }),
+    master_medal: Object.freeze({ rewardStage: 5, rewardKind: "evolution", displayForm: "master_medal", endsChallenge: true })
+  });
   function addCompletedRewardToSession(reward) {
+    // Session GET rendering only. Persistence is committed before this is called.
     if (!reward?.isNew) return;
-    recordAcquisitionForCompletedReward(reward);
     const key = `${reward.vehicleIndex}:${reward.stage}:${reward.kind}`;
     if (!state.sessionResultGets.some((item) => `${item.vehicleIndex}:${item.stage}:${item.kind}` === key)) state.sessionResultGets.push({ ...reward });
     state.collectionNewVehicleIndexes.add(reward.vehicleIndex);
   }
-  function recordAcquisitionForCompletedReward(reward) {
-    // All real acquisition types converge here after progress is mutated.  UI
-    // replay, loading, migration, and QA preset construction never call it.
+  function recordCommittedAcquisition({ vehicleIndex, acquisitionType, source, definition }) {
+    // QA, migration, fallback, and UI replay never invoke commitAcquisition.
     if (qaProgressModeEnabled()) return;
-    const vehicle = vehicles[reward.vehicleIndex];
+    const vehicle = vehicles[vehicleIndex];
     if (!vehicle) return;
-    const acquisition = reward.kind === "discovery"
-      ? { acquisitionType: "vehicle_discovered", displayForm: "vehicle" }
-      : reward.kind === "friendship"
-        ? { acquisitionType: "friendship_complete", displayForm: "vehicle" }
-        : ({
-            2: { acquisitionType: "robot", displayForm: "robot" },
-            3: { acquisitionType: "super_robot", displayForm: "super_robot" },
-            4: { acquisitionType: "super_robot_equipped", displayForm: "super_robot_equipped" },
-            5: { acquisitionType: "master_medal", displayForm: "master_medal" }
-          })[reward.stage];
-    if (!acquisition) return;
     try {
       profileStore.appendAcquisitionHistory({
         vehicleId: vehicle.stem,
         mode: state.mode,
-        displayStage: currentStageForVehicle(reward.vehicleIndex),
-        ...acquisition
+        source,
+        acquisitionType,
+        displayForm: definition.displayForm,
+        displayStage: currentStageForVehicle(vehicleIndex)
       });
     } catch (_) {}
+  }
+  function commitAcquisition({ vehicleIndex, acquisitionType, stage, source = "normal" }) {
+    const definition = acquisitionDefinitions[acquisitionType];
+    const progress = vehicleProgress(vehicleIndex);
+    if (!definition || definition.rewardStage !== stage || !progress) return null;
+    if (acquisitionType === "vehicle_discovered") {
+      if (progress.discovered) return null;
+      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
+    } else if (acquisitionType === "friendship_complete") {
+      if (!progress.discovered || progress.friendly || progress.friendship < 5) return null;
+      progress.friendship = 5; progress.friendly = true;
+      state.sessionUnlocks[1] += 1;
+    } else {
+      const expectedStage = stage;
+      if (!progress.friendly || progress.masterMedal || progress.stage !== expectedStage) return null;
+      progress.energy = 0;
+      if (acquisitionType === "master_medal") progress.masterMedal = true;
+      else progress.stage += 1;
+      state.sessionUnlocks[stage] += 1;
+    }
+    if (vehicleIndex === state.currentVehicleIndex) state.currentStage = currentStageForVehicle(vehicleIndex);
+    const reward = { stage, vehicleIndex, isNew: true, kind: definition.rewardKind, endsChallenge: definition.endsChallenge };
+    recordCommittedAcquisition({ vehicleIndex, acquisitionType, source, definition });
+    addCompletedRewardToSession(reward);
+    saveCollectionProgress();
+    return reward;
   }
   function saveCollectionProgress() {
     saveRewardProgress();
     syncCollectionFromRewardProgress();
   }
-  function completeEnergyStage(progress, vehicleIndex) {
-    const completedStage = progress.stage;
-    progress.energy = 0;
-    if (completedStage === 5) progress.masterMedal = true;
-    else progress.stage += 1;
-    state.sessionUnlocks[completedStage] += 1;
-    const reward = { stage: completedStage, vehicleIndex, isNew: true, kind: "evolution", endsChallenge: true };
-    if (vehicleIndex === state.currentVehicleIndex) state.currentStage = currentStageForVehicle(vehicleIndex);
-    return reward;
+  function completeEnergyStage(progress, vehicleIndex, source = "normal") {
+    const stage = progress.stage;
+    const acquisitionType = ({ 2: "robot", 3: "super_robot", 4: "super_robot_equipped", 5: "master_medal" })[stage];
+    return acquisitionType ? commitAcquisition({ vehicleIndex, acquisitionType, stage, source }) : null;
   }
   function applyEnergyGain(progress, vehicleIndex, amount, { completeStage = true } = {}) {
     const required = requiredEnergyForStage(progress.stage);
@@ -2678,9 +2697,8 @@
     const progress = vehicleProgress(deferred.vehicleIndex);
     const gain = applyEnergyGain(progress, deferred.vehicleIndex, deferred.timeBonus.amount, { completeStage: false });
     const { required, appliedEnergy } = gain;
-    const reward = progress.energy >= required ? completeEnergyStage(progress, deferred.vehicleIndex) : null;
-    addCompletedRewardToSession(reward);
-    saveCollectionProgress();
+    const reward = progress.energy >= required ? completeEnergyStage(progress, deferred.vehicleIndex, "time_bonus") : null;
+    if (!reward) saveCollectionProgress();
     return { reward, energyVisual: { vehicleIndex: deferred.vehicleIndex, energy: appliedEnergy, required } };
   }
   function playTimeBonusSequence(deferred, onResolved) {
@@ -2719,17 +2737,14 @@
     const progress = vehicleProgress(vehicleIndex);
     let reward = null, energyGain = 0, friendshipGain = 0, deferredTimeBonus = null, energyVisual = null;
     if (!progress.discovered) {
-      progress.discovered = true; progress.stage = 2; progress.friendship = 0; progress.friendly = false; progress.energy = 0;
-      reward = { stage: 1, vehicleIndex, isNew: true, kind: "discovery", endsChallenge: false };
+      reward = commitAcquisition({ vehicleIndex, acquisitionType: "vehicle_discovered", stage: 1 });
     } else if (!progress.friendly) {
       progress.friendship = Math.min(5, progress.friendship + 1);
       friendshipGain = 1;
       if (progress.friendship === 5) {
         // Friendship itself awards the vehicle. Energy starts on the next
         // encounter, never on this fifth-heart answer.
-        progress.friendly = true;
-        state.sessionUnlocks[1] += 1;
-        reward = { stage: 1, vehicleIndex, isNew: true, kind: "friendship", endsChallenge: true };
+        reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1 });
       }
     } else if (!progress.masterMedal) {
       const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
@@ -2743,10 +2758,9 @@
       }
     }
     if (vehicleIndex === state.currentVehicleIndex) state.currentStage = currentStageForVehicle(vehicleIndex);
-    // Completed state changes are shown as GET entries, including discovery
-    // and friendship. Ordinary point gains remain progress-only.
-    addCompletedRewardToSession(reward);
-    if (!deferredTimeBonus) saveCollectionProgress();
+    // Ordinary point gains remain progress-only; acquisitions persist inside
+    // commitAcquisition together with history and session GET data.
+    if (!deferredTimeBonus && !reward) saveCollectionProgress();
     return { reward, energyGain, friendshipGain, deferredTimeBonus, energyVisual };
   }
   function isFinalInitialQuestion() {
