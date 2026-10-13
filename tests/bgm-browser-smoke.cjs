@@ -103,6 +103,9 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
 
   await page.locator("#top-collection-button").click();
   await page.locator("#collection-screen.active").waitFor({ timeout: 30000 });
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup), "heroic");
+  await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup), "heroic");
   await waitForBgmGroup(page, "collection");
   const collectionStartCount = await bgmStarts(page);
   assert.equal(collectionStartCount, beforeTopCollection + 1);
@@ -117,6 +120,9 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await page.locator("#collection-exit").click();
   await page.locator("#collection-exit-yes").click();
   await page.locator("#mode-select-screen.active").waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup), "collection");
+  await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup), "collection");
   await waitForBgmGroup(page, "heroic");
   await page.locator("#mode-select-back").click();
   await page.locator("#start-screen.active").waitFor();

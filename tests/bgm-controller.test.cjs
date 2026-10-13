@@ -23,11 +23,18 @@ test("screen groups select the intended BGM through one controller", () => {
   assert.doesNotMatch(showScreen, /\.play\(|\.pause\(/);
 });
 
-test("same-group transitions keep the active source and track changes stop it", () => {
+test("same-group transitions keep the active source and track changes crossfade it", () => {
   const starter = app.slice(app.indexOf("function startDecodedBackgroundMusic"), app.indexOf("function updateBgmToggleButton"));
+  const transition = app.slice(app.indexOf("function transitionBackgroundMusic"), app.indexOf("function setBackgroundMusicDucked"));
   const selector = app.slice(app.indexOf("function setDesiredBgmGroup"), app.indexOf("function syncBackgroundMusicForActiveScreen"));
   assert.match(starter, /state\.bgmSource && state\.bgmGroup === group\) return/);
-  assert.match(selector, /state\.bgmGroup !== normalized\) stopBackgroundMusic\(\{ clearDesired: false \}\)/);
+  assert.match(app, /transitionDurationSeconds: 0\.5/);
+  assert.match(starter, /setValueAtTime\(0\.0001/);
+  assert.match(starter, /linearRampToValueAtTime\(backgroundMusicVolume\(group\)/);
+  assert.match(transition, /linearRampToValueAtTime\(0\.0001/);
+  assert.match(transition, /bgmConfig\.transitionDurationSeconds \* 1000/);
+  assert.match(selector, /state\.bgmGroup !== normalized\) \{ transitionBackgroundMusic\(normalized\); return; \}/);
+  assert.doesNotMatch(selector, /stopBackgroundMusic/);
   assert.match(app, /source\.loop = true/);
 });
 

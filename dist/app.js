@@ -43,6 +43,7 @@
   const bgmConfig = Object.freeze({
     storageKey: "warizan-robot:bgm-enabled-v1",
     rewardDuckMultiplier: 0.30,
+    transitionDurationSeconds: 0.5,
     tracks: Object.freeze({
       game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.22 }),
       heroic: Object.freeze({ filePath: "./assets/audio/heroic_loop.wav", normalVolume: 0.18 }),
@@ -166,7 +167,7 @@
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
-    bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0
+    bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0, bgmTransitionId: 0, bgmFadeTimer: null
   };
 
   function emptyVehicleProgress() { return { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false }; }
@@ -3061,7 +3062,6 @@
       if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2")) { finishRound(); return; }
       if (state.missed.length === 0) { finishRound(); return; }
       state.phase = "retry"; state.queue = [...state.missed]; state.retrySetPosition = 1; state.retrySetTotal = state.queue.length;
-      stopBackgroundMusic();
       $("retry-count").textContent = `あと${state.queue.length}問！`;
       showFixedScreenWhenReady("transition-screen", [topBackgroundPath], scheduleRetryAutoStart);
       return;
@@ -3074,7 +3074,7 @@
     displayQuestion(state.queue.shift());
   }
   function finishRound() {
-    state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer(); stopBackgroundMusic();
+    state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer();
     $("elapsed-time").textContent = formatTime(state.finalElapsedMs); $("result-time").textContent = formatTime(state.finalElapsedMs);
     const previousBest = getBestTime();
     if (previousBest === null) {
@@ -3240,7 +3240,7 @@
     state.confirmingAnswer = false; state.quotientInput = ""; state.remainderInput = ""; state.inputMode = "quotient";
     state.preparedInitialVehicleIndex = null;
     prepareInitialVehicle();
-    clearRetryAutoStartTimer(); clearIdleGuide(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.collectionUsed = false; setKeypadDisabled(false);
+    clearRetryAutoStartTimer(); clearIdleGuide(); stopTimer(); stopCollectionTimer(); state.collectionUsed = false; setKeypadDisabled(false);
     $("answer-confirm").hidden = true; $("quit-confirm").hidden = true; $("time-up").hidden = true;
     showFixedScreenWhenReady("start-screen");
   }
@@ -3248,7 +3248,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
+    state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
     state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
@@ -3264,7 +3264,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); stopBackgroundMusic(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
+    state.runId += 1; state.phase = "start"; clearRetryAutoStartTimer(); clearIdleGuide(); stopQuestionTimeout(); stopTimer(); stopCollectionTimer(); state.startedAt = 0; state.timerPaused = false; state.timerPausedAt = 0; state.pausedTimerMs = 0;
     state.confirmingAnswer = false; state.confirmingQuit = false; state.current = null; state.collectionUsed = false; state.collectionNewVehicleIndexes = new Set(); state.preparedInitialVehicleIndex = null;
     window.speechSynthesis?.cancel();
     prepareInitialVehicle();
@@ -3642,13 +3642,39 @@
     state.bgmGain = gain;
     return gain;
   }
+  function cancelBgmGainAutomation(ctx, gain = state.bgmGain) {
+    if (!gain) return;
+    const parameter = gain.gain;
+    if (typeof parameter.cancelAndHoldAtTime === "function") parameter.cancelAndHoldAtTime(ctx.currentTime);
+    else {
+      const currentValue = parameter.value;
+      parameter.cancelScheduledValues(ctx.currentTime);
+      parameter.setValueAtTime(currentValue, ctx.currentTime);
+    }
+  }
+  function clearBgmFadeTimer() {
+    if (state.bgmFadeTimer === null) return;
+    window.clearTimeout(state.bgmFadeTimer);
+    state.bgmFadeTimer = null;
+  }
+  function disconnectBackgroundMusicSource() {
+    const source = state.bgmSource;
+    state.bgmSource = null;
+    state.bgmGroup = null;
+    document.documentElement.dataset.bgmGroup = "";
+    if (!source) return;
+    try { source.stop(); } catch (_) {}
+    try { source.disconnect(); } catch (_) {}
+  }
   function startDecodedBackgroundMusic(buffer, group) {
     if (!buffer || !canPlayBackgroundMusic(group) || state.desiredBgmGroup !== group) return;
     if (state.bgmSource && state.bgmGroup === group) return;
-    if (state.bgmSource) stopBackgroundMusic({ clearDesired: false });
+    if (state.bgmSource) { transitionBackgroundMusic(group); return; }
     const ctx = audioContext();
     const gain = ensureBgmGain();
-    gain.gain.value = backgroundMusicVolume(group);
+    cancelBgmGainAutomation(ctx, gain);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(backgroundMusicVolume(group), ctx.currentTime + bgmConfig.transitionDurationSeconds);
     const source = ctx.createBufferSource();
     const bounds = detectBgmLoopBounds(buffer);
     source.buffer = buffer;
@@ -3676,17 +3702,33 @@
   }
   function stopBackgroundMusic({ clearDesired = true } = {}) {
     state.bgmRequestId += 1;
-    const source = state.bgmSource;
-    state.bgmSource = null;
-    state.bgmGroup = null;
-    document.documentElement.dataset.bgmGroup = "";
-    if (source) {
-      try { source.stop(); } catch (_) {}
-      try { source.disconnect(); } catch (_) {}
-    }
+    state.bgmTransitionId += 1;
+    clearBgmFadeTimer();
+    if (state.bgmGain) cancelBgmGainAutomation(audioContext());
+    disconnectBackgroundMusicSource();
     state.bgmDucked = false;
     if (clearDesired) state.desiredBgmGroup = null;
     if (state.bgmGain) state.bgmGain.gain.value = backgroundMusicVolume();
+  }
+  function transitionBackgroundMusic(nextGroup) {
+    if (!state.bgmSource || state.bgmGroup === nextGroup) {
+      if (nextGroup) startBackgroundMusic(nextGroup);
+      return;
+    }
+    state.bgmRequestId += 1;
+    const transitionId = ++state.bgmTransitionId;
+    clearBgmFadeTimer();
+    const ctx = audioContext();
+    const gain = ensureBgmGain();
+    if (nextGroup) ensureBackgroundMusic(nextGroup);
+    cancelBgmGainAutomation(ctx, gain);
+    gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + bgmConfig.transitionDurationSeconds);
+    state.bgmFadeTimer = window.setTimeout(() => {
+      if (transitionId !== state.bgmTransitionId) return;
+      state.bgmFadeTimer = null;
+      disconnectBackgroundMusicSource();
+      if (nextGroup && state.desiredBgmGroup === nextGroup && state.bgmEnabled) startBackgroundMusic(nextGroup);
+    }, bgmConfig.transitionDurationSeconds * 1000);
   }
   function setBackgroundMusicDucked(ducked) {
     state.bgmDucked = Boolean(ducked);
@@ -3715,7 +3757,16 @@
     const normalized = bgmTrack(group) ? group : null;
     state.desiredBgmGroup = normalized;
     document.documentElement.dataset.bgmDesiredGroup = normalized || "";
-    if (state.bgmSource && state.bgmGroup !== normalized) stopBackgroundMusic({ clearDesired: false });
+    if (state.bgmSource && state.bgmGroup === normalized && state.bgmFadeTimer !== null) {
+      state.bgmTransitionId += 1;
+      clearBgmFadeTimer();
+      const ctx = audioContext();
+      const gain = ensureBgmGain();
+      cancelBgmGainAutomation(ctx, gain);
+      gain.gain.linearRampToValueAtTime(backgroundMusicVolume(normalized), ctx.currentTime + bgmConfig.transitionDurationSeconds);
+      return;
+    }
+    if (state.bgmSource && state.bgmGroup !== normalized) { transitionBackgroundMusic(normalized); return; }
     if (!normalized || !state.bgmEnabled) return;
     startBackgroundMusic(normalized);
   }
