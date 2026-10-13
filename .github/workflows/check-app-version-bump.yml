@@ -1,0 +1,24 @@
+name: Check app version bump
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  check-app-version-bump:
+    name: Check app version bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Test version checker
+        run: node --test .github/scripts/check-app-version-bump.test.mjs
+
+      - name: Check production changes and appVersion
+        run: node .github/scripts/check-app-version-bump.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
