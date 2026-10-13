@@ -2076,7 +2076,13 @@
     const inputOrder = [];
     rows.forEach((row, rowIndex) => row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })));
     state.multiplication2x2 = {
-      rows: rows.map((row) => ({ ...row, cells: Array(row.value.length).fill(""), hintedIndexes: new Set() })),
+      rows: rows.map((row) => ({
+        ...row,
+        cells: Array(row.value.length).fill(""),
+        hintedIndexes: new Set(),
+        wrongIndexes: new Set(),
+        feedback: null
+      })),
       inputOrder, inputStep: 0, history: [],
       firstRowGuideVisible: false,
       secondRowGuideVisible: false,
@@ -2088,10 +2094,12 @@
     const model = state.multiplication2x2; if (!model) return;
     const active = model.inputOrder[model.inputStep] || null;
     model.rows.forEach((row, rowIndex) => {
-      Array.from(row.holder.children).forEach((slot, cellIndex) => {
+      row.holder.classList.toggle("is-step-wrong", row.feedback === "wrong");
+      row.holder.querySelectorAll(".multiplication-2x2-slot").forEach((slot, cellIndex) => {
         slot.textContent = row.cells[cellIndex];
         slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
         slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
+        slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
       });
     });
     const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
@@ -2099,6 +2107,24 @@
       digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
     });
     $("multiplication-2x2-shift-guide").hidden = !model.secondRowGuideVisible;
+  }
+  function playTwoDigitRowCorrectEffect(row) {
+    if (!row?.holder) return;
+    row.holder.querySelector(".multiplication-2x2-row-sparkles")?.remove();
+    const trail = document.createElement("span");
+    trail.className = "multiplication-2x2-row-sparkles";
+    trail.setAttribute("aria-hidden", "true");
+    trail.style.setProperty("--row-spark-distance", `${Math.max(105, row.holder.offsetWidth + 26)}px`);
+    for (let index = 0; index < 16; index += 1) {
+      const sparkle = document.createElement("i");
+      sparkle.style.setProperty("--row-spark-y", `${-8 + (index % 5) * 4}px`);
+      sparkle.style.setProperty("--row-spark-delay", `${index * 28}ms`);
+      sparkle.style.setProperty("--row-spark-size", `${5 + (index % 4) * 2}px`);
+      sparkle.style.setProperty("--row-spark-drift", `${(index % 3 - 1) * 6}px`);
+      trail.appendChild(sparkle);
+    }
+    row.holder.appendChild(trail);
+    window.setTimeout(() => trail.remove(), 760);
   }
   function showTwoDigitSecondRowGuides(model) {
     if (!model || model.firstRowGuideVisible) return;
@@ -2109,6 +2135,31 @@
       model.secondRowGuideVisible = true;
       renderTwoDigitMultiplication();
     }, 500);
+  }
+  function checkTwoDigitIntermediateRow(model, rowIndex) {
+    if (!model || rowIndex < 0 || rowIndex >= model.rows.length - 1) return;
+    const row = model.rows[rowIndex];
+    if (row.cells.some((cell) => !cell)) return;
+    const wrongIndexes = new Set();
+    row.cells.forEach((digit, cellIndex) => {
+      if (digit !== row.value[cellIndex]) wrongIndexes.add(cellIndex);
+    });
+    if (!wrongIndexes.size) {
+      row.feedback = null;
+      row.wrongIndexes.clear();
+      renderTwoDigitMultiplication();
+      playTwoDigitRowCorrectEffect(row);
+      if (rowIndex === 0) showTwoDigitSecondRowGuides(model);
+      return;
+    }
+    row.feedback = "wrong";
+    row.wrongIndexes = wrongIndexes;
+    if (state.current) {
+      state.current.stepCorrectionUsed = true;
+      state.current.progressPenalty = true;
+    }
+    renderTwoDigitMultiplication();
+    playWrongSound();
   }
   function advanceTwoDigitMultiplicationStep(model) {
     while (model.inputStep < model.inputOrder.length) {
@@ -2122,15 +2173,18 @@
     if (!model || model.inputStep >= model.inputOrder.length) return;
     noteQuestionActivity();
     const step = model.inputOrder[model.inputStep];
-    model.rows[step.rowIndex].cells[step.cellIndex] = String(number);
+    const row = model.rows[step.rowIndex];
+    row.cells[step.cellIndex] = String(number);
+    row.wrongIndexes.delete(step.cellIndex);
     model.history.push({ ...step });
     model.inputStep += 1;
     advanceTwoDigitMultiplicationStep(model);
-    const nextStep = model.inputOrder[model.inputStep] || null;
-    if (step.rowIndex === 0 && (!nextStep || nextStep.rowIndex !== 0)) showTwoDigitSecondRowGuides(model);
     renderTwoDigitMultiplication();
+    if (step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) {
+      checkTwoDigitIntermediateRow(model, step.rowIndex);
+    }
     if (model.inputStep >= model.inputOrder.length) {
-      const allRowsCorrect = model.rows.every((row) => row.cells.join("") === row.value);
+      const allRowsCorrect = model.rows.every((currentRow) => currentRow.cells.join("") === currentRow.value);
       const total = Number(model.rows[2].cells.join(""));
       judge({ quotient: allRowsCorrect ? total : total + 1, remainder: 0, usedRemainder: false });
     }
@@ -2139,7 +2193,9 @@
     const model = state.multiplication2x2;
     if (!model || !model.history.length) return;
     const step = model.history.pop();
-    model.rows[step.rowIndex].cells[step.cellIndex] = "";
+    const row = model.rows[step.rowIndex];
+    row.cells[step.cellIndex] = "";
+    row.wrongIndexes.delete(step.cellIndex);
     model.inputStep = 0;
     advanceTwoDigitMultiplicationStep(model);
     renderTwoDigitMultiplication();
@@ -2258,7 +2314,7 @@
     return `${question.dividend}/${question.divisor}`;
   }
   function makeReviewQuestion(question) {
-    return { ...question, hintUsed: false, hadWrong: false, progressPenalty: Boolean(question.progressPenalty || question.hintUsed || question.hadWrong || question.answerRevealed), answerRevealed: false, assistedCorrect: false, resultType: null, isReview: true };
+    return { ...question, hintUsed: false, hadWrong: false, stepCorrectionUsed: false, progressPenalty: Boolean(question.progressPenalty || question.hintUsed || question.hadWrong || question.answerRevealed || question.stepCorrectionUsed), answerRevealed: false, assistedCorrect: false, resultType: null, isReview: true };
   }
   function enqueueReview(target, question) {
     const key = questionKey(question);
@@ -2289,9 +2345,11 @@
       const row = model.rows[step.rowIndex];
       row.cells[step.cellIndex] = row.value[step.cellIndex];
       row.hintedIndexes.add(step.cellIndex);
+      row.wrongIndexes.delete(step.cellIndex);
       model.inputStep += 1;
       advanceTwoDigitMultiplicationStep(model);
       renderTwoDigitMultiplication();
+      if (step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) checkTwoDigitIntermediateRow(model, step.rowIndex);
       updateAssistButton();
       return;
     }
@@ -2428,7 +2486,7 @@
   }
   function showProgressSpeechBubbleForCurrentQuestion(vehicleIndex) {
     const question = state.current;
-    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.answerRevealed) return;
+    if (!question || question.vehicleIndex !== vehicleIndex || question.isReview || question.hintUsed || question.stepCorrectionUsed || question.answerRevealed) return;
     const spec = progressSpeechBubbleSpec(vehicleIndex);
     if (!spec || spec.stage !== question.answerStage) return;
     const bubble = $("answer-bubble");
@@ -2438,7 +2496,7 @@
     const reveal = () => {
       if (state.current !== question) return;
       const currentSpec = progressSpeechBubbleSpec(vehicleIndex);
-      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.answerRevealed) return;
+      if (!currentSpec || currentSpec.stage !== question.answerStage || question.hintUsed || question.stepCorrectionUsed || question.answerRevealed) return;
       bubble.style.visibility = "";
       bubble.hidden = false;
     };
@@ -2723,11 +2781,11 @@
     stopQuestionTimeout(); setKeypadDisabled(true); if (state.mode === "longdivision") renderLongDivision(); else $("answer-text").textContent = formatAnswer(answer);
     const hintInputTypeMatches = !state.current.hintUsed || Boolean(answer.usedRemainder) === (state.current.remainder !== 0);
     const correct = answer.quotient === state.current.quotient && answer.remainder === state.current.remainder && hintInputTypeMatches;
-    const assistedCorrect = correct && state.phase === "initial" && state.current.hintUsed;
+    const assistedCorrect = correct && state.phase === "initial" && (state.current.hintUsed || state.current.stepCorrectionUsed);
     let reward = null, progression = null;
     if (correct) {
       setQuestionCardState("correct");
-      state.current.resultType = state.current.hintUsed ? "hint_correct" : "self_correct";
+      state.current.resultType = assistedCorrect ? "hint_correct" : "self_correct";
       if (assistedCorrect) { state.current.assistedCorrect = true; enqueueReview(state.missed, state.current); }
       if (state.phase === "initial") {
         if (!assistedCorrect) {
