@@ -75,23 +75,7 @@
     rare: { label: "レア", stars: "★★★", weight: 2 },
     "super-rare": { label: "スーパーレア", stars: "★★★★", weight: 1 }
   });
-  const storageKeys = {
-    bestTime: "warizan-robot:best-time-ms",
-    collection: "warizan-robot:vehicle-collection-v1",
-    recentVehicles: "warizan-robot:recent-vehicles-v1",
-    history: "warizan-robot:history",
-    ranking: "warizan-robot:ranking",
-    topCollectionLastUsedJst: "warizan-robot:top-collection-last-used-jst",
-    resetMarker: "warizan-robot:records-reset-2026-09-19",
-    rewardResetMarker: "warizan-robot:reward-reset-v40-done",
-    collectionResetV60Marker: "warizan-robot:collection-reset-20260924-done",
-    topCollectionAccessResetV60Marker: "warizan-robot:collection-access-reset-20260924-done",
-    rewardProgressPhase1: "warizan-robot:reward-progress-phase1-v1",
-    rewardProgressPhase1ResetMarker: "warizan-robot:reward-progress-phase1-reset-20260928-done",
-    qaProgressBackup: "warizan-robot:qa-progress-backup-v1"
-  };
-  const previewQaProgressPresetMarker = "warizan-robot:preview-qa-progress-v2";
-  const qaProgressMissingBackupValue = "__missing__";
+  const profileStore = window.MQProfileStorage.createProfileStorage(window.localStorage);
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -171,45 +155,7 @@
     bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
   };
 
-  function resetStoredRecordsOnce() {
-    try {
-      if (localStorage.getItem(storageKeys.resetMarker) === "done") return;
-      localStorage.removeItem(storageKeys.bestTime);
-      localStorage.removeItem(storageKeys.history);
-      localStorage.removeItem(storageKeys.ranking);
-      localStorage.setItem(storageKeys.resetMarker, "done");
-    } catch (_) {}
-  }
-  function resetRewardProgressOnce() {
-    try {
-      if (localStorage.getItem(storageKeys.rewardResetMarker) === "done") return;
-      localStorage.removeItem(storageKeys.collection);
-      localStorage.setItem(storageKeys.rewardResetMarker, "done");
-    } catch (_) {}
-  }
-  function resetCollectionForV60Once() {
-    try {
-      if (localStorage.getItem(storageKeys.collectionResetV60Marker) === "done") return;
-      localStorage.removeItem(storageKeys.collection);
-      localStorage.setItem(storageKeys.collectionResetV60Marker, "done");
-    } catch (_) {}
-  }
-  function resetTopCollectionAccessForV60Once() {
-    try {
-      if (localStorage.getItem(storageKeys.topCollectionAccessResetV60Marker) === "done") return;
-      localStorage.removeItem(storageKeys.topCollectionLastUsedJst);
-      localStorage.setItem(storageKeys.topCollectionAccessResetV60Marker, "done");
-    } catch (_) {}
-  }
   function emptyVehicleProgress() { return { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false }; }
-  function resetRewardProgressPhase1Once() {
-    try {
-      if (localStorage.getItem(storageKeys.rewardProgressPhase1ResetMarker) === "done") return;
-      localStorage.removeItem(storageKeys.collection);
-      localStorage.removeItem(storageKeys.rewardProgressPhase1);
-      localStorage.setItem(storageKeys.rewardProgressPhase1ResetMarker, "done");
-    } catch (_) {}
-  }
   function collectionStageForProgress(progress) {
     if (!progress?.discovered) return 0;
     if (progress.masterMedal) return 5;
@@ -229,13 +175,30 @@
   function loadRewardProgress() {
     state.rewardProgress = Array.from({ length: vehicles.length }, emptyVehicleProgress);
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKeys.rewardProgressPhase1));
+      const saved = profileStore.getRewardProgress();
       if (Array.isArray(saved) && saved.length === vehicles.length) state.rewardProgress = saved.map(normalizeVehicleProgress);
+      else {
+        const legacyCollection = profileStore.getCollectionStages();
+        if (Array.isArray(legacyCollection) && legacyCollection.length === vehicles.length) {
+          state.rewardProgress = legacyCollection.map((value) => {
+            const stage = Math.max(0, Math.min(5, Number(value) || 0));
+            if (!stage) return emptyVehicleProgress();
+            return normalizeVehicleProgress({
+              discovered: true,
+              friendship: 0,
+              friendly: false,
+              stage: Math.min(5, stage + 1),
+              energy: 0,
+              masterMedal: stage === 5
+            });
+          });
+        }
+      }
     } catch (_) {}
     syncCollectionFromRewardProgress();
   }
   function saveRewardProgress() {
-    try { localStorage.setItem(storageKeys.rewardProgressPhase1, JSON.stringify(state.rewardProgress)); } catch (_) {}
+    try { profileStore.setRewardProgress(state.rewardProgress); } catch (_) {}
   }
   function syncCollectionFromRewardProgress() {
     state.collection = state.rewardProgress.map(collectionStageForProgress);
@@ -261,12 +224,12 @@
   }
   function loadCollection() {
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKeys.collection));
+      const saved = profileStore.getCollectionStages();
       if (Array.isArray(saved) && saved.length === 20) state.collection = saved.map((value) => Math.max(0, Math.min(5, Number(value) || 0)));
     } catch (_) {}
   }
   function saveCollection() {
-    try { localStorage.setItem(storageKeys.collection, JSON.stringify(state.collection)); } catch (_) {}
+    try { profileStore.setCollectionStages(state.collection); } catch (_) {}
   }
   function qaProgressModeEnabled() {
     return new URLSearchParams(window.location.search).get("qa") === "progress";
@@ -280,13 +243,10 @@
   }
   function restoreQaProgressBackup() {
     try {
-      const backup = localStorage.getItem(storageKeys.qaProgressBackup);
-      if (backup === null) return;
-      if (backup === qaProgressMissingBackupValue) localStorage.removeItem(storageKeys.rewardProgressPhase1);
-      else localStorage.setItem(storageKeys.rewardProgressPhase1, backup);
-      localStorage.removeItem(storageKeys.qaProgressBackup);
-      localStorage.removeItem(previewQaProgressPresetMarker);
-      localStorage.removeItem(storageKeys.collection);
+      const qaState = profileStore.getActiveQaState();
+      if (!qaState.backupInitialized) return;
+      profileStore.setRewardProgress(qaState.rewardProgressBackup);
+      profileStore.setActiveQaState({});
     } catch (_) {}
   }
   function toggleQaProgressMode() {
@@ -305,11 +265,12 @@
     const params = new URLSearchParams(window.location.search);
     if (!qaProgressModeEnabled()) return null;
     try {
-      if (localStorage.getItem(storageKeys.qaProgressBackup) === null) {
-        const currentProgress = localStorage.getItem(storageKeys.rewardProgressPhase1);
-        localStorage.setItem(storageKeys.qaProgressBackup, currentProgress === null ? qaProgressMissingBackupValue : currentProgress);
+      const qaState = profileStore.getActiveQaState();
+      if (!qaState.backupInitialized) {
+        qaState.backupInitialized = true;
+        qaState.rewardProgressBackup = profileStore.getRewardProgress();
       }
-      if (params.get("reset") !== "1" && localStorage.getItem(previewQaProgressPresetMarker) === "done") return null;
+      if (params.get("reset") !== "1" && qaState.presetApplied) return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
       const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
       const progressStates = [
@@ -325,28 +286,29 @@
         const progress = progressStates[displayIndex % progressStates.length];
         if (progress) preset[vehicleIndex] = progress;
       });
-      localStorage.setItem(storageKeys.rewardProgressPhase1, JSON.stringify(preset));
-      localStorage.setItem(previewQaProgressPresetMarker, "done");
+      profileStore.setRewardProgress(preset);
+      qaState.presetApplied = true;
+      profileStore.setActiveQaState(qaState);
       return qaVehicleIndexes[3];
     } catch (_) { return null; }
   }
   function loadRecentVehicles() {
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKeys.recentVehicles));
+      const saved = profileStore.getRecentVehicles();
       if (Array.isArray(saved)) state.recentVehicleHistory = saved.filter((id) => Number.isInteger(id) && id >= 0 && id < vehicles.length).slice(-3);
     } catch (_) {}
   }
   function saveRecentVehicles() {
-    try { localStorage.setItem(storageKeys.recentVehicles, JSON.stringify(state.recentVehicleHistory)); } catch (_) {}
+    try { profileStore.setRecentVehicles(state.recentVehicleHistory); } catch (_) {}
   }
   function getBestTime() {
     try {
-      const value = Number(localStorage.getItem(storageKeys.bestTime));
+      const value = Number(profileStore.getBestTime());
       return Number.isFinite(value) && value > 0 ? value : null;
     } catch (_) { return null; }
   }
   function saveBestTime(ms) {
-    try { localStorage.setItem(storageKeys.bestTime, String(ms)); } catch (_) {}
+    try { profileStore.setBestTime(ms); } catch (_) {}
   }
   function japanDateKey(date = new Date()) {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -357,7 +319,7 @@
   }
   function topCollectionAlreadyUsedToday() {
     if (qaProgressModeEnabled()) return false;
-    try { return localStorage.getItem(storageKeys.topCollectionLastUsedJst) === japanDateKey(); } catch (_) { return false; }
+    try { return profileStore.getTopCollectionLastUsedJst() === japanDateKey(); } catch (_) { return false; }
   }
   function updateTopCollectionButton() {
     const button = $("top-collection-button");
@@ -370,7 +332,7 @@
   }
   function openTopCollection() {
     if (state.collectionUsed || topCollectionAlreadyUsedToday()) { updateTopCollectionButton(); return; }
-    try { localStorage.setItem(storageKeys.topCollectionLastUsedJst, japanDateKey()); } catch (_) {}
+    try { profileStore.setTopCollectionLastUsedJst(japanDateKey()); } catch (_) {}
     const button = $("top-collection-button");
     button.disabled = true;
     openCollection({ showSessionMarkers: false });
@@ -3648,6 +3610,69 @@
   function playFinishSound() { tone(523, 0, .14); tone(659, .14, .14); tone(784, .28, .3); }
   function playCollectionEndSound() { tone(660, 0, .22, "sine", .12); tone(523, .2, .24, "sine", .12); tone(392, .4, .35, "sine", .1); }
   let developerResetInProgress = false;
+  let gameInitialized = false;
+  function setProfileError(element, message) {
+    element.textContent = message || "";
+    element.hidden = !message;
+  }
+  function updateActiveProfileUi() {
+    const profile = profileStore.getActiveProfile();
+    const button = $("profile-switch-button");
+    button.hidden = !profile;
+    $("active-profile-name").textContent = profile?.displayName || "";
+  }
+  function renderProfileList() {
+    const list = $("profile-list");
+    const activeId = profileStore.getActiveProfileId();
+    list.replaceChildren();
+    profileStore.listProfiles().forEach((profile) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = profile.displayName;
+      button.dataset.profileId = profile.profileId;
+      button.setAttribute("aria-current", profile.profileId === activeId ? "true" : "false");
+      button.addEventListener("click", () => {
+        if (profile.profileId === activeId) { $("profile-manager-overlay").hidden = true; return; }
+        profileStore.setActiveProfile(profile.profileId);
+        window.location.reload();
+      });
+      list.append(button);
+    });
+  }
+  function openProfileManager() {
+    renderProfileList();
+    setProfileError($("profile-manager-error"), "");
+    $("profile-manager-overlay").hidden = false;
+    $("profile-add-name").focus();
+  }
+  function initializeGameForActiveProfile() {
+    if (gameInitialized) return;
+    gameInitialized = true;
+    updateActiveProfileUi();
+    const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset();
+    loadRewardProgress();
+    loadRecentVehicles();
+    state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex;
+    setNeutralBackground();
+    prepareInitialVehicle();
+    preloadImages();
+    preloadStartSound();
+    updateTopCollectionButton();
+    schedulePlayStageSize("initial");
+  }
+  function beginProfileExperience() {
+    if (profileStore.listProfiles().length) {
+      profileStore.ensureActiveProfile();
+      initializeGameForActiveProfile();
+      return;
+    }
+    const hasLegacyData = profileStore.hasLegacyChildData();
+    $("profile-setup-message").textContent = hasLegacyData
+      ? "いままでのきろくを、このプレイヤーにひきつぎます"
+      : "なまえをいれてね";
+    $("profile-setup-overlay").hidden = false;
+    $("profile-setup-name").focus();
+  }
   function closeDeveloperResetConfirm() {
     if (developerResetInProgress) return;
     $("developer-reset-confirm").hidden = true;
@@ -3659,7 +3684,7 @@
     $("developer-reset-confirm-button").disabled = true;
     $("developer-reset-cancel").disabled = true;
     try {
-      Object.values(storageKeys).forEach((key) => localStorage.removeItem(key));
+      profileStore.resetActiveProfileData();
     } catch (error) {
       console.error("Developer data reset failed", error);
       developerResetInProgress = false;
@@ -3677,7 +3702,7 @@
   ensureBackgroundMusic();
   updateVersionLabelWithPreviewMetadata();
   updateQaModeButton();
-  resetStoredRecordsOnce(); resetRewardProgressOnce(); resetCollectionForV60Once(); resetTopCollectionAccessForV60Once(); resetRewardProgressPhase1Once(); const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset(); loadRewardProgress(); loadRecentVehicles(); state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex; setNeutralBackground(); prepareInitialVehicle(); preloadImages(); preloadStartSound(); updateTopCollectionButton(); schedulePlayStageSize("initial");
+  beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
@@ -3698,6 +3723,32 @@
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
   $("developer-reset-confirm-button").addEventListener("click", resetDeveloperUserData);
+  $("profile-switch-button").addEventListener("click", openProfileManager);
+  $("profile-manager-close").addEventListener("click", () => { $("profile-manager-overlay").hidden = true; });
+  $("profile-setup-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = $("profile-setup-name").value;
+    try {
+      if (profileStore.hasLegacyChildData()) profileStore.migrateLegacyProfile(name);
+      else profileStore.createProfile(name);
+      setProfileError($("profile-setup-error"), "");
+      $("profile-setup-overlay").hidden = true;
+      initializeGameForActiveProfile();
+    } catch (error) {
+      console.error("Profile setup failed", error);
+      setProfileError($("profile-setup-error"), "プロフィールを作れませんでした。もう一度ためしてください。");
+    }
+  });
+  $("profile-add-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    try {
+      profileStore.createProfile($("profile-add-name").value);
+      window.location.reload();
+    } catch (error) {
+      console.error("Profile creation failed", error);
+      setProfileError($("profile-manager-error"), "プロフィールを作れませんでした。なまえを確認してください。");
+    }
+  });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
