@@ -2,8 +2,27 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.11";
+  const appVersion = "0.1.12";
   const adminPin = "3710";
+  // Separate parent and admin PIN settings intentionally. They happen to share
+  // the same digits today, but can diverge later without changing either flow.
+  const parentPin = "3710";
+  const parentModeDefinitions = Object.freeze([
+    Object.freeze({ id:"numbercards", label:"すうじあつめ", detail:"" }),
+    Object.freeze({ id:"counting1", label:"かずかぞえ1", detail:"" }),
+    Object.freeze({ id:"counting2", label:"かずかぞえ2", detail:"" }),
+    Object.freeze({ id:"multiplication", label:"かけ算ひっ算", detail:"2けた×1けた" }),
+    Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
+    Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
+    Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" })
+  ]);
+  const parentEnergyLevels = Object.freeze([
+    Object.freeze({ id:"off", label:"OFF" }),
+    Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
+    Object.freeze({ id:"small", label:"小" }),
+    Object.freeze({ id:"medium", label:"中" }),
+    Object.freeze({ id:"large", label:"大" })
+  ]);
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -3826,6 +3845,7 @@
   function playCollectionEndSound() { tone(660, 0, .22, "sine", .12); tone(523, .2, .24, "sine", .12); tone(392, .4, .35, "sine", .1); }
   let adminResetInProgress = false;
   let gameInitialized = false;
+  let parentSettingsProfileId = null;
   function setProfileError(element, message) {
     element.textContent = message || "";
     element.hidden = !message;
@@ -3866,6 +3886,175 @@
     $("admin-pin-overlay").hidden = false;
     document.querySelector("[data-admin-pin-digit]")?.focus();
   }
+
+  function parentModeSetting(settings, modeId) {
+    const enabled = settings.enabledModes?.[modeId] !== false;
+    const storedEnergy = settings.energyMultipliers?.[modeId];
+    const validEnergy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : null;
+    const energy = enabled ? (validEnergy && validEnergy !== "off" ? validEnergy : "medium") : "off";
+    const rawTarget = Number(settings.dailyTargetCounts?.[modeId]);
+    const target = Number.isInteger(rawTarget) ? Math.max(1, Math.min(9, rawTarget)) : 1;
+    return { enabled: energy !== "off", energy, target };
+  }
+
+  function renderParentProfileTabs() {
+    const profiles = profileStore.listProfiles();
+    const activeId = profileStore.getActiveProfileId();
+    if (!parentSettingsProfileId || !profiles.some((profile) => profile.profileId === parentSettingsProfileId)) {
+      parentSettingsProfileId = profiles.some((profile) => profile.profileId === activeId) ? activeId : profiles[0]?.profileId || null;
+    }
+    const tabs = $("parent-profile-tabs");
+    tabs.replaceChildren();
+    profiles.forEach((profile) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = profile.displayName;
+      button.dataset.profileId = profile.profileId;
+      const selected = profile.profileId === parentSettingsProfileId;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+      button.addEventListener("click", () => {
+        parentSettingsProfileId = profile.profileId;
+        renderParentProfileTabs();
+        renderParentModeSettings();
+      });
+      tabs.append(button);
+    });
+  }
+
+  function renderParentModeSettings() {
+    const container = $("parent-mode-settings");
+    container.replaceChildren();
+    if (!parentSettingsProfileId) return;
+    const settings = profileStore.getProfileLearningSettings(parentSettingsProfileId);
+    parentModeDefinitions.forEach((mode) => {
+      const current = parentModeSetting(settings, mode.id);
+      const row = document.createElement("div");
+      row.className = "parent-mode-row";
+      row.dataset.mode = mode.id;
+
+      const name = document.createElement("div");
+      name.className = "parent-mode-name";
+      const strong = document.createElement("strong");
+      strong.textContent = mode.label;
+      name.append(strong);
+      if (mode.detail) {
+        const small = document.createElement("small");
+        small.textContent = mode.detail;
+        name.append(small);
+      }
+
+      const target = document.createElement("div");
+      target.className = "parent-target-control";
+      target.classList.toggle("disabled", !current.enabled);
+      const minus = document.createElement("button");
+      minus.type = "button";
+      minus.textContent = "−";
+      minus.setAttribute("aria-label", mode.label + "の目標回数を減らす");
+      minus.disabled = !current.enabled || current.target <= 1;
+      const value = document.createElement("strong");
+      value.textContent = current.target + "回";
+      const plus = document.createElement("button");
+      plus.type = "button";
+      plus.textContent = "＋";
+      plus.setAttribute("aria-label", mode.label + "の目標回数を増やす");
+      plus.disabled = !current.enabled || current.target >= 9;
+      minus.addEventListener("click", () => changeParentTarget(mode.id, -1));
+      plus.addEventListener("click", () => changeParentTarget(mode.id, 1));
+      target.append(minus, value, plus);
+
+      const energy = document.createElement("div");
+      energy.className = "parent-energy-options";
+      energy.setAttribute("aria-label", mode.label + "のエネルギー");
+      parentEnergyLevels.forEach((level) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = level.label;
+        button.dataset.energy = level.id;
+        const selected = current.energy === level.id;
+        button.classList.toggle("selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+        button.addEventListener("click", () => setParentEnergy(mode.id, level.id));
+        energy.append(button);
+      });
+
+      row.append(name, target, energy);
+      container.append(row);
+    });
+  }
+
+  function saveParentModeSetting(modeId, updater) {
+    if (!parentSettingsProfileId) return;
+    const settings = profileStore.getProfileLearningSettings(parentSettingsProfileId);
+    const current = parentModeSetting(settings, modeId);
+    const next = updater(current);
+    settings.enabledModes[modeId] = next.energy !== "off";
+    settings.energyMultipliers[modeId] = next.energy;
+    settings.dailyTargetCounts[modeId] = next.target;
+    profileStore.setProfileLearningSettings(parentSettingsProfileId, settings);
+    renderParentModeSettings();
+  }
+
+  function setParentEnergy(modeId, energy) {
+    if (!parentEnergyLevels.some((level) => level.id === energy)) return;
+    saveParentModeSetting(modeId, (current) => ({ ...current, energy }));
+  }
+
+  function changeParentTarget(modeId, delta) {
+    saveParentModeSetting(modeId, (current) => ({
+      ...current,
+      target: Math.max(1, Math.min(9, current.target + delta))
+    }));
+  }
+
+  function openParentPin() {
+    $("parent-pin-input").value = "";
+    setProfileError($("parent-pin-error"), "");
+    $("parent-pin-overlay").hidden = false;
+    document.querySelector("[data-parent-pin-digit]")?.focus();
+  }
+
+  function submitParentPin() {
+    const input = $("parent-pin-input");
+    const pin = input.value;
+    if (!/^\d{4}$/.test(pin)) return;
+    if (pin !== parentPin) {
+      setProfileError($("parent-pin-error"), "PINがちがいます。");
+      input.value = "";
+      document.querySelector("[data-parent-pin-digit]")?.focus();
+      return;
+    }
+    setProfileError($("parent-pin-error"), "");
+    $("parent-pin-overlay").hidden = true;
+    openParentSettings();
+  }
+
+  function appendParentPinDigit(digit) {
+    const input = $("parent-pin-input");
+    if (input.value.length >= 4) return;
+    input.value += digit;
+    setProfileError($("parent-pin-error"), "");
+    if (input.value.length === 4) submitParentPin();
+  }
+
+  function closeParentPin() {
+    $("parent-pin-overlay").hidden = true;
+    $("parent-settings-button").focus();
+  }
+
+  function openParentSettings() {
+    parentSettingsProfileId = profileStore.getActiveProfileId() || profileStore.listProfiles()[0]?.profileId || null;
+    renderParentProfileTabs();
+    renderParentModeSettings();
+    $("parent-settings-overlay").hidden = false;
+    $("parent-settings-close").focus();
+  }
+
+  function closeParentSettings() {
+    $("parent-settings-overlay").hidden = true;
+    $("parent-settings-button").focus();
+  }
+
   async function reloadApplication() {
     const button = $("top-reload-button");
     if (button.disabled) return;
@@ -4023,7 +4212,21 @@
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
+  $("parent-settings-button").addEventListener("click", openParentPin);
   $("top-reload-button").addEventListener("click", reloadApplication);
+  $("parent-pin-form").addEventListener("submit", (event) => event.preventDefault());
+  document.querySelectorAll("[data-parent-pin-digit]").forEach((button) => button.addEventListener("click", () => appendParentPinDigit(button.dataset.parentPinDigit)));
+  $("parent-pin-clear").addEventListener("click", () => {
+    $("parent-pin-input").value = "";
+    setProfileError($("parent-pin-error"), "");
+  });
+  $("parent-pin-backspace").addEventListener("click", () => {
+    $("parent-pin-input").value = $("parent-pin-input").value.slice(0, -1);
+    setProfileError($("parent-pin-error"), "");
+  });
+  $("parent-pin-cancel").addEventListener("click", closeParentPin);
+  $("parent-settings-close").addEventListener("click", closeParentSettings);
+  $("parent-settings-done").addEventListener("click", closeParentSettings);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
   document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
   $("admin-pin-clear").addEventListener("click", () => {
