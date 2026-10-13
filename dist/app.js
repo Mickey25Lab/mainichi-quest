@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.3";
+  const appVersion = "0.1.4";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -3284,7 +3284,7 @@
     if (state.collectionClosing) return;
     state.collectionClosing = true;
     stopCollectionTimer(); playCollectionEndSound(); $("time-up").hidden = false;
-    window.setTimeout(() => endToStart({ keepTimeUp:true }), collectionEndTransitionDurationMs);
+    window.setTimeout(() => endToModeSelect(), collectionEndTransitionDurationMs);
   }
   function stopCollectionTimer() {
     if (state.collectionTimerId !== null) { window.clearInterval(state.collectionTimerId); state.collectionTimerId = null; }
@@ -3768,13 +3768,13 @@
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
-  $("finish-button").addEventListener("click", endToStart); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
   $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
   $("developer-reset-confirm-button").addEventListener("click", resetDeveloperUserData);
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
-  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToStart(); });
+  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToModeSelect(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
     const category = button.dataset.category;
     setCollectionCategory(category);
