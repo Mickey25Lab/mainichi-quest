@@ -1968,14 +1968,26 @@
       return cell;
     }));
   }
-  function multiplicationInputOrder(multiplicand, product) {
-    const factorDigits = String(multiplicand).length;
-    const productDigits = String(product).length;
-    const lowerPlaceCount = Math.min(factorDigits - 1, productDigits - 1);
+  function calculationInputOrder(resultValue, lowerPlaceCount) {
+    const resultDigits = String(resultValue).length;
+    const lowerCount = Math.max(0, Math.min(lowerPlaceCount, resultDigits - 1));
     const order = [];
-    for (let index = productDigits - 1; index >= productDigits - lowerPlaceCount; index -= 1) order.push(index);
-    for (let index = 0; index < productDigits - lowerPlaceCount; index += 1) order.push(index);
+    // Ordinary column results are written from right to left. When the final
+    // calculation produces a multi-digit block (for example 10), that block is
+    // written as one number from left to right.
+    for (let index = resultDigits - 1; index >= resultDigits - lowerCount; index -= 1) order.push(index);
+    for (let index = 0; index < resultDigits - lowerCount; index += 1) order.push(index);
     return order;
+  }
+  function multiplicationInputOrder(multiplicand, product) {
+    return calculationInputOrder(product, String(multiplicand).length - 1);
+  }
+  function twoDigitTotalInputOrder(question) {
+    const partial1Places = String(question.partial1).length;
+    // The tens partial row is displayed one place to the left.
+    const partial2Places = String(question.partial2).length + 1;
+    const highestOccupiedPlace = Math.max(partial1Places, partial2Places) - 1;
+    return calculationInputOrder(question.product, highestOccupiedPlace);
   }
   function setupMultiplication(question) {
     const answerSlots = String(question.product).length;
@@ -2065,7 +2077,7 @@
     const rows = [
       { key: "partial1", value: partial1Text, holder: $("multiplication-2x2-partial-1"), order: twoDigitRowOrder(question.multiplicand, question.partial1) },
       { key: "partial2", value: partial2Text, holder: $("multiplication-2x2-partial-2"), order: twoDigitRowOrder(question.multiplicand, question.partial2) },
-      { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: Array.from({ length: totalText.length }, (_, offset) => totalText.length - 1 - offset) }
+      { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: twoDigitTotalInputOrder(question) }
     ];
     rows.forEach((row) => makeTwoDigitSlots(row.holder, row.value.length));
     makeMultiplicationDigits($("multiplication-2x2-multiplicand"), question.multiplicand);
