@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.1";
+  const appVersion = "0.1.2";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -179,19 +179,10 @@
       if (Array.isArray(saved) && saved.length === vehicles.length) state.rewardProgress = saved.map(normalizeVehicleProgress);
       else {
         const legacyCollection = profileStore.getCollectionStages();
-        if (Array.isArray(legacyCollection) && legacyCollection.length === vehicles.length) {
-          state.rewardProgress = legacyCollection.map((value) => {
-            const stage = Math.max(0, Math.min(5, Number(value) || 0));
-            if (!stage) return emptyVehicleProgress();
-            return normalizeVehicleProgress({
-              discovered: true,
-              friendship: 0,
-              friendly: false,
-              stage: Math.min(5, stage + 1),
-              energy: 0,
-              masterMedal: stage === 5
-            });
-          });
+        if (Array.isArray(legacyCollection) && legacyCollection.length === vehicles.length && legacyCollection.some((value) => Number(value) > 0)) {
+          const converted = window.MQProfileStorage.rewardProgressFromCollectionStages(legacyCollection);
+          state.rewardProgress = converted.map(normalizeVehicleProgress);
+          profileStore.setRewardProgress(state.rewardProgress);
         }
       }
     } catch (_) {}
@@ -245,7 +236,11 @@
     try {
       const qaState = profileStore.getActiveQaState();
       if (!qaState.backupInitialized) return;
-      profileStore.setRewardProgress(qaState.rewardProgressBackup);
+      const snapshot = qaState.progressBackup || {
+        rewardProgress: qaState.rewardProgressBackup ?? null,
+        collection: null
+      };
+      profileStore.restoreProgressSnapshot(snapshot);
       profileStore.setActiveQaState({});
     } catch (_) {}
   }
@@ -268,7 +263,8 @@
       const qaState = profileStore.getActiveQaState();
       if (!qaState.backupInitialized) {
         qaState.backupInitialized = true;
-        qaState.rewardProgressBackup = profileStore.getRewardProgress();
+        qaState.progressBackup = profileStore.getProgressSnapshot();
+        profileStore.setActiveQaState(qaState);
       }
       if (params.get("reset") !== "1" && qaState.presetApplied) return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);

@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { createProfileStorage, keys, legacyKeys } = require("../dist/scripts/profile-storage.js");
+const { createProfileStorage, rewardProgressFromCollectionStages, keys, legacyKeys } = require("../dist/scripts/profile-storage.js");
 
 class MemoryStorage {
   constructor(seed = {}) { this.values = new Map(Object.entries(seed)); }
@@ -76,19 +76,57 @@ test("new environment creates an empty active profile and survives reload", () =
   assert.deepEqual(reloaded.getCollectionStages(), [1, 0, 0]);
 });
 
-test("QA backup state is separated by profile", () => {
+test("QA progress snapshots restore reward progress and collection exactly per profile", () => {
   const storage = new MemoryStorage();
   const store = makeStore(storage);
   const profileA = store.createProfile("A");
-  store.setActiveQaState({ backupInitialized: true, rewardProgressBackup: [1] });
+  store.setRewardProgress([{ stage: 3 }]);
+  store.setCollectionStages([2]);
+  const snapshotA = store.getProgressSnapshot();
+  store.setActiveQaState({ backupInitialized: true, progressBackup: snapshotA });
+  store.setRewardProgress([{ stage: 5 }]);
+  store.setCollectionStages([5]);
   const profileB = store.createProfile("B");
   assert.deepEqual(store.getActiveQaState(), {});
-  store.setActiveQaState({ backupInitialized: true, rewardProgressBackup: [2] });
+  const snapshotB = store.getProgressSnapshot();
+  store.setActiveQaState({ backupInitialized: true, progressBackup: snapshotB });
+  store.setRewardProgress([{ stage: 4 }]);
+  store.setCollectionStages([3]);
   store.setActiveProfile(profileA.profileId);
-  assert.deepEqual(store.getActiveQaState().rewardProgressBackup, [1]);
+  store.restoreProgressSnapshot(store.getActiveQaState().progressBackup);
+  assert.deepEqual(store.getProgressSnapshot(), snapshotA);
   store.setActiveProfile(profileB.profileId);
-  assert.deepEqual(store.getActiveQaState().rewardProgressBackup, [2]);
+  store.restoreProgressSnapshot(store.getActiveQaState().progressBackup);
+  assert.deepEqual(store.getProgressSnapshot(), snapshotB);
   assert.ok(storage.getItem(keys.qaState));
+});
+
+test("QA progress snapshot preserves null values", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  store.createProfile("new");
+  const snapshot = store.getProgressSnapshot();
+  assert.deepEqual(snapshot, { rewardProgress: null, collection: null });
+  store.setRewardProgress([{ discovered: true }]);
+  store.setCollectionStages([1]);
+  store.restoreProgressSnapshot(snapshot);
+  assert.deepEqual(store.getProgressSnapshot(), snapshot);
+});
+
+test("legacy collection fallback creates only valid progress states", () => {
+  const progress = rewardProgressFromCollectionStages([0, 1, 2, 3, 4, 5]);
+  assert.deepEqual(progress, [
+    { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false },
+    { discovered: true, friendship: 0, friendly: false, stage: 2, energy: 0, masterMedal: false },
+    { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 0, masterMedal: false },
+    { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 0, masterMedal: false },
+    { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 0, masterMedal: false },
+    { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 0, masterMedal: true }
+  ]);
+  progress.filter((item) => item.stage >= 3).forEach((item) => {
+    assert.equal(item.friendship, 5);
+    assert.equal(item.friendly, true);
+  });
 });
 
 test("developer reset clears only the active profile child data", () => {

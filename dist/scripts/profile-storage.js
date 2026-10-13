@@ -45,6 +45,24 @@
     return String(value ?? "").trim().replace(/\s+/g, " ").slice(0, 24);
   }
 
+  function rewardProgressFromCollectionStages(value) {
+    if (!Array.isArray(value)) return null;
+    return value.map((rawStage) => {
+      const collectionStage = Math.max(0, Math.min(5, Number(rawStage) || 0));
+      if (collectionStage === 0) {
+        return { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false };
+      }
+      return {
+        discovered: true,
+        friendship: collectionStage >= 2 ? 5 : 0,
+        friendly: collectionStage >= 2,
+        stage: Math.min(5, collectionStage + 1),
+        energy: 0,
+        masterMedal: collectionStage === 5
+      };
+    });
+  }
+
   function emptyProfile(displayName, profileId, timestamp) {
     return {
       profileId,
@@ -225,6 +243,16 @@
     function setCollectionStages(value) { return mutateActiveProfile((profile) => { profile.collection.stages = Array.isArray(value) ? clone(value) : null; }); }
     function getRewardProgress() { return clone(getActiveProfile()?.progress.rewardProgressPhase1 ?? null); }
     function setRewardProgress(value) { return mutateActiveProfile((profile) => { profile.progress.rewardProgressPhase1 = Array.isArray(value) ? clone(value) : null; }); }
+    function getProgressSnapshot() {
+      return { rewardProgress: getRewardProgress(), collection: getCollectionStages() };
+    }
+    function restoreProgressSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== "object") throw new Error("progress snapshot is required");
+      return mutateActiveProfile((profile) => {
+        profile.progress.rewardProgressPhase1 = Array.isArray(snapshot.rewardProgress) ? clone(snapshot.rewardProgress) : null;
+        profile.collection.stages = Array.isArray(snapshot.collection) ? clone(snapshot.collection) : null;
+      });
+    }
     function getRecentVehicles() { return clone(getActiveProfile()?.progress.recentVehicles ?? []); }
     function setRecentVehicles(value) { return mutateActiveProfile((profile) => { profile.progress.recentVehicles = Array.isArray(value) ? clone(value) : []; }); }
     function getBestTime() { return getActiveProfile()?.bestRecords.bestTimeMs ?? null; }
@@ -263,11 +291,12 @@
       listProfiles, getActiveProfileId, ensureActiveProfile, getActiveProfile, setActiveProfile,
       hasLegacyChildData, legacySnapshot, createProfile, migrateLegacyProfile, getMigrationState,
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
+      getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };
   }
 
-  return { createProfileStorage, keys, legacyKeys, SCHEMA_VERSION, MIGRATION_VERSION };
+  return { createProfileStorage, rewardProgressFromCollectionStages, keys, legacyKeys, SCHEMA_VERSION, MIGRATION_VERSION };
 });
