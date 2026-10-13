@@ -24,13 +24,13 @@
       <div class="start-layer">
         <img src="./assets/ui/top/top_key_visual.webp" width="1400" height="1050" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
         <button class="admin-settings-button" id="admin-settings-button" type="button" aria-label="管理設定">⚙️</button>
+        <button class="bgm-toggle-button top-bgm-toggle-button" id="top-bgm-toggle-button" type="button" data-bgm-toggle aria-label="BGMをオフにする" aria-pressed="true">🔊</button>
         <button class="profile-switch-button" id="profile-switch-button" type="button" hidden><span>プレイヤー</span><strong id="active-profile-name"></strong></button>
         <div class="top-image-buttons" aria-label="ゲームを始めるメニュー">
           <button class="top-image-button" id="start-button" type="button" aria-label="はじめる"><img id="top-start-button-image" src="./assets/ui/top/top_button_start.webp" width="2048" height="682" decoding="async" alt=""></button>
           <button class="top-image-button" id="top-collection-button" type="button" aria-label="コレクションを見る"><img id="top-collection-button-image" src="./assets/ui/top/top_button_collection.webp" width="2048" height="682" decoding="async" alt="コレクションを見る"></button>
         </div>
         <p class="start-version" id="app-version" aria-label="アプリのバージョン"></p>
-        <p class="start-developer">開発者: Papa, Chuppy and Minato</p>
       </div>
     </section>
 
@@ -146,7 +146,7 @@
         </div>
       </div>
       <button class="quit-button" id="quit-button">やめる</button>
-      <button class="quit-button bgm-toggle-button" id="bgm-toggle-button" type="button" aria-label="BGMをオフにする" aria-pressed="true">🔊</button>
+      <button class="quit-button bgm-toggle-button" id="bgm-toggle-button" type="button" data-bgm-toggle aria-label="BGMをオフにする" aria-pressed="true">🔊</button>
       <button class="assist-button" id="assist-button">ヒントを見る</button>
       <div class="idle-guide" id="idle-guide" hidden aria-hidden="true">☝️</div>
       <div class="incorrect-next-vehicle-notice" id="incorrect-next-vehicle-notice" hidden aria-live="assertive">

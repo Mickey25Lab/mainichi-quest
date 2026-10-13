@@ -137,6 +137,31 @@ button, input { font: inherit; }
 }
 .admin-settings-button:hover,
 .admin-settings-button:focus-visible { opacity:.9; border-color:rgba(255,255,255,.78); outline:none; }
+.start-screen .top-bgm-toggle-button {
+  position:absolute;
+  z-index:8;
+  right:max(18px,env(safe-area-inset-right));
+  bottom:max(18px,env(safe-area-inset-bottom));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:76px;
+  height:76px;
+  min-width:76px;
+  margin:0;
+  padding:0;
+  border:3px solid #9ebddd;
+  border-radius:20px;
+  color:#173e5e;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);
+  font-size:38px;
+  line-height:1;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.start-screen .top-bgm-toggle-button:active { transform:translateY(3px); box-shadow:0 3px 0 #8ca6bf,0 7px 14px rgba(3,52,109,.16); }
+.start-screen .top-bgm-toggle-button:focus-visible { outline:5px solid rgba(255,225,50,.95); outline-offset:4px; }
 .admin-card > button[type="submit"] { width:100%; margin-top:18px; }
 .admin-pin-keypad {
   display:grid;
@@ -266,8 +291,7 @@ button, input { font: inherit; }
 .top-image-button:focus-visible { outline:7px solid rgba(255,225,50,.95); outline-offset:5px; }
 .top-image-button:active:not(:disabled) { transform:translateY(3px); }
 .top-image-button:disabled { cursor:default; }
-.start-version,
-.start-developer {
+.start-version {
   position:absolute;
   z-index:2;
   bottom:max(18px,env(safe-area-inset-bottom));
@@ -324,11 +348,6 @@ button, input { font: inherit; }
   letter-spacing:.01em;
   white-space:nowrap;
   opacity:.9;
-}
-.start-developer {
-  right:max(22px,env(safe-area-inset-right));
-  padding:9px 16px;
-  font-size:clamp(17px,1.8vw,25px);
 }
 
 .transition-card p {
@@ -1953,10 +1972,7 @@ button, input { font: inherit; }
   .keypad { width: min(92vw, 560px); height: 420px; transform: none; }
   .best-stamp { right: -8px; top: -12px; transform: rotate(8deg); width: 110px; }
   .start-layer { width:var(--content-stage-width); }
-  .start-version,
-  .start-developer { bottom:max(16px,env(safe-area-inset-bottom)); }
   .start-version { left:max(16px,env(safe-area-inset-left)); }
-  .start-developer { right:max(16px,env(safe-area-inset-right)); }
   .result-card { width:94vw; max-height:none; }
   .result-heading h2 { font-size:clamp(37px,10vw,58px); }
   .result-time-panel { grid-template-columns:auto 1fr; }

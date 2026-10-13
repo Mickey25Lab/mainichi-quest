@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.9";
+  const appVersion = "0.1.10";
   const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -38,13 +38,26 @@
     modes: Object.freeze(["normal", "longdivision", "multiplication", "multiplication2x2"]),
     limitMsByAnswerDigits: Object.freeze({ 1: 4000, 2: 5000, 3: 10000, 4: 15000, 5: 20000 })
   });
-  // Keep the music asset, levels, and preference key together so a future
-  // BGM swap or chooser remains independent from game progression.
+  // All screens share one preference and one Web Audio controller. Screens only
+  // select a music group; the controller owns loading, switching, looping, and volume.
   const bgmConfig = Object.freeze({
-    filePath: "./assets/audio/bgm_pynchon.mp3",
-    normalVolume: 0.22,
+    storageKey: "warizan-robot:bgm-enabled-v1",
     rewardDuckMultiplier: 0.30,
-    storageKey: "warizan-robot:bgm-enabled-v1"
+    tracks: Object.freeze({
+      game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.22 }),
+      heroic: Object.freeze({ filePath: "./assets/audio/heroic_loop.wav", normalVolume: 0.18 }),
+      collection: Object.freeze({ filePath: "./assets/audio/collection_sci_fi_loop.mp3", normalVolume: 0.18 })
+    }),
+    screenGroups: Object.freeze({
+      "start-screen": "heroic",
+      "mode-select-screen": "heroic",
+      "play-screen": "game",
+      "transition-screen": "game",
+      "reward-screen": "game",
+      "result-screen": "heroic",
+      "collection-screen": "collection",
+      "collection-detail-screen": "collection"
+    })
   });
   const wrongFeedbackDurationMs = 500;
   const revealedAnswerDurationMs = 2000 * 2;
@@ -153,7 +166,7 @@
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
-    bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
+    bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0
   };
 
   function emptyVehicleProgress() { return { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false }; }
@@ -335,11 +348,12 @@
   }
   function showScreen(id) {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
-    if (id !== "play-screen") stopBackgroundMusic();
+    setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
   }
   function showRewardOverPlay() {
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === "play-screen" || screenId === "reward-screen"));
+    setDesiredBgmGroup("game");
   }
   let collectionScaleRequest = 0;
   function sizeCollectionStage() {
@@ -1695,7 +1709,7 @@
     });
   }
   function openModeSelect() { recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot()); showFixedScreenWhenReady("mode-select-screen"); }
-  function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture(); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
+  function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
@@ -3572,8 +3586,19 @@
   function loadBgmEnabledPreference() {
     try { return localStorage.getItem(bgmConfig.storageKey) !== "false"; } catch (_) { return true; }
   }
-  function backgroundMusicVolume() {
-    return bgmConfig.normalVolume * (state.bgmDucked ? bgmConfig.rewardDuckMultiplier : 1);
+  function activeScreenId() {
+    return screens.find((screenId) => $(screenId).classList.contains("active")) || null;
+  }
+  function activeBgmGroup() {
+    return bgmConfig.screenGroups[activeScreenId()] || null;
+  }
+  function bgmTrack(group = state.bgmGroup || state.desiredBgmGroup) {
+    return group ? bgmConfig.tracks[group] || null : null;
+  }
+  function backgroundMusicVolume(group = state.bgmGroup || state.desiredBgmGroup) {
+    const track = bgmTrack(group);
+    if (!track) return 0;
+    return track.normalVolume * (state.bgmDucked ? bgmConfig.rewardDuckMultiplier : 1);
   }
   function detectBgmLoopBounds(buffer) {
     const sampleRate = buffer.sampleRate;
@@ -3595,16 +3620,18 @@
     if (last - first < sampleRate) return { start: 0, end: buffer.duration };
     return { start: first / sampleRate, end: last / sampleRate };
   }
-  function ensureBackgroundMusic() {
-    if (state.bgmBuffer) return Promise.resolve(state.bgmBuffer);
-    if (state.bgmBufferPromise) return state.bgmBufferPromise;
+  function ensureBackgroundMusic(group = state.desiredBgmGroup) {
+    const track = bgmTrack(group);
+    if (!track) return Promise.resolve(null);
+    if (state.bgmBuffers[group]) return Promise.resolve(state.bgmBuffers[group]);
+    if (state.bgmBufferPromises[group]) return state.bgmBufferPromises[group];
     const ctx = audioContext();
-    state.bgmBufferPromise = fetch(bgmConfig.filePath)
-      .then((response) => { if (!response.ok) throw new Error(bgmConfig.filePath); return response.arrayBuffer(); })
+    state.bgmBufferPromises[group] = fetch(track.filePath)
+      .then((response) => { if (!response.ok) throw new Error(track.filePath); return response.arrayBuffer(); })
       .then((arrayBuffer) => decodeAudio(ctx, arrayBuffer))
-      .then((buffer) => { state.bgmBuffer = buffer; return buffer; })
-      .catch(() => null);
-    return state.bgmBufferPromise;
+      .then((buffer) => { state.bgmBuffers[group] = buffer; return buffer; })
+      .catch((error) => { console.error(`BGM failed to load: ${group}`, error); return null; });
+    return state.bgmBufferPromises[group];
   }
   function ensureBgmGain() {
     if (state.bgmGain) return state.bgmGain;
@@ -3615,10 +3642,13 @@
     state.bgmGain = gain;
     return gain;
   }
-  function startDecodedBackgroundMusic(buffer) {
-    if (!buffer || state.bgmSource || !canPlayBackgroundMusic()) return;
+  function startDecodedBackgroundMusic(buffer, group) {
+    if (!buffer || !canPlayBackgroundMusic(group) || state.desiredBgmGroup !== group) return;
+    if (state.bgmSource && state.bgmGroup === group) return;
+    if (state.bgmSource) stopBackgroundMusic({ clearDesired: false });
     const ctx = audioContext();
     const gain = ensureBgmGain();
+    gain.gain.value = backgroundMusicVolume(group);
     const source = ctx.createBufferSource();
     const bounds = detectBgmLoopBounds(buffer);
     source.buffer = buffer;
@@ -3627,26 +3657,36 @@
     source.loopEnd = bounds.end;
     source.connect(gain);
     source.onended = () => {
-      if (state.bgmSource === source) state.bgmSource = null;
+      if (state.bgmSource === source) {
+        state.bgmSource = null;
+        state.bgmGroup = null;
+      }
     };
     state.bgmSource = source;
+    state.bgmGroup = group;
+    document.documentElement.dataset.bgmGroup = group;
     source.start(0, bounds.start);
   }
   function updateBgmToggleButton() {
-    const button = $("bgm-toggle-button");
-    button.textContent = state.bgmEnabled ? "🔊" : "🔇";
-    button.setAttribute("aria-pressed", String(state.bgmEnabled));
-    button.setAttribute("aria-label", state.bgmEnabled ? "BGMをオフにする" : "BGMをオンにする");
+    document.querySelectorAll("[data-bgm-toggle]").forEach((button) => {
+      button.textContent = state.bgmEnabled ? "🔊" : "🔇";
+      button.setAttribute("aria-pressed", String(state.bgmEnabled));
+      button.setAttribute("aria-label", state.bgmEnabled ? "BGMをオフにする" : "BGMをオンにする");
+    });
   }
-  function stopBackgroundMusic() {
+  function stopBackgroundMusic({ clearDesired = true } = {}) {
+    state.bgmRequestId += 1;
     const source = state.bgmSource;
     state.bgmSource = null;
+    state.bgmGroup = null;
+    document.documentElement.dataset.bgmGroup = "";
     if (source) {
       try { source.stop(); } catch (_) {}
       try { source.disconnect(); } catch (_) {}
     }
     state.bgmDucked = false;
-    if (state.bgmGain) state.bgmGain.gain.value = bgmConfig.normalVolume;
+    if (clearDesired) state.desiredBgmGroup = null;
+    if (state.bgmGain) state.bgmGain.gain.value = backgroundMusicVolume();
   }
   function setBackgroundMusicDucked(ducked) {
     state.bgmDucked = Boolean(ducked);
@@ -3656,34 +3696,45 @@
       state.bgmGain.gain.setTargetAtTime(backgroundMusicVolume(), ctx.currentTime, 0.025);
     }
   }
-  function canPlayBackgroundMusic() {
-    return !document.hidden && state.bgmEnabled && (state.phase === "initial" || state.phase === "retry") && Boolean(state.current) && $("play-screen").classList.contains("active");
+  function canPlayBackgroundMusic(group = state.desiredBgmGroup) {
+    if (!group || document.hidden || !state.bgmEnabled || activeBgmGroup() !== group) return false;
+    if (group !== "game") return true;
+    return (state.phase === "initial" || state.phase === "retry") && Boolean(state.current);
   }
-  function startBackgroundMusic() {
-    if (!canPlayBackgroundMusic()) return;
-    state.bgmPriming = false;
+  function startBackgroundMusic(group = state.desiredBgmGroup) {
+    if (!canPlayBackgroundMusic(group)) return;
+    if (state.bgmSource && state.bgmGroup === group) return;
+    const requestId = ++state.bgmRequestId;
     setBackgroundMusicDucked(false);
-    ensureBackgroundMusic().then((buffer) => startDecodedBackgroundMusic(buffer));
-  }
-  function primeBackgroundMusicFromGesture() {
-    if (!state.bgmEnabled) return;
-    // Decode the local MP3 into a Web Audio buffer after the child's explicit
-    // gesture. BufferSource looping is sample-accurate, avoiding the audible
-    // media-element restart gap at the end of the MP3.
-    state.bgmPriming = true;
-    audioContext();
-    ensureBackgroundMusic().then((buffer) => {
-      if (!state.bgmPriming) return;
-      state.bgmPriming = false;
-      if (buffer && canPlayBackgroundMusic()) startDecodedBackgroundMusic(buffer);
+    ensureBackgroundMusic(group).then((buffer) => {
+      if (requestId !== state.bgmRequestId || state.desiredBgmGroup !== group) return;
+      startDecodedBackgroundMusic(buffer, group);
     });
+  }
+  function setDesiredBgmGroup(group) {
+    const normalized = bgmTrack(group) ? group : null;
+    state.desiredBgmGroup = normalized;
+    document.documentElement.dataset.bgmDesiredGroup = normalized || "";
+    if (state.bgmSource && state.bgmGroup !== normalized) stopBackgroundMusic({ clearDesired: false });
+    if (!normalized || !state.bgmEnabled) return;
+    startBackgroundMusic(normalized);
+  }
+  function syncBackgroundMusicForActiveScreen() {
+    setDesiredBgmGroup(activeBgmGroup());
+  }
+  function primeBackgroundMusicFromGesture(group = state.desiredBgmGroup || activeBgmGroup()) {
+    if (!state.bgmEnabled || !group) return;
+    if (state.desiredBgmGroup !== group) setDesiredBgmGroup(group);
+    audioContext();
+    resumeAudioContext();
+    startBackgroundMusic(group);
   }
   function setBgmEnabled(enabled) {
     state.bgmEnabled = Boolean(enabled);
     try { localStorage.setItem(bgmConfig.storageKey, String(state.bgmEnabled)); } catch (_) {}
     updateBgmToggleButton();
-    if (!state.bgmEnabled) stopBackgroundMusic();
-    else startBackgroundMusic();
+    if (!state.bgmEnabled) stopBackgroundMusic({ clearDesired: false });
+    else primeBackgroundMusicFromGesture(state.desiredBgmGroup || activeBgmGroup());
   }
   function toggleBackgroundMusic() { setBgmEnabled(!state.bgmEnabled); }
   function tone(frequency, start, duration, type = "sine", volume = .17) {
@@ -3882,7 +3933,7 @@
   setupViewportDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
-  ensureBackgroundMusic();
+  syncBackgroundMusicForActiveScreen();
   updateVersionLabelWithPreviewMetadata();
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
@@ -3890,16 +3941,20 @@
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
     resumeAudioAfterVisible("pageshow");
+    syncBackgroundMusicForActiveScreen();
     schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
+  window.addEventListener("pagehide", () => stopBackgroundMusic());
+  window.addEventListener("pointerdown", () => primeBackgroundMusicFromGesture(), { capture: true, once: true });
+  window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true, once: true });
   window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture("game"); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
