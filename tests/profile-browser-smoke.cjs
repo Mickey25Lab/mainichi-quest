@@ -201,6 +201,10 @@ test("opening movie uses the latest three acquisitions, skips, and respects the 
   ]));
   await page.reload();
   await page.locator("#opening-movie-screen.active").waitFor();
+  await page.waitForFunction(() => {
+    const image = document.getElementById("opening-movie-art");
+    return image.complete && image.naturalWidth > 0;
+  });
   assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "救急車");
   await page.waitForTimeout(1900);
   assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "宅配便車");

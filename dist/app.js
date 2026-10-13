@@ -406,9 +406,18 @@
     if (entries.length === 0) return false;
     try {
       if (profileStore.getOpeningMovieLastPlayedJst() === japanDateKey()) return false;
-      profileStore.setOpeningMovieLastPlayedJst(japanDateKey());
     } catch (_) { return false; }
-    playOpeningMovie(entries);
+    const preparationRunId = ++openingMovieRunId;
+    // Do not spend a short slide duration while a first-time artwork request is
+    // still pending.  Playback and the daily marker begin only once every
+    // selected image can be drawn.
+    Promise.all(entries.map((entry) => preloadDecodedImage(entry.artworkPath)))
+      .then(() => {
+        if (preparationRunId !== openingMovieRunId) return;
+        try { profileStore.setOpeningMovieLastPlayedJst(japanDateKey()); } catch (_) { return; }
+        playOpeningMovie(entries);
+      })
+      .catch(() => {});
     return true;
   }
   function showRewardOverPlay() {
