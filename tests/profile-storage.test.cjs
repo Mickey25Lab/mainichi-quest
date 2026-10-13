@@ -164,6 +164,29 @@ test("legacy collection fallback creates only valid progress states", () => {
   });
 });
 
+test("daily usage markers are isolated by profile and can be cleared independently", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  store.setTopCollectionLastUsedJst("2026-10-14");
+  store.setOpeningMovieLastPlayedJst("2026-10-14");
+  const profileB = store.createProfile("B");
+  store.setTopCollectionLastUsedJst("2026-10-13");
+  store.setOpeningMovieLastPlayedJst("2026-10-13");
+
+  store.setActiveProfile(profileA.profileId);
+  assert.equal(store.getTopCollectionLastUsedJst(), "2026-10-14");
+  assert.equal(store.getOpeningMovieLastPlayedJst(), "2026-10-14");
+  store.setTopCollectionLastUsedJst(null);
+  store.setOpeningMovieLastPlayedJst(null);
+  assert.equal(store.getTopCollectionLastUsedJst(), null);
+  assert.equal(store.getOpeningMovieLastPlayedJst(), null);
+
+  store.setActiveProfile(profileB.profileId);
+  assert.equal(store.getTopCollectionLastUsedJst(), "2026-10-13");
+  assert.equal(store.getOpeningMovieLastPlayedJst(), "2026-10-13");
+});
+
 test("admin reset clears only the active profile child data", () => {
   const storage = new MemoryStorage();
   const store = makeStore(storage);
@@ -172,7 +195,7 @@ test("admin reset clears only the active profile child data", () => {
   registry.profiles[0].collection.stages = [3];
   registry.profiles[0].progress = {
     rewardProgressPhase1: [1], recentVehicles: [2, 3], topCollectionLastUsedJst: "2026-10-13",
-    legacyHistory: { played: 4 }, legacyRanking: ["rank"]
+    openingMovieLastPlayedJst: "2026-10-13", legacyHistory: { played: 4 }, legacyRanking: ["rank"]
   };
   registry.profiles[0].bestRecords.bestTimeMs = 1234;
   registry.profiles[0].acquisitionHistory = [{ eventKey: "01_patrol_car:vehicle_discovered", sequence: 1, timestamp: "2026-10-13T00:00:00.000Z", mode: "normal", vehicleId: "01_patrol_car", acquisitionType: "vehicle_discovered", displayForm: "vehicle", displayStage: 2 }];
@@ -193,6 +216,7 @@ test("admin reset clears only the active profile child data", () => {
   assert.equal(resetA.progress.rewardProgressPhase1, null);
   assert.deepEqual(resetA.progress.recentVehicles, []);
   assert.equal(resetA.progress.topCollectionLastUsedJst, null);
+  assert.equal(resetA.progress.openingMovieLastPlayedJst, null);
   assert.equal(resetA.progress.legacyHistory, null);
   assert.equal(resetA.progress.legacyRanking, null);
   assert.equal(resetA.bestRecords.bestTimeMs, null);

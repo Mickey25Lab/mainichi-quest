@@ -74,6 +74,7 @@
         rewardProgressPhase1: null,
         recentVehicles: [],
         topCollectionLastUsedJst: null,
+        openingMovieLastPlayedJst: null,
         legacyHistory: null,
         legacyRanking: null
       },
@@ -126,6 +127,7 @@
     profile.progress.rewardProgressPhase1 = Array.isArray(value.progress?.rewardProgressPhase1) ? clone(value.progress.rewardProgressPhase1) : null;
     profile.progress.recentVehicles = Array.isArray(value.progress?.recentVehicles) ? clone(value.progress.recentVehicles) : [];
     profile.progress.topCollectionLastUsedJst = typeof value.progress?.topCollectionLastUsedJst === "string" ? value.progress.topCollectionLastUsedJst : null;
+    profile.progress.openingMovieLastPlayedJst = typeof value.progress?.openingMovieLastPlayedJst === "string" ? value.progress.openingMovieLastPlayedJst : null;
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
@@ -291,6 +293,8 @@
     function setBestTime(value) { return mutateActiveProfile((profile) => { const n = Number(value); profile.bestRecords.bestTimeMs = Number.isFinite(n) && n > 0 ? n : null; }); }
     function getTopCollectionLastUsedJst() { return getActiveProfile()?.progress.topCollectionLastUsedJst ?? null; }
     function setTopCollectionLastUsedJst(value) { return mutateActiveProfile((profile) => { profile.progress.topCollectionLastUsedJst = value ? String(value) : null; }); }
+    function getOpeningMovieLastPlayedJst() { return getActiveProfile()?.progress.openingMovieLastPlayedJst ?? null; }
+    function setOpeningMovieLastPlayedJst(value) { return mutateActiveProfile((profile) => { profile.progress.openingMovieLastPlayedJst = value ? String(value) : null; }); }
     function getAcquisitionHistory() { return clone(getActiveProfile()?.acquisitionHistory ?? []); }
     function appendAcquisitionHistory(entry) {
       if (!entry || typeof entry !== "object") throw new Error("acquisition entry is required");
@@ -328,7 +332,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
       });
@@ -360,6 +364,7 @@
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
+      getOpeningMovieLastPlayedJst, setOpeningMovieLastPlayedJst,
       getAcquisitionHistory, appendAcquisitionHistory,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };

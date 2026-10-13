@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.8";
+  const appVersion = "0.1.9";
   const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -3761,20 +3761,68 @@
     $("admin-pin-input").value = "";
     setProfileError($("admin-pin-error"), "");
     $("admin-pin-overlay").hidden = false;
-    $("admin-pin-input").focus();
+    document.querySelector("[data-admin-pin-digit]")?.focus();
+  }
+  function submitAdminPin() {
+    const input = $("admin-pin-input");
+    const pin = input.value;
+    if (!/^\d{4}$/.test(pin)) return;
+    if (pin !== adminPin) {
+      setProfileError($("admin-pin-error"), "PINがちがいます。");
+      input.value = "";
+      document.querySelector("[data-admin-pin-digit]")?.focus();
+      return;
+    }
+    setProfileError($("admin-pin-error"), "");
+    $("admin-pin-overlay").hidden = true;
+    openAdminPanel();
+  }
+  function appendAdminPinDigit(digit) {
+    const input = $("admin-pin-input");
+    if (input.value.length >= 4) return;
+    input.value += digit;
+    setProfileError($("admin-pin-error"), "");
+    if (input.value.length === 4) submitAdminPin();
   }
   function closeAdminPin() {
     $("admin-pin-overlay").hidden = true;
     $("admin-settings-button").focus();
   }
+  function setAdminActionStatus(message) {
+    const status = $("admin-action-status");
+    status.textContent = message || "";
+    status.hidden = !message;
+  }
   function openAdminPanel() {
     updateAdminQaToggle();
+    setAdminActionStatus("");
     $("admin-panel-overlay").hidden = false;
     $("admin-qa-toggle").focus();
   }
   function closeAdminPanel() {
     $("admin-panel-overlay").hidden = true;
+    setAdminActionStatus("");
     $("admin-settings-button").focus();
+  }
+  function reenableTopCollectionForActiveProfile() {
+    try {
+      profileStore.setTopCollectionLastUsedJst(null);
+      state.collectionUsed = false;
+      updateTopCollectionButton();
+      setAdminActionStatus("このプレイヤーは、今日もう一度コレクションを見られます。");
+    } catch (error) {
+      console.error("Collection daily reset failed", error);
+      setAdminActionStatus("コレクションの利用状態をリセットできませんでした。");
+    }
+  }
+  function reenableOpeningMovieForActiveProfile() {
+    try {
+      profileStore.setOpeningMovieLastPlayedJst(null);
+      setAdminActionStatus("このプレイヤーの開始時ムービー再生済み状態をリセットしました。");
+    } catch (error) {
+      console.error("Opening movie daily reset failed", error);
+      setAdminActionStatus("開始時ムービーの利用状態をリセットできませんでした。");
+    }
   }
   function initializeGameForActiveProfile() {
     if (gameInitialized) return;
@@ -3854,19 +3902,21 @@
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
-  $("admin-pin-input").addEventListener("input", (event) => { event.target.value = event.target.value.replace(/\D/g, "").slice(0, 4); });
-  $("admin-pin-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const pin = $("admin-pin-input").value;
-    if (!/^\d{4}$/.test(pin)) { setProfileError($("admin-pin-error"), "4桁の数字を入力してください。"); return; }
-    if (pin !== adminPin) { setProfileError($("admin-pin-error"), "PINがちがいます。"); return; }
+  $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
+  document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
+  $("admin-pin-clear").addEventListener("click", () => {
+    $("admin-pin-input").value = "";
     setProfileError($("admin-pin-error"), "");
-    $("admin-pin-overlay").hidden = true;
-    openAdminPanel();
+  });
+  $("admin-pin-backspace").addEventListener("click", () => {
+    $("admin-pin-input").value = $("admin-pin-input").value.slice(0, -1);
+    setProfileError($("admin-pin-error"), "");
   });
   $("admin-pin-cancel").addEventListener("click", closeAdminPin);
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
+  $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
+  $("admin-reenable-opening-movie").addEventListener("click", reenableOpeningMovieForActiveProfile);
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
   $("admin-reset-cancel").addEventListener("click", closeAdminResetConfirm);
   $("admin-reset-confirm").addEventListener("click", resetActiveProfileFromAdmin);

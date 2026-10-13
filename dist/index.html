@@ -349,9 +349,22 @@
     <form class="profile-card admin-card" id="admin-pin-form">
       <h2 id="admin-pin-title">管理設定</h2>
       <label for="admin-pin-input">4桁PIN</label>
-      <input id="admin-pin-input" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required>
+      <input id="admin-pin-input" name="pin" type="password" maxlength="4" autocomplete="off" readonly aria-label="4桁PIN">
+      <div class="admin-pin-keypad" id="admin-pin-keypad" aria-label="PIN入力">
+        <button type="button" data-admin-pin-digit="1">1</button>
+        <button type="button" data-admin-pin-digit="2">2</button>
+        <button type="button" data-admin-pin-digit="3">3</button>
+        <button type="button" data-admin-pin-digit="4">4</button>
+        <button type="button" data-admin-pin-digit="5">5</button>
+        <button type="button" data-admin-pin-digit="6">6</button>
+        <button type="button" data-admin-pin-digit="7">7</button>
+        <button type="button" data-admin-pin-digit="8">8</button>
+        <button type="button" data-admin-pin-digit="9">9</button>
+        <button class="admin-pin-keypad-action" type="button" id="admin-pin-clear">クリア</button>
+        <button type="button" data-admin-pin-digit="0">0</button>
+        <button class="admin-pin-keypad-action" type="button" id="admin-pin-backspace" aria-label="1文字消す">⌫</button>
+      </div>
       <p class="profile-error" id="admin-pin-error" role="alert" hidden></p>
-      <button type="submit">ひらく</button>
       <button class="profile-close-button" id="admin-pin-cancel" type="button">やめる</button>
     </form>
   </div>
@@ -362,6 +375,11 @@
         <span>QAモード</span>
         <button class="admin-qa-toggle" id="admin-qa-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
+      <div class="admin-action-list">
+        <button class="admin-action-button" id="admin-reenable-collection" type="button">コレクションを今日もう一度見られるようにする</button>
+        <button class="admin-action-button" id="admin-reenable-opening-movie" type="button">開始時ムービーを今日もう一度再生できるようにする</button>
+      </div>
+      <p class="admin-action-status" id="admin-action-status" role="status" hidden></p>
       <button class="admin-reset-button" id="admin-reset-button" type="button">このプレイヤーのデータを消す</button>
       <button class="profile-close-button" id="admin-panel-close" type="button">もどる</button>
     </section>
