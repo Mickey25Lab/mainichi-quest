@@ -71,6 +71,38 @@ async function exitQaMode(page) {
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
+async function seedOpeningHistory(page, entries) {
+  await page.evaluate((history) => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const profileId = store.getActiveProfileId();
+    const registry = JSON.parse(localStorage.getItem(store.keys.profiles));
+    const profile = registry.profiles.find((item) => item.profileId === profileId);
+    profile.acquisitionHistory = history;
+    profile.progress.openingMovieLastPlayedJst = null;
+    localStorage.setItem(store.keys.profiles, JSON.stringify(registry));
+  }, entries);
+}
+
+function openingHistory(entries) {
+  return entries.map(([vehicleId, acquisitionType], index) => ({
+    eventKey: `${vehicleId}:${acquisitionType}`,
+    sequence: index + 1,
+    timestamp: `2026-10-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+    mode: "normal",
+    source: "normal",
+    vehicleId,
+    acquisitionType,
+    displayForm: acquisitionType,
+    displayStage: 2
+  }));
+}
+
+function jstDateKey() {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone:"Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit" }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 test("admin PIN gates QA and the old direct controls are absent", async (t) => {
   const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
   t.after(() => browser.close());
@@ -149,6 +181,67 @@ test("admin can re-enable today's collection and opening movie only for the acti
 
   await page.reload();
   assert.equal(await page.locator("#top-collection-button").isDisabled(), false);
+  assert.deepEqual(errors, []);
+});
+
+test("opening movie uses the latest three acquisitions, skips, and respects the daily reset", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "ムービー");
+  assert.equal(await page.locator("#opening-movie-screen.active").count(), 0);
+  await seedOpeningHistory(page, openingHistory([
+    ["01_patrol_car", "vehicle_discovered"],
+    ["02_fire_engine", "friendship_complete"],
+    ["03_ambulance", "robot"],
+    ["04_delivery_truck", "super_robot"],
+    ["05_mail_van", "super_robot_equipped"]
+  ]));
+  await page.reload();
+  await page.locator("#opening-movie-screen.active").waitFor();
+  assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "救急車");
+  await page.waitForTimeout(1900);
+  assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "宅配便車");
+  await page.locator("#opening-movie-skip").click();
+  await page.locator("#start-screen.active").waitFor();
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getOpeningMovieLastPlayedJst()), jstDateKey());
+  await page.reload();
+  assert.equal(await page.locator("#opening-movie-screen.active").count(), 0);
+  await unlockAdmin(page);
+  await page.locator("#admin-reenable-opening-movie").click();
+  await page.reload();
+  await page.locator("#opening-movie-screen.active").waitFor();
+  await page.locator("#opening-movie-skip").click();
+  assert.deepEqual(errors, []);
+});
+
+test("opening movie auto-finishes and remains isolated between profiles", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "A");
+  await seedOpeningHistory(page, openingHistory([["01_patrol_car", "vehicle_discovered"]]));
+  await page.reload();
+  await page.locator("#opening-movie-screen.active").waitFor();
+  await page.locator("#start-screen.active").waitFor({ timeout: 3000 });
+  const profileB = await page.evaluate((history) => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    store.createProfile("B");
+    const profile = store.getActiveProfile();
+    const registry = JSON.parse(localStorage.getItem(store.keys.profiles));
+    registry.profiles.find((item) => item.profileId === profile.profileId).acquisitionHistory = history;
+    localStorage.setItem(store.keys.profiles, JSON.stringify(registry));
+    return profile.profileId;
+  }, openingHistory([["02_fire_engine", "robot"]]));
+  await page.reload();
+  await page.locator("#opening-movie-screen.active").waitFor();
+  assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "消防車");
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveProfileId()), profileB);
+  await page.locator("#opening-movie-skip").click();
   assert.deepEqual(errors, []);
 });
 
