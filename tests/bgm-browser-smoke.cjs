@@ -74,8 +74,17 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   assert.ok(speakerBox);
   assert.ok(1400 - (speakerBox.x + speakerBox.width) <= 20);
   assert.ok(1050 - (speakerBox.y + speakerBox.height) <= 20);
+  const reloadBox = await page.locator("#top-reload-button").boundingBox();
+  const settingsBox = await page.locator("#admin-settings-button").boundingBox();
+  assert.ok(reloadBox && settingsBox);
+  assert.ok(reloadBox.x + reloadBox.width < settingsBox.x);
+  assert.ok(settingsBox.x - (reloadBox.x + reloadBox.width) <= 12);
+  assert.equal(reloadBox.y, settingsBox.y);
 
-  await page.reload();
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+    page.locator("#top-reload-button").click()
+  ]);
   await page.locator("#start-screen.active").waitFor();
   await waitForBgmGroup(page, "heroic");
   await page.locator("#start-title").click({ position: { x: 20, y: 20 } });
@@ -91,6 +100,10 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await page.locator("#mode-select-normal").click();
   await page.locator("#play-screen.active").waitFor();
   await waitForBgmGroup(page, "game");
+  const gameSpeakerBox = await page.locator("#bgm-toggle-button").boundingBox();
+  assert.ok(gameSpeakerBox);
+  assert.ok(Math.abs(speakerBox.width - gameSpeakerBox.width) < 0.5);
+  assert.ok(Math.abs(speakerBox.height - gameSpeakerBox.height) < 0.5);
   assert.equal(await bgmStarts(page), reloadedHeroicStartCount + 1);
   assert.equal(await page.locator("#bgm-toggle-button").getAttribute("aria-pressed"), "true");
   assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");
