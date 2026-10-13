@@ -45,6 +45,16 @@ test("one saved preference drives both speaker buttons", () => {
   assert.match(app, /localStorage\.setItem\(bgmConfig\.storageKey/);
 });
 
+test("startup audio unlock retries on user gestures instead of reusing a blocked resume", () => {
+  const resume = app.slice(app.indexOf("function resumeAudioContext"), app.indexOf("function suspendAudioForBackground"));
+  const context = app.slice(app.indexOf("function audioContext"), app.indexOf("function loadBgmEnabledPreference"));
+  assert.doesNotMatch(resume, /if \(audioResumePromise\) return/);
+  assert.doesNotMatch(context, /resumeAudioContext\(\)/);
+  assert.match(app, /window\.addEventListener\("pointerdown", \(\) => primeBackgroundMusicFromGesture\(\), \{ capture: true, passive: true \}\)/);
+  assert.match(app, /window\.addEventListener\("touchstart", \(\) => primeBackgroundMusicFromGesture\(\), \{ capture: true, passive: true \}\)/);
+  assert.doesNotMatch(app, /primeBackgroundMusicFromGesture\(\).*once: true/);
+});
+
 test("top speaker is scoped and developer credit is removed", () => {
   assert.match(html, /id="top-bgm-toggle-button"/);
   assert.match(css, /\.start-screen \.top-bgm-toggle-button/);

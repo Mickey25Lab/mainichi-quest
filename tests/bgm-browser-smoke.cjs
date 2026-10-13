@@ -34,7 +34,7 @@ async function waitForBgmGroup(page, group) {
 async function bgmStarts(page) { return page.evaluate(() => window.__bgmStarts || 0); }
 
 test("BGM follows screens, persists OFF, and does not restart inside a group", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable, args: ["--autoplay-policy=user-gesture-required"] });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   await context.addInitScript(() => {
@@ -43,6 +43,7 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
     if (!AudioCtor || AudioCtor.prototype.__mqBgmInstrumented) return;
     const create = AudioCtor.prototype.createBufferSource;
     AudioCtor.prototype.createBufferSource = function instrumentedCreateBufferSource(...args) {
+      window.__bgmAudioContext = this;
       const source = create.apply(this, args);
       const start = source.start;
       source.start = function instrumentedStart(...startArgs) {
@@ -62,6 +63,7 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 
   await waitForBgmGroup(page, "heroic");
+  await page.waitForFunction(() => window.__bgmAudioContext?.state === "running");
   const heroicStartCount = await bgmStarts(page);
   assert.ok(heroicStartCount >= 1);
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow")));
@@ -73,15 +75,23 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   assert.ok(1400 - (speakerBox.x + speakerBox.width) <= 20);
   assert.ok(1050 - (speakerBox.y + speakerBox.height) <= 20);
 
+  await page.reload();
+  await page.locator("#start-screen.active").waitFor();
+  await waitForBgmGroup(page, "heroic");
+  await page.locator("#start-title").click({ position: { x: 20, y: 20 } });
+  await page.waitForFunction(() => window.__bgmAudioContext?.state === "running");
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup), "heroic");
+  const reloadedHeroicStartCount = await bgmStarts(page);
+
   await page.locator("#start-button").click();
   await page.locator("#mode-select-screen.active").waitFor();
   await waitForBgmGroup(page, "heroic");
-  assert.equal(await bgmStarts(page), heroicStartCount);
+  assert.equal(await bgmStarts(page), reloadedHeroicStartCount);
 
   await page.locator("#mode-select-normal").click();
   await page.locator("#play-screen.active").waitFor();
   await waitForBgmGroup(page, "game");
-  assert.equal(await bgmStarts(page), heroicStartCount + 1);
+  assert.equal(await bgmStarts(page), reloadedHeroicStartCount + 1);
   assert.equal(await page.locator("#bgm-toggle-button").getAttribute("aria-pressed"), "true");
   assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");
 

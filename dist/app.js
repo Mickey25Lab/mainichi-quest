@@ -3540,10 +3540,12 @@
   function resumeAudioContext() {
     const ctx = state.audio;
     if (!ctx || ctx.state === "running" || ctx.state === "closed" || document.hidden) return;
-    if (audioResumePromise) return audioResumePromise;
     try {
-      audioResumePromise = Promise.resolve(ctx.resume()).finally(() => { audioResumePromise = null; });
-      return audioResumePromise;
+      const attempt = Promise.resolve(ctx.resume()).catch(() => null);
+      audioResumePromise = attempt;
+      return attempt.finally(() => {
+        if (audioResumePromise === attempt) audioResumePromise = null;
+      });
     } catch (_) {
       audioResumePromise = null;
     }
@@ -3580,7 +3582,6 @@
         if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
       });
     }
-    if (state.audio.state === "suspended" && !document.hidden) resumeAudioContext();
     return state.audio;
   }
   function loadBgmEnabledPreference() {
@@ -3997,8 +3998,9 @@
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("pagehide", () => stopBackgroundMusic());
-  window.addEventListener("pointerdown", () => primeBackgroundMusicFromGesture(), { capture: true, once: true });
-  window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true, once: true });
+  window.addEventListener("pointerdown", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
+  window.addEventListener("touchstart", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
+  window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });
   window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
