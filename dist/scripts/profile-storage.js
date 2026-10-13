@@ -84,7 +84,8 @@
       // the real acquisition order needed by a future opening movie.
       acquisitionHistory: [],
       enabledModes: {},
-      energyMultipliers: {}
+      energyMultipliers: {},
+      dailyTargetCounts: {}
     };
   }
 
@@ -135,6 +136,7 @@
     profile.bestRecords.bestTimeMs = Number.isFinite(best) && best > 0 ? best : null;
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
     profile.energyMultipliers = value.energyMultipliers && typeof value.energyMultipliers === "object" ? clone(value.energyMultipliers) : {};
+    profile.dailyTargetCounts = value.dailyTargetCounts && typeof value.dailyTargetCounts === "object" ? clone(value.dailyTargetCounts) : {};
     return profile;
   }
 
@@ -184,17 +186,23 @@
       return id;
     }
 
-    function mutateActiveProfile(mutator) {
+    function mutateProfile(profileId, mutator) {
       const registry = readRegistry();
-      const id = ensureActiveProfile();
+      const id = String(profileId || "");
       const index = registry.profiles.findIndex((profile) => profile.profileId === id);
-      if (index < 0) throw new Error("active profile is missing");
+      if (index < 0) throw new Error("profile not found");
       const profile = registry.profiles[index];
       mutator(profile);
       profile.updatedAt = isoNow(now);
       registry.profiles[index] = normalizeProfile(profile);
       writeRegistry(registry);
       return clone(registry.profiles[index]);
+    }
+
+    function mutateActiveProfile(mutator) {
+      const id = ensureActiveProfile();
+      if (!id) throw new Error("active profile is missing");
+      return mutateProfile(id, mutator);
     }
 
     function legacySnapshot() {
@@ -295,6 +303,25 @@
     function setTopCollectionLastUsedJst(value) { return mutateActiveProfile((profile) => { profile.progress.topCollectionLastUsedJst = value ? String(value) : null; }); }
     function getOpeningMovieLastPlayedJst() { return getActiveProfile()?.progress.openingMovieLastPlayedJst ?? null; }
     function setOpeningMovieLastPlayedJst(value) { return mutateActiveProfile((profile) => { profile.progress.openingMovieLastPlayedJst = value ? String(value) : null; }); }
+    function getProfileLearningSettings(profileId) {
+      const id = String(profileId || "");
+      const profile = readRegistry().profiles.find((item) => item.profileId === id);
+      if (!profile) throw new Error("profile not found");
+      return clone({
+        enabledModes: profile.enabledModes || {},
+        energyMultipliers: profile.energyMultipliers || {},
+        dailyTargetCounts: profile.dailyTargetCounts || {}
+      });
+    }
+    function setProfileLearningSettings(profileId, value) {
+      const settings = value && typeof value === "object" ? value : {};
+      return mutateProfile(profileId, (profile) => {
+        profile.enabledModes = settings.enabledModes && typeof settings.enabledModes === "object" ? clone(settings.enabledModes) : {};
+        profile.energyMultipliers = settings.energyMultipliers && typeof settings.energyMultipliers === "object" ? clone(settings.energyMultipliers) : {};
+        profile.dailyTargetCounts = settings.dailyTargetCounts && typeof settings.dailyTargetCounts === "object" ? clone(settings.dailyTargetCounts) : {};
+      });
+    }
+
     function getAcquisitionHistory() { return clone(getActiveProfile()?.acquisitionHistory ?? []); }
     function appendAcquisitionHistory(entry) {
       if (!entry || typeof entry !== "object") throw new Error("acquisition entry is required");
@@ -365,6 +392,7 @@
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
       getOpeningMovieLastPlayedJst, setOpeningMovieLastPlayedJst,
+      getProfileLearningSettings, setProfileLearningSettings,
       getAcquisitionHistory, appendAcquisitionHistory,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };
