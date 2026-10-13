@@ -129,17 +129,41 @@ test("legacy collection fallback creates only valid progress states", () => {
   });
 });
 
-test("developer reset clears only the active profile child data", () => {
+test("admin reset clears only the active profile child data", () => {
   const storage = new MemoryStorage();
   const store = makeStore(storage);
   const profileA = store.createProfile("A");
-  store.setRewardProgress([1]);
+  const registry = JSON.parse(storage.getItem(keys.profiles));
+  registry.profiles[0].collection.stages = [3];
+  registry.profiles[0].progress = {
+    rewardProgressPhase1: [1], recentVehicles: [2, 3], topCollectionLastUsedJst: "2026-10-13",
+    legacyHistory: { played: 4 }, legacyRanking: ["rank"]
+  };
+  registry.profiles[0].bestRecords.bestTimeMs = 1234;
+  registry.profiles[0].enabledModes = { division: true };
+  registry.profiles[0].energyMultipliers = { division: 0.5 };
+  storage.setItem(keys.profiles, JSON.stringify(registry));
+  const originalA = store.getActiveProfile();
   const profileB = store.createProfile("B");
   store.setRewardProgress([2]);
-  store.resetActiveProfileData();
-  assert.equal(store.getRewardProgress(), null);
+  const originalB = store.getActiveProfile();
   store.setActiveProfile(profileA.profileId);
-  assert.deepEqual(store.getRewardProgress(), [1]);
+  store.resetActiveProfileData();
+  const resetA = store.getActiveProfile();
+  assert.equal(resetA.profileId, originalA.profileId);
+  assert.equal(resetA.displayName, originalA.displayName);
+  assert.equal(resetA.createdAt, originalA.createdAt);
+  assert.equal(resetA.collection.stages, null);
+  assert.equal(resetA.progress.rewardProgressPhase1, null);
+  assert.deepEqual(resetA.progress.recentVehicles, []);
+  assert.equal(resetA.progress.topCollectionLastUsedJst, null);
+  assert.equal(resetA.progress.legacyHistory, null);
+  assert.equal(resetA.progress.legacyRanking, null);
+  assert.equal(resetA.bestRecords.bestTimeMs, null);
+  assert.deepEqual(resetA.enabledModes, originalA.enabledModes);
+  assert.deepEqual(resetA.energyMultipliers, originalA.energyMultipliers);
+  store.setActiveProfile(profileB.profileId);
+  assert.deepEqual(store.getActiveProfile(), originalB);
   assert.equal(store.listProfiles().length, 2);
   assert.equal(store.listProfiles().find((profile) => profile.profileId === profileB.profileId).displayName, "B");
 });

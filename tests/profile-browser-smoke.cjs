@@ -45,17 +45,55 @@ async function createInitialProfile(page, name) {
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
+async function unlockAdmin(page, pin = "3710") {
+  await page.locator("#admin-settings-button").click();
+  await page.locator("#admin-pin-overlay").waitFor({ state: "visible" });
+  await page.locator("#admin-pin-input").fill(pin);
+  await page.locator("#admin-pin-form button[type=submit]").click();
+  if (pin === "3710") await page.locator("#admin-panel-overlay").waitFor({ state: "visible" });
+}
+
 async function enterQaMode(page) {
-  await page.locator("#qa-mode-toggle").click();
+  await unlockAdmin(page);
+  assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "false");
+  await page.locator("#admin-qa-toggle").click();
   await page.waitForURL(/\?qa=progress&reset=1$/);
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
 async function exitQaMode(page) {
-  await page.locator("#qa-mode-toggle").click();
+  await unlockAdmin(page);
+  assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "true");
+  await page.locator("#admin-qa-toggle").click();
   await page.waitForURL((url) => !url.searchParams.has("qa"));
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
+
+test("admin PIN gates QA and the old direct controls are absent", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "管理確認");
+
+  assert.equal(await page.locator("#qa-mode-toggle").count(), 0);
+  assert.equal(await page.locator("#developer-reset-button").count(), 0);
+  assert.equal(await page.locator("#developer-reset-confirm").count(), 0);
+  assert.equal(await page.locator("#admin-settings-button").isVisible(), true);
+
+  await unlockAdmin(page, "1234");
+  assert.equal(await page.locator("#admin-panel-overlay").isVisible(), false);
+  assert.match(await page.locator("#admin-pin-error").textContent(), /ちがいます/);
+  await page.locator("#admin-pin-input").fill("371");
+  await page.locator("#admin-pin-form button[type=submit]").click();
+  assert.equal(await page.locator("#admin-panel-overlay").isVisible(), false);
+  await page.locator("#admin-pin-input").fill("3710");
+  await page.locator("#admin-pin-form button[type=submit]").click();
+  await page.locator("#admin-panel-overlay").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "false");
+  assert.deepEqual(errors, []);
+});
 
 test("new profile, profile separation, persistence, and game smoke", async (t) => {
   const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
@@ -238,5 +276,82 @@ test("collection-only fallback persists transition-consistent progress for every
     { friendship: 5, friendly: true, stage: 5, masterMedal: true }
   ]);
   assert.ok(snapshot.rewardProgress.filter((item) => item.stage >= 3).every((item) => item.friendly && item.friendship === 5));
+  assert.deepEqual(errors, []);
+});
+
+test("admin reset cancels safely then clears only the active profile progress", async (t) => {
+  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "A");
+
+  const seeded = await page.evaluate(() => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const profileA = store.getActiveProfile();
+    store.setRewardProgress([{ discovered:true, friendship:5, friendly:true, stage:4, energy:33, masterMedal:false }]);
+    store.setCollectionStages([3]);
+    store.setRecentVehicles([1, 2, 3]);
+    store.setBestTime(4321);
+    store.setTopCollectionLastUsedJst("2026-10-13");
+    let registry = JSON.parse(localStorage.getItem(store.keys.profiles));
+    let a = registry.profiles.find((profile) => profile.profileId === profileA.profileId);
+    a.progress.legacyHistory = { played: 8 };
+    a.progress.legacyRanking = ["rank"];
+    a.enabledModes = { division: true };
+    a.energyMultipliers = { division: 0.5 };
+    localStorage.setItem(store.keys.profiles, JSON.stringify(registry));
+    const profileB = store.createProfile("B");
+    store.setRewardProgress([{ discovered:true, friendship:2, friendly:false, stage:2, energy:0, masterMedal:false }]);
+    store.setCollectionStages([1]);
+    store.setRecentVehicles([7]);
+    store.setBestTime(9876);
+    const snapshotB = store.getActiveProfile();
+    store.setActiveProfile(profileA.profileId);
+    return { profileA: store.getActiveProfile(), profileB, snapshotB };
+  });
+  await page.reload();
+  const beforeCancel = await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveProfile());
+
+  await unlockAdmin(page);
+  await page.locator("#admin-reset-button").click();
+  await page.locator("#admin-reset-confirm-overlay").waitFor({ state: "visible" });
+  await page.locator("#admin-reset-cancel").click();
+  await page.locator("#admin-reset-confirm-overlay").waitFor({ state: "hidden" });
+  assert.deepEqual(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveProfile()), beforeCancel);
+
+  await page.locator("#admin-reset-button").click();
+  await page.locator("#admin-reset-confirm-overlay").waitFor({ state: "visible" });
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.locator("#admin-reset-confirm").click()
+  ]);
+  await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
+
+  const after = await page.evaluate(({ profileAId, profileBId }) => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const active = store.getActiveProfile();
+    store.setActiveProfile(profileBId);
+    const profileB = store.getActiveProfile();
+    store.setActiveProfile(profileAId);
+    return { active, profileB };
+  }, { profileAId: seeded.profileA.profileId, profileBId: seeded.profileB.profileId });
+  assert.equal(after.active.profileId, seeded.profileA.profileId);
+  assert.equal(after.active.displayName, "A");
+  assert.equal(after.active.createdAt, seeded.profileA.createdAt);
+  assert.equal(after.active.progress.rewardProgressPhase1, null);
+  assert.ok(after.active.collection.stages.every((stage) => stage === 0));
+  assert.ok(after.active.progress.recentVehicles.length <= 1);
+  assert.notDeepEqual(after.active.progress.recentVehicles, [1, 2, 3]);
+  assert.equal(after.active.progress.topCollectionLastUsedJst, null);
+  assert.equal(after.active.progress.legacyHistory, null);
+  assert.equal(after.active.progress.legacyRanking, null);
+  assert.equal(after.active.bestRecords.bestTimeMs, null);
+  assert.deepEqual(after.active.enabledModes, { division: true });
+  assert.deepEqual(after.active.energyMultipliers, { division: 0.5 });
+  assert.deepEqual(after.profileB, seeded.snapshotB);
+  await page.reload();
+  assert.equal(await page.locator("#active-profile-name").textContent(), "A");
   assert.deepEqual(errors, []);
 });

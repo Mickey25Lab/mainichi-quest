@@ -23,7 +23,7 @@
     <section class="screen start-screen active" id="start-screen" aria-labelledby="start-title">
       <div class="start-layer">
         <img src="./assets/ui/top/top_key_visual.webp" width="1400" height="1050" fetchpriority="high" decoding="async" alt="マイクエ まいにちクエスト ロボットワールド" id="start-title">
-        <button class="qa-mode-toggle" id="qa-mode-toggle" type="button" aria-pressed="false">QAモード開始</button>
+        <button class="admin-settings-button" id="admin-settings-button" type="button" aria-label="管理設定">⚙️</button>
         <button class="profile-switch-button" id="profile-switch-button" type="button" hidden><span>プレイヤー</span><strong id="active-profile-name"></strong></button>
         <div class="top-image-buttons" aria-label="ゲームを始めるメニュー">
           <button class="top-image-button" id="start-button" type="button" aria-label="はじめる"><img id="top-start-button-image" src="./assets/ui/top/top_button_start.webp" width="2048" height="682" decoding="async" alt=""></button>
@@ -204,7 +204,6 @@
     <section class="screen result-screen" id="result-screen" aria-labelledby="result-title">
       <div class="result-stage result-screen-new">
         <img class="result-background" id="result-background" src="./assets/ui/top/top_background.webp" width="1400" height="1050" decoding="async" alt="">
-        <button class="developer-reset-button" id="developer-reset-button" type="button">きろくとコレクションをぜんぶけす</button>
         <main class="result-new-content">
           <header class="result-new-hero">
             <img src="./assets/collection/01_vehicle/01_patrol_car_vehicle.webp" alt="" decoding="async">
@@ -233,15 +232,6 @@
             <button class="collection-button" id="collection-button"><svg class="ui-icon collection-gem" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#gem"></use></svg><span class="collection-copy">コレクションを見る</span></button>
           </nav>
         </main>
-      <div class="developer-reset-confirm" id="developer-reset-confirm" role="dialog" aria-modal="true" aria-labelledby="developer-reset-question" hidden>
-        <div class="developer-reset-confirm-card">
-          <p id="developer-reset-question">きろくとコレクションを<br>ほんとうにぜんぶけしますか？</p>
-          <div class="developer-reset-confirm-actions">
-            <button id="developer-reset-cancel" type="button">やめる</button>
-            <button id="developer-reset-confirm-button" type="button">はい、ぜんぶけす</button>
-          </div>
-        </div>
-      </div>
       </div>
     </section>
 
@@ -353,6 +343,37 @@
       </form>
       <p class="profile-error" id="profile-manager-error" role="alert" hidden></p>
       <button class="profile-close-button" id="profile-manager-close" type="button">もどる</button>
+    </section>
+  </div>
+  <div class="profile-overlay" id="admin-pin-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-pin-title" hidden>
+    <form class="profile-card admin-card" id="admin-pin-form">
+      <h2 id="admin-pin-title">管理設定</h2>
+      <label for="admin-pin-input">4桁PIN</label>
+      <input id="admin-pin-input" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required>
+      <p class="profile-error" id="admin-pin-error" role="alert" hidden></p>
+      <button type="submit">ひらく</button>
+      <button class="profile-close-button" id="admin-pin-cancel" type="button">やめる</button>
+    </form>
+  </div>
+  <div class="profile-overlay" id="admin-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-panel-title" hidden>
+    <section class="profile-card admin-card">
+      <h2 id="admin-panel-title">管理設定</h2>
+      <div class="admin-setting-row">
+        <span>QAモード</span>
+        <button class="admin-qa-toggle" id="admin-qa-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
+      </div>
+      <button class="admin-reset-button" id="admin-reset-button" type="button">このプレイヤーのデータを消す</button>
+      <button class="profile-close-button" id="admin-panel-close" type="button">もどる</button>
+    </section>
+  </div>
+  <div class="profile-overlay" id="admin-reset-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-reset-question" hidden>
+    <section class="profile-card admin-card admin-confirm-card">
+      <h2 id="admin-reset-question">このプレイヤーのデータと<br>コレクションを消しますか？</h2>
+      <p>元に戻せません。</p>
+      <div class="admin-confirm-actions">
+        <button id="admin-reset-confirm" type="button">消す</button>
+        <button id="admin-reset-cancel" type="button">やめる</button>
+      </div>
     </section>
   </div>
   <script src="./scripts/profile-storage.js"></script>

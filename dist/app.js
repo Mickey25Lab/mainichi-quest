@@ -3,6 +3,7 @@
 
   const $ = (id) => document.getElementById(id);
   const appVersion = "0.1.6";
+  const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -225,12 +226,11 @@
   function qaProgressModeEnabled() {
     return new URLSearchParams(window.location.search).get("qa") === "progress";
   }
-  function updateQaModeButton() {
-    const button = $("qa-mode-toggle");
-    if (!button) return;
+  function updateAdminQaToggle() {
+    const toggle = $("admin-qa-toggle");
     const enabled = qaProgressModeEnabled();
-    button.textContent = enabled ? "QAモード終了" : "QAモード開始";
-    button.setAttribute("aria-pressed", enabled ? "true" : "false");
+    toggle.setAttribute("aria-checked", String(enabled));
+    toggle.querySelector("span").textContent = enabled ? "ON" : "OFF";
   }
   function restoreQaProgressBackup() {
     try {
@@ -3680,7 +3680,7 @@
   function playNumberCardCorrectSound() { tone(620, 0, .12, "sine", .238); tone(880, .065, .12, "sine", .179); }
   function playFinishSound() { tone(523, 0, .14); tone(659, .14, .14); tone(784, .28, .3); }
   function playCollectionEndSound() { tone(660, 0, .22, "sine", .12); tone(523, .2, .24, "sine", .12); tone(392, .4, .35, "sine", .1); }
-  let developerResetInProgress = false;
+  let adminResetInProgress = false;
   let gameInitialized = false;
   function setProfileError(element, message) {
     element.textContent = message || "";
@@ -3716,6 +3716,25 @@
     $("profile-manager-overlay").hidden = false;
     $("profile-add-name").focus();
   }
+  function openAdminPin() {
+    $("admin-pin-input").value = "";
+    setProfileError($("admin-pin-error"), "");
+    $("admin-pin-overlay").hidden = false;
+    $("admin-pin-input").focus();
+  }
+  function closeAdminPin() {
+    $("admin-pin-overlay").hidden = true;
+    $("admin-settings-button").focus();
+  }
+  function openAdminPanel() {
+    updateAdminQaToggle();
+    $("admin-panel-overlay").hidden = false;
+    $("admin-qa-toggle").focus();
+  }
+  function closeAdminPanel() {
+    $("admin-panel-overlay").hidden = true;
+    $("admin-settings-button").focus();
+  }
   function initializeGameForActiveProfile() {
     if (gameInitialized) return;
     gameInitialized = true;
@@ -3744,26 +3763,30 @@
     $("profile-setup-overlay").hidden = false;
     $("profile-setup-name").focus();
   }
-  function closeDeveloperResetConfirm() {
-    if (developerResetInProgress) return;
-    $("developer-reset-confirm").hidden = true;
-    $("developer-reset-button").focus();
+  function closeAdminResetConfirm() {
+    if (adminResetInProgress) return;
+    $("admin-reset-confirm-overlay").hidden = true;
+    $("admin-reset-button").focus();
   }
-  function resetDeveloperUserData() {
-    if (developerResetInProgress) return;
-    developerResetInProgress = true;
-    $("developer-reset-confirm-button").disabled = true;
-    $("developer-reset-cancel").disabled = true;
+  function resetActiveProfileFromAdmin() {
+    if (adminResetInProgress) return;
+    adminResetInProgress = true;
+    $("admin-reset-confirm").disabled = true;
+    $("admin-reset-cancel").disabled = true;
     try {
       profileStore.resetActiveProfileData();
+      profileStore.setActiveQaState({});
     } catch (error) {
-      console.error("Developer data reset failed", error);
-      developerResetInProgress = false;
-      $("developer-reset-confirm-button").disabled = false;
-      $("developer-reset-cancel").disabled = false;
+      console.error("Active profile data reset failed", error);
+      adminResetInProgress = false;
+      $("admin-reset-confirm").disabled = false;
+      $("admin-reset-cancel").disabled = false;
       return;
     }
-    window.location.reload();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("qa");
+    url.searchParams.delete("reset");
+    window.location.assign(url.toString());
   }
 
   setupVisualDiagnostics();
@@ -3772,7 +3795,6 @@
   updateBgmToggleButton();
   ensureBackgroundMusic();
   updateVersionLabelWithPreviewMetadata();
-  updateQaModeButton();
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
@@ -3788,12 +3810,25 @@
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("qa-mode-toggle").addEventListener("click", toggleQaProgressMode);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
-  $("developer-reset-button").addEventListener("click", () => { $("developer-reset-confirm").hidden = false; $("developer-reset-cancel").focus(); });
-  $("developer-reset-cancel").addEventListener("click", closeDeveloperResetConfirm);
-  $("developer-reset-confirm-button").addEventListener("click", resetDeveloperUserData);
+  $("admin-settings-button").addEventListener("click", openAdminPin);
+  $("admin-pin-input").addEventListener("input", (event) => { event.target.value = event.target.value.replace(/\D/g, "").slice(0, 4); });
+  $("admin-pin-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const pin = $("admin-pin-input").value;
+    if (!/^\d{4}$/.test(pin)) { setProfileError($("admin-pin-error"), "4桁の数字を入力してください。"); return; }
+    if (pin !== adminPin) { setProfileError($("admin-pin-error"), "PINがちがいます。"); return; }
+    setProfileError($("admin-pin-error"), "");
+    $("admin-pin-overlay").hidden = true;
+    openAdminPanel();
+  });
+  $("admin-pin-cancel").addEventListener("click", closeAdminPin);
+  $("admin-panel-close").addEventListener("click", closeAdminPanel);
+  $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
+  $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
+  $("admin-reset-cancel").addEventListener("click", closeAdminResetConfirm);
+  $("admin-reset-confirm").addEventListener("click", resetActiveProfileFromAdmin);
   $("profile-switch-button").addEventListener("click", openProfileManager);
   $("profile-manager-close").addEventListener("click", () => { $("profile-manager-overlay").hidden = true; });
   $("profile-setup-form").addEventListener("submit", (event) => {
