@@ -78,9 +78,39 @@
         legacyRanking: null
       },
       bestRecords: { bestTimeMs: null },
+      // This starts empty even for migrated profiles.  It is deliberately not
+      // inferred from collection/progress, because those states do not retain
+      // the real acquisition order needed by a future opening movie.
+      acquisitionHistory: [],
       enabledModes: {},
       energyMultipliers: {}
     };
+  }
+
+  function normalizeAcquisitionHistory(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    return value.reduce((history, raw) => {
+      if (!raw || typeof raw !== "object") return history;
+      const vehicleId = typeof raw.vehicleId === "string" ? raw.vehicleId : "";
+      const acquisitionType = typeof raw.acquisitionType === "string" ? raw.acquisitionType : "";
+      const mode = typeof raw.mode === "string" ? raw.mode : "";
+      const eventKey = typeof raw.eventKey === "string" ? raw.eventKey : `${vehicleId}:${acquisitionType}`;
+      if (!vehicleId || !acquisitionType || !mode || !eventKey || seen.has(eventKey)) return history;
+      seen.add(eventKey);
+      const displayStage = Number(raw.displayStage);
+      history.push({
+        eventKey,
+        sequence: history.length + 1,
+        timestamp: typeof raw.timestamp === "string" ? raw.timestamp : new Date(0).toISOString(),
+        mode,
+        vehicleId,
+        acquisitionType,
+        displayForm: typeof raw.displayForm === "string" ? raw.displayForm : null,
+        displayStage: Number.isInteger(displayStage) && displayStage >= 1 && displayStage <= 5 ? displayStage : null
+      });
+      return history;
+    }, []);
   }
 
   function normalizeProfile(value) {
@@ -97,6 +127,7 @@
     profile.progress.topCollectionLastUsedJst = typeof value.progress?.topCollectionLastUsedJst === "string" ? value.progress.topCollectionLastUsedJst : null;
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
+    profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
     const best = Number(value.bestRecords?.bestTimeMs);
     profile.bestRecords.bestTimeMs = Number.isFinite(best) && best > 0 ? best : null;
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
@@ -259,12 +290,44 @@
     function setBestTime(value) { return mutateActiveProfile((profile) => { const n = Number(value); profile.bestRecords.bestTimeMs = Number.isFinite(n) && n > 0 ? n : null; }); }
     function getTopCollectionLastUsedJst() { return getActiveProfile()?.progress.topCollectionLastUsedJst ?? null; }
     function setTopCollectionLastUsedJst(value) { return mutateActiveProfile((profile) => { profile.progress.topCollectionLastUsedJst = value ? String(value) : null; }); }
+    function getAcquisitionHistory() { return clone(getActiveProfile()?.acquisitionHistory ?? []); }
+    function appendAcquisitionHistory(entry) {
+      if (!entry || typeof entry !== "object") throw new Error("acquisition entry is required");
+      const vehicleId = typeof entry.vehicleId === "string" ? entry.vehicleId : "";
+      const acquisitionType = typeof entry.acquisitionType === "string" ? entry.acquisitionType : "";
+      const mode = typeof entry.mode === "string" ? entry.mode : "";
+      const eventKey = typeof entry.eventKey === "string" ? entry.eventKey : `${vehicleId}:${acquisitionType}`;
+      const displayStage = Number(entry.displayStage);
+      if (!vehicleId || !acquisitionType || !mode || !eventKey) throw new Error("acquisition entry is incomplete");
+      let added = false;
+      let record = null;
+      mutateActiveProfile((profile) => {
+        const history = normalizeAcquisitionHistory(profile.acquisitionHistory);
+        const duplicate = history.find((item) => item.eventKey === eventKey);
+        if (duplicate) { record = duplicate; profile.acquisitionHistory = history; return; }
+        record = {
+          eventKey,
+          sequence: history.length + 1,
+          timestamp: isoNow(now),
+          mode,
+          vehicleId,
+          acquisitionType,
+          displayForm: typeof entry.displayForm === "string" ? entry.displayForm : null,
+          displayStage: Number.isInteger(displayStage) && displayStage >= 1 && displayStage <= 5 ? displayStage : null
+        };
+        history.push(record);
+        profile.acquisitionHistory = history;
+        added = true;
+      });
+      return { added, record: clone(record) };
+    }
 
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
         profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
+        profile.acquisitionHistory = [];
       });
     }
 
@@ -294,6 +357,7 @@
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
+      getAcquisitionHistory, appendAcquisitionHistory,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };
   }

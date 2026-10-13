@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.6";
+  const appVersion = "0.1.7";
   const adminPin = "3710";
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -2622,9 +2622,36 @@
   }
   function addCompletedRewardToSession(reward) {
     if (!reward?.isNew) return;
+    recordAcquisitionForCompletedReward(reward);
     const key = `${reward.vehicleIndex}:${reward.stage}:${reward.kind}`;
     if (!state.sessionResultGets.some((item) => `${item.vehicleIndex}:${item.stage}:${item.kind}` === key)) state.sessionResultGets.push({ ...reward });
     state.collectionNewVehicleIndexes.add(reward.vehicleIndex);
+  }
+  function recordAcquisitionForCompletedReward(reward) {
+    // All real acquisition types converge here after progress is mutated.  UI
+    // replay, loading, migration, and QA preset construction never call it.
+    if (qaProgressModeEnabled()) return;
+    const vehicle = vehicles[reward.vehicleIndex];
+    if (!vehicle) return;
+    const acquisition = reward.kind === "discovery"
+      ? { acquisitionType: "vehicle_discovered", displayForm: "vehicle" }
+      : reward.kind === "friendship"
+        ? { acquisitionType: "friendship_complete", displayForm: "vehicle" }
+        : ({
+            2: { acquisitionType: "robot", displayForm: "robot" },
+            3: { acquisitionType: "super_robot", displayForm: "super_robot" },
+            4: { acquisitionType: "super_robot_equipped", displayForm: "super_robot_equipped" },
+            5: { acquisitionType: "master_medal", displayForm: "master_medal" }
+          })[reward.stage];
+    if (!acquisition) return;
+    try {
+      profileStore.appendAcquisitionHistory({
+        vehicleId: vehicle.stem,
+        mode: state.mode,
+        displayStage: currentStageForVehicle(reward.vehicleIndex),
+        ...acquisition
+      });
+    } catch (_) {}
   }
   function saveCollectionProgress() {
     saveRewardProgress();
