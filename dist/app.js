@@ -2119,7 +2119,7 @@
       const sparkle = document.createElement("i");
       sparkle.style.setProperty("--row-spark-y", `${-8 + (index % 5) * 4}px`);
       sparkle.style.setProperty("--row-spark-delay", `${index * 28}ms`);
-      sparkle.style.setProperty("--row-spark-size", `${5 + (index % 4) * 2}px`);
+      sparkle.style.setProperty("--row-spark-size", `${Math.round((5 + (index % 4) * 2) * 1.5)}px`);
       sparkle.style.setProperty("--row-spark-drift", `${(index % 3 - 1) * 6}px`);
       trail.appendChild(sparkle);
     }
@@ -2149,7 +2149,12 @@
       row.wrongIndexes.clear();
       renderTwoDigitMultiplication();
       playTwoDigitRowCorrectEffect(row);
-      if (rowIndex === 0) showTwoDigitSecondRowGuides(model);
+      if (rowIndex === 0) {
+        window.setTimeout(() => {
+          if (state.multiplication2x2 !== model) return;
+          showTwoDigitSecondRowGuides(model);
+        }, 760);
+      }
       return;
     }
     row.feedback = "wrong";
