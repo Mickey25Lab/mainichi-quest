@@ -228,3 +228,54 @@ test("admin reset clears only the active profile child data", () => {
   assert.equal(store.listProfiles().length, 2);
   assert.equal(store.listProfiles().find((profile) => profile.profileId === profileB.profileId).displayName, "B");
 });
+
+
+test("parent learning settings are saved per profile without switching the active player", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  const profileB = store.createProfile("B");
+  const activeBefore = store.getActiveProfileId();
+
+  store.setProfileLearningSettings(profileA.profileId, {
+    enabledModes: { normal: true, counting1: false },
+    energyMultipliers: { normal: "large", counting1: "off" },
+    dailyTargetCounts: { normal: 3, counting1: 1 }
+  });
+  store.setProfileLearningSettings(profileB.profileId, {
+    enabledModes: { normal: true },
+    energyMultipliers: { normal: "small" },
+    dailyTargetCounts: { normal: 2 }
+  });
+
+  assert.equal(store.getActiveProfileId(), activeBefore);
+  assert.deepEqual(store.getProfileLearningSettings(profileA.profileId), {
+    enabledModes: { normal: true, counting1: false },
+    energyMultipliers: { normal: "large", counting1: "off" },
+    dailyTargetCounts: { normal: 3, counting1: 1 }
+  });
+  assert.deepEqual(store.getProfileLearningSettings(profileB.profileId), {
+    enabledModes: { normal: true },
+    energyMultipliers: { normal: "small" },
+    dailyTargetCounts: { normal: 2 }
+  });
+});
+
+test("admin reset preserves parent learning settings", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profile = store.createProfile("A");
+  store.setProfileLearningSettings(profile.profileId, {
+    enabledModes: { normal: true },
+    energyMultipliers: { normal: "medium" },
+    dailyTargetCounts: { normal: 4 }
+  });
+  store.setRewardProgress([{ stage: 3 }]);
+  store.resetActiveProfileData();
+
+  assert.deepEqual(store.getProfileLearningSettings(profile.profileId), {
+    enabledModes: { normal: true },
+    energyMultipliers: { normal: "medium" },
+    dailyTargetCounts: { normal: 4 }
+  });
+});
