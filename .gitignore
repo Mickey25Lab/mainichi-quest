@@ -1,2 +1,4 @@
 .worktrees/
 review/
+__pycache__/
+asset-source/audio/phonics/models/

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "voice": {
+    "engine": "piper",
+    "voice_name": "en_US-libritts-high",
+    "speaker_id": 487,
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx",
+    "config_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx.json",
+    "model_path": "asset-source/audio/phonics/models/en_US-libritts-high.onnx",
+    "sample_rate_hz": 22050
+  },
+  "normalization": {
+    "target_peak_dbfs": -1.0,
+    "trim_silence_threshold_dbfs": -45.0,
+    "edge_padding_ms": 80
+  },
+  "qa": {
+    "min_duration_ms": 180,
+    "max_duration_ms": 4000,
+    "max_silence_ratio": 0.72,
+    "clip_peak": 32767
+  },
+  "clips": [
+    {"id": "a-phoneme-ae", "group": "A", "kind": "phoneme", "text": "[[æ]]", "display": "/æ/"},
+    {"id": "a-letter-a", "group": "A", "kind": "letter", "text": "A", "display": "A"},
+    {"id": "a-word-apple", "group": "A", "kind": "word", "text": "apple", "display": "apple"},
+    {"id": "a-word-ant", "group": "A", "kind": "word", "text": "ant", "display": "ant"},
+    {"id": "b-phoneme-b", "group": "B", "kind": "phoneme", "text": "[[b]]", "display": "/b/"},
+    {"id": "b-letter-b", "group": "B", "kind": "letter", "text": "B", "display": "B"},
+    {"id": "b-word-ball", "group": "B", "kind": "word", "text": "ball", "display": "ball"},
+    {"id": "b-word-bus", "group": "B", "kind": "word", "text": "bus", "display": "bus"}
+  ]
+}

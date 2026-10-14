@@ -1,0 +1,170 @@
+{
+  "voice": {
+    "engine": "piper",
+    "voice_name": "en_US-libritts-high",
+    "speaker_id": 487,
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx",
+    "config_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx.json",
+    "model_path": "asset-source/audio/phonics/models/en_US-libritts-high.onnx",
+    "sample_rate_hz": 22050
+  },
+  "summary": {
+    "expected": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "id": "a-phoneme-ae",
+      "file": "a-phoneme-ae.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 336.7,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.0902
+      }
+    },
+    {
+      "id": "a-letter-a",
+      "file": "a-letter-a.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 441.2,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.3534
+      }
+    },
+    {
+      "id": "a-word-apple",
+      "file": "a-word-apple.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 583.5,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.468
+      }
+    },
+    {
+      "id": "a-word-ant",
+      "file": "a-word-ant.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 232.2,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.1834
+      }
+    },
+    {
+      "id": "b-phoneme-b",
+      "file": "b-phoneme-b.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 180.0,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.4316
+      }
+    },
+    {
+      "id": "b-letter-b",
+      "file": "b-letter-b.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 359.9,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.2218
+      }
+    },
+    {
+      "id": "b-word-ball",
+      "file": "b-word-ball.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 499.2,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.4324
+      }
+    },
+    {
+      "id": "b-word-bus",
+      "file": "b-word-bus.wav",
+      "status": "PASS",
+      "checks": {
+        "format": true,
+        "duration": true,
+        "not_silent": true,
+        "not_clipped": true
+      },
+      "metrics": {
+        "duration_ms": 510.8,
+        "sample_rate_hz": 22050,
+        "channels": 1,
+        "bit_depth": 16,
+        "peak": 29205,
+        "silence_ratio": 0.184
+      }
+    }
+  ]
+}
