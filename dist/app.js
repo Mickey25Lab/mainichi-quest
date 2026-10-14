@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.18";
+  const appVersion = "0.2.19";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -742,8 +742,6 @@
     const playStage = $("play-stage");
     const appRect = app?.getBoundingClientRect();
     const playStageRect = playStage?.getBoundingClientRect();
-    const appStyle = app ? getComputedStyle(app) : null;
-    const playStageStyle = playStage ? getComputedStyle(playStage) : null;
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -757,18 +755,12 @@
       scrollX: window.scrollX,
       scrollY: window.scrollY,
       visibilityState: document.visibilityState,
-      stageScale: playStageStyle?.getPropertyValue("--stage-scale").trim() || null,
+      stageScale: playStage?.style.getPropertyValue("--stage-scale").trim() || null,
       appRect: appRect ? {
         x: appRect.x,
         y: appRect.y,
         width: appRect.width,
         height: appRect.height
-      } : null,
-      appComputed: appStyle ? {
-        width: appStyle.width,
-        height: appStyle.height,
-        transform: appStyle.transform,
-        transformOrigin: appStyle.transformOrigin
       } : null,
       stageRect: playStageRect ? {
         x: playStageRect.x,
@@ -776,24 +768,20 @@
         width: playStageRect.width,
         height: playStageRect.height
       } : null,
-      stageComputed: playStageStyle ? {
-        transform: playStageStyle.transform,
-        transformOrigin: playStageStyle.transformOrigin
-      } : null
     };
   }
   function recordViewportDiagnostic(event, detail = {}) {
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
+    if (viewportDiagnostics.length > 60) viewportDiagnostics = viewportDiagnostics.slice(-60);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function setupViewportDiagnostics() {
     if (!viewportDiagnosticsEnabled) return;
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-60);
     } catch (_) {}
     const button = document.createElement("button");
     button.type = "button";
