@@ -93,9 +93,9 @@ test("top speaker is scoped and developer credit is removed", () => {
 });
 
 test("audio balance keeps gameplay BGM stronger and reward celebration controlled", () => {
-  assert.match(app, /game: Object\.freeze\(\{ filePath: "\.\/assets\/audio\/bgm_pynchon\.mp3", normalVolume: 0\.30 \}\)/);
+  assert.match(app, /game: Object\.freeze\(\{ filePath: "\.\/assets\/audio\/bgm_pynchon\.mp3", normalVolume: 0\.38 \}\)/);
   const correct = app.slice(app.indexOf("function playCorrectSound"), app.indexOf("function playSimpleCorrectSound"));
-  assert.match(correct, /gain\.gain\.value = 1\.05/);
+  assert.match(correct, /gain\.gain\.value = 0\.75/);
   assert.match(correct, /tone\(660, 0, \.15, "sine", \.25\)/);
   assert.match(correct, /tone\(880, \.16, \.3, "sine", \.25\)/);
 });
