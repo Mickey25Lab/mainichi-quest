@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.12";
+  const appVersion = "0.2.0";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1789,7 +1789,9 @@
       button.classList.toggle("is-complete", completed);
       button.classList.toggle("is-free-play", overview.allComplete);
       const remaining = button.querySelector(".mode-select-remaining");
-      remaining.textContent = completed ? "できた！" : `あと${item.remaining}回`;
+      remaining.innerHTML = completed
+        ? '<strong class="mode-select-done-text">できた！</strong>'
+        : `<span class="mode-select-remaining-prefix">あと</span><strong class="mode-select-remaining-number">${item.remaining}</strong><span class="mode-select-remaining-suffix">回</span>`;
       const energy = button.querySelector(".mode-select-energy");
       const presentation = childEnergyPresentation[item.energyId];
       energy.className = `mode-select-energy energy-level-${presentation.level}`;
