@@ -299,3 +299,24 @@ test("daily mission progress is isolated by profile and survives reload", () => 
   reloaded.setActiveProfile(profileA.profileId);
   assert.deepEqual(reloaded.getDailyMission(), { date:"2026-10-14", completedCounts:{ normal:2 } });
 });
+
+
+test("collection scene order is persisted per profile and reset with child data", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  store.setCollectionSceneOrder({ vehicle:[3,1,8], robot:[1,3] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3] });
+
+  const profileB = store.createProfile("B");
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[] });
+  store.setCollectionSceneOrder({ vehicle:[2], robot:[2] });
+
+  store.setActiveProfile(profileA.profileId);
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3] });
+  store.resetActiveProfileData();
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[] });
+
+  store.setActiveProfile(profileB.profileId);
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[2], robot:[2] });
+});
