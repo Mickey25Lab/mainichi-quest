@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.22";
+  const appVersion = "0.2.23";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -736,15 +736,9 @@
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
   // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
-  function viewportSnapshot(forceLayoutRead = false) {
+  function viewportSnapshot() {
     const visualViewport = window.visualViewport;
-    const app = $("app");
     const playStage = $("play-stage");
-    // Phase 5: keep the potentially stabilizing layout read only on
-    // visibilitychange; all other viewport snapshots stay read-only/lightweight.
-    if (forceLayoutRead) {
-      app?.getBoundingClientRect();
-    }
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -760,7 +754,7 @@
   }
   function recordViewportDiagnostic(event, detail = {}) {
     if (!viewportDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot(event === "visibilitychange") };
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
     viewportDiagnostics.push(entry);
     if (viewportDiagnostics.length > 60) viewportDiagnostics = viewportDiagnostics.slice(-60);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
