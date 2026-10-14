@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.7";
+  const appVersion = "0.2.8";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -857,6 +857,35 @@
       // GitHub Pages / local builds do not generate preview metadata.
     }
   }
+  const stableViewportMetaContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+  const resetViewportMetaContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no";
+  let viewportRecoveryInProgress = false;
+  function recoverAbnormalPwaZoom(reason) {
+    const visualViewport = window.visualViewport;
+    const scale = visualViewport?.scale;
+    if (viewportRecoveryInProgress || !Number.isFinite(scale) || Math.abs(scale - 1) <= 0.01) return false;
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (!viewportMeta) return false;
+    viewportRecoveryInProgress = true;
+    recordViewportDiagnostic("viewport-recovery-start", { reason, detectedScale: scale });
+    viewportMeta.setAttribute("content", resetViewportMetaContent);
+    // Force WebKit to consume the temporary constraint before restoring
+    // viewport-fit=cover. This targets the standalone-PWA resume zoom bug.
+    void document.documentElement.offsetWidth;
+    window.setTimeout(() => {
+      viewportMeta.setAttribute("content", stableViewportMetaContent);
+      window.scrollTo(0, 0);
+      recordViewportDiagnostic("viewport-recovery-restored-meta", { reason });
+      window.setTimeout(() => {
+        viewportRecoveryInProgress = false;
+        recordViewportDiagnostic("viewport-recovery-complete", { reason });
+        schedulePlayStageSize("viewport-recovery");
+        scheduleCollectionStageSize();
+      }, 120);
+    }, 60);
+    return true;
+  }
+
   function isNormalViewport(snapshot) {
     const viewportScale = snapshot.visualViewportScale;
     if (Number.isFinite(viewportScale) && Math.abs(viewportScale - 1) > 0.01) return false;
@@ -4384,7 +4413,7 @@
     recordViewportDiagnostic("pageshow", { persisted: event.persisted });
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
-    schedulePlayStageSize("pageshow");
+    if (!recoverAbnormalPwaZoom("pageshow")) schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("pagehide", () => {
@@ -4403,7 +4432,7 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => {
     recordViewportDiagnostic("visualViewport.resize");
-    schedulePlayStageSize("visualViewport.resize");
+    if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("scroll", () => {
@@ -4526,7 +4555,7 @@
       suspendAudioForBackground("visibilitychange:hidden");
     } else {
       resumeAudioAfterVisible("visibilitychange:visible");
-      schedulePlayStageSize("visibilitychange:visible");
+      if (!recoverAbnormalPwaZoom("visibilitychange:visible")) schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
@@ -4542,6 +4571,7 @@
   window.addEventListener("focus", () => {
     recordViewportDiagnostic("focus");
     resumeAudioAfterVisible("focus");
+    recoverAbnormalPwaZoom("focus");
     checkQuestionTimeout();
   });
   // WebKit can leave double-tap smart zoom enabled on non-interactive hit targets
