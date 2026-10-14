@@ -180,7 +180,7 @@
     inputMode: "quotient", quotientInput: "", remainderInput: "", correctSoundBuffers: [],
     correctSoundsLoading: null, lastCorrectSoundIndex: -1, startSound: null,
     collection: Array(20).fill(0), rewardProgress: [], currentVehicleIndex: 0, currentStage: 1, preparedInitialVehicleIndex: null,
-    recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false,
+    recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false, collectionShowSessionMarkers: true,
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
@@ -3459,6 +3459,7 @@
     await preloadCollectionVehicleArtwork();
     if (runId !== state.runId || !state.collectionUsed) return;
     state.collectionDeadline = Date.now() + 60000;
+    state.collectionShowSessionMarkers = showSessionMarkers;
     setCollectionCategory("summary"); renderCollectionGrid({ showSessionMarkers }); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
@@ -3495,6 +3496,50 @@
       renderCollectionCategoryScene(normalizedCategory);
     }
   }
+  function collectionSceneSlots(rows, idKey) {
+    return [...rows].reverse().flatMap((row) => row[idKey].map((id, slotIndex) => ({
+      ...row, slotId:id, x:row.centers[slotIndex]
+    })));
+  }
+  const vehicleCollectionSlots = Object.freeze(collectionSceneSlots(vehicleCollectionRows, "ids"));
+  const robotCollectionSlots = Object.freeze(collectionSceneSlots(robotCollectionRows, "localIds"));
+
+  function collectionSceneQualifies(vehicleIndex, kind) {
+    const progress = vehicleProgress(vehicleIndex);
+    return kind === "vehicle" ? progress.discovered : progress.discovered && progress.stage >= 3;
+  }
+  function collectionSceneAcquisitionType(kind) { return kind === "vehicle" ? "vehicle_discovered" : "robot"; }
+  function collectionSceneOrder(kind) {
+    const qualified = vehicles.map((_, index) => index).filter((index) => collectionSceneQualifies(index, kind));
+    let saved;
+    try { saved = profileStore.getCollectionSceneOrder(); } catch (_) { saved = { vehicle:[], robot:[] }; }
+    const current = Array.isArray(saved?.[kind]) ? saved[kind].filter((index, position, values) => Number.isInteger(index) && index >= 0 && index < vehicles.length && values.indexOf(index) === position) : [];
+    const placed = new Set(current);
+    const missing = qualified.filter((index) => !placed.has(index));
+    if (missing.length) {
+      let history = [];
+      try { history = profileStore.getAcquisitionHistory(); } catch (_) {}
+      const acquisitionType = collectionSceneAcquisitionType(kind);
+      const sequenceByVehicle = new Map();
+      history.forEach((entry) => {
+        if (entry?.acquisitionType !== acquisitionType) return;
+        const index = vehicles.findIndex((vehicle) => vehicle.stem === entry.vehicleId);
+        if (index >= 0 && !sequenceByVehicle.has(index)) sequenceByVehicle.set(index, Number(entry.sequence) || Number.MAX_SAFE_INTEGER);
+      });
+      // Existing items with no trustworthy timing are seeded by stable vehicle ID.
+      // Items with a recorded acquisition event follow in actual acquisition order.
+      const unknown = missing.filter((index) => !sequenceByVehicle.has(index)).sort((a,b) => a - b);
+      const known = missing.filter((index) => sequenceByVehicle.has(index)).sort((a,b) => sequenceByVehicle.get(a) - sequenceByVehicle.get(b) || a - b);
+      current.push(...unknown, ...known);
+      try {
+        const next = { vehicle:[...(saved?.vehicle || [])], robot:[...(saved?.robot || [])], [kind]:current };
+        profileStore.setCollectionSceneOrder(next);
+      } catch (_) {}
+    }
+    return current.filter((index) => collectionSceneQualifies(index, kind));
+  }
+  function robotCollectionPageCount() { return collectionSceneOrder("robot").length > 10 ? 2 : 1; }
+
   function collectionItemMarkup(vehicleIndex, kind, layout, grayscale = false) {
     const vehicle = vehicles[vehicleIndex];
     const artworkPath = kind === "vehicle" ? vehicleArtworkPath(vehicleIndex) : robotArtworkPath(vehicleIndex);
@@ -3503,28 +3548,21 @@
     const shadowHeight = kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13);
     const shadowY = layout.contactY - (kind === "vehicle" ? 0 : 7);
     const top = layout.contactY - layout.size * anchorY;
-    return `<button class="collection-scene-item collection-scene-item-${kind}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async"></button>`;
+    const isNew = state.collectionShowSessionMarkers && state.collectionNewVehicleIndexes.has(vehicleIndex);
+    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
   }
   function renderVehicleCollectionScene() {
-    const markup = [];
-    vehicleCollectionRows.forEach((row) => row.ids.forEach((id, slotIndex) => {
-      const vehicleIndex = id - 1;
+    return collectionSceneOrder("vehicle").slice(0, vehicleCollectionSlots.length).map((vehicleIndex, position) => {
       const progress = vehicleProgress(vehicleIndex);
-      if (!progress.discovered) return;
-      markup.push(collectionItemMarkup(vehicleIndex, "vehicle", { ...row, x:row.centers[slotIndex] }, !progress.friendly));
-    }));
-    return markup.join("");
+      return collectionItemMarkup(vehicleIndex, "vehicle", vehicleCollectionSlots[position], !progress.friendly);
+    }).join("");
   }
   function renderRobotCollectionScene() {
-    const pageOffset = state.collectionRobotPage * 10;
-    const markup = [];
-    robotCollectionRows.forEach((row) => row.localIds.forEach((localId, slotIndex) => {
-      const vehicleIndex = pageOffset + localId - 1;
-      const progress = vehicleProgress(vehicleIndex);
-      if (!progress.discovered || progress.stage < 3) return;
-      markup.push(collectionItemMarkup(vehicleIndex, "robot", { ...row, x:row.centers[slotIndex] }));
-    }));
-    return markup.join("");
+    const order = collectionSceneOrder("robot");
+    const pageCount = order.length > 10 ? 2 : 1;
+    if (state.collectionRobotPage >= pageCount) state.collectionRobotPage = 0;
+    const pageItems = order.slice(state.collectionRobotPage * 10, state.collectionRobotPage * 10 + 10);
+    return pageItems.map((vehicleIndex, position) => collectionItemMarkup(vehicleIndex, "robot", robotCollectionSlots[position])).join("");
   }
   function renderCollectionCategoryScene(category) {
     const scene = $("collection-category-scene");
@@ -3533,19 +3571,24 @@
     scene.dataset.category = category;
     scene.style.backgroundImage = `url("${collectionCategoryBackgroundPaths[category]}")`;
     items.innerHTML = category === "vehicle" ? renderVehicleCollectionScene() : category === "robot" ? renderRobotCollectionScene() : "";
-    indicator.hidden = category !== "robot";
+    const paged = category === "robot" && robotCollectionPageCount() > 1;
+    indicator.hidden = !paged;
     indicator.querySelectorAll("button").forEach((button) => {
       const selected = Number(button.dataset.collectionPage) === state.collectionRobotPage;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-current", selected ? "page" : "false");
     });
-    const paged = category === "robot";
     $("collection-series-prev").hidden = !paged;
     $("collection-series-next").hidden = !paged;
     items.querySelectorAll(".collection-scene-item").forEach((item) => item.addEventListener("click", () => openVehicleDetail(Number(item.dataset.vehicle))));
   }
   function setCollectionRobotPage(page) {
-    const pageCount = 2;
+    const pageCount = robotCollectionPageCount();
+    if (pageCount < 2) {
+      state.collectionRobotPage = 0;
+      if (state.collectionCategory === "robot") renderCollectionCategoryScene("robot");
+      return;
+    }
     const rawPage = Number(page) || 0;
     const nextPage = ((rawPage % pageCount) + pageCount) % pageCount;
     if (nextPage === state.collectionRobotPage) return;
@@ -4506,7 +4549,7 @@
     if (state.collectionCategory === "robot") state.collectionSwipeStartX = event.clientX;
   });
   $("collection-category-scene").addEventListener("pointerup", (event) => {
-    if (state.collectionCategory !== "robot" || state.collectionSwipeStartX === null) return;
+    if (state.collectionCategory !== "robot" || state.collectionSwipeStartX === null || robotCollectionPageCount() < 2) return;
     const deltaX = event.clientX - state.collectionSwipeStartX;
     state.collectionSwipeStartX = null;
     if (Math.abs(deltaX) < 70) return;
