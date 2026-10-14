@@ -200,6 +200,9 @@ test("opening movie uses the latest three acquisitions, skips, and respects the 
     ["05_mail_van", "super_robot_equipped"]
   ]));
   await page.reload();
+  assert.equal(await page.locator("#opening-movie-screen.active").count(), 0);
+  await page.locator("#start-screen.active").waitFor();
+  await page.locator("#start-button").click();
   await page.locator("#opening-movie-screen.active").waitFor();
   await page.waitForFunction(() => {
     const image = document.getElementById("opening-movie-art");
@@ -209,13 +212,17 @@ test("opening movie uses the latest three acquisitions, skips, and respects the 
   await page.waitForTimeout(1900);
   assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "宅配便車");
   await page.locator("#opening-movie-skip").click();
-  await page.locator("#start-screen.active").waitFor();
+  await page.locator("#mode-select-screen.active").waitFor();
   assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getOpeningMovieLastPlayedJst()), jstDateKey());
   await page.reload();
   assert.equal(await page.locator("#opening-movie-screen.active").count(), 0);
+  await page.locator("#start-button").click();
+  await page.locator("#mode-select-screen.active").waitFor();
   await unlockAdmin(page);
   await page.locator("#admin-reenable-opening-movie").click();
   await page.reload();
+  assert.equal(await page.locator("#opening-movie-screen.active").count(), 0);
+  await page.locator("#start-button").click();
   await page.locator("#opening-movie-screen.active").waitFor();
   await page.locator("#opening-movie-skip").click();
   assert.deepEqual(errors, []);
@@ -230,8 +237,9 @@ test("opening movie auto-finishes and remains isolated between profiles", async 
   await createInitialProfile(page, "A");
   await seedOpeningHistory(page, openingHistory([["01_patrol_car", "vehicle_discovered"]]));
   await page.reload();
+  await page.locator("#start-button").click();
   await page.locator("#opening-movie-screen.active").waitFor();
-  await page.locator("#start-screen.active").waitFor({ timeout: 3000 });
+  await page.locator("#mode-select-screen.active").waitFor({ timeout: 3000 });
   const profileB = await page.evaluate((history) => {
     const store = window.MQProfileStorage.createProfileStorage(localStorage);
     store.createProfile("B");
@@ -242,6 +250,7 @@ test("opening movie auto-finishes and remains isolated between profiles", async 
     return profile.profileId;
   }, openingHistory([["02_fire_engine", "robot"]]));
   await page.reload();
+  await page.locator("#start-button").click();
   await page.locator("#opening-movie-screen.active").waitFor();
   assert.equal(await page.locator("#opening-movie-vehicle-name").textContent(), "消防車");
   assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveProfileId()), profileB);

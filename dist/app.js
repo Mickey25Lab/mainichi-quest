@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.10";
+  const appVersion = "0.1.11";
   const adminPin = "3710";
   const screens = ["start-screen", "opening-movie-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
@@ -45,6 +45,14 @@
     normalVolume: 0.22,
     rewardDuckMultiplier: 0.30,
     storageKey: "warizan-robot:bgm-enabled-v1"
+  });
+  // The opening movie has its own short, non-looping cue.  Keep all of its
+  // playback tuning here so it cannot affect the normal game BGM.
+  const openingMovieBgmConfig = Object.freeze({
+    filePath: "./assets/audio/opening-movie-bgm.mp3",
+    startOffsetSec: 90,
+    normalVolume: 0.16,
+    fadeDurationMs: 500
   });
   const wrongFeedbackDurationMs = 500;
   const revealedAnswerDurationMs = 2000 * 2;
@@ -153,7 +161,8 @@
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
-    bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false
+    bgmAudio: null, bgmBuffer: null, bgmBufferPromise: null, bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmPriming: false,
+    openingMovieBgmBuffer: null, openingMovieBgmBufferPromise: null, openingMovieBgmSource: null, openingMovieBgmGain: null
   };
 
   function emptyVehicleProgress() { return { discovered: false, friendship: 0, friendly: false, stage: 1, energy: 0, masterMedal: false }; }
@@ -342,10 +351,80 @@
   const openingMovieSlideDurationMs = 1800;
   let openingMovieTimerId = null;
   let openingMovieRunId = 0;
-  function stopOpeningMoviePlayback() {
+  let openingMovieBgmFadeTimerId = null;
+  let openingMovieBgmRunId = 0;
+  let openingMovieFinishing = false;
+  let openingMovieLaunchInProgress = false;
+  function ensureOpeningMovieBgmGain() {
+    if (state.openingMovieBgmGain) return state.openingMovieBgmGain;
+    const gain = audioContext().createGain();
+    gain.gain.value = 0;
+    gain.connect(audioContext().destination);
+    state.openingMovieBgmGain = gain;
+    return gain;
+  }
+  function ensureOpeningMovieBgm() {
+    if (state.openingMovieBgmBuffer) return Promise.resolve(state.openingMovieBgmBuffer);
+    if (state.openingMovieBgmBufferPromise) return state.openingMovieBgmBufferPromise;
+    const ctx = audioContext();
+    state.openingMovieBgmBufferPromise = fetch(openingMovieBgmConfig.filePath)
+      .then((response) => { if (!response.ok) throw new Error(openingMovieBgmConfig.filePath); return response.arrayBuffer(); })
+      .then((arrayBuffer) => decodeAudio(ctx, arrayBuffer))
+      .then((buffer) => { state.openingMovieBgmBuffer = buffer; return buffer; })
+      .catch(() => null);
+    return state.openingMovieBgmBufferPromise;
+  }
+  function stopOpeningMovieBgm({ fade = false, onStopped = null } = {}) {
+    const source = state.openingMovieBgmSource;
+    const gain = state.openingMovieBgmGain;
+    const ctx = state.audio;
+    openingMovieBgmRunId += 1;
+    if (openingMovieBgmFadeTimerId !== null) window.clearTimeout(openingMovieBgmFadeTimerId);
+    openingMovieBgmFadeTimerId = null;
+    const finish = () => {
+      if (state.openingMovieBgmSource === source) state.openingMovieBgmSource = null;
+      if (source) {
+        try { source.stop(); } catch (_) {}
+        try { source.disconnect(); } catch (_) {}
+      }
+      if (gain) gain.gain.value = 0;
+      if (onStopped) onStopped();
+    };
+    if (!source || !gain || !ctx || ctx.state === "closed") { finish(); return; }
+    gain.gain.cancelScheduledValues(ctx.currentTime);
+    if (!fade) { finish(); return; }
+    gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + openingMovieBgmConfig.fadeDurationMs / 1000);
+    openingMovieBgmFadeTimerId = window.setTimeout(() => {
+      openingMovieBgmFadeTimerId = null;
+      finish();
+    }, openingMovieBgmConfig.fadeDurationMs);
+  }
+  function startOpeningMovieBgm() {
+    stopBackgroundMusic();
+    if (!state.bgmEnabled) return;
+    const runId = ++openingMovieBgmRunId;
+    ensureOpeningMovieBgm().then((buffer) => {
+      if (!buffer || runId !== openingMovieBgmRunId || !$('opening-movie-screen').classList.contains('active') || openingMovieFinishing) return;
+      const ctx = audioContext();
+      const gain = ensureOpeningMovieBgmGain();
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(gain);
+      source.onended = () => { if (state.openingMovieBgmSource === source) state.openingMovieBgmSource = null; };
+      state.openingMovieBgmSource = source;
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      source.start(0, openingMovieBgmConfig.startOffsetSec);
+      gain.gain.linearRampToValueAtTime(openingMovieBgmConfig.normalVolume, ctx.currentTime + openingMovieBgmConfig.fadeDurationMs / 1000);
+    });
+  }
+  function stopOpeningMoviePlayback({ stopBgm = true } = {}) {
     if (openingMovieTimerId !== null) window.clearTimeout(openingMovieTimerId);
     openingMovieTimerId = null;
     openingMovieRunId += 1;
+    if (!openingMovieFinishing) openingMovieLaunchInProgress = false;
+    if (stopBgm) stopOpeningMovieBgm();
   }
   function openingMovieEntryForHistory(item) {
     const vehicleIndex = vehicles.findIndex((vehicle) => vehicle.stem === item.vehicleId);
@@ -380,14 +459,22 @@
     copy.classList.add("is-playing");
   }
   function finishOpeningMovie() {
-    stopOpeningMoviePlayback();
-    showScreen("start-screen");
+    if (openingMovieFinishing) return;
+    openingMovieFinishing = true;
+    stopOpeningMoviePlayback({ stopBgm: false });
+    stopOpeningMovieBgm({ fade: true, onStopped: () => {
+      openingMovieFinishing = false;
+      openingMovieLaunchInProgress = false;
+      showFixedScreenWhenReady("mode-select-screen");
+    }});
   }
   function playOpeningMovie(entries) {
     stopOpeningMoviePlayback();
     const runId = ++openingMovieRunId;
     let index = 0;
+    openingMovieFinishing = false;
     showScreen("opening-movie-screen");
+    startOpeningMovieBgm();
     const advance = () => {
       if (runId !== openingMovieRunId) return;
       renderOpeningMovieEntry(entries[index]);
@@ -400,7 +487,7 @@
     };
     advance();
   }
-  function startOpeningMovieForActiveProfile() {
+  function startOpeningMovieForActiveProfile({ onUnavailable = null } = {}) {
     if (qaProgressModeEnabled()) return false;
     const entries = recentOpeningMovieEntries();
     if (entries.length === 0) return false;
@@ -411,13 +498,15 @@
     // Do not spend a short slide duration while a first-time artwork request is
     // still pending.  Playback and the daily marker begin only once every
     // selected image can be drawn.
-    Promise.all(entries.map((entry) => preloadDecodedImage(entry.artworkPath)))
+    // Prepare the cue with the artwork so its fade-in can begin with the first
+    // visible slide rather than partway through the short movie.
+    Promise.all([...entries.map((entry) => preloadDecodedImage(entry.artworkPath)), ensureOpeningMovieBgm()])
       .then(() => {
         if (preparationRunId !== openingMovieRunId) return;
-        try { profileStore.setOpeningMovieLastPlayedJst(japanDateKey()); } catch (_) { return; }
+        try { profileStore.setOpeningMovieLastPlayedJst(japanDateKey()); } catch (_) { onUnavailable?.(); return; }
         playOpeningMovie(entries);
       })
-      .catch(() => {});
+      .catch(() => { if (preparationRunId === openingMovieRunId) onUnavailable?.(); });
     return true;
   }
   function showRewardOverPlay() {
@@ -1776,7 +1865,21 @@
       startTimer();
     });
   }
-  function openModeSelect() { recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot()); showFixedScreenWhenReady("mode-select-screen"); }
+  function openModeSelect() { showFixedScreenWhenReady("mode-select-screen"); }
+  function openModeSelectOrPlayOpeningMovie() {
+    if (openingMovieLaunchInProgress) return;
+    openingMovieLaunchInProgress = true;
+    recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot());
+    // Establish audio permission in the child's explicit button gesture.  The
+    // decoded opening cue may finish loading slightly later, but it remains
+    // eligible to start from the configured 90-second position.
+    audioContext();
+    const showModeSelect = () => {
+      openingMovieLaunchInProgress = false;
+      openModeSelect();
+    };
+    if (!startOpeningMovieForActiveProfile({ onUnavailable: showModeSelect })) showModeSelect();
+  }
   function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture(); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
@@ -3764,7 +3867,10 @@
     state.bgmEnabled = Boolean(enabled);
     try { localStorage.setItem(bgmConfig.storageKey, String(state.bgmEnabled)); } catch (_) {}
     updateBgmToggleButton();
-    if (!state.bgmEnabled) stopBackgroundMusic();
+    if (!state.bgmEnabled) {
+      stopBackgroundMusic();
+      stopOpeningMovieBgm();
+    }
     else startBackgroundMusic();
   }
   function toggleBackgroundMusic() { setBgmEnabled(!state.bgmEnabled); }
@@ -3920,7 +4026,6 @@
     preloadStartSound();
     updateTopCollectionButton();
     schedulePlayStageSize("initial");
-    startOpeningMovieForActiveProfile();
   }
   function beginProfileExperience() {
     if (profileStore.listProfiles().length) {
@@ -3966,6 +4071,7 @@
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   ensureBackgroundMusic();
+  ensureOpeningMovieBgm();
   updateVersionLabelWithPreviewMetadata();
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
@@ -3980,7 +4086,7 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelectOrPlayOpeningMovie); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture(); beginRound(state.mode || "normal"); });
   $("opening-movie-skip").addEventListener("click", finishOpeningMovie);
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
