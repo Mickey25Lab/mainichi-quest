@@ -558,10 +558,27 @@ button, input { font: inherit; }
 }
 .mode-select-remaining {
   justify-self:center;
+  display:inline-flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:.12em;
   color:#fff9b8;
-  font-size:clamp(20px,2.35vw,31px);
   white-space:nowrap;
   text-align:center;
+}
+.mode-select-remaining-prefix,
+.mode-select-remaining-suffix {
+  font-size:clamp(14px,1.4vw,20px);
+  font-weight:900;
+}
+.mode-select-remaining-number {
+  font-size:clamp(32px,4vw,52px);
+  font-weight:1000;
+  line-height:.9;
+}
+.mode-select-done-text {
+  font-size:clamp(20px,2.35vw,31px);
+  font-weight:1000;
 }
 .mode-select-choice.is-complete .mode-select-remaining { color:#d8ffe6; }
 
@@ -606,6 +623,10 @@ button, input { font: inherit; }
   transform:scale(1.48);
   box-shadow:0 0 7px #fff,0 0 18px #fff96b,0 0 32px #3ee8ff,0 0 48px rgba(41,119,255,.95);
 }
+.mode-select-energy.energy-level-1 span { font-size:clamp(10px,.9vw,13px); }
+.mode-select-energy.energy-level-2 span { font-size:clamp(13px,1.15vw,16px); }
+.mode-select-energy.energy-level-3 span { font-size:clamp(16px,1.45vw,20px); }
+.mode-select-energy.energy-level-4 span { font-size:clamp(20px,1.9vw,26px); font-weight:1000; }
 
 .mode-select-energy-guide {
   position:absolute;
