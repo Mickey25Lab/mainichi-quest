@@ -3284,7 +3284,7 @@ button, input { font: inherit; }
   position:absolute;
   z-index:3;
   right:-8px;
-  top:calc(var(--shadow-y) - var(--item-y) - 46px + var(--item-size) / 5);
+  top:calc(var(--shadow-y) - var(--item-y) - 46px + var(--item-size) / 10);
   width:46px;
   height:46px;
   display:grid;
