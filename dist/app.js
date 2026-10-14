@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.6";
+  const appVersion = "0.2.7";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -730,7 +730,7 @@
   }
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
-  const viewportDiagnosticsEnabled = new URLSearchParams(window.location.search).get("viewport-diagnostics") === "1";
+  const viewportDiagnosticsEnabled = true;
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
   // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
