@@ -279,3 +279,23 @@ test("admin reset preserves parent learning settings", () => {
     dailyTargetCounts: { normal: 4 }
   });
 });
+
+
+test("daily mission progress is isolated by profile and survives reload", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  store.setDailyMission({ date:"2026-10-14", completedCounts:{ normal:2 } });
+  const profileB = store.createProfile("B");
+  store.setDailyMission({ date:"2026-10-14", completedCounts:{ counting1:1 } });
+
+  store.setActiveProfile(profileA.profileId);
+  assert.deepEqual(store.getDailyMission(), { date:"2026-10-14", completedCounts:{ normal:2 } });
+
+  store.setActiveProfile(profileB.profileId);
+  assert.deepEqual(store.getDailyMission(), { date:"2026-10-14", completedCounts:{ counting1:1 } });
+
+  const reloaded = makeStore(storage);
+  reloaded.setActiveProfile(profileA.profileId);
+  assert.deepEqual(reloaded.getDailyMission(), { date:"2026-10-14", completedCounts:{ normal:2 } });
+});
