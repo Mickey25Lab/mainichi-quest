@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.11";
+  const appVersion = "0.2.12";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -379,7 +379,9 @@
     const width = document.documentElement.clientWidth || window.innerWidth;
     const height = document.documentElement.clientHeight || window.innerHeight;
     const scale = Math.min(width / collectionStageWidth, height / collectionStageHeight);
-    $("collection-stage").style.setProperty("--collection-scale", String(scale));
+    const stage = $("collection-stage");
+    stage.style.setProperty("--collection-scale", String(scale));
+    stage.style.setProperty("--collection-scale-inverse", String(scale > 0 ? 1 / scale : 1));
     return scale;
   }
   function scheduleCollectionStageSize() {
