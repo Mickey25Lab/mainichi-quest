@@ -623,10 +623,10 @@ button, input { font: inherit; }
   transform:scale(1.48);
   box-shadow:0 0 7px #fff,0 0 18px #fff96b,0 0 32px #3ee8ff,0 0 48px rgba(41,119,255,.95);
 }
-.mode-select-energy.energy-level-1 span { font-size:clamp(10px,.9vw,13px); }
-.mode-select-energy.energy-level-2 span { font-size:clamp(13px,1.15vw,16px); }
-.mode-select-energy.energy-level-3 span { font-size:clamp(16px,1.45vw,20px); }
-.mode-select-energy.energy-level-4 span { font-size:clamp(20px,1.9vw,26px); font-weight:1000; }
+.mode-select-energy.energy-level-1 span { font-size:clamp(13px,1.15vw,16px); }
+.mode-select-energy.energy-level-2 span { font-size:clamp(16px,1.45vw,20px); }
+.mode-select-energy.energy-level-3 span { font-size:clamp(20px,1.9vw,26px); }
+.mode-select-energy.energy-level-4 span { font-size:clamp(22px,2.7vw,36px); font-weight:1000; }
 
 .mode-select-energy-guide {
   display:grid;
@@ -637,12 +637,14 @@ button, input { font: inherit; }
   padding:0 20px 2px 26px;
   border:0;
   border-radius:0;
-  color:#eaf8ff;
+  color:#fff7a8;
   background:transparent;
   box-shadow:none;
-  font:900 clamp(13px,1.45vw,19px)/1.08 "Noto Sans JP",sans-serif;
+  font:1000 clamp(20px,1.9vw,26px)/1.08 "Noto Sans JP",sans-serif;
   text-align:left;
-  text-shadow:0 2px 0 #001b51,0 0 7px #28d5ff;
+  -webkit-text-stroke:3px #0a3f78;
+  paint-order:stroke fill;
+  text-shadow:none;
   pointer-events:none;
 }
 .mode-select-energy-guide span {
