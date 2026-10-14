@@ -2,8 +2,26 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.1.11";
+  const appVersion = "0.2.0";
   const adminPin = "3710";
+  // Separate parent and admin PIN settings intentionally. They happen to share
+  // the same digits today, but can diverge later without changing either flow.
+  const parentPin = "3710";
+  const parentModeDefinitions = Object.freeze([
+    Object.freeze({ id:"numbercards", label:"すうじあつめ", detail:"" }),
+    Object.freeze({ id:"counting1", label:"かずかぞえ1", detail:"" }),
+    Object.freeze({ id:"counting2", label:"かずかぞえ2", detail:"" }),
+    Object.freeze({ id:"multiplication", label:"かけ算ひっ算", detail:"2けた×1けた" }),
+    Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
+    Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
+    Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" })
+  ]);
+  const parentEnergyLevels = Object.freeze([
+    Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
+    Object.freeze({ id:"small", label:"小" }),
+    Object.freeze({ id:"medium", label:"中" }),
+    Object.freeze({ id:"large", label:"大" })
+  ]);
   const screens = ["start-screen", "mode-select-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
@@ -1709,8 +1727,118 @@
       startTimer();
     });
   }
-  function openModeSelect() { recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot()); showFixedScreenWhenReady("mode-select-screen"); }
-  function startGameFromGesture(mode) { recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() }); primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode); }
+  const childEnergyPresentation = Object.freeze({
+    "almost-zero": Object.freeze({ label:"ほんのちょっと", multiplier:.2, level:1 }),
+    small: Object.freeze({ label:"ちょっと", multiplier:.6, level:2 }),
+    medium: Object.freeze({ label:"ふつう", multiplier:1, level:3 }),
+    large: Object.freeze({ label:"いっぱい", multiplier:1.6, level:4 })
+  });
+
+  function activeLearningSettings() {
+    const profileId = profileStore.getActiveProfileId();
+    if (!profileId) return { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} };
+    try { return profileStore.getProfileLearningSettings(profileId); }
+    catch (_) { return { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} }; }
+  }
+
+  function normalizedMissionTarget(settings, modeId) {
+    const raw = Number(settings.dailyTargetCounts?.[modeId]);
+    if (Number.isInteger(raw)) return Math.max(0, Math.min(9, raw));
+    return settings.enabledModes?.[modeId] === false ? 0 : 1;
+  }
+
+  function dailyMissionState() {
+    const today = japanDateKey();
+    let mission;
+    try { mission = profileStore.getDailyMission(); } catch (_) { mission = null; }
+    if (!mission || mission.date !== today || !mission.completedCounts || typeof mission.completedCounts !== "object") {
+      mission = { date:today, completedCounts:{} };
+      try { profileStore.setDailyMission(mission); } catch (_) {}
+    }
+    return mission;
+  }
+
+  function missionOverview() {
+    const settings = activeLearningSettings();
+    const mission = dailyMissionState();
+    const items = parentModeDefinitions.map((mode) => {
+      const target = normalizedMissionTarget(settings, mode.id);
+      const completed = Math.max(0, Number(mission.completedCounts?.[mode.id]) || 0);
+      const remaining = Math.max(0, target - completed);
+      const energyId = childEnergyPresentation[settings.energyMultipliers?.[mode.id]]
+        ? settings.energyMultipliers[mode.id]
+        : "medium";
+      return { ...mode, target, completed, remaining, energyId };
+    }).filter((item) => item.target > 0);
+    return {
+      settings,
+      mission,
+      items,
+      allComplete: items.length > 0 && items.every((item) => item.remaining === 0)
+    };
+  }
+
+  function renderModeSelectMission() {
+    const overview = missionOverview();
+    document.querySelectorAll(".mode-select-choice[data-mode]").forEach((button) => {
+      const item = overview.items.find((entry) => entry.id === button.dataset.mode);
+      button.hidden = !item;
+      if (!item) return;
+      const completed = item.remaining === 0;
+      button.disabled = completed && !overview.allComplete;
+      button.classList.toggle("is-complete", completed);
+      button.classList.toggle("is-free-play", overview.allComplete);
+      const remaining = button.querySelector(".mode-select-remaining");
+      remaining.innerHTML = completed
+        ? '<strong class="mode-select-done-text">できた！</strong>'
+        : `<span class="mode-select-remaining-prefix">あと</span><strong class="mode-select-remaining-number">${item.remaining}</strong><span class="mode-select-remaining-suffix">回</span>`;
+      const energy = button.querySelector(".mode-select-energy");
+      const presentation = childEnergyPresentation[item.energyId];
+      energy.className = `mode-select-energy energy-level-${presentation.level}`;
+      energy.innerHTML = `<i aria-hidden="true"></i><span>${presentation.label}</span>`;
+      energy.setAttribute("aria-label", `エネルギーのたまりやすさ ${presentation.label}`);
+    });
+    const banner = $("mode-select-mission-complete");
+    banner.hidden = !overview.allComplete;
+  }
+
+  function isModeAvailableForMission(mode) {
+    const overview = missionOverview();
+    const item = overview.items.find((entry) => entry.id === mode);
+    if (!item) return false;
+    return overview.allComplete || item.remaining > 0;
+  }
+
+  function completeDailyMissionRound(mode) {
+    const overview = missionOverview();
+    const item = overview.items.find((entry) => entry.id === mode);
+    if (!item || overview.allComplete || item.remaining <= 0) return;
+    const mission = overview.mission;
+    mission.completedCounts[mode] = item.completed + 1;
+    try { profileStore.setDailyMission(mission); } catch (_) {}
+  }
+
+  function energyPresentationForMode(mode) {
+    const settings = activeLearningSettings();
+    return childEnergyPresentation[settings.energyMultipliers?.[mode]] || childEnergyPresentation.medium;
+  }
+
+  function scaledEnergyGain(baseAmount, mode = state.mode) {
+    const amount = Number(baseAmount) || 0;
+    if (amount <= 0) return 0;
+    return Math.max(1, Math.round(amount * energyPresentationForMode(mode).multiplier));
+  }
+
+  function openModeSelect() {
+    recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot());
+    renderModeSelectMission();
+    showFixedScreenWhenReady("mode-select-screen");
+  }
+  function startGameFromGesture(mode) {
+    if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
+    recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
+    primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode);
+  }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
@@ -2763,7 +2891,8 @@
       }
     } else if (!progress.masterMedal) {
       const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
-      energyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
+      const baseEnergyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
+      energyGain = scaledEnergyGain(baseEnergyGain, state.mode);
       const timeBonus = getTimeBonusForCorrect(question);
       if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
       else {
@@ -3074,6 +3203,7 @@
     displayQuestion(state.queue.shift());
   }
   function finishRound() {
+    completeDailyMissionRound(state.mode);
     state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer();
     $("elapsed-time").textContent = formatTime(state.finalElapsedMs); $("result-time").textContent = formatTime(state.finalElapsedMs);
     const previousBest = getBestTime();
@@ -3270,6 +3400,7 @@
     prepareInitialVehicle();
     $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     $("time-up").hidden = true;
+    renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen", [], () => {
       state.collectionClosing = false;
     });
@@ -3826,6 +3957,8 @@
   function playCollectionEndSound() { tone(660, 0, .22, "sine", .12); tone(523, .2, .24, "sine", .12); tone(392, .4, .35, "sine", .1); }
   let adminResetInProgress = false;
   let gameInitialized = false;
+  let parentSettingsProfileId = null;
+  let parentSettingsDrafts = new Map();
   function setProfileError(element, message) {
     element.textContent = message || "";
     element.hidden = !message;
@@ -3866,6 +3999,205 @@
     $("admin-pin-overlay").hidden = false;
     document.querySelector("[data-admin-pin-digit]")?.focus();
   }
+
+  function parentModeSetting(settings, modeId) {
+    const storedEnergy = settings.energyMultipliers?.[modeId];
+    const energy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : "medium";
+    const rawTarget = Number(settings.dailyTargetCounts?.[modeId]);
+    const hasStoredTarget = Number.isInteger(rawTarget);
+    const target = hasStoredTarget
+      ? Math.max(0, Math.min(9, rawTarget))
+      : settings.enabledModes?.[modeId] === false ? 0 : 1;
+    return { enabled: target > 0, energy, target };
+  }
+
+  function cloneParentSettings(settings) {
+    return JSON.parse(JSON.stringify(settings || { enabledModes:{}, energyMultipliers:{}, dailyTargetCounts:{} }));
+  }
+
+  function initializeParentSettingsDrafts() {
+    parentSettingsDrafts = new Map();
+    profileStore.listProfiles().forEach((profile) => {
+      parentSettingsDrafts.set(profile.profileId, cloneParentSettings(profileStore.getProfileLearningSettings(profile.profileId)));
+    });
+  }
+
+  function parentDraftForProfile(profileId) {
+    if (!profileId) return null;
+    if (!parentSettingsDrafts.has(profileId)) {
+      parentSettingsDrafts.set(profileId, cloneParentSettings(profileStore.getProfileLearningSettings(profileId)));
+    }
+    return parentSettingsDrafts.get(profileId);
+  }
+
+  function renderParentProfileTabs() {
+    const profiles = profileStore.listProfiles();
+    const activeId = profileStore.getActiveProfileId();
+    if (!parentSettingsProfileId || !profiles.some((profile) => profile.profileId === parentSettingsProfileId)) {
+      parentSettingsProfileId = profiles.some((profile) => profile.profileId === activeId) ? activeId : profiles[0]?.profileId || null;
+    }
+    const tabs = $("parent-profile-tabs");
+    tabs.replaceChildren();
+    profiles.forEach((profile) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = profile.displayName;
+      button.dataset.profileId = profile.profileId;
+      const selected = profile.profileId === parentSettingsProfileId;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+      button.addEventListener("click", () => {
+        parentSettingsProfileId = profile.profileId;
+        renderParentProfileTabs();
+        renderParentModeSettings();
+      });
+      tabs.append(button);
+    });
+  }
+
+  function renderParentModeSettings() {
+    const container = $("parent-mode-settings");
+    container.replaceChildren();
+    if (!parentSettingsProfileId) return;
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    parentModeDefinitions.forEach((mode) => {
+      const current = parentModeSetting(settings, mode.id);
+      const row = document.createElement("div");
+      row.className = "parent-mode-row";
+      row.dataset.mode = mode.id;
+      row.classList.toggle("is-off", !current.enabled);
+
+      const name = document.createElement("div");
+      name.className = "parent-mode-name";
+      const strong = document.createElement("strong");
+      strong.textContent = mode.label;
+      name.append(strong);
+      if (mode.detail) {
+        const small = document.createElement("small");
+        small.textContent = mode.detail;
+        name.append(small);
+      }
+
+      const target = document.createElement("div");
+      target.className = "parent-target-control";
+      const minus = document.createElement("button");
+      minus.type = "button";
+      minus.textContent = "−";
+      minus.setAttribute("aria-label", mode.label + "の目標回数を減らす");
+      minus.disabled = current.target <= 0;
+      const value = document.createElement("strong");
+      value.textContent = current.target === 0 ? "OFF" : current.target + "回";
+      const plus = document.createElement("button");
+      plus.type = "button";
+      plus.textContent = "＋";
+      plus.setAttribute("aria-label", mode.label + "の目標回数を増やす");
+      plus.disabled = current.target >= 9;
+      minus.addEventListener("click", () => changeParentTarget(mode.id, -1));
+      plus.addEventListener("click", () => changeParentTarget(mode.id, 1));
+      target.append(minus, value, plus);
+
+      const energy = document.createElement("div");
+      energy.className = "parent-energy-options";
+      energy.classList.toggle("disabled", !current.enabled);
+      energy.setAttribute("aria-label", mode.label + "のエネルギー");
+      parentEnergyLevels.forEach((level) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = level.label;
+        button.dataset.energy = level.id;
+        button.disabled = !current.enabled;
+        const selected = current.energy === level.id;
+        button.classList.toggle("selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+        button.addEventListener("click", () => setParentEnergy(mode.id, level.id));
+        energy.append(button);
+      });
+
+      row.append(name, target, energy);
+      container.append(row);
+    });
+  }
+
+  function updateParentDraftModeSetting(modeId, updater) {
+    if (!parentSettingsProfileId) return;
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    const current = parentModeSetting(settings, modeId);
+    const next = updater(current);
+    settings.enabledModes[modeId] = next.target > 0;
+    settings.energyMultipliers[modeId] = next.energy;
+    settings.dailyTargetCounts[modeId] = next.target;
+    renderParentModeSettings();
+  }
+
+  function setParentEnergy(modeId, energy) {
+    if (!parentEnergyLevels.some((level) => level.id === energy)) return;
+    updateParentDraftModeSetting(modeId, (current) => ({ ...current, energy }));
+  }
+
+  function changeParentTarget(modeId, delta) {
+    updateParentDraftModeSetting(modeId, (current) => ({
+      ...current,
+      target: Math.max(0, Math.min(9, current.target + delta))
+    }));
+  }
+
+  function saveParentSettings() {
+    parentSettingsDrafts.forEach((settings, profileId) => {
+      profileStore.setProfileLearningSettings(profileId, settings);
+    });
+    closeParentSettings();
+  }
+
+  function openParentPin() {
+    $("parent-pin-input").value = "";
+    setProfileError($("parent-pin-error"), "");
+    $("parent-pin-overlay").hidden = false;
+    document.querySelector("[data-parent-pin-digit]")?.focus();
+  }
+
+  function submitParentPin() {
+    const input = $("parent-pin-input");
+    const pin = input.value;
+    if (!/^\d{4}$/.test(pin)) return;
+    if (pin !== parentPin) {
+      setProfileError($("parent-pin-error"), "PINがちがいます。");
+      input.value = "";
+      document.querySelector("[data-parent-pin-digit]")?.focus();
+      return;
+    }
+    setProfileError($("parent-pin-error"), "");
+    $("parent-pin-overlay").hidden = true;
+    openParentSettings();
+  }
+
+  function appendParentPinDigit(digit) {
+    const input = $("parent-pin-input");
+    if (input.value.length >= 4) return;
+    input.value += digit;
+    setProfileError($("parent-pin-error"), "");
+    if (input.value.length === 4) submitParentPin();
+  }
+
+  function closeParentPin() {
+    $("parent-pin-overlay").hidden = true;
+    $("parent-settings-button").focus();
+  }
+
+  function openParentSettings() {
+    parentSettingsProfileId = profileStore.getActiveProfileId() || profileStore.listProfiles()[0]?.profileId || null;
+    initializeParentSettingsDrafts();
+    renderParentProfileTabs();
+    renderParentModeSettings();
+    $("parent-settings-overlay").hidden = false;
+    $("parent-settings-close").focus();
+  }
+
+  function closeParentSettings() {
+    $("parent-settings-overlay").hidden = true;
+    parentSettingsDrafts = new Map();
+    $("parent-settings-button").focus();
+  }
+
   async function reloadApplication() {
     const button = $("top-reload-button");
     if (button.disabled) return;
@@ -4018,12 +4350,31 @@
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => { primeBackgroundMusicFromGesture("game"); beginRound(state.mode || "normal"); });
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => {
+    const mode = state.mode || "normal";
+    if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
+    primeBackgroundMusicFromGesture("game"); beginRound(mode);
+  });
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
+  $("parent-settings-button").addEventListener("click", openParentPin);
   $("top-reload-button").addEventListener("click", reloadApplication);
+  $("parent-pin-form").addEventListener("submit", (event) => event.preventDefault());
+  document.querySelectorAll("[data-parent-pin-digit]").forEach((button) => button.addEventListener("click", () => appendParentPinDigit(button.dataset.parentPinDigit)));
+  $("parent-pin-clear").addEventListener("click", () => {
+    $("parent-pin-input").value = "";
+    setProfileError($("parent-pin-error"), "");
+  });
+  $("parent-pin-backspace").addEventListener("click", () => {
+    $("parent-pin-input").value = $("parent-pin-input").value.slice(0, -1);
+    setProfileError($("parent-pin-error"), "");
+  });
+  $("parent-pin-cancel").addEventListener("click", closeParentPin);
+  $("parent-settings-close").addEventListener("click", closeParentSettings);
+  $("parent-settings-cancel").addEventListener("click", closeParentSettings);
+  $("parent-settings-save").addEventListener("click", saveParentSettings);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
   document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
   $("admin-pin-clear").addEventListener("click", () => {

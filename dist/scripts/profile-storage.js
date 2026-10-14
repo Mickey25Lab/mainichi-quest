@@ -75,6 +75,7 @@
         recentVehicles: [],
         topCollectionLastUsedJst: null,
         openingMovieLastPlayedJst: null,
+        dailyMission: { date: null, completedCounts: {} },
         legacyHistory: null,
         legacyRanking: null
       },
@@ -84,7 +85,8 @@
       // the real acquisition order needed by a future opening movie.
       acquisitionHistory: [],
       enabledModes: {},
-      energyMultipliers: {}
+      energyMultipliers: {},
+      dailyTargetCounts: {}
     };
   }
 
@@ -128,6 +130,11 @@
     profile.progress.recentVehicles = Array.isArray(value.progress?.recentVehicles) ? clone(value.progress.recentVehicles) : [];
     profile.progress.topCollectionLastUsedJst = typeof value.progress?.topCollectionLastUsedJst === "string" ? value.progress.topCollectionLastUsedJst : null;
     profile.progress.openingMovieLastPlayedJst = typeof value.progress?.openingMovieLastPlayedJst === "string" ? value.progress.openingMovieLastPlayedJst : null;
+    const dailyMission = value.progress?.dailyMission;
+    profile.progress.dailyMission = {
+      date: typeof dailyMission?.date === "string" ? dailyMission.date : null,
+      completedCounts: dailyMission?.completedCounts && typeof dailyMission.completedCounts === "object" ? clone(dailyMission.completedCounts) : {}
+    };
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
@@ -135,6 +142,7 @@
     profile.bestRecords.bestTimeMs = Number.isFinite(best) && best > 0 ? best : null;
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
     profile.energyMultipliers = value.energyMultipliers && typeof value.energyMultipliers === "object" ? clone(value.energyMultipliers) : {};
+    profile.dailyTargetCounts = value.dailyTargetCounts && typeof value.dailyTargetCounts === "object" ? clone(value.dailyTargetCounts) : {};
     return profile;
   }
 
@@ -184,17 +192,23 @@
       return id;
     }
 
-    function mutateActiveProfile(mutator) {
+    function mutateProfile(profileId, mutator) {
       const registry = readRegistry();
-      const id = ensureActiveProfile();
+      const id = String(profileId || "");
       const index = registry.profiles.findIndex((profile) => profile.profileId === id);
-      if (index < 0) throw new Error("active profile is missing");
+      if (index < 0) throw new Error("profile not found");
       const profile = registry.profiles[index];
       mutator(profile);
       profile.updatedAt = isoNow(now);
       registry.profiles[index] = normalizeProfile(profile);
       writeRegistry(registry);
       return clone(registry.profiles[index]);
+    }
+
+    function mutateActiveProfile(mutator) {
+      const id = ensureActiveProfile();
+      if (!id) throw new Error("active profile is missing");
+      return mutateProfile(id, mutator);
     }
 
     function legacySnapshot() {
@@ -295,6 +309,38 @@
     function setTopCollectionLastUsedJst(value) { return mutateActiveProfile((profile) => { profile.progress.topCollectionLastUsedJst = value ? String(value) : null; }); }
     function getOpeningMovieLastPlayedJst() { return getActiveProfile()?.progress.openingMovieLastPlayedJst ?? null; }
     function setOpeningMovieLastPlayedJst(value) { return mutateActiveProfile((profile) => { profile.progress.openingMovieLastPlayedJst = value ? String(value) : null; }); }
+    function getDailyMission() {
+      const mission = getActiveProfile()?.progress.dailyMission;
+      return clone(mission && typeof mission === "object" ? mission : { date:null, completedCounts:{} });
+    }
+    function setDailyMission(value) {
+      const mission = value && typeof value === "object" ? value : {};
+      return mutateActiveProfile((profile) => {
+        profile.progress.dailyMission = {
+          date: typeof mission.date === "string" ? mission.date : null,
+          completedCounts: mission.completedCounts && typeof mission.completedCounts === "object" ? clone(mission.completedCounts) : {}
+        };
+      });
+    }
+    function getProfileLearningSettings(profileId) {
+      const id = String(profileId || "");
+      const profile = readRegistry().profiles.find((item) => item.profileId === id);
+      if (!profile) throw new Error("profile not found");
+      return clone({
+        enabledModes: profile.enabledModes || {},
+        energyMultipliers: profile.energyMultipliers || {},
+        dailyTargetCounts: profile.dailyTargetCounts || {}
+      });
+    }
+    function setProfileLearningSettings(profileId, value) {
+      const settings = value && typeof value === "object" ? value : {};
+      return mutateProfile(profileId, (profile) => {
+        profile.enabledModes = settings.enabledModes && typeof settings.enabledModes === "object" ? clone(settings.enabledModes) : {};
+        profile.energyMultipliers = settings.energyMultipliers && typeof settings.energyMultipliers === "object" ? clone(settings.energyMultipliers) : {};
+        profile.dailyTargetCounts = settings.dailyTargetCounts && typeof settings.dailyTargetCounts === "object" ? clone(settings.dailyTargetCounts) : {};
+      });
+    }
+
     function getAcquisitionHistory() { return clone(getActiveProfile()?.acquisitionHistory ?? []); }
     function appendAcquisitionHistory(entry) {
       if (!entry || typeof entry !== "object") throw new Error("acquisition entry is required");
@@ -332,7 +378,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
       });
@@ -365,6 +411,8 @@
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
       getOpeningMovieLastPlayedJst, setOpeningMovieLastPlayedJst,
+      getDailyMission, setDailyMission,
+      getProfileLearningSettings, setProfileLearningSettings,
       getAcquisitionHistory, appendAcquisitionHistory,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };
