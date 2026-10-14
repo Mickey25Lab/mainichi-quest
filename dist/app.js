@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.10";
+  const appVersion = "0.2.11";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4047,7 +4047,7 @@
     renderProfileList();
     setProfileError($("profile-manager-error"), "");
     $("profile-manager-overlay").hidden = false;
-    $("profile-add-name").focus();
+    document.querySelector('#profile-list [aria-current="true"]')?.focus();
   }
   function openAdminPin() {
     $("admin-pin-input").value = "";
