@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.9";
+  const appVersion = "0.2.10";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -742,7 +742,6 @@
     const playStageRect = playStage?.getBoundingClientRect();
     const appStyle = app ? getComputedStyle(app) : null;
     const playStageStyle = playStage ? getComputedStyle(playStage) : null;
-    const orientation = window.screen?.orientation;
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -753,17 +752,9 @@
       visualViewportScale: visualViewport?.scale ?? null,
       visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
       visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
-      devicePixelRatio: window.devicePixelRatio,
       scrollX: window.scrollX,
       scrollY: window.scrollY,
-      pageHidden: document.hidden,
       visibilityState: document.visibilityState,
-      screenWidth: window.screen?.width ?? null,
-      screenHeight: window.screen?.height ?? null,
-      screenAvailWidth: window.screen?.availWidth ?? null,
-      screenAvailHeight: window.screen?.availHeight ?? null,
-      orientationType: orientation?.type ?? null,
-      orientationAngle: orientation?.angle ?? window.orientation ?? null,
       stageScale: playStageStyle?.getPropertyValue("--stage-scale").trim() || null,
       appRect: appRect ? {
         x: appRect.x,
@@ -784,10 +775,6 @@
         height: playStageRect.height
       } : null,
       stageComputed: playStageStyle ? {
-        left: playStageStyle.left,
-        top: playStageStyle.top,
-        width: playStageStyle.width,
-        height: playStageStyle.height,
         transform: playStageStyle.transform,
         transformOrigin: playStageStyle.transformOrigin
       } : null
@@ -797,14 +784,14 @@
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 300) viewportDiagnostics = viewportDiagnostics.slice(-300);
+    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function setupViewportDiagnostics() {
     if (!viewportDiagnosticsEnabled) return;
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-300);
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
     } catch (_) {}
     const button = document.createElement("button");
     button.type = "button";
@@ -916,20 +903,16 @@
   }
   function schedulePlayStageSize(reason) {
     const requestId = ++scaleUpdateRequest;
-    recordViewportDiagnostic("schedule", { reason, requestId });
     window.requestAnimationFrame(() => {
       const first = viewportSnapshot();
       window.requestAnimationFrame(() => {
         if (requestId !== scaleUpdateRequest) {
-          recordViewportDiagnostic("schedule-cancelled", { reason, requestId, currentRequestId: scaleUpdateRequest, first });
           return;
         }
         const second = viewportSnapshot();
         if (!viewportIsStable(first, second)) {
-          recordViewportDiagnostic("schedule-unstable", { reason, requestId, first, second });
           return;
         }
-        recordViewportDiagnostic("schedule-stable", { reason, requestId, first, second });
         sizePlayStage(second);
       });
     });
@@ -4435,10 +4418,6 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  window.visualViewport?.addEventListener("scroll", () => {
-    // Diagnostic only: never use visualViewport.scroll as a rescale trigger.
-    recordViewportDiagnostic("visualViewport.scroll");
-  });
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
