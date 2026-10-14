@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.23";
+  const appVersion = "0.2.24";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -740,10 +740,6 @@
     const visualViewport = window.visualViewport;
     const playStage = $("play-stage");
     return {
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      clientWidth: document.documentElement.clientWidth,
-      clientHeight: document.documentElement.clientHeight,
       visualViewportWidth: visualViewport?.width ?? null,
       visualViewportHeight: visualViewport?.height ?? null,
       visualViewportScale: visualViewport?.scale ?? null,
@@ -756,14 +752,14 @@
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 60) viewportDiagnostics = viewportDiagnostics.slice(-60);
+    if (viewportDiagnostics.length > 30) viewportDiagnostics = viewportDiagnostics.slice(-30);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function setupViewportDiagnostics() {
     if (!viewportDiagnosticsEnabled) return;
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-60);
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-30);
     } catch (_) {}
     const button = document.createElement("button");
     button.type = "button";
@@ -835,8 +831,7 @@
       window.scrollTo(0, 0);
       window.setTimeout(() => {
         viewportRecoveryInProgress = false;
-        recordViewportDiagnostic("viewport-recovery-complete", { reason });
-        schedulePlayStageSize("viewport-recovery");
+          schedulePlayStageSize("viewport-recovery");
         scheduleCollectionStageSize();
       }, 120);
     }, 60);
@@ -862,7 +857,6 @@
   }
   function sizePlayStage(snapshot = viewportSnapshot()) {
     if (!isNormalViewport(snapshot)) {
-      recordViewportDiagnostic("size-rejected-abnormal", { candidate: snapshot });
       return false;
     }
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
@@ -4555,7 +4549,6 @@
     suspendAudioForBackground("blur", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
   });
   window.addEventListener("focus", () => {
-    recordViewportDiagnostic("focus");
     resumeAudioAfterVisible("focus");
     recoverAbnormalPwaZoom("focus");
     checkQuestionTimeout();
