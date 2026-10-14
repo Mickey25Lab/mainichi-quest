@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.19";
+  const appVersion = "0.2.20";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -740,8 +740,10 @@
     const visualViewport = window.visualViewport;
     const app = $("app");
     const playStage = $("play-stage");
-    const appRect = app?.getBoundingClientRect();
-    const playStageRect = playStage?.getBoundingClientRect();
+    // Keep these layout reads because they may help stabilize the iPad PWA
+    // resume path, but do not retain their values in the diagnostic payload.
+    app?.getBoundingClientRect();
+    playStage?.getBoundingClientRect();
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -752,22 +754,7 @@
       visualViewportScale: visualViewport?.scale ?? null,
       visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
       visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      visibilityState: document.visibilityState,
-      stageScale: playStage?.style.getPropertyValue("--stage-scale").trim() || null,
-      appRect: appRect ? {
-        x: appRect.x,
-        y: appRect.y,
-        width: appRect.width,
-        height: appRect.height
-      } : null,
-      stageRect: playStageRect ? {
-        x: playStageRect.x,
-        y: playStageRect.y,
-        width: playStageRect.width,
-        height: playStageRect.height
-      } : null,
+      stageScale: playStage?.style.getPropertyValue("--stage-scale").trim() || null
     };
   }
   function recordViewportDiagnostic(event, detail = {}) {
