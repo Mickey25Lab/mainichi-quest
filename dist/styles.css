@@ -3273,6 +3273,46 @@ button, input { font: inherit; }
   background:rgba(3,14,18,.439);
   filter:blur(13px);
 }
+.collection-scene-new-orb {
+  position:absolute;
+  z-index:3;
+  right:-8px;
+  top:calc(var(--shadow-y) - var(--item-y) - 46px);
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border:2px solid rgba(255,255,255,.95);
+  border-radius:50%;
+  color:#fff;
+  background:radial-gradient(circle at 34% 26%,#fff 0 8%,#8ffcff 17%,#21d6ff 42%,#1677ff 70%,#0b2c91 100%);
+  box-shadow:inset 0 0 8px rgba(255,255,255,.75),0 0 7px #fff,0 0 17px #5ff4ff,0 0 31px rgba(45,126,255,.88);
+  font:1000 12px/1 "Noto Sans JP",sans-serif;
+  letter-spacing:-.03em;
+  text-shadow:0 1px 2px #07306f,0 0 5px rgba(255,255,255,.9);
+  pointer-events:none;
+}
+.collection-scene-new-orb::before {
+  content:"";
+  position:absolute;
+  left:7px;
+  top:5px;
+  width:15px;
+  height:8px;
+  border-radius:50%;
+  background:rgba(255,255,255,.92);
+  filter:blur(.5px);
+  transform:rotate(-24deg);
+}
+.collection-scene-new-orb::after {
+  content:"✦";
+  position:absolute;
+  right:-9px;
+  top:-12px;
+  color:#fffbd0;
+  font-size:22px;
+  text-shadow:0 0 4px #fff,0 0 10px #69f6ff,0 0 18px #2d91ff;
+}
 .collection-page-indicator {
   position:absolute;
   z-index:4;
