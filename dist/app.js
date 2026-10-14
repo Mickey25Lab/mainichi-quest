@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.5";
+  const appVersion = "0.2.6";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -63,7 +63,7 @@
     rewardDuckMultiplier: 0.30,
     transitionDurationSeconds: 0.5,
     tracks: Object.freeze({
-      game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.30 }),
+      game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.38 }),
       heroic: Object.freeze({ filePath: "./assets/audio/heroic_loop.wav", normalVolume: 0.18 }),
       collection: Object.freeze({ filePath: "./assets/audio/collection_sci_fi_loop.mp3", normalVolume: 0.18 })
     }),
@@ -3952,12 +3952,12 @@
   function playStartSound() { if (!state.startSound) preloadStartSound(); state.startSound.currentTime = 0; state.startSound.play().catch(() => {}); }
   function playCorrectSound() {
     const buffers = state.correctSoundBuffers;
-    if (buffers.length !== correctSoundPaths.length) { preloadCorrectSounds(); tone(660, 0, .15, "sine", .25); tone(880, .16, .3, "sine", .25); return; }
+    if (buffers.length !== correctSoundPaths.length) { preloadCorrectSounds(); tone(660, 0, .15, "sine", .18); tone(880, .16, .3, "sine", .18); return; }
     let index = Math.floor(Math.random() * buffers.length);
     if (buffers.length > 1 && index === state.lastCorrectSoundIndex) index = (index + 1) % buffers.length;
     state.lastCorrectSoundIndex = index;
     const ctx = audioContext(), source = ctx.createBufferSource(), gain = ctx.createGain(), compressor = ctx.createDynamicsCompressor();
-    source.buffer = buffers[index]; gain.gain.value = 1.05; compressor.threshold.value = -10; compressor.ratio.value = 4;
+    source.buffer = buffers[index]; gain.gain.value = 0.75; compressor.threshold.value = -10; compressor.ratio.value = 4;
     source.connect(gain).connect(compressor).connect(ctx.destination); source.start();
   }
   function playSimpleCorrectSound() { tone(880, 0, .12, "sine", .234); tone(1320, .14, .18, "sine", .234); }
