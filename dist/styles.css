@@ -3211,16 +3211,8 @@ button, input { font: inherit; }
 .collection-header .medal-count > span { display:block; text-align:center; white-space:nowrap; }
 .collection-header .medal-count strong { display:inline-block; margin-top:3px; }
 .collection-categories { box-sizing:border-box; }
-.category-button { box-sizing:border-box; padding:8px 10px 10px; overflow:hidden; }
-.category-button svg,
-.category-button .ui-icon,
-.category-button .collection-tab-icon {
-  width:22px;
-  height:22px;
-  max-width:100%;
-  max-height:100%;
-  overflow:hidden;
-}
+.category-button { box-sizing:border-box; padding:10px; overflow:hidden; }
+.category-button svg, .category-button .collection-tab-icon { width:48px; height:48px; max-width:100%; max-height:100%; overflow:hidden; }
 
 /* Version 142: category-specific collection backgrounds and fixed layouts. */
 .collection-stage.is-category-view { background:#020814; box-shadow:none; }
