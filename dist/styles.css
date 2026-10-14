@@ -504,7 +504,7 @@ button, input { font: inherit; }
 .mode-select-choice {
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 160px 250px;
+  grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:center;
   width:100%;
   min-height:92px;
@@ -585,13 +585,18 @@ button, input { font: inherit; }
 .mode-select-energy {
   position:relative;
   display:grid;
-  grid-template-columns:74px 1fr;
+  grid-template-columns:74px minmax(0,1fr);
   align-items:center;
   min-height:56px;
+  min-width:0;
   padding-left:6px;
   color:#f7fdff;
   font-size:clamp(14px,1.6vw,21px);
   text-align:left;
+  white-space:nowrap;
+}
+.mode-select-energy span {
+  min-width:max-content;
   white-space:nowrap;
 }
 .mode-select-energy i {
@@ -630,7 +635,7 @@ button, input { font: inherit; }
 
 .mode-select-energy-guide {
   display:grid;
-  grid-template-columns:minmax(0,1fr) 160px 250px;
+  grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:end;
   width:100%;
   min-height:42px;
@@ -650,7 +655,7 @@ button, input { font: inherit; }
 .mode-select-energy-guide span {
   grid-column:3;
   justify-self:start;
-  padding-left:80px;
+  padding-left:32px;
   white-space:nowrap;
 }
 
