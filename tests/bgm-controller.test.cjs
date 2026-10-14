@@ -92,6 +92,14 @@ test("top speaker is scoped and developer credit is removed", () => {
   assert.doesNotMatch(css, /(^|\n)button\s*\{/);
 });
 
+test("audio balance keeps gameplay BGM stronger and reward celebration controlled", () => {
+  assert.match(app, /game: Object\.freeze\(\{ filePath: "\.\/assets\/audio\/bgm_pynchon\.mp3", normalVolume: 0\.30 \}\)/);
+  const correct = app.slice(app.indexOf("function playCorrectSound"), app.indexOf("function playSimpleCorrectSound"));
+  assert.match(correct, /gain\.gain\.value = 1\.05/);
+  assert.match(correct, /tone\(660, 0, \.15, "sine", \.25\)/);
+  assert.match(correct, /tone\(880, \.16, \.3, "sine", \.25\)/);
+});
+
 test("all configured BGM assets exist", () => {
   ["bgm_pynchon.mp3", "heroic_loop.wav", "collection_sci_fi_loop.mp3"].forEach((name) => {
     const file = path.join(root, "dist/assets/audio", name);
