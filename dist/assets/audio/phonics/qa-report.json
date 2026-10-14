@@ -8,162 +8,359 @@
     "model_path": "asset-source/audio/phonics/models/en_US-libritts-high.onnx",
     "sample_rate_hz": 22050
   },
+  "review": {
+    "repetitions": 3,
+    "silence_between_ms": 1000,
+    "max_duration_ms": 15000
+  },
   "summary": {
-    "expected": 8,
-    "passed": 8,
-    "failed": 0
+    "expected_clip_pairs": 8,
+    "passed_clip_pairs": 8,
+    "failed_clip_pairs": 0
   },
   "results": [
     {
-      "id": "a-phoneme-ae",
-      "file": "a-phoneme-ae.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "a-phoneme-ae",
+        "file": "a-phoneme-ae.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 336.7,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.0902
+        }
       },
-      "metrics": {
-        "duration_ms": 336.7,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.0902
+      "review": {
+        "id": "a-phoneme-ae",
+        "file": "a-phoneme-ae_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3010.1,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.6947
+        }
       }
     },
     {
-      "id": "a-letter-a",
-      "file": "a-letter-a.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "a-letter-a",
+        "file": "a-letter-a.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 441.2,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.3534
+        }
       },
-      "metrics": {
-        "duration_ms": 441.2,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.3534
+      "review": {
+        "id": "a-letter-a",
+        "file": "a-letter-a_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3323.5,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.7425
+        }
       }
     },
     {
-      "id": "a-word-apple",
-      "file": "a-word-apple.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "a-word-apple",
+        "file": "a-word-apple.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 583.5,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.468
+        }
       },
-      "metrics": {
-        "duration_ms": 583.5,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.468
+      "review": {
+        "id": "a-word-apple",
+        "file": "a-word-apple_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3750.5,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.7517
+        }
       }
     },
     {
-      "id": "a-word-ant",
-      "file": "a-word-ant.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "a-word-ant",
+        "file": "a-word-ant.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 232.2,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.1834
+        }
       },
-      "metrics": {
-        "duration_ms": 232.2,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.1834
+      "review": {
+        "id": "a-word-ant",
+        "file": "a-word-ant_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 2696.6,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.7891
+        }
       }
     },
     {
-      "id": "b-phoneme-b",
-      "file": "b-phoneme-b.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "b-phoneme-b",
+        "file": "b-phoneme-b.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 180.0,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.4316
+        }
       },
-      "metrics": {
-        "duration_ms": 180.0,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.4316
+      "review": {
+        "id": "b-phoneme-b",
+        "file": "b-phoneme-b_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 2540.0,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.8792
+        }
       }
     },
     {
-      "id": "b-letter-b",
-      "file": "b-letter-b.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "b-letter-b",
+        "file": "b-letter-b.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 359.9,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.2218
+        }
       },
-      "metrics": {
-        "duration_ms": 359.9,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.2218
+      "review": {
+        "id": "b-letter-b",
+        "file": "b-letter-b_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3079.7,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.7272
+        }
       }
     },
     {
-      "id": "b-word-ball",
-      "file": "b-word-ball.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "b-word-ball",
+        "file": "b-word-ball.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 499.2,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.4324
+        }
       },
-      "metrics": {
-        "duration_ms": 499.2,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.4324
+      "review": {
+        "id": "b-word-ball",
+        "file": "b-word-ball_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3497.7,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.757
+        }
       }
     },
     {
-      "id": "b-word-bus",
-      "file": "b-word-bus.wav",
-      "status": "PASS",
-      "checks": {
-        "format": true,
-        "duration": true,
-        "not_silent": true,
-        "not_clipped": true
+      "single": {
+        "id": "b-word-bus",
+        "file": "b-word-bus.wav",
+        "status": "PASS",
+        "checks": {
+          "format": true,
+          "duration": true,
+          "not_silent": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 510.8,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.184
+        }
       },
-      "metrics": {
-        "duration_ms": 510.8,
-        "sample_rate_hz": 22050,
-        "channels": 1,
-        "bit_depth": 16,
-        "peak": 29205,
-        "silence_ratio": 0.184
+      "review": {
+        "id": "b-word-bus",
+        "file": "b-word-bus_review.wav",
+        "status": "PASS",
+        "checks": {
+          "exists": true,
+          "same_format_as_single": true,
+          "three_audio_plays": true,
+          "two_one_second_silent_gaps": true,
+          "expected_duration": true,
+          "not_zero_length": true,
+          "not_clipped": true
+        },
+        "metrics": {
+          "duration_ms": 3532.5,
+          "sample_rate_hz": 22050,
+          "channels": 1,
+          "bit_depth": 16,
+          "peak": 29205,
+          "silence_ratio": 0.646
+        }
       }
     }
   ]

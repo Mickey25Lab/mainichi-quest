@@ -13,6 +13,11 @@
     "trim_silence_threshold_dbfs": -45.0,
     "edge_padding_ms": 80
   },
+  "review": {
+    "repetitions": 3,
+    "silence_between_ms": 1000,
+    "max_duration_ms": 15000
+  },
   "clips": [
     {
       "id": "a-phoneme-ae",
@@ -22,8 +27,10 @@
       "display": "/æ/",
       "file": "a-phoneme-ae.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/a-phoneme-ae.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "a-phoneme-ae_review.wav",
+      "review_duration_ms": 3010.1
     },
     {
       "id": "a-letter-a",
@@ -33,8 +40,10 @@
       "display": "A",
       "file": "a-letter-a.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/a-letter-a.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "a-letter-a_review.wav",
+      "review_duration_ms": 3323.5
     },
     {
       "id": "a-word-apple",
@@ -44,8 +53,10 @@
       "display": "apple",
       "file": "a-word-apple.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/a-word-apple.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "a-word-apple_review.wav",
+      "review_duration_ms": 3750.5
     },
     {
       "id": "a-word-ant",
@@ -55,8 +66,10 @@
       "display": "ant",
       "file": "a-word-ant.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/a-word-ant.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "a-word-ant_review.wav",
+      "review_duration_ms": 2696.6
     },
     {
       "id": "b-phoneme-b",
@@ -66,8 +79,10 @@
       "display": "/b/",
       "file": "b-phoneme-b.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/b-phoneme-b.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "b-phoneme-b_review.wav",
+      "review_duration_ms": 2540.0
     },
     {
       "id": "b-letter-b",
@@ -77,8 +92,10 @@
       "display": "B",
       "file": "b-letter-b.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/b-letter-b.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "b-letter-b_review.wav",
+      "review_duration_ms": 3079.7
     },
     {
       "id": "b-word-ball",
@@ -88,8 +105,10 @@
       "display": "ball",
       "file": "b-word-ball.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/b-word-ball.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "b-word-ball_review.wav",
+      "review_duration_ms": 3497.7
     },
     {
       "id": "b-word-bus",
@@ -99,8 +118,10 @@
       "display": "bus",
       "file": "b-word-bus.wav",
       "raw_file": "asset-source/audio/phonics/libritts-high-speaker-487/raw/b-word-bus.wav",
-      "source_peak_dbfs": -0.0,
-      "normalized_peak_dbfs": -1.0
+      "preserved_single": true,
+      "normalized_peak_dbfs": -1.0,
+      "review_file": "b-word-bus_review.wav",
+      "review_duration_ms": 3532.5
     }
   ]
 }

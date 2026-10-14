@@ -20,6 +20,11 @@
     "max_silence_ratio": 0.72,
     "clip_peak": 32767
   },
+  "review": {
+    "repetitions": 3,
+    "silence_between_ms": 1000,
+    "max_duration_ms": 15000
+  },
   "clips": [
     {"id": "a-phoneme-ae", "group": "A", "kind": "phoneme", "text": "[[æ]]", "display": "/æ/"},
     {"id": "a-letter-a", "group": "A", "kind": "letter", "text": "A", "display": "A"},
