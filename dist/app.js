@@ -736,8 +736,13 @@
   let viewportDiagnostics = [];
   function viewportSnapshot() {
     const visualViewport = window.visualViewport;
+    const app = $("app");
     const playStage = $("play-stage");
+    const appRect = app?.getBoundingClientRect();
     const playStageRect = playStage?.getBoundingClientRect();
+    const appStyle = app ? getComputedStyle(app) : null;
+    const playStageStyle = playStage ? getComputedStyle(playStage) : null;
+    const orientation = window.screen?.orientation;
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -752,12 +757,39 @@
       scrollX: window.scrollX,
       scrollY: window.scrollY,
       pageHidden: document.hidden,
-      stageScale: getComputedStyle(playStage).getPropertyValue("--stage-scale").trim() || null,
+      visibilityState: document.visibilityState,
+      screenWidth: window.screen?.width ?? null,
+      screenHeight: window.screen?.height ?? null,
+      screenAvailWidth: window.screen?.availWidth ?? null,
+      screenAvailHeight: window.screen?.availHeight ?? null,
+      orientationType: orientation?.type ?? null,
+      orientationAngle: orientation?.angle ?? window.orientation ?? null,
+      stageScale: playStageStyle?.getPropertyValue("--stage-scale").trim() || null,
+      appRect: appRect ? {
+        x: appRect.x,
+        y: appRect.y,
+        width: appRect.width,
+        height: appRect.height
+      } : null,
+      appComputed: appStyle ? {
+        width: appStyle.width,
+        height: appStyle.height,
+        transform: appStyle.transform,
+        transformOrigin: appStyle.transformOrigin
+      } : null,
       stageRect: playStageRect ? {
         x: playStageRect.x,
         y: playStageRect.y,
         width: playStageRect.width,
         height: playStageRect.height
+      } : null,
+      stageComputed: playStageStyle ? {
+        left: playStageStyle.left,
+        top: playStageStyle.top,
+        width: playStageStyle.width,
+        height: playStageStyle.height,
+        transform: playStageStyle.transform,
+        transformOrigin: playStageStyle.transformOrigin
       } : null
     };
   }
@@ -765,21 +797,21 @@
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 120) viewportDiagnostics = viewportDiagnostics.slice(-120);
+    if (viewportDiagnostics.length > 300) viewportDiagnostics = viewportDiagnostics.slice(-300);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function setupViewportDiagnostics() {
     if (!viewportDiagnosticsEnabled) return;
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-120);
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-300);
     } catch (_) {}
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "MQ-001 LOG";
     Object.assign(button.style, {
       position: "fixed",
-      right: "8px",
+      left: "8px",
       top: "8px",
       zIndex: "2147483647",
       fontSize: "12px",
@@ -4349,6 +4381,7 @@
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
+    recordViewportDiagnostic("pageshow", { persisted: event.persisted });
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
     schedulePlayStageSize("pageshow");
@@ -4363,10 +4396,20 @@
   window.addEventListener("pointerdown", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("touchstart", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });
-  window.addEventListener("orientationchange", () => schedulePlayStageSize("orientationchange"));
+  window.addEventListener("orientationchange", () => {
+    recordViewportDiagnostic("orientationchange");
+    schedulePlayStageSize("orientationchange");
+  });
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
-  window.visualViewport?.addEventListener("resize", () => schedulePlayStageSize("visualViewport.resize"));
+  window.visualViewport?.addEventListener("resize", () => {
+    recordViewportDiagnostic("visualViewport.resize");
+    schedulePlayStageSize("visualViewport.resize");
+  });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
+  window.visualViewport?.addEventListener("scroll", () => {
+    // Diagnostic only: never use visualViewport.scroll as a rescale trigger.
+    recordViewportDiagnostic("visualViewport.scroll");
+  });
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
