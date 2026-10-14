@@ -806,7 +806,6 @@
       }
     });
     document.body.appendChild(button);
-    recordViewportDiagnostic("diagnostics-enabled");
   }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
@@ -852,7 +851,6 @@
     window.setTimeout(() => {
       viewportMeta.setAttribute("content", stableViewportMetaContent);
       window.scrollTo(0, 0);
-      recordViewportDiagnostic("viewport-recovery-restored-meta", { reason });
       window.setTimeout(() => {
         viewportRecoveryInProgress = false;
         recordViewportDiagnostic("viewport-recovery-complete", { reason });
@@ -888,7 +886,6 @@
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
-    recordViewportDiagnostic("size-applied", { scale, candidate: snapshot });
     return true;
   }
   function schedulePlayStageSize(reason) {
@@ -4426,7 +4423,6 @@
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
-    recordViewportDiagnostic("pageshow", { persisted: event.persisted });
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
     if (!recoverAbnormalPwaZoom("pageshow")) schedulePlayStageSize("pageshow");
@@ -4442,7 +4438,6 @@
   window.addEventListener("touchstart", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });
   window.addEventListener("orientationchange", () => {
-    recordViewportDiagnostic("orientationchange");
     schedulePlayStageSize("orientationchange");
   });
   window.addEventListener("orientationchange", scheduleCollectionStageSize);
@@ -4571,9 +4566,6 @@
       updateTopCollectionButton();
       checkQuestionTimeout();
     }
-  });
-  window.addEventListener("pagehide", (event) => {
-    recordViewportDiagnostic("pagehide", { persisted: event.persisted });
   });
   window.addEventListener("blur", () => {
     // iOS can interrupt Web Audio before visibilitychange fires when switching
