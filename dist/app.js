@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.2";
+  const appVersion = "0.2.3";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4342,7 +4342,12 @@
     schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
-  window.addEventListener("pagehide", () => stopBackgroundMusic());
+  window.addEventListener("pagehide", () => {
+    // Do not stop/disconnect the BufferSource during iOS app handoff.
+    // An abrupt source.stop() here can create a short click/beep before the OS
+    // suspends Web Audio. Reuse the same short fade+suspend path as blur.
+    suspendAudioForBackground("pagehide", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
+  });
   window.addEventListener("pointerdown", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("touchstart", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });

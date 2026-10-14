@@ -55,6 +55,13 @@ test("startup audio unlock retries on user gestures instead of reusing a blocked
   assert.doesNotMatch(app, /primeBackgroundMusicFromGesture\(\).*once: true/);
 });
 
+test("pagehide fades and suspends audio instead of abruptly stopping the BGM source", () => {
+  const lifecycle = app.slice(app.indexOf('window.addEventListener("pageshow"'), app.indexOf('window.addEventListener("pointerdown"'));
+  assert.match(lifecycle, /window\.addEventListener\("pagehide", \(\) => \{/);
+  assert.match(lifecycle, /suspendAudioForBackground\("pagehide", \{ requireHidden: false, fadeMs: 24, suspendDelayMs: 40 \}\)/);
+  assert.doesNotMatch(lifecycle, /pagehide[^\n]*stopBackgroundMusic/);
+});
+
 test("top speaker is scoped and developer credit is removed", () => {
   assert.match(html, /id="top-bgm-toggle-button"/);
   assert.match(css, /\.start-screen \.top-bgm-toggle-button/);
