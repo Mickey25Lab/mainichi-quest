@@ -2915,6 +2915,7 @@ button, input { font: inherit; }
   stroke-linecap:round;
 }
 .category-button .ui-icon { width:24px; height:24px; }
+.category-button .collection-tab-icon { width:24px; height:24px; display:block; object-fit:contain; }
 .category-button-summary {
   color:#fff7c8;
   border-color:#7ee8ff;
@@ -3211,7 +3212,7 @@ button, input { font: inherit; }
 .collection-header .medal-count strong { display:inline-block; margin-top:3px; }
 .collection-categories { box-sizing:border-box; }
 .category-button { box-sizing:border-box; padding:10px; overflow:hidden; }
-.category-button svg { width:48px; height:48px; max-width:100%; max-height:100%; overflow:hidden; }
+.category-button svg, .category-button .collection-tab-icon { width:48px; height:48px; max-width:100%; max-height:100%; overflow:hidden; }
 
 /* Version 142: category-specific collection backgrounds and fixed layouts. */
 .collection-stage.is-category-view { background:#020814; box-shadow:none; }
