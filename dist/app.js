@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.24";
+  const appVersion = "0.2.25";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -738,6 +738,20 @@
   let viewportDiagnostics = [];
   function viewportSnapshot() {
     const visualViewport = window.visualViewport;
+    return {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      clientWidth: document.documentElement.clientWidth,
+      clientHeight: document.documentElement.clientHeight,
+      visualViewportWidth: visualViewport?.width ?? null,
+      visualViewportHeight: visualViewport?.height ?? null,
+      visualViewportScale: visualViewport?.scale ?? null,
+      visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
+      visualViewportOffsetTop: visualViewport?.offsetTop ?? null
+    };
+  }
+  function diagnosticViewportSnapshot() {
+    const visualViewport = window.visualViewport;
     const playStage = $("play-stage");
     return {
       visualViewportWidth: visualViewport?.width ?? null,
@@ -750,7 +764,7 @@
   }
   function recordViewportDiagnostic(event, detail = {}) {
     if (!viewportDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: diagnosticViewportSnapshot() };
     viewportDiagnostics.push(entry);
     if (viewportDiagnostics.length > 30) viewportDiagnostics = viewportDiagnostics.slice(-30);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
