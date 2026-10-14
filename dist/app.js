@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.20";
+  const appVersion = "0.2.21";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -736,14 +736,16 @@
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
   // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
-  function viewportSnapshot() {
+  function viewportSnapshot(forceLayoutRead = false) {
     const visualViewport = window.visualViewport;
     const app = $("app");
     const playStage = $("play-stage");
-    // Keep these layout reads because they may help stabilize the iPad PWA
-    // resume path, but do not retain their values in the diagnostic payload.
-    app?.getBoundingClientRect();
-    playStage?.getBoundingClientRect();
+    // Phase 5: keep the potentially stabilizing layout read only on
+    // visibilitychange; all other viewport snapshots stay read-only/lightweight.
+    if (forceLayoutRead) {
+      app?.getBoundingClientRect();
+      playStage?.getBoundingClientRect();
+    }
     return {
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -759,7 +761,7 @@
   }
   function recordViewportDiagnostic(event, detail = {}) {
     if (!viewportDiagnosticsEnabled) return;
-    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot() };
+    const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: viewportSnapshot(event === "visibilitychange") };
     viewportDiagnostics.push(entry);
     if (viewportDiagnostics.length > 60) viewportDiagnostics = viewportDiagnostics.slice(-60);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
