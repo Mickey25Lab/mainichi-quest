@@ -4,7 +4,7 @@
 
 ## 対象と試聴
 
-生成先は `dist/assets/audio/phonics/`。試聴ページは各素材の `_review.wav`（同じ正規化済み単発音声を3回、各回の間に1秒無音）を再生する。単発版も残り、補助リンクで確認できる。次の3点だけを確認する。
+生成先は `dist/assets/audio/phonics/`。試聴ページは各素材の `_review.wav`（同じ正規化済み単発音声を3回、各回の間に1秒無音）を再生する。単発版も残り、補助リンクで確認できる。音素と `ant` は、元の単発素材を保持したまま、長さ・明示 phoneme を調整した `-clear` 候補をレビュー対象にする。次の3点だけを確認する。
 
 1. 子どもが真似したくなる声か
 2. 音がクリアか
@@ -32,4 +32,4 @@ python scripts/validate-phonics-audio.py
 
 `config/phonics-speaker-487.json` が voice/model URL、speaker ID、命名、正規化、QA の唯一の正本。`[[æ]]` と `[[b]]` は Piper の phoneme 指定で、letter/word と別クリップとして生成する。
 
-生成器は `asset-source/audio/phonics/libritts-high-speaker-487/raw/` に元 WAV、`dist/assets/audio/phonics/` にトリミング・ピーク正規化済み単発 WAV と `_review.wav` を保存する。検証器は単発版とレビュー版の欠損、読み取り不可、モノラル/16-bit/22,050Hz、無音、長さ、クリッピングを確認する。レビュー版は単発版が3回あること、1秒の無音が2か所あること、単発版と形式が一致することも検証し、`qa-report.json` を更新する。
+生成器は `asset-source/audio/phonics/libritts-high-speaker-487/raw/` に元 WAV、`dist/assets/audio/phonics/` にトリミング・ピーク正規化済み単発 WAV と `_review.wav` を保存する。さらに `comparison_sequences` の定義から、音素2回→文字／単語の結合 WAV を生成する（要素間0.6秒）。検証器は単発版とレビュー版の欠損、読み取り不可、モノラル/16-bit/22,050Hz、無音、長さ、クリッピングを確認する。レビュー版は単発版が3回あること、1秒の無音が2か所あること、単発版と形式が一致することも検証し、結合版は3要素の順序・2つの無音区間・形式・長さを検証して `qa-report.json` を更新する。

@@ -8,18 +8,31 @@
 </head>
 <body>
   <h1>フォニックス試作: speaker_487</h1>
-  <p>LibriTTS high / Piper local / speaker ID 487。各クリップは同じ音声を3回、間に1秒の無音を入れて再生します。聞き、<strong>OK</strong> または <strong>NG</strong> だけ返してください。</p>
+  <p>LibriTTS high / Piper local / speaker ID 487。各クリップは同じ音声を3回、間に1秒の無音を入れて再生します。音素と ant は聞き取りやすさのため明瞭化候補を再生成しています。聞き、<strong>OK</strong> または <strong>NG</strong> だけ返してください。</p>
   <table>
     <thead><tr><th>Group</th><th>種類</th><th>内容</th><th>試聴</th></tr></thead>
     <tbody>
-      <tr><td>A</td><td>phoneme</td><td>/æ/</td><td><audio controls src="a-phoneme-ae_review.wav"></audio> <small><a href="a-phoneme-ae.wav">単発</a></small></td></tr>
+      <tr><td>A</td><td>phoneme</td><td>/æ/</td><td><audio controls src="a-phoneme-ae-clear_review.wav"></audio> <small><a href="a-phoneme-ae-clear.wav">単発</a></small></td></tr>
       <tr><td>A</td><td>letter</td><td>A</td><td><audio controls src="a-letter-a_review.wav"></audio> <small><a href="a-letter-a.wav">単発</a></small></td></tr>
       <tr><td>A</td><td>word</td><td>apple</td><td><audio controls src="a-word-apple_review.wav"></audio> <small><a href="a-word-apple.wav">単発</a></small></td></tr>
-      <tr><td>A</td><td>word</td><td>ant</td><td><audio controls src="a-word-ant_review.wav"></audio> <small><a href="a-word-ant.wav">単発</a></small></td></tr>
-      <tr><td>B</td><td>phoneme</td><td>/b/</td><td><audio controls src="b-phoneme-b_review.wav"></audio> <small><a href="b-phoneme-b.wav">単発</a></small></td></tr>
+      <tr><td>A</td><td>word</td><td>ant</td><td><audio controls src="a-word-ant-clear_review.wav"></audio> <small><a href="a-word-ant-clear.wav">単発</a></small></td></tr>
+      <tr><td>B</td><td>phoneme</td><td>/b/</td><td><audio controls src="b-phoneme-b-clear_review.wav"></audio> <small><a href="b-phoneme-b-clear.wav">単発</a></small></td></tr>
       <tr><td>B</td><td>letter</td><td>B</td><td><audio controls src="b-letter-b_review.wav"></audio> <small><a href="b-letter-b.wav">単発</a></small></td></tr>
       <tr><td>B</td><td>word</td><td>ball</td><td><audio controls src="b-word-ball_review.wav"></audio> <small><a href="b-word-ball.wav">単発</a></small></td></tr>
       <tr><td>B</td><td>word</td><td>bus</td><td><audio controls src="b-word-bus_review.wav"></audio> <small><a href="b-word-bus.wav">単発</a></small></td></tr>
+    </tbody>
+  </table>
+  <h2>つながり比較</h2>
+  <p>各行は音素2回のあとに文字または単語を続けます。要素の間は0.6秒の無音です。</p>
+  <table>
+    <thead><tr><th>Group</th><th>内容</th><th>試聴</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>/æ/, /æ/, A</td><td><audio controls src="a-ae-ae-letter-a.wav"></audio></td></tr>
+      <tr><td>A</td><td>/æ/, /æ/, apple</td><td><audio controls src="a-ae-ae-apple.wav"></audio></td></tr>
+      <tr><td>A</td><td>/æ/, /æ/, ant</td><td><audio controls src="a-ae-ae-ant.wav"></audio></td></tr>
+      <tr><td>B</td><td>/b/, /b/, B</td><td><audio controls src="b-b-b-letter-b.wav"></audio></td></tr>
+      <tr><td>B</td><td>/b/, /b/, ball</td><td><audio controls src="b-b-b-ball.wav"></audio></td></tr>
+      <tr><td>B</td><td>/b/, /b/, bus</td><td><audio controls src="b-b-b-bus.wav"></audio></td></tr>
     </tbody>
   </table>
   <p><small>自動QA: <a href="qa-report.json">qa-report.json</a></small></p>

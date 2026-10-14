@@ -79,12 +79,53 @@ def create_review_clip(single_path, review_path, sample_rate, review):
     return {"review_file": review_path.name, "review_duration_ms": round(len(combined) / sample_rate * 1000, 1)}
 
 
+def create_sequence(source_paths, destination_path, sample_rate, comparison):
+    """Concatenate distinct clips with a fixed, review-friendly gap."""
+    gap_frames = round(sample_rate * comparison["silence_between_ms"] / 1000)
+    silence = array.array("h", [0] * gap_frames)
+    combined = array.array("h")
+    for index, source_path in enumerate(source_paths):
+        source_rate, samples = pcm_samples(source_path)
+        if source_rate != sample_rate:
+            raise ValueError(f"{source_path} has {source_rate}Hz; expected {sample_rate}Hz")
+        combined.extend(samples)
+        if index < len(source_paths) - 1:
+            combined.extend(silence)
+    with wave.open(str(destination_path), "wb") as destination:
+        destination.setnchannels(1)
+        destination.setsampwidth(2)
+        destination.setframerate(sample_rate)
+        destination.writeframes(combined.tobytes())
+    return {"file": destination_path.name, "duration_ms": round(len(combined) / sample_rate * 1000, 1)}
+
+
+def synthesize_and_normalize(clip, raw, output, piper, model, voice, config):
+    command = [piper, "--model", str(model), "--speaker", str(voice["speaker_id"]), "--output_file", str(raw)]
+    if "length_scale" in clip:
+        command.extend(["--length_scale", str(clip["length_scale"])])
+    environment = os.environ.copy()
+    # Piper on Windows otherwise inherits cp932 for piped IPA input.
+    environment["PYTHONUTF8"] = "1"
+    completed = subprocess.run(
+        command,
+        input=clip["text"] + "\n",
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        env=environment,
+    )
+    if completed.returncode:
+        raise RuntimeError(f"Piper failed for {clip['id']}: {completed.stderr.strip()}")
+    return normalize(raw, output, voice["sample_rate_hz"], config["normalization"], config["qa"]["min_duration_ms"])
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=ROOT / "config" / "phonics-speaker-487.json")
     parser.add_argument("--piper", default="piper", help="Piper executable or command on PATH")
     parser.add_argument("--model", type=Path, help="Override model path (never downloads a voice automatically)")
     parser.add_argument("--review-only", action="store_true", help="Keep existing normalized single clips and rebuild only _review.wav files")
+    parser.add_argument("--preserve-singles", action="store_true", help="Keep existing base single clips while regenerating corrected review candidates and comparisons")
     args = parser.parse_args()
     config = json.loads(args.config.read_text(encoding="utf-8"))
     voice = config["voice"]
@@ -97,10 +138,11 @@ def main():
     source_dir = ROOT / "asset-source" / "audio" / "phonics" / "libritts-high-speaker-487" / "raw"
     source_dir.mkdir(parents=True, exist_ok=True)
     records = []
+    source_paths = {}
     for clip in config["clips"]:
         raw = source_dir / f"{clip['id']}.wav"
         output = out_dir / f"{clip['id']}.wav"
-        if args.review_only:
+        if args.review_only or args.preserve_singles:
             if not output.is_file():
                 raise RuntimeError(f"Cannot preserve missing single clip: {output}")
             single_rate, single = pcm_samples(output)
@@ -108,25 +150,35 @@ def main():
                 raise RuntimeError(f"Unexpected sample rate in preserved single clip: {output}")
             stats = {"preserved_single": True, "normalized_peak_dbfs": round(dbfs(max(abs(value) for value in single)), 2)}
         else:
-            command = [piper, "--model", str(model), "--speaker", str(voice["speaker_id"]), "--output_file", str(raw)]
-            environment = os.environ.copy()
-            # Piper on Windows otherwise inherits cp932 for piped IPA input.
-            environment["PYTHONUTF8"] = "1"
-            completed = subprocess.run(
-                command,
-                input=clip["text"] + "\n",
-                text=True,
-                encoding="utf-8",
-                capture_output=True,
-                env=environment,
-            )
-            if completed.returncode:
-                raise RuntimeError(f"Piper failed for {clip['id']}: {completed.stderr.strip()}")
-            stats = normalize(raw, output, voice["sample_rate_hz"], config["normalization"], config["qa"]["min_duration_ms"])
+            stats = synthesize_and_normalize(clip, raw, output, piper, model, voice, config)
         review_output = out_dir / f"{clip['id']}_review.wav"
         review_stats = create_review_clip(output, review_output, voice["sample_rate_hz"], config["review"])
         records.append({**clip, "file": output.name, "raw_file": str(raw.relative_to(ROOT)).replace("\\", "/"), **stats, **review_stats})
-    manifest = {"voice": voice, "normalization": config["normalization"], "review": config["review"], "clips": records}
+        source_paths[clip["id"]] = output
+    corrections = []
+    for clip in config.get("corrections", []):
+        raw = source_dir / "corrected" / f"{clip['id']}.wav"
+        output = out_dir / f"{clip['id']}.wav"
+        if args.review_only:
+            if not output.is_file():
+                raise RuntimeError(f"Cannot preserve missing corrected clip: {output}")
+            _, samples = pcm_samples(output)
+            stats = {"preserved_single": True, "normalized_peak_dbfs": round(dbfs(max(abs(value) for value in samples)), 2)}
+        else:
+            raw.parent.mkdir(parents=True, exist_ok=True)
+            stats = synthesize_and_normalize(clip, raw, output, piper, model, voice, config)
+        review_output = out_dir / f"{clip['id']}_review.wav"
+        review_stats = create_review_clip(output, review_output, voice["sample_rate_hz"], config["review"])
+        corrections.append({**clip, "file": output.name, "raw_file": str(raw.relative_to(ROOT)).replace("\\", "/"), **stats, **review_stats})
+        source_paths[clip["id"]] = output
+    comparisons = []
+    for sequence in config.get("comparison_sequences", []):
+        try:
+            inputs = [source_paths[source_id] for source_id in sequence["source_ids"]]
+        except KeyError as error:
+            raise RuntimeError(f"Unknown comparison source: {error.args[0]}") from error
+        comparisons.append({**sequence, **create_sequence(inputs, out_dir / f"{sequence['id']}.wav", voice["sample_rate_hz"], config["comparison"])})
+    manifest = {"voice": voice, "normalization": config["normalization"], "review": config["review"], "comparison": config["comparison"], "clips": records, "corrections": corrections, "comparison_sequences": comparisons}
     (out_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {len(records)} clips in {out_dir}")
 

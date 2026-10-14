@@ -37,7 +37,9 @@ def main():
     config = json.loads(args.config.read_text(encoding="utf-8"))
     output = ROOT / "dist" / "assets" / "audio" / "phonics"
     results, failures = [], []
-    for clip in config["clips"]:
+    base_clip_ids = {clip["id"] for clip in config["clips"]}
+    threshold = int(32768 * (10 ** (config["normalization"]["trim_silence_threshold_dbfs"] / 20)))
+    for clip in config["clips"] + config.get("corrections", []):
         path = output / f"{clip['id']}.wav"
         review_path = output / f"{clip['id']}_review.wav"
         checks, metrics = {}, {}
@@ -47,7 +49,6 @@ def main():
             continue
         try:
             audio = read_wav(path)
-            threshold = int(32768 * (10 ** (config["normalization"]["trim_silence_threshold_dbfs"] / 20)))
             metrics = metrics_for(audio, threshold)
             checks = {
                 "format": audio["channels"] == 1 and audio["bit_depth"] == 16 and audio["sample_rate_hz"] == config["voice"]["sample_rate_hz"],
@@ -96,9 +97,50 @@ def main():
         review_status = "PASS" if all(review_checks.values()) else "FAIL"
         if review_status == "FAIL":
             failures.append(f"qa: {review_path.name}")
-        results.append({"single": single_result, "review": {"id": clip["id"], "file": review_path.name, "status": review_status, "checks": review_checks, "metrics": review_metrics}})
-    passed = sum(result["single"]["status"] == "PASS" and result["review"]["status"] == "PASS" for result in results)
-    report = {"voice": config["voice"], "review": config["review"], "summary": {"expected_clip_pairs": len(config["clips"]), "passed_clip_pairs": passed, "failed_clip_pairs": len(config["clips"]) - passed}, "results": results}
+        results.append({"is_base_clip": clip["id"] in base_clip_ids, "single": single_result, "review": {"id": clip["id"], "file": review_path.name, "status": review_status, "checks": review_checks, "metrics": review_metrics}})
+    comparison_results = []
+    source_file_by_id = {clip["id"]: output / f"{clip['id']}.wav" for clip in config["clips"] + config.get("corrections", [])}
+    for sequence in config.get("comparison_sequences", []):
+        path = output / f"{sequence['id']}.wav"
+        checks, metrics = {}, {}
+        if not path.is_file():
+            checks = {"exists": False}
+        else:
+            try:
+                source_audios = [read_wav(source_file_by_id[source_id]) for source_id in sequence["source_ids"]]
+                sequence_audio = read_wav(path)
+                gap_frames = round(config["voice"]["sample_rate_hz"] * config["comparison"]["silence_between_ms"] / 1000)
+                cursor = 0
+                source_segments_match = True
+                silent_gaps = True
+                for index, source_audio in enumerate(source_audios):
+                    end = cursor + source_audio["frames"]
+                    source_segments_match = source_segments_match and sequence_audio["values"][cursor:end] == source_audio["values"]
+                    cursor = end
+                    if index < len(source_audios) - 1:
+                        silent_gaps = silent_gaps and not any(sequence_audio["values"][cursor:cursor + gap_frames])
+                        cursor += gap_frames
+                metrics = metrics_for(sequence_audio, threshold)
+                checks = {
+                    "exists": True,
+                    "same_format_as_sources": all(sequence_audio["sample_rate_hz"] == item["sample_rate_hz"] and sequence_audio["channels"] == item["channels"] and sequence_audio["bit_depth"] == item["bit_depth"] for item in source_audios),
+                    "three_ordered_audio_segments": source_segments_match,
+                    "two_600ms_silent_gaps": silent_gaps,
+                    "expected_duration": cursor == sequence_audio["frames"] and metrics["duration_ms"] <= config["comparison"]["max_duration_ms"],
+                    "not_zero_length": sequence_audio["frames"] > 0,
+                    "not_clipped": metrics["peak"] < config["qa"]["clip_peak"]
+                }
+            except (KeyError, wave.Error, OSError, ValueError) as error:
+                checks = {"readable_wav": False}
+                metrics = {"error": str(error)}
+        status = "PASS" if all(checks.values()) else "FAIL"
+        if status == "FAIL":
+            failures.append(f"qa: {path.name}")
+        comparison_results.append({"id": sequence["id"], "file": path.name, "display": sequence["display"], "status": status, "checks": checks, "metrics": metrics})
+    passed = sum(result["single"]["status"] == "PASS" and result["review"]["status"] == "PASS" for result in results if result["is_base_clip"])
+    passed_corrections = sum(result["single"]["status"] == "PASS" and result["review"]["status"] == "PASS" for result in results if not result["is_base_clip"])
+    passed_comparisons = sum(result["status"] == "PASS" for result in comparison_results)
+    report = {"voice": config["voice"], "review": config["review"], "comparison": config["comparison"], "summary": {"expected_clip_pairs": len(config["clips"]), "passed_clip_pairs": passed, "failed_clip_pairs": len(config["clips"]) - passed, "expected_correction_pairs": len(config.get("corrections", [])), "passed_correction_pairs": passed_corrections, "failed_correction_pairs": len(config.get("corrections", [])) - passed_corrections, "expected_comparisons": len(comparison_results), "passed_comparisons": passed_comparisons, "failed_comparisons": len(comparison_results) - passed_comparisons}, "results": results, "comparison_results": comparison_results}
     (output / "qa-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report["summary"], ensure_ascii=False))
     if failures:

@@ -25,6 +25,10 @@
     "silence_between_ms": 1000,
     "max_duration_ms": 15000
   },
+  "comparison": {
+    "silence_between_ms": 600,
+    "max_duration_ms": 15000
+  },
   "clips": [
     {"id": "a-phoneme-ae", "group": "A", "kind": "phoneme", "text": "[[æ]]", "display": "/æ/"},
     {"id": "a-letter-a", "group": "A", "kind": "letter", "text": "A", "display": "A"},
@@ -34,5 +38,18 @@
     {"id": "b-letter-b", "group": "B", "kind": "letter", "text": "B", "display": "B"},
     {"id": "b-word-ball", "group": "B", "kind": "word", "text": "ball", "display": "ball"},
     {"id": "b-word-bus", "group": "B", "kind": "word", "text": "bus", "display": "bus"}
+  ],
+  "corrections": [
+    {"id": "a-phoneme-ae-clear", "base_id": "a-phoneme-ae", "group": "A", "kind": "phoneme", "text": "[[æ]]", "display": "/æ/", "length_scale": 2.2, "reason": "Extend the standalone vowel for review clarity."},
+    {"id": "b-phoneme-b-clear", "base_id": "b-phoneme-b", "group": "B", "kind": "phoneme", "text": "[[b]]", "display": "/b/", "length_scale": 2.2, "reason": "Extend the standalone consonant for review clarity."},
+    {"id": "a-word-ant-clear", "base_id": "a-word-ant", "group": "A", "kind": "word", "text": "[[ænt]]", "display": "ant", "length_scale": 1.35, "reason": "Force the final /t/ phoneme and slow it slightly for audibility."}
+  ],
+  "comparison_sequences": [
+    {"id": "a-ae-ae-letter-a", "group": "A", "display": "/æ/, /æ/, A", "source_ids": ["a-phoneme-ae-clear", "a-phoneme-ae-clear", "a-letter-a"]},
+    {"id": "a-ae-ae-apple", "group": "A", "display": "/æ/, /æ/, apple", "source_ids": ["a-phoneme-ae-clear", "a-phoneme-ae-clear", "a-word-apple"]},
+    {"id": "a-ae-ae-ant", "group": "A", "display": "/æ/, /æ/, ant", "source_ids": ["a-phoneme-ae-clear", "a-phoneme-ae-clear", "a-word-ant-clear"]},
+    {"id": "b-b-b-letter-b", "group": "B", "display": "/b/, /b/, B", "source_ids": ["b-phoneme-b-clear", "b-phoneme-b-clear", "b-letter-b"]},
+    {"id": "b-b-b-ball", "group": "B", "display": "/b/, /b/, ball", "source_ids": ["b-phoneme-b-clear", "b-phoneme-b-clear", "b-word-ball"]},
+    {"id": "b-b-b-bus", "group": "B", "display": "/b/, /b/, bus", "source_ids": ["b-phoneme-b-clear", "b-phoneme-b-clear", "b-word-bus"]}
   ]
 }
