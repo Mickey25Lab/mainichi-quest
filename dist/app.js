@@ -3398,6 +3398,7 @@
     prepareInitialVehicle();
     $("answer-confirm").hidden = true; $("quit-confirm").hidden = true;
     $("time-up").hidden = true;
+    renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen", [], () => {
       state.collectionClosing = false;
     });
