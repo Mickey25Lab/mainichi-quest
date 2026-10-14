@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.3";
+  const appVersion = "0.2.4";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3685,9 +3685,15 @@
     const ctx = state.audio;
     if (!ctx || ctx.state === "closed") return;
     if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+
+    // Background handoff owns the audio lifecycle. Cancel every pending
+    // screen-to-screen BGM transition first so no delayed BufferSource.stop()
+    // or late async start can fire while iOS is suspending Web Audio.
+    cancelBgmTransitionForLifecycle();
+
     if (state.bgmGain && ctx.state === "running") {
       const gain = state.bgmGain.gain;
-      gain.cancelScheduledValues(ctx.currentTime);
+      cancelBgmGainAutomation(ctx, state.bgmGain);
       gain.setValueAtTime(Math.max(0.0001, gain.value), ctx.currentTime);
       gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
       audioMutedForBackground = true;
@@ -3703,8 +3709,11 @@
       window.clearTimeout(audioVisibilitySuspendTimer);
       audioVisibilitySuspendTimer = null;
     }
-    resumeAudioContext(reason);
-    restoreAudioGainAfterVisibility();
+    const resumed = resumeAudioContext(reason);
+    Promise.resolve(resumed).finally(() => {
+      restoreAudioGainAfterVisibility();
+      if (!document.hidden) syncBackgroundMusicForActiveScreen();
+    });
   }
   function audioContext() {
     if (!state.audio) {
@@ -3789,6 +3798,11 @@
     window.clearTimeout(state.bgmFadeTimer);
     state.bgmFadeTimer = null;
   }
+  function cancelBgmTransitionForLifecycle() {
+    state.bgmRequestId += 1;
+    state.bgmTransitionId += 1;
+    clearBgmFadeTimer();
+  }
   function disconnectBackgroundMusicSource() {
     const source = state.bgmSource;
     state.bgmSource = null;
@@ -3833,9 +3847,7 @@
     });
   }
   function stopBackgroundMusic({ clearDesired = true } = {}) {
-    state.bgmRequestId += 1;
-    state.bgmTransitionId += 1;
-    clearBgmFadeTimer();
+    cancelBgmTransitionForLifecycle();
     if (state.bgmGain) cancelBgmGainAutomation(audioContext());
     disconnectBackgroundMusicSource();
     state.bgmDucked = false;
@@ -3856,7 +3868,7 @@
     cancelBgmGainAutomation(ctx, gain);
     gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + bgmConfig.transitionDurationSeconds);
     state.bgmFadeTimer = window.setTimeout(() => {
-      if (transitionId !== state.bgmTransitionId) return;
+      if (transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground) return;
       state.bgmFadeTimer = null;
       disconnectBackgroundMusicSource();
       if (nextGroup && state.desiredBgmGroup === nextGroup && state.bgmEnabled) startBackgroundMusic(nextGroup);

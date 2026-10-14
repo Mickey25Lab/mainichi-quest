@@ -55,6 +55,27 @@ test("startup audio unlock retries on user gestures instead of reusing a blocked
   assert.doesNotMatch(app, /primeBackgroundMusicFromGesture\(\).*once: true/);
 });
 
+test("background handoff cancels pending screen BGM transitions before fading", () => {
+  const cancel = app.slice(app.indexOf("function cancelBgmTransitionForLifecycle"), app.indexOf("function disconnectBackgroundMusicSource"));
+  assert.match(cancel, /state\.bgmRequestId \+= 1/);
+  assert.match(cancel, /state\.bgmTransitionId \+= 1/);
+  assert.match(cancel, /clearBgmFadeTimer\(\)/);
+
+  const suspend = app.slice(app.indexOf("function suspendAudioForBackground"), app.indexOf("function resumeAudioAfterVisible"));
+  assert.match(suspend, /cancelBgmTransitionForLifecycle\(\)/);
+  assert.match(suspend, /cancelBgmGainAutomation\(ctx, state\.bgmGain\)/);
+});
+
+test("screen transition timer cannot stop or restart BGM during background handoff", () => {
+  const transition = app.slice(app.indexOf("function transitionBackgroundMusic"), app.indexOf("function setBackgroundMusicDucked"));
+  assert.match(transition, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+});
+
+test("foreground resume re-syncs BGM for the active screen", () => {
+  const resume = app.slice(app.indexOf("function resumeAudioAfterVisible"), app.indexOf("function audioContext"));
+  assert.match(resume, /syncBackgroundMusicForActiveScreen\(\)/);
+});
+
 test("pagehide fades and suspends audio instead of abruptly stopping the BGM source", () => {
   const lifecycle = app.slice(app.indexOf('window.addEventListener("pageshow"'), app.indexOf('window.addEventListener("pointerdown"'));
   assert.match(lifecycle, /window\.addEventListener\("pagehide", \(\) => \{/);
