@@ -2269,14 +2269,10 @@
         slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
       });
     });
-    const multiplicand = $("multiplication-2x2-multiplicand");
-    const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
-    multiplicand.classList.toggle("is-operation-guide", model.guideStage === 1 || model.guideStage === 2 || model.guideStage === 3);
-    multiplierDigits.forEach((digit, index) => {
-      const guidesThisDigit = (model.guideStage === 1 && index === multiplierDigits.length - 1)
-        || (model.guideStage === 2 && index === multiplierDigits.length - 2);
-      digit.classList.toggle("is-operation-guide", guidesThisDigit);
-    });
+    const operationGuide = $("multiplication-2x2-operation-guide");
+    const isGuidedMultiplicationRow = model.guideStage === 1 || model.guideStage === 2;
+    operationGuide.hidden = !isGuidedMultiplicationRow;
+    operationGuide.dataset.stage = model.guideStage === 1 ? "ones" : "tens";
     $("multiplication-2x2-shift-guide").hidden = !model.shiftGuideVisible;
     const sumOperator = $("multiplication-2x2-sum-operator");
     sumOperator.hidden = !model.sumOperatorVisible;
