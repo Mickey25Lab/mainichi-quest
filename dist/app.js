@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.28";
+  const appVersion = "0.2.29";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3935,10 +3935,16 @@
     window.clearTimeout(state.bgmFadeTimer);
     state.bgmFadeTimer = null;
   }
-  function cancelBgmTransitionForLifecycle() {
-    state.bgmRequestId += 1;
+  // Invalidate pending BGM fade callbacks before changing audio lifecycle.
+  // Screen changes and background handoff share this cancellation path.
+  function invalidateBgmFadeTransition() {
     state.bgmTransitionId += 1;
     clearBgmFadeTimer();
+    return state.bgmTransitionId;
+  }
+  function cancelBgmTransitionForLifecycle() {
+    state.bgmRequestId += 1;
+    invalidateBgmFadeTransition();
   }
   function disconnectBackgroundMusicSource() {
     const source = state.bgmSource;
@@ -3997,8 +4003,7 @@
       return;
     }
     state.bgmRequestId += 1;
-    const transitionId = ++state.bgmTransitionId;
-    clearBgmFadeTimer();
+    const transitionId = invalidateBgmFadeTransition();
     const ctx = audioContext();
     const gain = ensureBgmGain();
     if (nextGroup) ensureBackgroundMusic(nextGroup);
@@ -4039,8 +4044,7 @@
     state.desiredBgmGroup = normalized;
     document.documentElement.dataset.bgmDesiredGroup = normalized || "";
     if (state.bgmSource && state.bgmGroup === normalized && state.bgmFadeTimer !== null) {
-      state.bgmTransitionId += 1;
-      clearBgmFadeTimer();
+      invalidateBgmFadeTransition();
       const ctx = audioContext();
       const gain = ensureBgmGain();
       cancelBgmGainAutomation(ctx, gain);
