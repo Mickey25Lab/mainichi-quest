@@ -60,5 +60,14 @@ test("screen transitions share invalidation without changing fade time", () => {
   assert.match(transition, /const transitionId = invalidateBgmFadeTransition\(\)/);
   assert.match(transition, /bgmConfig\.transitionDurationSeconds \* 1000/);
   assert.match(select, /invalidateBgmFadeTransition\(\)/);
-  assert.match(transition, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+  assert.match(transition, /isBgmTransitionObsolete\(transitionId\)/);
+  const guard = app.slice(app.indexOf("function isBgmTransitionObsolete"), app.indexOf("function isBgmStartRequestObsolete"));
+  assert.match(guard, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+});
+
+test("pending BGM starts use the same state validity contract", () => {
+  const guard = section("function isBgmStartRequestObsolete", "function transitionBackgroundMusic");
+  const start = section("function startBackgroundMusic", "function setDesiredBgmGroup");
+  assert.match(guard, /requestId !== state\.bgmRequestId \|\| state\.desiredBgmGroup !== group/);
+  assert.match(start, /isBgmStartRequestObsolete\(requestId, group\)/);
 });
