@@ -70,7 +70,9 @@ test("background handoff cancels pending screen BGM transitions before fading", 
 
 test("screen transition timer cannot stop or restart BGM during background handoff", () => {
   const transition = app.slice(app.indexOf("function transitionBackgroundMusic"), app.indexOf("function setBackgroundMusicDucked"));
-  assert.match(transition, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+  assert.match(transition, /isBgmTransitionObsolete\(transitionId\)/);
+  const guard = app.slice(app.indexOf("function isBgmTransitionObsolete"), app.indexOf("function isBgmStartRequestObsolete"));
+  assert.match(guard, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
 });
 
 test("foreground resume re-syncs BGM for the active screen", () => {
