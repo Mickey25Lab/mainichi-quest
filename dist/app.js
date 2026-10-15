@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.36";
+  const appVersion = "0.2.37";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -492,7 +492,7 @@
         videoId: phonicsYoutubeConfig.videoId,
         host: "https://www.youtube-nocookie.com",
         playerVars: {
-          autoplay: 0,
+          autoplay: 1,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -506,7 +506,6 @@
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
-            $("mode-select-phonics").disabled = false;
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -529,16 +528,15 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
-      $("mode-select-phonics").disabled = true;
     });
   }
   function preparePhonicsYoutubePlayback() {
-    // Keep the mode choice unavailable until the player is actually ready.
-    // That guarantees the eventual phonics-mode tap can call playVideo()
-    // synchronously inside the user gesture instead of falling through to an
-    // async autoplay attempt that Safari/iPadOS may block.
-    $("mode-select-phonics").disabled = true;
-    createPhonicsYoutubePlayer();
+    // Preload only the IFrame API. The actual Player belongs to the selected
+    // video session and is created only after the user taps the purple button.
+    $("mode-select-phonics").disabled = false;
+    loadPhonicsYoutubeApi().catch((error) => {
+      console.error("Phonics YouTube API preload failed", error);
+    });
   }
   function beginPhonicsYoutubePlayback() {
     if (!phonicsYoutube.player) return;
@@ -569,37 +567,31 @@
     $("phonics-youtube-start").disabled = false;
     $("phonics-youtube-status").classList.remove("is-practice");
     setPhonicsYoutubeStatus("動画を準備しています…");
-    startPhonicsYoutubeAutomatically();
+    phonicsYoutube.autoStartPending = true;
+    createPhonicsYoutubePlayer();
   }
   function startPhonicsYoutubeFromGesture() {
     beginPhonicsYoutubePlayback();
   }
-  function resetPhonicsYoutubeForReuse() {
+  function stopAndDestroyPhonicsYoutube() {
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
-      // Keep the ready Player instance, but return it to a non-playing CUED
-      // state at the start position. Calling seekTo() after stopVideo() can
-      // cause playback to resume in the YouTube iframe on Safari/iPadOS.
-      try {
-        phonicsYoutube.player.cueVideoById?.({
-          videoId: phonicsYoutubeConfig.videoId,
-          startSeconds: phonicsYoutubeConfig.startTimeSeconds
-        });
-      } catch (_) {
-        try { phonicsYoutube.player.pauseVideo?.(); } catch (_) {}
-      }
-      try { phonicsYoutube.player.unMute?.(); } catch (_) {}
+      try { phonicsYoutube.player.stopVideo?.(); } catch (_) {}
+      try { phonicsYoutube.player.destroy?.(); } catch (_) {}
     }
+    phonicsYoutube.player = null;
     phonicsYoutube.started = false;
+    phonicsYoutube.ready = false;
     phonicsYoutube.autoStartPending = false;
     phonicsYoutube.phase = 0;
+    $("phonics-youtube-player").replaceChildren();
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = true;
     $("mode-select-phonics").disabled = false;
   }
   function leavePhonicsYoutube() {
-    resetPhonicsYoutubeForReuse();
+    stopAndDestroyPhonicsYoutube();
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
   }
