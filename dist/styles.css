@@ -1919,6 +1919,32 @@ button, input { font: inherit; }
   display:flex; align-items:center; justify-content:center; width:var(--multiplication-2x2-column); height:48px;
   font-size:62px; line-height:1; font-variant-numeric:tabular-nums;
 }
+.multiplication-2x2-multiplicand.is-operation-guide {
+  position:relative;
+  isolation:isolate;
+}
+.multiplication-2x2-multiplicand.is-operation-guide::after {
+  content:"";
+  position:absolute;
+  inset:-7px -8px;
+  border:5px solid #48d9ff;
+  border-radius:17px;
+  background:rgba(72,217,255,.08);
+  box-shadow:0 0 0 3px rgba(255,255,255,.72),0 0 15px rgba(72,217,255,.54);
+  pointer-events:none;
+  z-index:-1;
+}
+.multiplication-2x2-multiplier span.is-operation-guide::after {
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border:5px solid #48d9ff;
+  border-radius:50%;
+  background:rgba(72,217,255,.08);
+  box-shadow:0 0 0 3px rgba(255,255,255,.72),0 0 15px rgba(72,217,255,.54);
+  pointer-events:none;
+  z-index:2;
+}
 .multiplication-2x2-operator { grid-column:2; grid-row:2; display:flex; align-items:center; justify-content:center; font-size:62px; line-height:1; }
 .multiplication-2x2-bar { grid-column:2 / 5; height:8px; align-self:center; border-radius:999px; background:var(--navy); }
 .multiplication-2x2-bar-first { grid-row:3; }
@@ -1947,6 +1973,24 @@ button, input { font: inherit; }
   text-shadow:0 1px 0 #fff,0 0 5px rgba(35,137,223,.32);
   pointer-events:none;
 }
+.multiplication-2x2-sum-operator {
+  position:absolute;
+  z-index:4;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:64px;
+  height:62px;
+  transform:translateY(-50%);
+  color:#48d9ff;
+  font-size:58px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 0 2px #fff,0 0 9px rgba(72,217,255,.9);
+  pointer-events:none;
+}
+.multiplication-2x2-sum-operator[hidden] { display:none !important; }
+.question-answer-card:not(.multiplication-2x2-mode) .multiplication-2x2-sum-operator { display:none !important; }
 .multiplication-2x2-row-sparkles {
   position:absolute;
   z-index:5;
@@ -3541,34 +3585,6 @@ button, input { font: inherit; }
 .mode-select-multiplication { flex-direction:column; gap:2px; }
 .mode-select-multiplication small,
 .mode-select-multiplication-2x2 small { display:block; font-size:.48em; font-weight:800; line-height:1; }
-
-.multiplication-2x2-multiplier span,
-.multiplication-2x2-slot { position:relative; }
-.multiplication-2x2-multiplier span.is-crossed::before,
-.multiplication-2x2-multiplier span.is-crossed::after,
-.multiplication-2x2-slot.is-crossed::before,
-.multiplication-2x2-slot.is-crossed::after {
-  content:"";
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:118%;
-  height:6px;
-  border-radius:999px;
-  background:#8a9299;
-  box-shadow:0 1px 0 rgba(70,78,84,.15);
-  transform-origin:center;
-  pointer-events:none;
-  z-index:3;
-}
-.multiplication-2x2-multiplier span.is-crossed::before,
-.multiplication-2x2-slot.is-crossed::before {
-  transform:translate(-50%,-50%) rotate(-45deg);
-}
-.multiplication-2x2-multiplier span.is-crossed::after,
-.multiplication-2x2-slot.is-crossed::after {
-  transform:translate(-50%,-50%) rotate(45deg);
-}
 
 .multiplication-2x2-shift-guide {
   grid-column:4;
