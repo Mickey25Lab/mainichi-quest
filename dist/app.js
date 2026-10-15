@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.25";
+  const appVersion = "0.2.26";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -732,8 +732,16 @@
   }
   let lastStableAppScale = null;
   let scaleUpdateRequest = 0;
-  const viewportDiagnosticsEnabled = true;
+  const viewportDiagnosticsPreferenceKey = "mq-001:viewport-diagnostics-enabled-v1";
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
+  let viewportDiagnosticsEnabled = false;
+  let viewportDiagnosticsButton = null;
+  function loadViewportDiagnosticsEnabled() {
+    try { return localStorage.getItem(viewportDiagnosticsPreferenceKey) === "1"; } catch (_) { return false; }
+  }
+  function saveViewportDiagnosticsEnabled(enabled) {
+    try { localStorage.setItem(viewportDiagnosticsPreferenceKey, enabled ? "1" : "0"); } catch (_) {}
+  }
   // B-line preview auto-deploy verification: no runtime behavior change.
   let viewportDiagnostics = [];
   function viewportSnapshot() {
@@ -769,13 +777,30 @@
     if (viewportDiagnostics.length > 30) viewportDiagnostics = viewportDiagnostics.slice(-30);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
+  function updateViewportDiagnosticsButton() {
+    if (viewportDiagnosticsButton) viewportDiagnosticsButton.hidden = !viewportDiagnosticsEnabled;
+  }
+  function updateAdminViewportDiagnosticsToggle() {
+    const toggle = $("admin-viewport-diagnostics-toggle");
+    if (!toggle) return;
+    toggle.setAttribute("aria-checked", String(viewportDiagnosticsEnabled));
+    toggle.querySelector("span").textContent = viewportDiagnosticsEnabled ? "ON" : "OFF";
+  }
+  function toggleViewportDiagnostics() {
+    viewportDiagnosticsEnabled = !viewportDiagnosticsEnabled;
+    saveViewportDiagnosticsEnabled(viewportDiagnosticsEnabled);
+    updateViewportDiagnosticsButton();
+    updateAdminViewportDiagnosticsToggle();
+    setAdminActionStatus(viewportDiagnosticsEnabled ? "MQ-001診断をONにしました。" : "MQ-001診断をOFFにしました。");
+  }
   function setupViewportDiagnostics() {
-    if (!viewportDiagnosticsEnabled) return;
+    viewportDiagnosticsEnabled = loadViewportDiagnosticsEnabled();
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
       if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-30);
     } catch (_) {}
     const button = document.createElement("button");
+    viewportDiagnosticsButton = button;
     button.type = "button";
     button.textContent = "MQ-001 LOG";
     Object.assign(button.style, {
@@ -798,6 +823,7 @@
       }
     });
     document.body.appendChild(button);
+    updateViewportDiagnosticsButton();
   }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
@@ -4319,6 +4345,7 @@
   }
   function openAdminPanel() {
     updateAdminQaToggle();
+    updateAdminViewportDiagnosticsToggle();
     setAdminActionStatus("");
     $("admin-panel-overlay").hidden = false;
     $("admin-qa-toggle").focus();
@@ -4474,6 +4501,7 @@
   $("admin-pin-cancel").addEventListener("click", closeAdminPin);
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
+  $("admin-viewport-diagnostics-toggle").addEventListener("click", toggleViewportDiagnostics);
   $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
   $("admin-reenable-opening-movie").addEventListener("click", reenableOpeningMovieForActiveProfile);
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
