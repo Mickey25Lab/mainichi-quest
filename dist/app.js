@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.27";
+  const appVersion = "0.2.28";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3807,10 +3807,24 @@
       audioResumePromise = null;
     }
   }
+  // One owner for the pending background suspension timer. Keeping the
+  // cancellation and clearing logic together avoids stale timer handles.
+  function clearAudioVisibilitySuspendTimer() {
+    if (audioVisibilitySuspendTimer === null) return;
+    window.clearTimeout(audioVisibilitySuspendTimer);
+    audioVisibilitySuspendTimer = null;
+  }
+  function scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs) {
+    audioVisibilitySuspendTimer = window.setTimeout(() => {
+      audioVisibilitySuspendTimer = null;
+      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      try { state.audio.suspend(); } catch (_) {}
+    }, suspendDelayMs);
+  }
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
     if (!ctx || ctx.state === "closed") return;
-    if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+    clearAudioVisibilitySuspendTimer();
 
     // Background handoff owns the audio lifecycle. Cancel every pending
     // screen-to-screen BGM transition first so no delayed BufferSource.stop()
@@ -3824,17 +3838,10 @@
       gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
       audioMutedForBackground = true;
     }
-    audioVisibilitySuspendTimer = window.setTimeout(() => {
-      audioVisibilitySuspendTimer = null;
-      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
-      try { state.audio.suspend(); } catch (_) {}
-    }, suspendDelayMs);
+    scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs);
   }
   function resumeAudioAfterVisible(reason) {
-    if (audioVisibilitySuspendTimer !== null) {
-      window.clearTimeout(audioVisibilitySuspendTimer);
-      audioVisibilitySuspendTimer = null;
-    }
+    clearAudioVisibilitySuspendTimer();
     const resumed = resumeAudioContext(reason);
     Promise.resolve(resumed).finally(() => {
       restoreAudioGainAfterVisibility();
