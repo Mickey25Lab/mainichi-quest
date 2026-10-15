@@ -3840,19 +3840,23 @@
     }
     scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs);
   }
+  // Keep foreground restoration in one place. The AudioContext may still be
+  // suspended when focus/pageshow fires; its statechange listener also retries
+  // gain restoration as soon as Web Audio actually becomes running.
+  function restoreForegroundBackgroundMusic() {
+    restoreAudioGainAfterVisibility();
+    if (!document.hidden) syncBackgroundMusicForActiveScreen();
+  }
   function resumeAudioAfterVisible(reason) {
     clearAudioVisibilitySuspendTimer();
     const resumed = resumeAudioContext(reason);
-    Promise.resolve(resumed).finally(() => {
-      restoreAudioGainAfterVisibility();
-      if (!document.hidden) syncBackgroundMusicForActiveScreen();
-    });
+    Promise.resolve(resumed).finally(restoreForegroundBackgroundMusic);
   }
   function audioContext() {
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
       state.audio.addEventListener?.("statechange", () => {
-        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
+        if (state.audio?.state === "running" && !document.hidden) restoreForegroundBackgroundMusic();
       });
     }
     return state.audio;
