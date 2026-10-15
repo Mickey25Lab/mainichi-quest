@@ -3997,6 +3997,14 @@
     if (clearDesired) state.desiredBgmGroup = null;
     if (state.bgmGain) state.bgmGain.gain.value = backgroundMusicVolume();
   }
+  // Keep the conditions that make a pending BGM transition obsolete in one
+  // place. This is a read-only view of the existing lifecycle state.
+  function isBgmTransitionObsolete(transitionId) {
+    return transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground;
+  }
+  function isBgmStartRequestObsolete(requestId, group) {
+    return requestId !== state.bgmRequestId || state.desiredBgmGroup !== group;
+  }
   function transitionBackgroundMusic(nextGroup) {
     if (!state.bgmSource || state.bgmGroup === nextGroup) {
       if (nextGroup) startBackgroundMusic(nextGroup);
@@ -4010,7 +4018,7 @@
     cancelBgmGainAutomation(ctx, gain);
     gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + bgmConfig.transitionDurationSeconds);
     state.bgmFadeTimer = window.setTimeout(() => {
-      if (transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground) return;
+      if (isBgmTransitionObsolete(transitionId)) return;
       state.bgmFadeTimer = null;
       disconnectBackgroundMusicSource();
       if (nextGroup && state.desiredBgmGroup === nextGroup && state.bgmEnabled) startBackgroundMusic(nextGroup);
@@ -4035,7 +4043,7 @@
     const requestId = ++state.bgmRequestId;
     setBackgroundMusicDucked(false);
     ensureBackgroundMusic(group).then((buffer) => {
-      if (requestId !== state.bgmRequestId || state.desiredBgmGroup !== group) return;
+      if (isBgmStartRequestObsolete(requestId, group)) return;
       startDecodedBackgroundMusic(buffer, group);
     });
   }
