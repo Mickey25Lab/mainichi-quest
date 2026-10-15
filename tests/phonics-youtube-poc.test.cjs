@@ -135,6 +135,9 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /playsinline: 1/);
   assert.match(app, /controls: 0/);
   assert.match(app, /onAutoplayBlocked/);
+  assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
+  assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
+  assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
   assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
