@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.33";
+  const appVersion = "0.2.34";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -428,8 +428,10 @@
       }
       if (phonicsYoutube.phase === 1 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
         phonicsYoutube.phase = 2;
+        // Keep playback continuous at the 15-second boundary. The silent
+        // repeat has already reached 15 seconds, so only restore audio here;
+        // seeking to 15 again causes a visible/audio discontinuity on iPad.
         player.unMute?.();
-        player.seekTo?.(phonicsYoutubeConfig.splitTimeSeconds, true);
         setPhonicsYoutubeStatus("15〜20秒を音ありで再生しています。");
         return;
       }
