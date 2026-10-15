@@ -108,7 +108,15 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
 
   await page.locator("#phonics-youtube-end").click();
   await page.locator("#mode-select-screen.active").waitFor();
-  await page.waitForFunction(() => window.__ytPlayers.length === 2);
+  assert.equal(await page.evaluate(() => window.__ytPlayers.length), 1);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].destroyed), false);
+  assert.equal(await page.locator("#mode-select-phonics").isDisabled(), false);
+
+  // Re-enter immediately: the same ready Player is reused and no preload wait is needed.
+  await page.locator("#mode-select-phonics").click();
+  await page.locator("#phonics-youtube-screen.active").waitFor();
+  await page.waitForFunction(() => window.__ytPlayers[0].playCalls >= 2);
+  assert.equal(await page.evaluate(() => window.__ytPlayers.length), 1);
   assert.deepEqual(pageErrors, []);
 });
 
@@ -127,7 +135,8 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
-  assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*preparePhonicsYoutubePlayback\(\)/);
+  assert.match(app, /function resetPhonicsYoutubeForReuse\(\)[\s\S]*stopVideo\?\.\(\)[\s\S]*seekTo\?\.\(phonicsYoutubeConfig\.startTimeSeconds, true\)[\s\S]*unMute\?\.\(\)/);
+  assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*resetPhonicsYoutubeForReuse\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
   assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
