@@ -3814,6 +3814,12 @@
     // Keep the first fade/suspend deadline: restarting it for each event can
     // leave Web Audio audible when the OS interrupts the app.
     if (audioMutedForBackground) return;
+    // Collection uses a separate compressed loop; minimize the time Web Audio
+    // remains audible during the iPadOS handoff, without changing other BGM.
+    if (state.bgmGroup === "collection") {
+      fadeMs = Math.min(fadeMs, 8);
+      suspendDelayMs = Math.min(suspendDelayMs, 24);
+    }
     if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
 
     // Background handoff owns the audio lifecycle. Cancel every pending
