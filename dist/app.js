@@ -36,11 +36,15 @@
   const phonicsYoutubeConfig = Object.freeze({
     videoId: "ChqnN3cKzXQ",
     iframeApiUrl: "https://www.youtube.com/iframe_api",
+    startTimeSeconds: 10,
+    endTimeSeconds: 60,
     promptDurationMs: 3000,
     checkpoints: Object.freeze([
-      Object.freeze({ id: "after-d", timeSeconds: 43 }),
-      Object.freeze({ id: "after-m", timeSeconds: 129 }),
-      Object.freeze({ id: "after-u", timeSeconds: 210 })
+      Object.freeze({ id: "at-20", timeSeconds: 20 }),
+      Object.freeze({ id: "at-30", timeSeconds: 30 }),
+      Object.freeze({ id: "at-40", timeSeconds: 40 }),
+      Object.freeze({ id: "at-50", timeSeconds: 50 }),
+      Object.freeze({ id: "at-60", timeSeconds: 60, final: true })
     ])
   });
   const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.webp";
@@ -391,8 +395,11 @@
     expectedCheckpointId: null, completedCheckpoints: new Set(), started: false
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
-  function setPhonicsYoutubeStatus(message) { $("phonics-youtube-status").textContent = message; }
-  function hidePhonicsYoutubePrompt() { $("phonics-youtube-prompt").hidden = true; }
+  function setPhonicsYoutubeStatus(message, practice = false) {
+    const status = $("phonics-youtube-status");
+    status.textContent = message;
+    status.classList.toggle("is-practice", practice);
+  }
   function stopPhonicsYoutubePolling() {
     if (phonicsYoutube.checkpointPollId) window.clearInterval(phonicsYoutube.checkpointPollId);
     phonicsYoutube.checkpointPollId = 0;
@@ -401,7 +408,7 @@
     if (phonicsYoutube.promptTimerId) window.clearTimeout(phonicsYoutube.promptTimerId);
     phonicsYoutube.promptTimerId = 0;
     phonicsYoutube.expectedCheckpointId = null;
-    hidePhonicsYoutubePrompt();
+    $("phonics-youtube-status").classList.remove("is-practice");
   }
   function youtubePlayerState(name) { return window.YT?.PlayerState?.[name]; }
   function runPhonicsYoutubeCheckpointPoll() {
@@ -418,18 +425,26 @@
       phonicsYoutube.expectedCheckpointId = checkpoint.id;
       stopPhonicsYoutubePolling();
       player.pauseVideo();
-    }, 250);
+    }, 100);
   }
   function beginPhonicsYoutubePracticePrompt(checkpointId) {
     if (!phonicsYoutubeActive() || phonicsYoutube.expectedCheckpointId !== checkpointId) return;
-    $("phonics-youtube-prompt").hidden = false;
-    setPhonicsYoutubeStatus("声に出してまねしてみよう。");
+    const checkpoint = phonicsYoutubeConfig.checkpoints.find((item) => item.id === checkpointId);
+    const checkpointIndex = Math.max(0, phonicsYoutubeConfig.checkpoints.findIndex((item) => item.id === checkpointId)) + 1;
+    setPhonicsYoutubeStatus(`一時停止 ${checkpointIndex} / ${phonicsYoutubeConfig.checkpoints.length}：3秒間、まねして言ってみよう！`, true);
     phonicsYoutube.promptTimerId = window.setTimeout(() => {
       phonicsYoutube.promptTimerId = 0;
       // Only a pause initiated by this checkpoint may resume automatically.
       if (!phonicsYoutubeActive() || phonicsYoutube.expectedCheckpointId !== checkpointId) return;
       phonicsYoutube.expectedCheckpointId = null;
-      hidePhonicsYoutubePrompt();
+      $("phonics-youtube-status").classList.remove("is-practice");
+      if (checkpoint?.final) {
+        setPhonicsYoutubeStatus(`${phonicsYoutubeConfig.endTimeSeconds}秒で終了しました。`);
+        $("phonics-youtube-start").hidden = true;
+        $("phonics-youtube-end").hidden = false;
+        phonicsYoutube.started = false;
+        return;
+      }
       setPhonicsYoutubeStatus("つづきを再生しています。");
       phonicsYoutube.player?.playVideo();
     }, phonicsYoutubeConfig.promptDurationMs);
@@ -485,7 +500,7 @@
       phonicsYoutube.player = new window.YT.Player("phonics-youtube-player", {
         videoId: phonicsYoutubeConfig.videoId,
         host: "https://www.youtube-nocookie.com",
-        playerVars: { autoplay: 0, controls: 1, playsinline: 1, rel: 0, enablejsapi: 1, origin: window.location.origin },
+        playerVars: { autoplay: 0, controls: 1, playsinline: 1, rel: 0, enablejsapi: 1, start: phonicsYoutubeConfig.startTimeSeconds, origin: window.location.origin },
         events: {
           onReady: () => { $("phonics-youtube-start").disabled = false; setPhonicsYoutubeStatus("準備できました。「はじめる」を押してね。"); resolve(phonicsYoutube.player); },
           onStateChange: onPhonicsYoutubeStateChange
@@ -502,15 +517,17 @@
     $("phonics-youtube-start").hidden = false;
     $("phonics-youtube-end").hidden = true;
     $("phonics-youtube-start").disabled = false;
-    hidePhonicsYoutubePrompt();
-    setPhonicsYoutubeStatus("「はじめる」を押すと動画が再生されます。");
+    $("phonics-youtube-status").classList.remove("is-practice");
+    setPhonicsYoutubeStatus(`「はじめる」で${phonicsYoutubeConfig.startTimeSeconds}秒から${phonicsYoutubeConfig.endTimeSeconds}秒まで再生します。`);
     createPhonicsYoutubePlayer();
   }
   function startPhonicsYoutubeFromGesture() {
     if (!phonicsYoutube.player) return;
     phonicsYoutube.started = true;
+    phonicsYoutube.completedCheckpoints.clear();
     $("phonics-youtube-start").hidden = true;
-    setPhonicsYoutubeStatus("再生を始めます。");
+    setPhonicsYoutubeStatus(`${phonicsYoutubeConfig.startTimeSeconds}秒から再生を始めます。`);
+    phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
     phonicsYoutube.player.playVideo();
   }
   function stopAndDestroyPhonicsYoutube() {
