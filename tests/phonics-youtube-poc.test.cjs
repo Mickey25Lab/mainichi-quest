@@ -69,10 +69,10 @@ test("phonics YouTube PoC pauses only at its configured checkpoints and never re
   await page.locator("#profile-setup-form button[type=submit]").click();
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
   await page.locator("#start-button").click();
+  await page.waitForFunction(() => window.__ytPlayers.length === 1);
   await page.locator("#mode-select-phonics").click();
   await page.locator("#phonics-youtube-screen.active").waitFor();
-  await page.locator("#phonics-youtube-start").waitFor({ state: "visible" });
-  await page.waitForFunction(() => !document.querySelector("#phonics-youtube-start").disabled);
+  await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 1);
 
   const playerOptions = await page.evaluate(() => window.__ytPlayers[0].options);
   assert.equal(playerOptions.videoId, "ChqnN3cKzXQ");
@@ -80,10 +80,13 @@ test("phonics YouTube PoC pauses only at its configured checkpoints and never re
   assert.equal(playerOptions.playerVars.playsinline, 1);
   assert.equal(playerOptions.playerVars.enablejsapi, 1);
   assert.equal(playerOptions.playerVars.autoplay, 0);
+  assert.equal(playerOptions.playerVars.controls, 0);
+  assert.equal(playerOptions.playerVars.disablekb, 1);
+  assert.equal(playerOptions.playerVars.fs, 0);
   const playerFrame = await page.locator(".phonics-youtube-player-frame").boundingBox();
   assert.ok(playerFrame && playerFrame.width / playerFrame.height > 1.7 && playerFrame.width / playerFrame.height < 1.9);
 
-  await page.locator("#phonics-youtube-start").click();
+  assert.equal(await page.locator("#phonics-youtube-start").isVisible(), false);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10]);
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
   await page.waitForFunction(() => window.__ytPlayers[0].pauseCalls === 1);
@@ -130,6 +133,8 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /timeSeconds: 60, final: true/);
   assert.match(app, /host: "https:\/\/www\.youtube-nocookie\.com"/);
   assert.match(app, /playsinline: 1/);
+  assert.match(app, /controls: 0/);
+  assert.match(app, /onAutoplayBlocked/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
   assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
