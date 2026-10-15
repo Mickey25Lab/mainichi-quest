@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.35";
+  const appVersion = "0.2.36";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -578,8 +578,17 @@
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
-      try { phonicsYoutube.player.stopVideo?.(); } catch (_) {}
-      try { phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true); } catch (_) {}
+      // Keep the ready Player instance, but return it to a non-playing CUED
+      // state at the start position. Calling seekTo() after stopVideo() can
+      // cause playback to resume in the YouTube iframe on Safari/iPadOS.
+      try {
+        phonicsYoutube.player.cueVideoById?.({
+          videoId: phonicsYoutubeConfig.videoId,
+          startSeconds: phonicsYoutubeConfig.startTimeSeconds
+        });
+      } catch (_) {
+        try { phonicsYoutube.player.pauseVideo?.(); } catch (_) {}
+      }
       try { phonicsYoutube.player.unMute?.(); } catch (_) {}
     }
     phonicsYoutube.started = false;
