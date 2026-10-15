@@ -744,7 +744,7 @@ button, input { font: inherit; }
   width:min(100%,810px);
   margin:8px auto 0;
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  grid-template-columns:minmax(0,1fr) auto;
   align-items:center;
   gap:9px;
 }
@@ -753,13 +753,11 @@ button, input { font: inherit; }
 .phonics-youtube-actions { display:flex; justify-content:center; gap:8px; }
 .phonics-youtube-start, .phonics-youtube-end { min-width:150px; padding:8px 18px; background:linear-gradient(180deg,#ff962d,#df4d13); box-shadow:0 4px 0 #9f2f0d; font-size:clamp(16px,1.9vw,21px); }
 .phonics-youtube-end { background:linear-gradient(180deg,#2778d7,#1250a7); box-shadow:0 4px 0 #082f74; }
-.phonics-youtube-note { min-width:0; margin:0; color:#c8def9; font-size:clamp(10px,1.15vw,12px); font-weight:700; line-height:1.25; text-align:right; }
 @media (max-width:600px) {
   .phonics-youtube-stage { width:calc(100vw - 16px); padding:10px 8px 12px; border-radius:18px; }
   .phonics-youtube-header { gap:8px; }
   .phonics-youtube-back { padding:6px 10px; }
   .phonics-youtube-control-row { grid-template-columns:1fr auto; }
-  .phonics-youtube-note { grid-column:1 / -1; text-align:center; }
 }
 .top-image-buttons {
   position:absolute;
