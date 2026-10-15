@@ -27,6 +27,18 @@ def nearest(values: np.ndarray, target: float) -> float:
     return float(values[np.argmin(np.abs(values - target))]) if len(values) else target
 
 
+def beat_time_at_position(beat_times: np.ndarray, position: float) -> float:
+    """Interpolate a fractional beat position, including a short pre-roll."""
+    lower = math.floor(position)
+    fraction = position - lower
+    if lower < 0:
+        base = float(beat_times[0]) + lower * float(beat_times[1] - beat_times[0])
+        return base + fraction * float(beat_times[1] - beat_times[0])
+    if lower >= len(beat_times) - 1:
+        return float(beat_times[-1])
+    return float(beat_times[lower] + fraction * (beat_times[lower + 1] - beat_times[lower]))
+
+
 def alternatives(candidates: np.ndarray, center: float, low: float, high: float) -> list[float]:
     valid = [float(value) for value in candidates if low <= value <= high]
     ordered = sorted(valid, key=lambda value: abs(value - center))
@@ -43,7 +55,9 @@ def alternatives(candidates: np.ndarray, center: float, low: float, high: float)
             result.append(rounded)
         if len(result) == 3:
             break
-    return sorted(result)[:3]
+    center_value = round_time(center)
+    others = sorted((value for value in result if value != center_value), key=lambda value: abs(value - center_value))
+    return [center_value, *others[:2]]
 
 
 def local_valley(times: np.ndarray, rms: np.ndarray, target: float, radius: float) -> tuple[float, float]:
@@ -98,32 +112,38 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
             raise ValueError("拍グリッドを作れませんでした。beat tracking の結果が空です。")
         anchor = float(rhythm_config.get("firstDownbeatSeconds", beat_times[0]))
         anchor_index = int(np.argmin(np.abs(beat_times - anchor)))
+        first_set_start_beat = float(rhythm_config.get("firstSetStartBeat", 1.0))
+        grid_offset = first_set_start_beat - 1.0
     target_results = []
     metered_set_offset = 0
     for target in config["targets"]:
         if rhythm_config:
-            first_beat = anchor_index + metered_set_offset * beats_per_set
-            last_beat = first_beat + len(target["sets"]) * beats_per_set
-            if last_beat >= len(beat_times):
+            first_beat_position = anchor_index + grid_offset + metered_set_offset * beats_per_set
+            last_beat_position = first_beat_position + len(target["sets"]) * beats_per_set
+            if first_beat_position < -1 or last_beat_position >= len(beat_times):
                 raise ValueError(f"{target['letter']} の拍グリッドが動画のbeat tracking範囲を超えました。")
-            scope_start, scope_end = float(beat_times[first_beat]), float(beat_times[last_beat])
+            scope_start = max(0.0, beat_time_at_position(beat_times, first_beat_position))
+            scope_end = beat_time_at_position(beat_times, last_beat_position)
         else:
             scope_start, scope_end = float(target["scope"]["start"]), float(target["scope"]["end"])
         count = len(target["sets"])
         boundary_meta = []
         if rhythm_config:
-            boundary_times = [float(beat_times[first_beat + index * beats_per_set]) for index in range(count + 1)]
+            boundary_positions = [first_beat_position + index * beats_per_set for index in range(count + 1)]
+            boundary_times = [max(0.0, beat_time_at_position(beat_times, position)) for position in boundary_positions]
             for index in range(count):
                 start, end = boundary_times[index], boundary_times[index + 1]
                 _, valley_strength = local_valley(frame_times, rms, end, 0.20)
-                intervals = np.diff(beat_times[first_beat + index * beats_per_set:first_beat + (index + 1) * beats_per_set + 1])
+                interval_start = max(0, math.floor(boundary_positions[index]))
+                interval_end = min(len(beat_times) - 1, math.ceil(boundary_positions[index + 1]))
+                intervals = np.diff(beat_times[interval_start:interval_end + 1])
                 stability = 1.0 - min(1.0, float(np.std(intervals) / max(np.mean(intervals), 1e-9)))
                 boundary_meta.append({
                     "confidence": round(min(0.97, 0.72 + stability * 0.18 + valley_strength * 0.07), 2),
                     "valleyStrength": round(valley_strength, 3),
                     "beatsPerSet": beats_per_set,
-                    "startBeatIndex": first_beat + index * beats_per_set,
-                    "endBeatIndex": first_beat + (index + 1) * beats_per_set,
+                    "startBeatPosition": round(first_set_start_beat + (metered_set_offset + index) * beats_per_set, 2),
+                    "endBeatPosition": round(first_set_start_beat + (metered_set_offset + index + 1) * beats_per_set, 2),
                 })
         else:
             boundary_times = [scope_start]
@@ -158,7 +178,7 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
                 "confidence": boundary["confidence"], "evidence": {
                     "valleyStrength": boundary["valleyStrength"],
                     "nearbyOnsets": [round_time(value) for value in onset_times if start - 0.35 <= value <= end + 0.35][:24],
-                    "meter": {key: boundary[key] for key in ("beatsPerSet", "startBeatIndex", "endBeatIndex") if key in boundary},
+                    "meter": {key: boundary[key] for key in ("beatsPerSet", "startBeatPosition", "endBeatPosition") if key in boundary},
                 },
             })
         target_results.append({"letter": target["letter"], "scope": {"start": round_time(scope_start), "end": round_time(scope_end)}, "segments": segments})
@@ -172,7 +192,7 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
             "methods": ["RMS low-energy valleys", "onset detection", "beat tracking", "spectral flux"],
             "onsets": [round_time(value) for value in onset_times.tolist()],
             "beats": [round_time(value) for value in beat_times.tolist()],
-            "meter": {"beatsPerSet": beats_per_set, "anchorBeatIndex": anchor_index} if rhythm_config else None,
+            "meter": {"beatsPerSet": beats_per_set, "anchorBeatIndex": anchor_index, "firstSetStartBeat": first_set_start_beat} if rhythm_config else None,
         },
         "waveform": {"times": [round_time(value) for value in waveform_times.tolist()], "peaks": [round(float(value), 4) for value in waveform_peaks.tolist()]},
         "letters": target_results,

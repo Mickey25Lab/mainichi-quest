@@ -1,11 +1,12 @@
 {
   "lessonId": "phonics-ab",
   "sourceId": "abc-phonics-chant-az-tora-teacher",
-  "proposalRevision": "8-beat-v1",
+  "proposalRevision": "8-beat-offset-0.75-v1",
   "repeatVolume": 40,
   "rhythm": {
     "beatsPerSet": 8,
-    "firstDownbeatSeconds": 0.16
+    "firstDownbeatSeconds": 0.16,
+    "firstSetStartBeat": 0.75
   },
   "targets": [
     {
