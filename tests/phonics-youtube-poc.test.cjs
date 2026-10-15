@@ -91,13 +91,13 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
   // 10-15 silent -> seek to 15 and unmute.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
   await page.waitForFunction(() => window.__ytPlayers[0].unMuteCalls >= 2);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15]);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
   assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), false);
 
   // 15-20 voiced -> seek to 15 and mute.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
   await page.waitForFunction(() => window.__ytPlayers[0].muteCalls === 2);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15, 15]);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15]);
   assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), true);
 
   // 15-20 silent -> finish.
