@@ -28,13 +28,18 @@ test("guided 2x2 questions never use a repeated tens/ones multiplier digit", () 
   }
 });
 
-test("the cyan operand guides and delayed sum operator are isolated to the 2x2 panel", () => {
+test("the cyan operand guide is a rounded connected background in the 2x2 panel", () => {
+  assert.match(html, /id="multiplication-2x2-operation-guide"/);
   assert.match(html, /id="multiplication-2x2-sum-operator"/);
   assert.match(app, /guideStage: 1/);
+  assert.match(app, /operationGuide\.dataset\.stage = model\.guideStage === 1 \? "ones" : "tens"/);
   assert.match(app, /model\.guideStage = 2/);
   assert.match(app, /model\.sumOperatorVisible = true/);
-  assert.match(css, /\.multiplication-2x2-multiplicand\.is-operation-guide/);
-  assert.match(css, /\.multiplication-2x2-multiplier span\.is-operation-guide/);
+  assert.match(css, /\.multiplication-2x2-operation-guide/);
+  assert.match(css, /data-stage="ones"/);
+  assert.match(css, /data-stage="tens"/);
+  assert.match(css, /--operation-guide-radius:14px/);
+  assert.doesNotMatch(css, /is-operation-guide/);
   assert.match(css, /\.multiplication-2x2-sum-operator/);
 });
 
