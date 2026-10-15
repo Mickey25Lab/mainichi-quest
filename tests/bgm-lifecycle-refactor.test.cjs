@@ -50,3 +50,15 @@ test("user gestures remain able to retry suspended AudioContext resume", () => {
   assert.match(app, /window\.addEventListener\("pointerdown", \(\) => primeBackgroundMusicFromGesture\(\)/);
   assert.match(app, /window\.addEventListener\("touchstart", \(\) => primeBackgroundMusicFromGesture\(\)/);
 });
+
+test("screen transitions share invalidation without changing fade time", () => {
+  const invalidate = section("function invalidateBgmFadeTransition", "function cancelBgmTransitionForLifecycle");
+  const transition = section("function transitionBackgroundMusic", "function setBackgroundMusicDucked");
+  const select = section("function setDesiredBgmGroup", "function syncBackgroundMusicForActiveScreen");
+  assert.match(invalidate, /state\.bgmTransitionId \+= 1/);
+  assert.match(invalidate, /clearBgmFadeTimer\(\)/);
+  assert.match(transition, /const transitionId = invalidateBgmFadeTransition\(\)/);
+  assert.match(transition, /bgmConfig\.transitionDurationSeconds \* 1000/);
+  assert.match(select, /invalidateBgmFadeTransition\(\)/);
+  assert.match(transition, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+});
