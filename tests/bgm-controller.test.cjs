@@ -77,7 +77,9 @@ test("screen transition timer cannot stop or restart BGM during background hando
 
 test("foreground resume re-syncs BGM for the active screen", () => {
   const resume = app.slice(app.indexOf("function resumeAudioAfterVisible"), app.indexOf("function audioContext"));
-  assert.match(resume, /syncBackgroundMusicForActiveScreen\(\)/);
+  const restore = app.slice(app.indexOf("function restoreForegroundBackgroundMusic"), app.indexOf("function resumeAudioAfterVisible"));
+  assert.match(resume, /restoreForegroundBackgroundMusic/);
+  assert.match(restore, /syncBackgroundMusicForActiveScreen\(\)/);
 });
 
 test("pagehide fades and suspends audio instead of abruptly stopping the BGM source", () => {
