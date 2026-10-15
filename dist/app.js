@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.29";
+  const appVersion = "0.2.30";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3994,7 +3994,13 @@
       .then((response) => { if (!response.ok) throw new Error(track.filePath); return response.arrayBuffer(); })
       .then((arrayBuffer) => decodeAudio(ctx, arrayBuffer))
       .then((buffer) => { state.bgmBuffers[group] = buffer; return buffer; })
-      .catch((error) => { console.error(`BGM failed to load: ${group}`, error); return null; });
+      .catch((error) => {
+        // A failed fetch/decode must not be cached forever: allow the next
+        // user gesture or screen sync to retry the same BGM track.
+        state.bgmBufferPromises[group] = null;
+        console.error(`BGM failed to load: ${group}`, error);
+        return null;
+      });
     return state.bgmBufferPromises[group];
   }
   function ensureBgmGain() {
