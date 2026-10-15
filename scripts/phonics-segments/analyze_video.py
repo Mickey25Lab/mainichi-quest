@@ -95,7 +95,7 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
     anchor_index = None
     if rhythm_config:
         if len(beat_times) == 0:
-            raise ValueError("4拍グリッドを作れませんでした。beat tracking の結果が空です。")
+            raise ValueError("拍グリッドを作れませんでした。beat tracking の結果が空です。")
         anchor = float(rhythm_config.get("firstDownbeatSeconds", beat_times[0]))
         anchor_index = int(np.argmin(np.abs(beat_times - anchor)))
     target_results = []
@@ -105,7 +105,7 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
             first_beat = anchor_index + metered_set_offset * beats_per_set
             last_beat = first_beat + len(target["sets"]) * beats_per_set
             if last_beat >= len(beat_times):
-                raise ValueError(f"{target['letter']} の4拍グリッドが動画のbeat tracking範囲を超えました。")
+                raise ValueError(f"{target['letter']} の拍グリッドが動画のbeat tracking範囲を超えました。")
             scope_start, scope_end = float(beat_times[first_beat]), float(beat_times[last_beat])
         else:
             scope_start, scope_end = float(target["scope"]["start"]), float(target["scope"]["end"])
