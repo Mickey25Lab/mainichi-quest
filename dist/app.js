@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.34";
+  const appVersion = "0.2.35";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -574,27 +574,25 @@
   function startPhonicsYoutubeFromGesture() {
     beginPhonicsYoutubePlayback();
   }
-  function stopAndDestroyPhonicsYoutube() {
+  function resetPhonicsYoutubeForReuse() {
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
-      try { phonicsYoutube.player.stopVideo?.(); phonicsYoutube.player.destroy?.(); } catch (_) {}
+      try { phonicsYoutube.player.stopVideo?.(); } catch (_) {}
+      try { phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true); } catch (_) {}
+      try { phonicsYoutube.player.unMute?.(); } catch (_) {}
     }
-    phonicsYoutube.player = null;
     phonicsYoutube.started = false;
-    phonicsYoutube.ready = false;
     phonicsYoutube.autoStartPending = false;
     phonicsYoutube.phase = 0;
-    $("phonics-youtube-player").replaceChildren();
+    $("phonics-youtube-start").hidden = true;
+    $("phonics-youtube-end").hidden = true;
+    $("mode-select-phonics").disabled = false;
   }
   function leavePhonicsYoutube() {
-    stopAndDestroyPhonicsYoutube();
+    resetPhonicsYoutubeForReuse();
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
-    // Recreate and preload the player for the next phonics entry. Without this,
-    // the second visit has to create the iframe after the mode tap, so Safari
-    // sees playVideo() after the user-gesture window has expired and blocks it.
-    preparePhonicsYoutubePlayback();
   }
   function pausePhonicsYoutubeForLifecycle() {
     if (!phonicsYoutubeActive() || !phonicsYoutube.player) return;
