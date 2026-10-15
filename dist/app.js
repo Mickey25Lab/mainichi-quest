@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.28";
+  const appVersion = "0.2.29";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -516,6 +516,9 @@
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
+            $("mode-select-phonics").disabled = false;
+            const iframe = phonicsYoutube.player?.getIframe?.();
+            iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
             if (phonicsYoutubeActive() && phonicsYoutube.autoStartPending) {
               startPhonicsYoutubeAutomatically();
@@ -536,9 +539,15 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
+      $("mode-select-phonics").disabled = true;
     });
   }
   function preparePhonicsYoutubePlayback() {
+    // Keep the mode choice unavailable until the player is actually ready.
+    // That guarantees the eventual phonics-mode tap can call playVideo()
+    // synchronously inside the user gesture instead of falling through to an
+    // async autoplay attempt that Safari/iPadOS may block.
+    $("mode-select-phonics").disabled = true;
     createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
