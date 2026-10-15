@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.27";
+  const appVersion = "0.2.28";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3810,6 +3810,10 @@
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
     if (!ctx || ctx.state === "closed") return;
+    // blur, pagehide and visibilitychange often arrive together on iPadOS.
+    // Keep the first fade/suspend deadline: restarting it for each event can
+    // leave Web Audio audible when the OS interrupts the app.
+    if (audioMutedForBackground) return;
     if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
 
     // Background handoff owns the audio lifecycle. Cancel every pending
