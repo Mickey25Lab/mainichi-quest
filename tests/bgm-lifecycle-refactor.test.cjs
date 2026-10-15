@@ -31,3 +31,23 @@ test("iOS handoff preserves existing fade timings and transition cancellation", 
   assert.match(app, /suspendAudioForBackground\("blur", \{ requireHidden: false, fadeMs: 24, suspendDelayMs: 40 \}\)/);
   assert.doesNotMatch(hide, /if \(audioMutedForBackground\) return/);
 });
+
+test("foreground restoration is shared by resume and AudioContext running events", () => {
+  const restore = section("function restoreForegroundBackgroundMusic", "function resumeAudioAfterVisible");
+  const resume = section("function resumeAudioAfterVisible", "function audioContext");
+  const context = section("function audioContext", "function loadBgmEnabledPreference");
+  assert.match(restore, /restoreAudioGainAfterVisibility\(\)/);
+  assert.match(restore, /if \(!document\.hidden\) syncBackgroundMusicForActiveScreen\(\)/);
+  assert.match(resume, /Promise\.resolve\(resumed\)\.finally\(restoreForegroundBackgroundMusic\)/);
+  assert.match(context, /state\.audio\?\.state === "running" && !document\.hidden\) restoreForegroundBackgroundMusic\(\)/);
+  assert.doesNotMatch(resume, /stopBackgroundMusic\(/);
+  assert.doesNotMatch(resume, /disconnectBackgroundMusicSource\(/);
+});
+
+test("user gestures remain able to retry suspended AudioContext resume", () => {
+  const resumeContext = section("function resumeAudioContext", "function clearAudioVisibilitySuspendTimer");
+  assert.match(resumeContext, /Promise\.resolve\(ctx\.resume\(\)\)/);
+  assert.doesNotMatch(resumeContext, /if \(audioResumePromise\) return/);
+  assert.match(app, /window\.addEventListener\("pointerdown", \(\) => primeBackgroundMusicFromGesture\(\)/);
+  assert.match(app, /window\.addEventListener\("touchstart", \(\) => primeBackgroundMusicFromGesture\(\)/);
+});
