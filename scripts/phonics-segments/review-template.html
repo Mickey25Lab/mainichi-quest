@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>フォニックス区間レビュー</title>
 <style>
-  :root{font-family:system-ui,"Noto Sans JP",sans-serif;color:#16304c;background:#edf4fc}body{margin:0}.wrap{max-width:1320px;margin:auto;padding:20px}h1,h2{margin:0 0 8px}.note{color:#49657e}.layout{display:grid;grid-template-columns:230px minmax(0,1fr) 300px;gap:18px;align-items:start}.panel{background:#fff;border:1px solid #c8dced;border-radius:16px;padding:16px;box-shadow:0 2px 10px #193a5914}video{width:100%;background:#000;border-radius:12px}.clip{border:2px solid #f2ac2e;background:#fffaf0;border-radius:12px;padding:12px;margin-bottom:16px}.grid-panel,.fine-tune{border:2px solid #5d9fd8;background:#f3f9ff;border-radius:12px;padding:12px;margin-bottom:16px}.grid-panel summary,.fine-tune summary{font-weight:800;cursor:pointer}.grid-panel[open] summary,.fine-tune[open] summary{margin-bottom:8px}canvas{width:100%;height:160px;background:#071a2e;border-radius:10px;margin-top:16px}button{font:inherit;font-weight:700;color:#143a60;background:#fff;border:1px solid #9fc2df;border-radius:9px;padding:8px 10px;cursor:pointer}button:hover{background:#e6f3ff}.primary{background:#1476c9;color:#fff;border-color:#1476c9}.fix{background:#12894f;color:#fff;border-color:#12894f}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.segment{width:100%;text-align:left;margin:5px 0}.segment.selected{outline:3px solid #f2ac2e}.fixed{color:#08733f}.metric{font:700 13px/1.5 ui-monospace,monospace}.small{font-size:13px}.alternatives button{font-size:12px;padding:5px}.clip-timing{font:700 16px/1.5 ui-monospace,monospace;margin:0 0 8px}.hidden{display:none}input{font:inherit;border:1px solid #9fc2df;border-radius:8px;padding:8px;flex:1;min-width:180px}@media(max-width:900px){.layout{grid-template-columns:1fr}.wrap{padding:12px}.controls{grid-template-columns:repeat(2,1fr)}.segment-panel{order:0}.main-panel{order:1}.editor-panel{order:2}}
+  :root{font-family:system-ui,"Noto Sans JP",sans-serif;color:#16304c;background:#edf4fc}body{margin:0}.wrap{max-width:1320px;margin:auto;padding:20px}h1,h2{margin:0 0 8px}.note{color:#49657e}.layout{display:grid;grid-template-columns:230px minmax(0,1fr) 300px;gap:18px;align-items:start}.panel{background:#fff;border:1px solid #c8dced;border-radius:16px;padding:16px;box-shadow:0 2px 10px #193a5914}video{width:100%;background:#000;border-radius:12px}.clip{border:2px solid #f2ac2e;background:#fffaf0;border-radius:12px;padding:12px;margin-bottom:16px}.grid-panel,.fine-tune{border:2px solid #5d9fd8;background:#f3f9ff;border-radius:12px;padding:12px;margin-bottom:16px}.grid-panel summary,.fine-tune summary{font-weight:800;cursor:pointer}.grid-panel[open] summary,.fine-tune[open] summary{margin-bottom:8px}canvas{width:100%;height:160px;background:#071a2e;border-radius:10px;margin-top:16px}button{font:inherit;font-weight:700;color:#143a60;background:#fff;border:1px solid #9fc2df;border-radius:9px;padding:8px 10px;cursor:pointer}button:hover{background:#e6f3ff}.primary{background:#1476c9;color:#fff;border-color:#1476c9}.fix{background:#12894f;color:#fff;border-color:#12894f}.adjust-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.controls{display:grid;grid-template-columns:1fr;gap:6px;margin:8px 0}.decrease{color:#1769c2}.increase{color:#c22727}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.segment-panel{position:sticky;top:16px}.segment-list{height:440px;overflow-y:auto;padding-right:6px;scrollbar-color:#5d9fd8 #edf4fc}.segment{width:100%;text-align:left;margin:5px 0}.segment.selected{outline:3px solid #f2ac2e}.fixed{color:#08733f}.metric{font:700 13px/1.5 ui-monospace,monospace}.small{font-size:13px}.clip-timing{font:700 16px/1.5 ui-monospace,monospace;margin:0 0 8px}.hidden{display:none}input{font:inherit;border:1px solid #9fc2df;border-radius:8px;padding:8px;flex:1;min-width:180px}@media(max-width:900px){.layout{grid-template-columns:1fr}.wrap{padding:12px}.segment-panel{position:static}.segment-list{height:300px}.segment-panel{order:0}.main-panel{order:1}.editor-panel{order:2}}
 </style>
 <main class="wrap">
   <h1>フォニックス区間レビュー</h1>
@@ -13,7 +13,7 @@
     <aside class="panel segment-panel">
       <h2>区間を選ぶ</h2>
       <p class="small">選ぶと、そのセットから最後までを各2回ずつ連続再生します。</p>
-      <div id="segments"></div>
+      <div class="segment-list" id="segments"></div>
     </aside>
     <div class="panel main-panel">
       <section class="clip" aria-label="選択中セット専用プレイヤー">
@@ -33,17 +33,19 @@
       <details class="grid-panel hidden" id="grid-controls">
         <summary>全区間フレーム設定（必要なときだけ開く）</summary><p class="small">この2つを変えるとA-1〜Z-2の全区間が即時に再計算されます。</p>
         <p class="metric" id="grid-metrics">—</p>
-        <h3>A-1フレーム</h3><div class="controls" data-grid="firstFrameSeconds"></div>
-        <h3>A-2以降フレーム</h3><div class="controls" data-grid="followingFrameSeconds"></div>
+        <div class="adjust-columns">
+          <section><h3>A-1フレーム</h3><div class="controls" data-grid="firstFrameSeconds"></div></section>
+          <section><h3>A-2以降フレーム</h3><div class="controls" data-grid="followingFrameSeconds"></div></section>
+        </div>
       </details>
       <h2 id="title">—</h2><p class="metric" id="metrics">—</p>
       <details class="fine-tune">
         <summary>個別の微調整（必要なときだけ開く）</summary>
         <label>ラベル <input id="label"></label>
-        <h3>開始</h3><div class="controls" data-side="start"></div>
-        <div class="alternatives" id="start-alts"></div>
-        <h3>終了</h3><div class="controls" data-side="end"></div>
-        <div class="alternatives" id="end-alts"></div>
+        <div class="adjust-columns">
+          <section><h3>開始</h3><div class="controls" data-side="start"></div></section>
+          <section><h3>終了</h3><div class="controls" data-side="end"></div></section>
+        </div>
       </details>
       <div class="row"><button class="fix" id="fix">FIX</button><button id="unfix">FIX解除</button><button id="save-review">レビュー状態を保存</button><button id="export">アプリ用JSONを書き出す</button></div>
     </aside>
@@ -68,11 +70,10 @@
   };
   const renderList = () => { $("segments").replaceChildren(...all().map(segment=>{const button=document.createElement("button");button.className="segment"+(segment===selected?" selected":"");button.innerHTML=`<b>${segment.id}</b> ${segment.label}<br><span class="${segment.fixed?"fixed":""}">${fmt(segment.start)}–${fmt(segment.end)} / ${segment.fixed?"FIX済み":"未FIX"}</span>`;button.onclick=()=>select(segment);return button;})); };
   const rebuildMechanicalGrid = () => {const grid=data.analysis.mechanicalGrid;if(!grid)return;all().forEach((segment,index)=>{const frame=index===0?grid.firstFrameSeconds:grid.followingFrameSeconds;const start=index===0?0:grid.firstFrameSeconds+(index-1)*grid.followingFrameSeconds;segment.start=Number(start.toFixed(2));segment.end=Number((start+frame).toFixed(2));segment.startAlternatives=[segment.start,Number((segment.start+.01).toFixed(2)),Number((segment.start+.05).toFixed(2))];segment.endAlternatives=[segment.end,Number((segment.end-.01).toFixed(2)),Number((segment.end-.05).toFixed(2))];segment.fixed=false;segment.manuallyAdjusted=true;segment.evidence={mechanicalGrid:{frameSeconds:frame,sequenceIndex:index}};});data.letters.forEach(letter=>{letter.scope={start:letter.segments[0].start,end:letter.segments.at(-1).end};});};
-  const gridButtons = name => {const grid=data.analysis.mechanicalGrid, box=document.querySelector(`[data-grid="${name}"]`);if(!grid||!box)return;box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const button=document.createElement("button");button.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;button.onclick=()=>{grid[name]=Number((grid[name]+delta).toFixed(2));rebuildMechanicalGrid();render();cueSelected();playClipRange(selected.start,selected.end,1,null)};return button;}));};
+  const gridButtons = name => {const grid=data.analysis.mechanicalGrid, box=document.querySelector(`[data-grid="${name}"]`);if(!grid||!box)return;box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const button=document.createElement("button");button.className=delta<0?"decrease":"increase";button.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;button.onclick=()=>{grid[name]=Number((grid[name]+delta).toFixed(2));rebuildMechanicalGrid();render();cueSelected();playClipRange(selected.start,selected.end,1,null)};return button;}));};
   const renderGrid = () => {const grid=data.analysis.mechanicalGrid, panel=$("grid-controls");if(!grid){panel.classList.add("hidden");return}panel.classList.remove("hidden");$("grid-metrics").textContent=`A-1 ${fmt(grid.firstFrameSeconds)}秒 / A-2以降 ${fmt(grid.followingFrameSeconds)}秒 / 全${all().length}区間`;gridButtons("firstFrameSeconds");gridButtons("followingFrameSeconds");};
-  const buttons = side => {const box=document.querySelector(`[data-side="${side}"]`);box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const b=document.createElement("button");b.textContent=`${side==="start"?"開始":"終了"} ${delta>0?"+":""}${delta.toFixed(2)}`;b.onclick=()=>{selected[side]=Number((selected[side]+delta).toFixed(2));selected.manuallyAdjusted=true;render();cueSelected()};return b;}));};
-  const alternatives = side => {const box=$(side+"-alts");box.innerHTML="候補: "; selected[side+"Alternatives"].forEach(value=>{const b=document.createElement("button");b.textContent=fmt(value);b.onclick=()=>{selected[side]=value;selected.manuallyAdjusted=true;render();cueSelected()};box.append(b)});};
-  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;renderGrid();buttons("start");buttons("end");alternatives("start");alternatives("end");renderList();draw();persist();};
+  const buttons = side => {const box=document.querySelector(`[data-side="${side}"]`);box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const b=document.createElement("button");b.className=delta<0?"decrease":"increase";b.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;b.onclick=()=>{selected[side]=Number((selected[side]+delta).toFixed(2));selected.manuallyAdjusted=true;render();cueSelected()};return b;}));};
+  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;renderGrid();buttons("start");buttons("end");renderList();draw();persist();};
   const select = segment => {selected=segment;render();cueSelected();playTwiceThrough(all().slice(all().indexOf(selected)));};
   const playClipRange = (start,end,volume,next) => {clipFlow=next;clipStopAt=end;clipVideo.volume=volume;clipVideo.currentTime=start;clipVideo.play();$("status").textContent=`${fmt(start)}–${fmt(end)}秒を${Math.round(volume*100)}%で再生中`};
   const continueWithoutSeek = nextSegment => {if(!nextSegment){$("status").textContent="最後の区間です。";return}clipStopAt=nextSegment.end;clipVideo.volume=1;clipVideo.play();$("status").textContent=`${fmt(nextSegment.start)}–${fmt(nextSegment.end)}秒へ連続再生中（seekなし）`};
