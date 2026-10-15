@@ -721,36 +721,45 @@ button, input { font: inherit; }
 .phonics-youtube-stage {
   position:relative;
   z-index:1;
-  width:min(1040px,calc(100vw - 32px));
-  margin:clamp(16px,3vh,34px) auto;
-  padding:clamp(18px,3vw,32px);
+  width:min(936px,calc(100vw - 28px));
+  margin:clamp(10px,2vh,22px) auto;
+  padding:clamp(10px,1.8vw,18px);
   border:3px solid rgba(214,246,255,.9);
-  border-radius:28px;
+  border-radius:24px;
   background:rgba(4,20,62,.92);
   box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 0 34px rgba(63,199,255,.2);
   color:#fff;
   text-align:center;
 }
-.phonics-youtube-header { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:16px; text-align:left; }
-.phonics-youtube-eyebrow { margin:0 0 3px; color:#bfeeff; font-size:clamp(12px,1.6vw,18px); font-weight:900; }
-.phonics-youtube-header h1 { margin:0; font-size:clamp(24px,3.4vw,42px); line-height:1.1; }
+.phonics-youtube-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; text-align:left; }
+.phonics-youtube-header h1 { margin:0; font-size:clamp(21px,2.8vw,34px); line-height:1.05; }
 .phonics-youtube-back, .phonics-youtube-start, .phonics-youtube-end {
-  border:3px solid rgba(255,255,255,.9); border-radius:999px; color:#fff; font-weight:1000; cursor:pointer;
+  border:2px solid rgba(255,255,255,.9); border-radius:999px; color:#fff; font-weight:1000; cursor:pointer;
   text-shadow:0 2px 0 rgba(0,0,0,.25);
 }
-.phonics-youtube-back { padding:10px 20px; background:#1659ae; font-size:clamp(15px,1.8vw,20px); }
-.phonics-youtube-player-frame { width:min(100%,900px); aspect-ratio:16 / 9; margin:0 auto; background:#000; }
+.phonics-youtube-back { padding:6px 13px; background:#1659ae; font-size:clamp(13px,1.5vw,17px); }
+.phonics-youtube-player-frame { width:min(100%,810px); aspect-ratio:16 / 9; margin:0 auto; background:#000; }
 .phonics-youtube-player-frame > div, .phonics-youtube-player-frame iframe { width:100%; height:100%; border:0; }
-.phonics-youtube-status, .phonics-youtube-prompt { min-height:1.5em; margin:16px 0 10px; font-size:clamp(18px,2.2vw,27px); font-weight:900; }
-.phonics-youtube-prompt { color:#fff6a7; text-shadow:0 2px 0 #643900,0 0 12px #ffb92d; }
-.phonics-youtube-actions { display:flex; justify-content:center; gap:14px; min-height:60px; }
-.phonics-youtube-start, .phonics-youtube-end { min-width:min(280px,85vw); padding:13px 28px; background:linear-gradient(180deg,#ff962d,#df4d13); box-shadow:0 5px 0 #9f2f0d; font-size:clamp(20px,2.5vw,28px); }
-.phonics-youtube-end { background:linear-gradient(180deg,#2778d7,#1250a7); box-shadow:0 5px 0 #082f74; }
-.phonics-youtube-note { margin:14px 0 0; color:#c8def9; font-size:14px; font-weight:700; }
+.phonics-youtube-control-row {
+  width:min(100%,810px);
+  margin:8px auto 0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:9px;
+}
+.phonics-youtube-status { min-width:0; margin:0; color:#fff; font-size:clamp(12px,1.45vw,16px); font-weight:900; line-height:1.25; text-align:left; }
+.phonics-youtube-status.is-practice { color:#fff6a7; text-shadow:0 1px 0 #643900,0 0 10px #ffb92d; }
+.phonics-youtube-actions { display:flex; justify-content:center; gap:8px; }
+.phonics-youtube-start, .phonics-youtube-end { min-width:150px; padding:8px 18px; background:linear-gradient(180deg,#ff962d,#df4d13); box-shadow:0 4px 0 #9f2f0d; font-size:clamp(16px,1.9vw,21px); }
+.phonics-youtube-end { background:linear-gradient(180deg,#2778d7,#1250a7); box-shadow:0 4px 0 #082f74; }
+.phonics-youtube-note { min-width:0; margin:0; color:#c8def9; font-size:clamp(10px,1.15vw,12px); font-weight:700; line-height:1.25; text-align:right; }
 @media (max-width:600px) {
-  .phonics-youtube-stage { width:calc(100vw - 18px); padding:15px 10px 20px; border-radius:20px; }
+  .phonics-youtube-stage { width:calc(100vw - 16px); padding:10px 8px 12px; border-radius:18px; }
   .phonics-youtube-header { gap:8px; }
-  .phonics-youtube-back { padding:8px 12px; }
+  .phonics-youtube-back { padding:6px 10px; }
+  .phonics-youtube-control-row { grid-template-columns:1fr auto; }
+  .phonics-youtube-note { grid-column:1 / -1; text-align:center; }
 }
 .top-image-buttons {
   position:absolute;
