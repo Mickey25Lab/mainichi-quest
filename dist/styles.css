@@ -245,7 +245,7 @@ button, input { font: inherit; }
 .profile-card .admin-qa-toggle[aria-checked="true"] { padding:4px 35px 4px 9px; background:#168650; text-align:left; }
 .profile-card .admin-qa-toggle[aria-checked="true"]::before { left:46px; }
 .admin-action-list { display:grid; gap:10px; margin:0 0 18px; }
-.profile-card .admin-action-button { width:100%; background:#167bd6; text-align:left; font-size:16px; }
+.profile-card .admin-action-button { width:100%; background:#167bd6; text-align:center; font-size:16px; }
 .admin-action-status { margin:0 0 16px!important; padding:10px 12px; border-radius:10px; background:#e8f5ff; color:#173e5e; font-size:14px; font-weight:700; }
 .profile-card .admin-reset-button { width:100%; background:#b9363e; }
 .admin-confirm-card { text-align:center; }
