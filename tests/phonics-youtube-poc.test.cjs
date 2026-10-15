@@ -44,6 +44,7 @@ function installMockPlayer() {
         mute() { this.muteCalls += 1; this.muted = true; },
         unMute() { this.unMuteCalls += 1; this.muted = false; },
         stopVideo() { this.state = -1; },
+        cueVideoById(arg) { this.cueArgs = arg; this.state = 5; this.currentTime = Number(arg?.startSeconds) || 0; },
         destroy() { this.destroyed = true; },
         finish() { this.state = window.YT.PlayerState.ENDED; options.events.onStateChange({ data: this.state, target: this }); }
       };
@@ -110,6 +111,8 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
   await page.locator("#mode-select-screen.active").waitFor();
   assert.equal(await page.evaluate(() => window.__ytPlayers.length), 1);
   assert.equal(await page.evaluate(() => window.__ytPlayers[0].destroyed), false);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].cueArgs), { videoId: "ChqnN3cKzXQ", startSeconds: 10 });
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].state), 5);
   assert.equal(await page.locator("#mode-select-phonics").isDisabled(), false);
 
   // Re-enter immediately: the same ready Player is reused and no preload wait is needed.
@@ -135,7 +138,7 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
-  assert.match(app, /function resetPhonicsYoutubeForReuse\(\)[\s\S]*stopVideo\?\.\(\)[\s\S]*seekTo\?\.\(phonicsYoutubeConfig\.startTimeSeconds, true\)[\s\S]*unMute\?\.\(\)/);
+  assert.match(app, /function resetPhonicsYoutubeForReuse\(\)[\s\S]*cueVideoById\?\.\([\s\S]*startSeconds: phonicsYoutubeConfig\.startTimeSeconds[\s\S]*unMute\?\.\(\)/);
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*resetPhonicsYoutubeForReuse\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
