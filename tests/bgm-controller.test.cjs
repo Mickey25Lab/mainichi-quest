@@ -58,8 +58,10 @@ test("startup audio unlock retries on user gestures instead of reusing a blocked
 test("background handoff cancels pending screen BGM transitions before fading", () => {
   const cancel = app.slice(app.indexOf("function cancelBgmTransitionForLifecycle"), app.indexOf("function disconnectBackgroundMusicSource"));
   assert.match(cancel, /state\.bgmRequestId \+= 1/);
-  assert.match(cancel, /state\.bgmTransitionId \+= 1/);
-  assert.match(cancel, /clearBgmFadeTimer\(\)/);
+  assert.match(cancel, /invalidateBgmFadeTransition\(\)/);
+  const invalidate = app.slice(app.indexOf("function invalidateBgmFadeTransition"), app.indexOf("function cancelBgmTransitionForLifecycle"));
+  assert.match(invalidate, /state\.bgmTransitionId \+= 1/);
+  assert.match(invalidate, /clearBgmFadeTimer\(\)/);
 
   const suspend = app.slice(app.indexOf("function suspendAudioForBackground"), app.indexOf("function resumeAudioAfterVisible"));
   assert.match(suspend, /cancelBgmTransitionForLifecycle\(\)/);
@@ -68,12 +70,16 @@ test("background handoff cancels pending screen BGM transitions before fading", 
 
 test("screen transition timer cannot stop or restart BGM during background handoff", () => {
   const transition = app.slice(app.indexOf("function transitionBackgroundMusic"), app.indexOf("function setBackgroundMusicDucked"));
-  assert.match(transition, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
+  assert.match(transition, /isBgmTransitionObsolete\(transitionId\)/);
+  const guard = app.slice(app.indexOf("function isBgmTransitionObsolete"), app.indexOf("function isBgmStartRequestObsolete"));
+  assert.match(guard, /transitionId !== state\.bgmTransitionId \|\| document\.hidden \|\| audioMutedForBackground/);
 });
 
 test("foreground resume re-syncs BGM for the active screen", () => {
   const resume = app.slice(app.indexOf("function resumeAudioAfterVisible"), app.indexOf("function audioContext"));
-  assert.match(resume, /syncBackgroundMusicForActiveScreen\(\)/);
+  const restore = app.slice(app.indexOf("function restoreForegroundBackgroundMusic"), app.indexOf("function resumeAudioAfterVisible"));
+  assert.match(resume, /restoreForegroundBackgroundMusic/);
+  assert.match(restore, /syncBackgroundMusicForActiveScreen\(\)/);
 });
 
 test("pagehide fades and suspends audio instead of abruptly stopping the BGM source", () => {

@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.28";
+  const appVersion = "0.2.29";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3894,11 +3894,25 @@
       audioResumePromise = null;
     }
   }
+  // One owner for the pending background suspension timer. Keeping the
+  // cancellation and clearing logic together avoids stale timer handles.
+  function clearAudioVisibilitySuspendTimer() {
+    if (audioVisibilitySuspendTimer === null) return;
+    window.clearTimeout(audioVisibilitySuspendTimer);
+    audioVisibilitySuspendTimer = null;
+  }
+  function scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs) {
+    audioVisibilitySuspendTimer = window.setTimeout(() => {
+      audioVisibilitySuspendTimer = null;
+      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      try { state.audio.suspend(); } catch (_) {}
+    }, suspendDelayMs);
+  }
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
     recordBgmDiagnostic("background-suspend", { reason });
     if (!ctx || ctx.state === "closed") return;
-    if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+    clearAudioVisibilitySuspendTimer();
 
     // Background handoff owns the audio lifecycle. Cancel every pending
     // screen-to-screen BGM transition first so no delayed BufferSource.stop()
@@ -3912,30 +3926,27 @@
       gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
       audioMutedForBackground = true;
     }
-    audioVisibilitySuspendTimer = window.setTimeout(() => {
-      audioVisibilitySuspendTimer = null;
-      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
-      try { state.audio.suspend(); } catch (_) {}
-    }, suspendDelayMs);
+    scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs);
+  }
+  // Keep foreground restoration in one place. The AudioContext may still be
+  // suspended when focus/pageshow fires; its statechange listener also retries
+  // gain restoration as soon as Web Audio actually becomes running.
+  function restoreForegroundBackgroundMusic() {
+    restoreAudioGainAfterVisibility();
+    if (!document.hidden) syncBackgroundMusicForActiveScreen();
   }
   function resumeAudioAfterVisible(reason) {
     recordBgmDiagnostic("foreground-resume", { reason });
-    if (audioVisibilitySuspendTimer !== null) {
-      window.clearTimeout(audioVisibilitySuspendTimer);
-      audioVisibilitySuspendTimer = null;
-    }
+    clearAudioVisibilitySuspendTimer();
     const resumed = resumeAudioContext(reason);
-    Promise.resolve(resumed).finally(() => {
-      restoreAudioGainAfterVisibility();
-      if (!document.hidden) syncBackgroundMusicForActiveScreen();
-    });
+    Promise.resolve(resumed).finally(restoreForegroundBackgroundMusic);
   }
   function audioContext() {
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
       state.audio.addEventListener?.("statechange", () => {
         recordBgmDiagnostic("audio-context-statechange");
-        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
+        if (state.audio?.state === "running" && !document.hidden) restoreForegroundBackgroundMusic();
       });
     }
     return state.audio;
@@ -4014,10 +4025,16 @@
     window.clearTimeout(state.bgmFadeTimer);
     state.bgmFadeTimer = null;
   }
-  function cancelBgmTransitionForLifecycle() {
-    state.bgmRequestId += 1;
+  // Invalidate pending BGM fade callbacks before changing audio lifecycle.
+  // Screen changes and background handoff share this cancellation path.
+  function invalidateBgmFadeTransition() {
     state.bgmTransitionId += 1;
     clearBgmFadeTimer();
+    return state.bgmTransitionId;
+  }
+  function cancelBgmTransitionForLifecycle() {
+    state.bgmRequestId += 1;
+    invalidateBgmFadeTransition();
   }
   function disconnectBackgroundMusicSource() {
     const source = state.bgmSource;
@@ -4070,21 +4087,26 @@
     if (clearDesired) state.desiredBgmGroup = null;
     if (state.bgmGain) state.bgmGain.gain.value = backgroundMusicVolume();
   }
+  function isBgmTransitionObsolete(transitionId) {
+    return transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground;
+  }
+  function isBgmStartRequestObsolete(requestId, group) {
+    return requestId !== state.bgmRequestId || state.desiredBgmGroup !== group;
+  }
   function transitionBackgroundMusic(nextGroup) {
     if (!state.bgmSource || state.bgmGroup === nextGroup) {
       if (nextGroup) startBackgroundMusic(nextGroup);
       return;
     }
     state.bgmRequestId += 1;
-    const transitionId = ++state.bgmTransitionId;
-    clearBgmFadeTimer();
+    const transitionId = invalidateBgmFadeTransition();
     const ctx = audioContext();
     const gain = ensureBgmGain();
     if (nextGroup) ensureBackgroundMusic(nextGroup);
     cancelBgmGainAutomation(ctx, gain);
     gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + bgmConfig.transitionDurationSeconds);
     state.bgmFadeTimer = window.setTimeout(() => {
-      if (transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground) return;
+      if (isBgmTransitionObsolete(transitionId)) return;
       state.bgmFadeTimer = null;
       disconnectBackgroundMusicSource();
       if (nextGroup && state.desiredBgmGroup === nextGroup && state.bgmEnabled) startBackgroundMusic(nextGroup);
@@ -4109,7 +4131,7 @@
     const requestId = ++state.bgmRequestId;
     setBackgroundMusicDucked(false);
     ensureBackgroundMusic(group).then((buffer) => {
-      if (requestId !== state.bgmRequestId || state.desiredBgmGroup !== group) return;
+      if (isBgmStartRequestObsolete(requestId, group)) return;
       startDecodedBackgroundMusic(buffer, group);
     });
   }
@@ -4118,8 +4140,7 @@
     state.desiredBgmGroup = normalized;
     document.documentElement.dataset.bgmDesiredGroup = normalized || "";
     if (state.bgmSource && state.bgmGroup === normalized && state.bgmFadeTimer !== null) {
-      state.bgmTransitionId += 1;
-      clearBgmFadeTimer();
+      invalidateBgmFadeTransition();
       const ctx = audioContext();
       const gain = ensureBgmGain();
       cancelBgmGainAutomation(ctx, gain);
