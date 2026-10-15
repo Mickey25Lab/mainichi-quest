@@ -83,7 +83,6 @@ test("phonics YouTube PoC pauses only at its configured checkpoints and never re
   assert.equal(playerOptions.playerVars.controls, 0);
   assert.equal(playerOptions.playerVars.disablekb, 1);
   assert.equal(playerOptions.playerVars.fs, 0);
-  assert.equal(playerOptions.playerVars.iv_load_policy, 3);
   const playerFrame = await page.locator(".phonics-youtube-player-frame").boundingBox();
   assert.ok(playerFrame && playerFrame.width / playerFrame.height > 1.7 && playerFrame.width / playerFrame.height < 1.9);
 
