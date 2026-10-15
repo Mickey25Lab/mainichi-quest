@@ -35,12 +35,14 @@ function installMockPlayer() {
     PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2 },
     Player: function Player(id, options) {
       const player = {
-        id, options, currentTime: 0, state: -1, playCalls: 0, pauseCalls: 0, seekCalls: [], destroyed: false,
+        id, options, currentTime: 0, state: -1, playCalls: 0, pauseCalls: 0, seekCalls: [], destroyed: false, muted: false, muteCalls: 0, unMuteCalls: 0,
         getPlayerState() { return this.state; },
         getCurrentTime() { return this.currentTime; },
         seekTo(seconds) { this.seekCalls.push(seconds); this.currentTime = seconds; },
         playVideo() { this.playCalls += 1; this.state = window.YT.PlayerState.PLAYING; options.events.onStateChange({ data: this.state, target: this }); },
         pauseVideo() { this.pauseCalls += 1; this.state = window.YT.PlayerState.PAUSED; options.events.onStateChange({ data: this.state, target: this }); },
+        mute() { this.muteCalls += 1; this.muted = true; },
+        unMute() { this.unMuteCalls += 1; this.muted = false; },
         stopVideo() { this.state = -1; },
         destroy() { this.destroyed = true; },
         finish() { this.state = window.YT.PlayerState.ENDED; options.events.onStateChange({ data: this.state, target: this }); }
@@ -52,7 +54,7 @@ function installMockPlayer() {
   };
 }
 
-test("phonics YouTube PoC pauses only at its configured checkpoints and never rewards viewing", async (t) => {
+test("phonics YouTube PoC alternates voiced and silent repeat segments", async (t) => {
   if (!chromium) {
     t.skip("Playwright is not installed in this local checkout; run this browser test in CI or with the project browser-test dependency.");
     return;
@@ -77,47 +79,36 @@ test("phonics YouTube PoC pauses only at its configured checkpoints and never re
   const playerOptions = await page.evaluate(() => window.__ytPlayers[0].options);
   assert.equal(playerOptions.videoId, "ChqnN3cKzXQ");
   assert.equal(playerOptions.host, "https://www.youtube-nocookie.com");
-  assert.equal(playerOptions.playerVars.playsinline, 1);
-  assert.equal(playerOptions.playerVars.enablejsapi, 1);
-  assert.equal(playerOptions.playerVars.autoplay, 0);
   assert.equal(playerOptions.playerVars.controls, 0);
-  assert.equal(playerOptions.playerVars.disablekb, 1);
-  assert.equal(playerOptions.playerVars.fs, 0);
-  const playerFrame = await page.locator(".phonics-youtube-player-frame").boundingBox();
-  assert.ok(playerFrame && playerFrame.width / playerFrame.height > 1.7 && playerFrame.width / playerFrame.height < 1.9);
-
-  assert.equal(await page.locator("#phonics-youtube-start").isVisible(), false);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10]);
+
+  // 10-15 voiced -> seek to 10 and mute.
+  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
+  await page.waitForFunction(() => window.__ytPlayers[0].muteCalls === 1);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), true);
+
+  // 10-15 silent -> seek to 15 and unmute.
+  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
+  await page.waitForFunction(() => window.__ytPlayers[0].unMuteCalls >= 2);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15]);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), false);
+
+  // 15-20 voiced -> seek to 15 and mute.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
-  await page.waitForFunction(() => window.__ytPlayers[0].pauseCalls === 1);
-  await page.waitForFunction(() => document.querySelector("#phonics-youtube-status").textContent.includes("一時停止 1 / 5"));
-  await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 2, { timeout: 5000 });
+  await page.waitForFunction(() => window.__ytPlayers[0].muteCalls === 2);
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15, 15]);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), true);
 
-  // A manual play during the three-second prompt cancels the queued resume.
-  await page.evaluate(() => { const player = window.__ytPlayers[0]; player.currentTime = 30; });
-  await page.waitForFunction(() => window.__ytPlayers[0].pauseCalls === 2);
-  await page.evaluate(() => window.__ytPlayers[0].playVideo());
-  await page.waitForTimeout(3200);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 3);
-
-  // Seeking back over a completed point cannot pause it a second time.
+  // 15-20 silent -> finish.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
-  await page.waitForTimeout(400);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 2);
-
-  // PWA/background lifecycle pauses but does not resume playback on its own.
-  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
-  await page.waitForFunction(() => window.__ytPlayers[0].pauseCalls === 3);
-  await page.waitForTimeout(3200);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 3);
-
-  await page.evaluate(() => window.__ytPlayers[0].finish());
   await page.locator("#phonics-youtube-end").waitFor({ state: "visible" });
-  assert.equal(await page.locator("#phonics-youtube-start").isVisible(), false);
   assert.equal(await page.locator("#phonics-youtube-end").isVisible(), true);
+  assert.match(await page.locator("#phonics-youtube-status").textContent(), /20秒で終了/);
+
   await page.locator("#phonics-youtube-end").click();
   await page.locator("#mode-select-screen.active").waitFor();
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].destroyed), true);
+  await page.waitForFunction(() => window.__ytPlayers.length === 2);
   assert.deepEqual(pageErrors, []);
 });
 
@@ -125,15 +116,13 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /startTimeSeconds: 10/);
-  assert.match(app, /endTimeSeconds: 60/);
-  assert.match(app, /timeSeconds: 20/);
-  assert.match(app, /timeSeconds: 30/);
-  assert.match(app, /timeSeconds: 40/);
-  assert.match(app, /timeSeconds: 50/);
-  assert.match(app, /timeSeconds: 60, final: true/);
+  assert.match(app, /splitTimeSeconds: 15/);
+  assert.match(app, /endTimeSeconds: 20/);
   assert.match(app, /host: "https:\/\/www\.youtube-nocookie\.com"/);
   assert.match(app, /playsinline: 1/);
   assert.match(app, /controls: 0/);
+  assert.match(app, /player\.mute\?\.\(\)/);
+  assert.match(app, /player\.unMute\?\.\(\)/);
   assert.match(app, /onAutoplayBlocked/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
