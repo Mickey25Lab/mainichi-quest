@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.32";
+  const appVersion = "0.2.33";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -37,15 +37,8 @@
     videoId: "ChqnN3cKzXQ",
     iframeApiUrl: "https://www.youtube.com/iframe_api",
     startTimeSeconds: 10,
-    endTimeSeconds: 60,
-    promptDurationMs: 3000,
-    checkpoints: Object.freeze([
-      Object.freeze({ id: "at-20", timeSeconds: 20 }),
-      Object.freeze({ id: "at-30", timeSeconds: 30 }),
-      Object.freeze({ id: "at-40", timeSeconds: 40 }),
-      Object.freeze({ id: "at-50", timeSeconds: 50 }),
-      Object.freeze({ id: "at-60", timeSeconds: 60, final: true })
-    ])
+    splitTimeSeconds: 15,
+    endTimeSeconds: 20
   });
   const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.webp";
   const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.webp";
@@ -391,9 +384,8 @@
     setDesiredBgmGroup("game");
   }
   const phonicsYoutube = {
-    player: null, apiPromise: null, checkpointPollId: 0, promptTimerId: 0,
-    expectedCheckpointId: null, completedCheckpoints: new Set(), started: false,
-    ready: false, autoStartPending: false
+    player: null, apiPromise: null, checkpointPollId: 0,
+    started: false, ready: false, autoStartPending: false, phase: 0
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -406,73 +398,69 @@
     phonicsYoutube.checkpointPollId = 0;
   }
   function cancelPhonicsYoutubePrompt() {
-    if (phonicsYoutube.promptTimerId) window.clearTimeout(phonicsYoutube.promptTimerId);
-    phonicsYoutube.promptTimerId = 0;
-    phonicsYoutube.expectedCheckpointId = null;
     $("phonics-youtube-status").classList.remove("is-practice");
   }
   function youtubePlayerState(name) { return window.YT?.PlayerState?.[name]; }
+  function finishPhonicsYoutubeSequence() {
+    stopPhonicsYoutubePolling();
+    phonicsYoutube.started = false;
+    phonicsYoutube.phase = 4;
+    try { phonicsYoutube.player?.pauseVideo?.(); } catch (_) {}
+    try { phonicsYoutube.player?.unMute?.(); } catch (_) {}
+    setPhonicsYoutubeStatus("20秒で終了しました。");
+    $("phonics-youtube-start").hidden = true;
+    $("phonics-youtube-end").hidden = false;
+  }
   function runPhonicsYoutubeCheckpointPoll() {
     stopPhonicsYoutubePolling();
     phonicsYoutube.checkpointPollId = window.setInterval(() => {
       const player = phonicsYoutube.player;
-      if (!player || !phonicsYoutubeActive() || phonicsYoutube.expectedCheckpointId) return;
+      if (!player || !phonicsYoutubeActive() || !phonicsYoutube.started) return;
       if (player.getPlayerState?.() !== youtubePlayerState("PLAYING")) return;
       const currentTime = Number(player.getCurrentTime?.()) || 0;
-      const checkpoint = phonicsYoutubeConfig.checkpoints.find((item) => currentTime >= item.timeSeconds && !phonicsYoutube.completedCheckpoints.has(item.id));
-      if (!checkpoint) return;
-      // Mark before pausing: seeking backward or resuming cannot replay a checkpoint.
-      phonicsYoutube.completedCheckpoints.add(checkpoint.id);
-      phonicsYoutube.expectedCheckpointId = checkpoint.id;
-      stopPhonicsYoutubePolling();
-      player.pauseVideo();
-    }, 100);
-  }
-  function beginPhonicsYoutubePracticePrompt(checkpointId) {
-    if (!phonicsYoutubeActive() || phonicsYoutube.expectedCheckpointId !== checkpointId) return;
-    const checkpoint = phonicsYoutubeConfig.checkpoints.find((item) => item.id === checkpointId);
-    const checkpointIndex = Math.max(0, phonicsYoutubeConfig.checkpoints.findIndex((item) => item.id === checkpointId)) + 1;
-    setPhonicsYoutubeStatus(`一時停止 ${checkpointIndex} / ${phonicsYoutubeConfig.checkpoints.length}：3秒間、まねして言ってみよう！`, true);
-    phonicsYoutube.promptTimerId = window.setTimeout(() => {
-      phonicsYoutube.promptTimerId = 0;
-      // Only a pause initiated by this checkpoint may resume automatically.
-      if (!phonicsYoutubeActive() || phonicsYoutube.expectedCheckpointId !== checkpointId) return;
-      phonicsYoutube.expectedCheckpointId = null;
-      $("phonics-youtube-status").classList.remove("is-practice");
-      if (checkpoint?.final) {
-        setPhonicsYoutubeStatus(`${phonicsYoutubeConfig.endTimeSeconds}秒で終了しました。`);
-        $("phonics-youtube-start").hidden = true;
-        $("phonics-youtube-end").hidden = false;
-        phonicsYoutube.started = false;
+
+      if (phonicsYoutube.phase === 0 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
+        phonicsYoutube.phase = 1;
+        player.mute?.();
+        player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
+        setPhonicsYoutubeStatus("10〜15秒を音なしでもう一度再生しています。", true);
         return;
       }
-      setPhonicsYoutubeStatus("つづきを再生しています。");
-      phonicsYoutube.player?.playVideo();
-    }, phonicsYoutubeConfig.promptDurationMs);
+      if (phonicsYoutube.phase === 1 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
+        phonicsYoutube.phase = 2;
+        player.unMute?.();
+        player.seekTo?.(phonicsYoutubeConfig.splitTimeSeconds, true);
+        setPhonicsYoutubeStatus("15〜20秒を音ありで再生しています。");
+        return;
+      }
+      if (phonicsYoutube.phase === 2 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
+        phonicsYoutube.phase = 3;
+        player.mute?.();
+        player.seekTo?.(phonicsYoutubeConfig.splitTimeSeconds, true);
+        setPhonicsYoutubeStatus("15〜20秒を音なしでもう一度再生しています。", true);
+        return;
+      }
+      if (phonicsYoutube.phase === 3 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
+        finishPhonicsYoutubeSequence();
+      }
+    }, 100);
   }
   function onPhonicsYoutubeStateChange(event) {
     const stateCode = event.data;
     if (stateCode === youtubePlayerState("PLAYING")) {
-      // A user pressing play while the practice prompt is visible cancels its
-      // pending automatic resume; we never override a manual player decision.
-      if (phonicsYoutube.promptTimerId) cancelPhonicsYoutubePrompt();
-      setPhonicsYoutubeStatus("再生中です。");
-      runPhonicsYoutubeCheckpointPoll();
+      if (phonicsYoutube.started) {
+        if (phonicsYoutube.phase === 0) setPhonicsYoutubeStatus("10〜15秒を音ありで再生しています。");
+        runPhonicsYoutubeCheckpointPoll();
+      }
       return;
     }
     if (stateCode === youtubePlayerState("PAUSED")) {
       stopPhonicsYoutubePolling();
-      const checkpointId = phonicsYoutube.expectedCheckpointId;
-      if (checkpointId) beginPhonicsYoutubePracticePrompt(checkpointId);
-      else setPhonicsYoutubeStatus("一時停止中です。プレーヤーの再生ボタンで続けられます。");
+      if (phonicsYoutube.started) setPhonicsYoutubeStatus("一時停止中です。プレーヤーの再生ボタンで続けられます。");
       return;
     }
     if (stateCode === youtubePlayerState("ENDED")) {
-      stopPhonicsYoutubePolling();
-      cancelPhonicsYoutubePrompt();
-      setPhonicsYoutubeStatus("動画はここでおわりです。");
-      $("phonics-youtube-start").hidden = true;
-      $("phonics-youtube-end").hidden = false;
+      finishPhonicsYoutubeSequence();
     }
   }
   function loadPhonicsYoutubeApi() {
@@ -554,10 +542,11 @@
     if (!phonicsYoutube.player) return;
     phonicsYoutube.started = true;
     phonicsYoutube.autoStartPending = false;
-    phonicsYoutube.completedCheckpoints.clear();
+    phonicsYoutube.phase = 0;
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = true;
-    setPhonicsYoutubeStatus(`${phonicsYoutubeConfig.startTimeSeconds}秒から再生を始めます。`);
+    try { phonicsYoutube.player.unMute?.(); } catch (_) {}
+    setPhonicsYoutubeStatus("10〜15秒を音ありで再生しています。");
     phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
     phonicsYoutube.player.playVideo();
   }
@@ -593,7 +582,7 @@
     phonicsYoutube.started = false;
     phonicsYoutube.ready = false;
     phonicsYoutube.autoStartPending = false;
-    phonicsYoutube.completedCheckpoints.clear();
+    phonicsYoutube.phase = 0;
     $("phonics-youtube-player").replaceChildren();
   }
   function leavePhonicsYoutube() {
