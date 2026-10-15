@@ -74,8 +74,8 @@
   $("clip-play").onclick=()=>playClipRange(selected.start,selected.end,1,null);
   $("clip-stop").onclick=()=>{cueSelected();$("status").textContent="選択中セットの開始位置で停止しました。"};
   $("play-flow").onclick=()=>{const index=all().indexOf(selected), nextSegment=all()[index+1];playClipRange(selected.start,selected.end,1,()=>playClipRange(selected.start,selected.end,1,()=>continueWithoutSeek(nextSegment)))};
-  const playSequence = queue => {const segment=queue.shift();if(!segment){$("status").textContent="A-1〜Z-2の各2回通し再生が終わりました。";return}playClipRange(segment.start,segment.end,1,()=>playSequence(queue));};
-  $("play-all-double").onclick=()=>playSequence(all().flatMap(segment=>[segment,segment]));
+  const playSecondThenContinue = (segments,index) => {const segment=segments[index];playClipRange(segment.start,segment.end,1,()=>{const next=segments[index+1];if(!next){$("status").textContent="A-1〜Z-2の各2回通し再生が終わりました。";return}clipStopAt=next.end;clipFlow=()=>playSecondThenContinue(segments,index+1);clipVideo.volume=1;clipVideo.play();$("status").textContent=`${next.id} の1回目を連続再生中`;});};
+  $("play-all-double").onclick=()=>{const segments=all();const first=segments[0];if(first)playClipRange(first.start,first.end,1,()=>playSecondThenContinue(segments,0));};
   $("label").oninput=e=>{selected.label=e.target.value;renderList();persist()};
   $("fix").onclick=()=>{selected.fixed=true;selected.manuallyAdjusted=true;render()};$("unfix").onclick=()=>{selected.fixed=false;render()};
   const download = (payload,name) => {const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=name;a.click();URL.revokeObjectURL(a.href)};
