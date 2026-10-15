@@ -4,11 +4,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>フォニックス区間レビュー</title>
 <style>
-  :root{font-family:system-ui,"Noto Sans JP",sans-serif;color:#16304c;background:#edf4fc}body{margin:0}.wrap{max-width:1040px;margin:auto;padding:20px}h1,h2{margin:0 0 8px}.note{color:#49657e}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px}.panel{background:#fff;border:1px solid #c8dced;border-radius:16px;padding:16px;box-shadow:0 2px 10px #193a5914}video{width:100%;background:#000;border-radius:12px}.clip{margin-top:16px;border:2px solid #f2ac2e;background:#fffaf0;border-radius:12px;padding:12px}canvas{width:100%;height:160px;background:#071a2e;border-radius:10px;margin-top:16px}button{font:inherit;font-weight:700;color:#143a60;background:#fff;border:1px solid #9fc2df;border-radius:9px;padding:8px 10px;cursor:pointer}button:hover{background:#e6f3ff}.primary{background:#1476c9;color:#fff;border-color:#1476c9}.fix{background:#12894f;color:#fff;border-color:#12894f}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.segment{width:100%;text-align:left;margin:5px 0}.segment.selected{outline:3px solid #f2ac2e}.fixed{color:#08733f}.metric{font:700 13px/1.5 ui-monospace,monospace}.small{font-size:13px}.alternatives button{font-size:12px;padding:5px}.clip-timing{font:700 16px/1.5 ui-monospace,monospace;margin:0 0 8px}input{font:inherit;border:1px solid #9fc2df;border-radius:8px;padding:8px;flex:1;min-width:180px}@media(max-width:760px){.layout{grid-template-columns:1fr}.wrap{padding:12px}.controls{grid-template-columns:repeat(2,1fr)}}
+  :root{font-family:system-ui,"Noto Sans JP",sans-serif;color:#16304c;background:#edf4fc}body{margin:0}.wrap{max-width:1040px;margin:auto;padding:20px}h1,h2{margin:0 0 8px}.note{color:#49657e}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px}.panel{background:#fff;border:1px solid #c8dced;border-radius:16px;padding:16px;box-shadow:0 2px 10px #193a5914}video{width:100%;background:#000;border-radius:12px}.clip{margin-top:16px;border:2px solid #f2ac2e;background:#fffaf0;border-radius:12px;padding:12px}.grid-panel{border:2px solid #5d9fd8;background:#f3f9ff;border-radius:12px;padding:12px;margin-bottom:16px}canvas{width:100%;height:160px;background:#071a2e;border-radius:10px;margin-top:16px}button{font:inherit;font-weight:700;color:#143a60;background:#fff;border:1px solid #9fc2df;border-radius:9px;padding:8px 10px;cursor:pointer}button:hover{background:#e6f3ff}.primary{background:#1476c9;color:#fff;border-color:#1476c9}.fix{background:#12894f;color:#fff;border-color:#12894f}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.segment{width:100%;text-align:left;margin:5px 0}.segment.selected{outline:3px solid #f2ac2e}.fixed{color:#08733f}.metric{font:700 13px/1.5 ui-monospace,monospace}.small{font-size:13px}.alternatives button{font-size:12px;padding:5px}.clip-timing{font:700 16px/1.5 ui-monospace,monospace;margin:0 0 8px}.hidden{display:none}input{font:inherit;border:1px solid #9fc2df;border-radius:8px;padding:8px;flex:1;min-width:180px}@media(max-width:760px){.layout{grid-template-columns:1fr}.wrap{padding:12px}.controls{grid-template-columns:repeat(2,1fr)}}
 </style>
 <main class="wrap">
   <h1>フォニックス区間レビュー</h1>
-  <p class="note">A/Bだけの半自動PoC。右の区間を選ぶと、下の専用プレイヤーがそのセットの開始位置で待機します。耳で確認してからFIXします。</p>
+  <p class="note">A-1〜Z-2の機械的フレームPoC。右の区間を選ぶと、下の専用プレイヤーがそのセットを自動再生します。</p>
   <section class="layout">
     <div class="panel">
       <h2>全体動画</h2>
@@ -18,13 +18,19 @@
         <h2>選択中セット: <span id="clip-title">—</span></h2>
         <p class="clip-timing" id="clip-timing">—</p>
         <video id="clip-video" playsinline preload="metadata"></video>
-        <div class="row"><button class="primary" id="clip-play">このセットを最初から再生</button><button id="clip-stop">停止して開始位置へ</button><button class="primary" id="play-flow">通常→40%→次区間</button></div>
+        <div class="row"><button class="primary" id="clip-play">このセットを最初から再生</button><button id="clip-stop">停止して開始位置へ</button><button class="primary" id="play-flow">通常→通常→次区間</button><button class="primary" id="play-all-double">A-1〜Z-2を各2回通し再生</button></div>
         <p class="small">専用プレイヤーは選択中セットだけを開始→終了まで再生し、終了で必ず停止します。</p>
       </section>
       <p id="status" aria-live="polite">解析データを読み込み中…</p>
       <canvas id="waveform" width="1600" height="320" aria-label="波形と区間"></canvas>
     </div>
     <aside class="panel">
+      <section class="grid-panel hidden" id="grid-controls">
+        <h2>全区間フレーム</h2><p class="small">この2つを変えるとA-1〜Z-2の全区間が即時に再計算されます。</p>
+        <p class="metric" id="grid-metrics">—</p>
+        <h3>A-1フレーム</h3><div class="controls" data-grid="firstFrameSeconds"></div>
+        <h3>A-2以降フレーム</h3><div class="controls" data-grid="followingFrameSeconds"></div>
+      </section>
       <h2 id="title">—</h2><p class="metric" id="metrics">—</p>
       <label>ラベル <input id="label"></label>
       <h3>開始</h3><div class="controls" data-side="start"></div>
@@ -43,7 +49,7 @@
   const key = "phonics-segment-review:" + location.pathname;
   const all = () => data.letters.flatMap(letter => letter.segments);
   const fmt = value => Number(value).toFixed(2);
-  const persist = () => localStorage.setItem(key, JSON.stringify({proposalRevision:data.proposalRevision,letters:data.letters}));
+  const persist = () => localStorage.setItem(key, JSON.stringify({proposalRevision:data.proposalRevision,letters:data.letters,mechanicalGrid:data.analysis.mechanicalGrid}));
   const cue = (player, time) => {player.pause(); player.currentTime = time;};
   const cueSelected = () => {if(!selected)return; cue(overviewVideo, selected.start); cue(clipVideo, selected.start); clipVideo.volume=1; clipStopAt=null; clipFlow=null;};
   const draw = () => {
@@ -54,9 +60,12 @@
     const x=overviewVideo.currentTime/duration*w;ctx.strokeStyle="#ff5e52";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
   };
   const renderList = () => { $("segments").replaceChildren(...all().map(segment=>{const button=document.createElement("button");button.className="segment"+(segment===selected?" selected":"");button.innerHTML=`<b>${segment.id}</b> ${segment.label}<br><span class="${segment.fixed?"fixed":""}">${fmt(segment.start)}–${fmt(segment.end)} / ${segment.fixed?"FIX済み":"未FIX"}</span>`;button.onclick=()=>select(segment);return button;})); };
+  const rebuildMechanicalGrid = () => {const grid=data.analysis.mechanicalGrid;if(!grid)return;all().forEach((segment,index)=>{const frame=index===0?grid.firstFrameSeconds:grid.followingFrameSeconds;const start=index===0?0:grid.firstFrameSeconds+(index-1)*grid.followingFrameSeconds;segment.start=Number(start.toFixed(2));segment.end=Number((start+frame).toFixed(2));segment.startAlternatives=[segment.start,Number((segment.start+.01).toFixed(2)),Number((segment.start+.05).toFixed(2))];segment.endAlternatives=[segment.end,Number((segment.end-.01).toFixed(2)),Number((segment.end-.05).toFixed(2))];segment.fixed=false;segment.manuallyAdjusted=true;segment.evidence={mechanicalGrid:{frameSeconds:frame,sequenceIndex:index}};});data.letters.forEach(letter=>{letter.scope={start:letter.segments[0].start,end:letter.segments.at(-1).end};});};
+  const gridButtons = name => {const grid=data.analysis.mechanicalGrid, box=document.querySelector(`[data-grid="${name}"]`);if(!grid||!box)return;box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const button=document.createElement("button");button.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;button.onclick=()=>{grid[name]=Number((grid[name]+delta).toFixed(2));rebuildMechanicalGrid();render();cueSelected();playClipRange(selected.start,selected.end,1,null)};return button;}));};
+  const renderGrid = () => {const grid=data.analysis.mechanicalGrid, panel=$("grid-controls");if(!grid){panel.classList.add("hidden");return}panel.classList.remove("hidden");$("grid-metrics").textContent=`A-1 ${fmt(grid.firstFrameSeconds)}秒 / A-2以降 ${fmt(grid.followingFrameSeconds)}秒 / 全${all().length}区間`;gridButtons("firstFrameSeconds");gridButtons("followingFrameSeconds");};
   const buttons = side => {const box=document.querySelector(`[data-side="${side}"]`);box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const b=document.createElement("button");b.textContent=`${side==="start"?"開始":"終了"} ${delta>0?"+":""}${delta.toFixed(2)}`;b.onclick=()=>{selected[side]=Number((selected[side]+delta).toFixed(2));selected.manuallyAdjusted=true;render();cueSelected()};return b;}));};
   const alternatives = side => {const box=$(side+"-alts");box.innerHTML="候補: "; selected[side+"Alternatives"].forEach(value=>{const b=document.createElement("button");b.textContent=fmt(value);b.onclick=()=>{selected[side]=value;selected.manuallyAdjusted=true;render();cueSelected()};box.append(b)});};
-  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;buttons("start");buttons("end");alternatives("start");alternatives("end");renderList();draw();persist();};
+  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;renderGrid();buttons("start");buttons("end");alternatives("start");alternatives("end");renderList();draw();persist();};
   const select = segment => {selected=segment;render();cueSelected();playClipRange(selected.start,selected.end,1,null);};
   const playClipRange = (start,end,volume,next) => {clipFlow=next;clipStopAt=end;clipVideo.volume=volume;clipVideo.currentTime=start;clipVideo.play();$("status").textContent=`${fmt(start)}–${fmt(end)}秒を${Math.round(volume*100)}%で再生中`};
   const continueWithoutSeek = nextSegment => {if(!nextSegment){$("status").textContent="最後の区間です。";return}clipStopAt=nextSegment.end;clipVideo.volume=1;clipVideo.play();$("status").textContent=`${fmt(nextSegment.start)}–${fmt(nextSegment.end)}秒へ連続再生中（seekなし）`};
@@ -64,13 +73,15 @@
   clipVideo.addEventListener("timeupdate",()=>{if(clipStopAt!==null&&clipVideo.currentTime>=clipStopAt){clipVideo.pause();const next=clipFlow;clipStopAt=null;clipFlow=null;if(next)next();else $("status").textContent="選択中セットの終わりで停止しました。";}});
   $("clip-play").onclick=()=>playClipRange(selected.start,selected.end,1,null);
   $("clip-stop").onclick=()=>{cueSelected();$("status").textContent="選択中セットの開始位置で停止しました。"};
-  $("play-flow").onclick=()=>{const index=all().indexOf(selected), nextSegment=all()[index+1];playClipRange(selected.start,selected.end,1,()=>playClipRange(selected.start,selected.end,.4,()=>continueWithoutSeek(nextSegment)))};
+  $("play-flow").onclick=()=>{const index=all().indexOf(selected), nextSegment=all()[index+1];playClipRange(selected.start,selected.end,1,()=>playClipRange(selected.start,selected.end,1,()=>continueWithoutSeek(nextSegment)))};
+  const playSequence = queue => {const segment=queue.shift();if(!segment){$("status").textContent="A-1〜Z-2の各2回通し再生が終わりました。";return}playClipRange(segment.start,segment.end,1,()=>playSequence(queue));};
+  $("play-all-double").onclick=()=>playSequence(all().flatMap(segment=>[segment,segment]));
   $("label").oninput=e=>{selected.label=e.target.value;renderList();persist()};
   $("fix").onclick=()=>{selected.fixed=true;selected.manuallyAdjusted=true;render()};$("unfix").onclick=()=>{selected.fixed=false;render()};
   const download = (payload,name) => {const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=name;a.click();URL.revokeObjectURL(a.href)};
   $("save-review").onclick=()=>{download(data,data.lessonId+"-fixed-segments.json");$("status").textContent="レビュー状態を保存しました。"};
   $("export").onclick=()=>{const unfixed=all().filter(s=>!s.fixed);if(unfixed.length){$("status").textContent=`未FIX: ${unfixed.map(s=>s.id).join(", ")}`;return}const output={lessonId:data.lessonId,sourceId:data.sourceId,repeatVolume:data.repeatVolume,letters:data.letters.map(letter=>({letter:letter.letter,segments:letter.segments.map(({id,start,end})=>({id,start,end}))}))};download(output,data.lessonId+".json");$("status").textContent="アプリ用JSONを保存しました。"};
-  fetch("analysis.json").then(r=>r.json()).then(result=>{data=result;const saved=localStorage.getItem(key);const savedState=saved&&JSON.parse(saved);const restored=savedState&&savedState.proposalRevision===data.proposalRevision;if(restored)data.letters=savedState.letters;const source="../../../"+data.sourceVideo.replaceAll("\\","/");overviewVideo.src=source;clipVideo.src=source;selected=all()[0];render();overviewVideo.addEventListener("loadedmetadata",cueSelected,{once:true});clipVideo.addEventListener("loadedmetadata",cueSelected,{once:true});const meter=data.analysis.meter;$("status").textContent=restored?"保存済みのレビュー状態を復元しました。":`A/Bの${meter?meter.beatsPerSet+" beat":"リズム"}グリッド候補を読み込みました。右の区間を選んでください。`}).catch(error=>$("status").textContent="読み込み失敗: "+error.message);
+  fetch("analysis.json").then(r=>r.json()).then(result=>{data=result;const saved=localStorage.getItem(key);const savedState=saved&&JSON.parse(saved);const restored=savedState&&savedState.proposalRevision===data.proposalRevision;if(restored){data.letters=savedState.letters;if(savedState.mechanicalGrid)data.analysis.mechanicalGrid=savedState.mechanicalGrid;}const source="../../../"+data.sourceVideo.replaceAll("\\","/");overviewVideo.src=source;clipVideo.src=source;selected=all()[0];render();overviewVideo.addEventListener("loadedmetadata",cueSelected,{once:true});clipVideo.addEventListener("loadedmetadata",cueSelected,{once:true});$("status").textContent=restored?"保存済みのレビュー状態を復元しました。":"A-1〜Z-2の機械的フレーム候補を読み込みました。右の区間を選んでください。"}).catch(error=>$("status").textContent="読み込み失敗: "+error.message);
 })();
 </script>
 </html>

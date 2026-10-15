@@ -82,7 +82,63 @@ def extract_audio(video: Path, wav: Path) -> None:
     )
 
 
+def mechanical_alternatives(center: float, low: float, high: float) -> list[float]:
+    """Small local choices, while retaining the deterministic frame boundary."""
+    result = [round_time(center)]
+    for offset in (-0.01, 0.01, -0.05, 0.05):
+        value = round_time(max(low, min(high, center + offset)))
+        if value not in result:
+            result.append(value)
+        if len(result) == 3:
+            break
+    return result
+
+
+def analyze_mechanical_grid(video: Path, config: dict, output_dir: Path) -> dict:
+    """Generate A-1 through Z-2 without inspecting audio rhythm or speech."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    grid = config["mechanicalGrid"]
+    first = float(grid["firstFrameSeconds"])
+    following = float(grid["followingFrameSeconds"])
+    letters = list(grid.get("letters", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+    sets_per_letter = int(grid.get("setsPerLetter", 2))
+    duration = float(grid["videoDurationSeconds"])
+    target_results = []
+    sequence_index = 0
+    for letter in letters:
+        segments = []
+        letter_start = 0.0 if sequence_index == 0 else first + (sequence_index - 1) * following
+        for set_number in range(1, sets_per_letter + 1):
+            frame = first if sequence_index == 0 else following
+            start = 0.0 if sequence_index == 0 else first + (sequence_index - 1) * following
+            end = start + frame
+            if end > duration:
+                raise ValueError(f"{letter}-{set_number} が動画長を超えました: {end:.2f} > {duration:.2f}")
+            segments.append({
+                "id": f"{letter}-{set_number}", "letter": letter, "label": f"{letter}-{set_number}",
+                "start": round_time(start), "end": round_time(end),
+                "startAlternatives": mechanical_alternatives(start, max(0.0, start - 0.10), min(duration, start + 0.10)),
+                "endAlternatives": mechanical_alternatives(end, max(0.0, end - 0.10), min(duration, end + 0.10)),
+                "autoSuggested": True, "manuallyAdjusted": False, "fixed": False,
+                "confidence": 1.0, "evidence": {"mechanicalGrid": {"frameSeconds": round_time(frame), "sequenceIndex": sequence_index}},
+            })
+            sequence_index += 1
+        target_results.append({"letter": letter, "scope": {"start": round_time(letter_start), "end": segments[-1]["end"]}, "segments": segments})
+    result = {
+        "schemaVersion": 1, "lessonId": config["lessonId"], "sourceId": config["sourceId"],
+        "proposalRevision": config.get("proposalRevision", "default"),
+        "sourceVideo": str(video), "sourceAudio": None, "duration": round_time(duration),
+        "repeatVolume": config.get("repeatVolume", 100),
+        "analysis": {"methods": ["Mechanical frame grid; no audio/rhythm analysis"], "meter": None, "mechanicalGrid": grid},
+        "waveform": {"times": [], "peaks": []}, "letters": target_results,
+    }
+    (output_dir / "analysis.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return result
+
+
 def analyze(video: Path, config: dict, output_dir: Path) -> dict:
+    if config.get("mechanicalGrid"):
+        return analyze_mechanical_grid(video, config, output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     wav = output_dir / "analysis-audio.wav"
     extract_audio(video, wav)
