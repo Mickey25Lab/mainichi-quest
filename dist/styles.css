@@ -1934,6 +1934,10 @@ button, input { font: inherit; }
   pointer-events:none;
   z-index:-1;
 }
+.multiplication-2x2-multiplier span.is-operation-guide {
+  position:relative;
+  isolation:isolate;
+}
 .multiplication-2x2-multiplier span.is-operation-guide::after {
   content:"";
   position:absolute;
