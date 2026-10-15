@@ -109,14 +109,13 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
 
   await page.locator("#phonics-youtube-end").click();
   await page.locator("#mode-select-screen.active").waitFor();
-  assert.equal(await page.evaluate(() => window.__ytPlayers.length), 1);
+  assert.equal(await page.evaluate(() => window.__ytPlayers.length), 2);
   assert.equal(await page.evaluate(() => window.__ytPlayers[0].destroyed), true);
   assert.equal(await page.locator("#mode-select-phonics").isDisabled(), false);
 
-  // Re-enter immediately: a fresh Player is created for the new viewing session.
+  // Re-enter: the next Player was already preloaded while the purple button stayed enabled.
   await page.locator("#mode-select-phonics").click();
   await page.locator("#phonics-youtube-screen.active").waitFor();
-  await page.waitForFunction(() => window.__ytPlayers.length === 2);
   await page.waitForFunction(() => window.__ytPlayers[1].playCalls >= 1);
   assert.equal(await page.evaluate(() => window.__ytPlayers[1].destroyed), false);
   assert.deepEqual(pageErrors, []);
@@ -137,7 +136,7 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
-  assert.match(app, /function preparePhonicsYoutubePlayback\(\)[\s\S]*loadPhonicsYoutubeApi\(\)/);
+  assert.match(app, /function preparePhonicsYoutubePlayback\(\)[\s\S]*createPhonicsYoutubePlayer\(\)/);
   assert.match(app, /function stopAndDestroyPhonicsYoutube\(\)[\s\S]*stopVideo\?\.\(\)[\s\S]*destroy\?\.\(\)/);
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*stopAndDestroyPhonicsYoutube\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
