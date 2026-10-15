@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.26";
+  const appVersion = "0.2.27";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1550,7 +1550,12 @@
     const multiplierValues = [];
     for (let tens = 1; tens <= 5; tens += 1) {
       for (let ones = 0; ones <= 5; ones += 1) values.push(tens * 10 + ones);
-      for (let ones = 1; ones <= 5; ones += 1) multiplierValues.push(tens * 10 + ones);
+      // A repeated lower digit makes the two partial products indistinguishable
+      // to a child who swaps the ones and tens places.  Keep every existing
+      // range rule, and only remove those ambiguous multipliers for this mode.
+      for (let ones = 1; ones <= 5; ones += 1) {
+        if (tens !== ones) multiplierValues.push(tens * 10 + ones);
+      }
     }
     const pairs = [];
     const used = new Set();
@@ -2244,9 +2249,10 @@
         feedback: null
       })),
       inputOrder, inputStep: 0, history: [],
-      firstRowGuideVisible: false,
-      secondRowGuideVisible: false,
-      secondGuideTimer: null
+      guideStage: 1,
+      shiftGuideVisible: false,
+      sumOperatorVisible: false,
+      sumTransitionPending: false
     };
     renderTwoDigitMultiplication();
   }
@@ -2262,11 +2268,29 @@
         slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
       });
     });
+    const multiplicand = $("multiplication-2x2-multiplicand");
     const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
+    multiplicand.classList.toggle("is-operation-guide", model.guideStage === 1 || model.guideStage === 2);
     multiplierDigits.forEach((digit, index) => {
-      digit.classList.toggle("is-crossed", index === multiplierDigits.length - 1 && model.firstRowGuideVisible);
+      const guidesThisDigit = (model.guideStage === 1 && index === multiplierDigits.length - 1)
+        || (model.guideStage === 2 && index === multiplierDigits.length - 2);
+      digit.classList.toggle("is-operation-guide", guidesThisDigit);
     });
-    $("multiplication-2x2-shift-guide").hidden = !model.secondRowGuideVisible;
+    $("multiplication-2x2-shift-guide").hidden = !model.shiftGuideVisible;
+    const sumOperator = $("multiplication-2x2-sum-operator");
+    sumOperator.hidden = !model.sumOperatorVisible;
+    if (model.sumOperatorVisible) positionTwoDigitSumOperator();
+  }
+  function positionTwoDigitSumOperator() {
+    const panel = $("multiplication-2x2-panel");
+    const partial2 = $("multiplication-2x2-partial-2");
+    const operator = $("multiplication-2x2-sum-operator");
+    // One full digit column (64px) plus its regular gap (12px) left of the
+    // most-significant second partial digit.  Positioning it outside the panel
+    // also keeps the three-digit partial-product case inside the card.
+    const columnStep = 76;
+    operator.style.left = `${panel.offsetLeft + partial2.offsetLeft - columnStep}px`;
+    operator.style.top = `${panel.offsetTop + partial2.offsetTop + (partial2.offsetHeight / 2)}px`;
   }
   function playTwoDigitRowCorrectEffect(row) {
     if (!row?.holder) return;
@@ -2287,14 +2311,10 @@
     window.setTimeout(() => trail.remove(), 760);
   }
   function showTwoDigitSecondRowGuides(model) {
-    if (!model || model.firstRowGuideVisible) return;
-    model.firstRowGuideVisible = true;
+    if (!model || model.guideStage !== 0) return;
+    model.shiftGuideVisible = true;
+    model.guideStage = 2;
     renderTwoDigitMultiplication();
-    model.secondGuideTimer = window.setTimeout(() => {
-      if (state.multiplication2x2 !== model) return;
-      model.secondRowGuideVisible = true;
-      renderTwoDigitMultiplication();
-    }, 500);
   }
   function checkTwoDigitIntermediateRow(model, rowIndex) {
     if (!model || rowIndex < 0 || rowIndex >= model.rows.length - 1) return;
@@ -2307,12 +2327,24 @@
     if (!wrongIndexes.size) {
       row.feedback = null;
       row.wrongIndexes.clear();
+      model.guideStage = 0;
       renderTwoDigitMultiplication();
       playTwoDigitRowCorrectEffect(row);
       if (rowIndex === 0) {
         window.setTimeout(() => {
           if (state.multiplication2x2 !== model) return;
           showTwoDigitSecondRowGuides(model);
+        }, 760);
+      } else if (rowIndex === 1) {
+        // Keep the final addition from starting in the brief interval before
+        // the operator appears, so the child always sees why the next row is
+        // an addition rather than another multiplication step.
+        model.sumTransitionPending = true;
+        window.setTimeout(() => {
+          if (state.multiplication2x2 !== model) return;
+          model.sumOperatorVisible = true;
+          model.sumTransitionPending = false;
+          renderTwoDigitMultiplication();
         }, 760);
       }
       return;
@@ -2336,6 +2368,7 @@
   function inputTwoDigitMultiplicationNumber(number) {
     const model = state.multiplication2x2;
     if (!model || model.inputStep >= model.inputOrder.length) return;
+    if (model.sumTransitionPending && model.inputOrder[model.inputStep]?.rowIndex === 2) return;
     noteQuestionActivity();
     const step = model.inputOrder[model.inputStep];
     const row = model.rows[step.rowIndex];
@@ -2500,9 +2533,10 @@
       return;
     }
     if (state.mode === "multiplication2x2") {
-      state.current.hintUsed = true;
       const model = state.multiplication2x2;
       const step = model?.inputOrder[model.inputStep];
+      if (model?.sumTransitionPending && step?.rowIndex === 2) return;
+      state.current.hintUsed = true;
       if (!step) {
         if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
         return;
