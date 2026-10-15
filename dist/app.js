@@ -2270,7 +2270,7 @@
     });
     const multiplicand = $("multiplication-2x2-multiplicand");
     const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
-    multiplicand.classList.toggle("is-operation-guide", model.guideStage === 1 || model.guideStage === 2);
+    multiplicand.classList.toggle("is-operation-guide", model.guideStage === 1 || model.guideStage === 2 || model.guideStage === 3);
     multiplierDigits.forEach((digit, index) => {
       const guidesThisDigit = (model.guideStage === 1 && index === multiplierDigits.length - 1)
         || (model.guideStage === 2 && index === multiplierDigits.length - 2);
@@ -2311,7 +2311,7 @@
     window.setTimeout(() => trail.remove(), 760);
   }
   function showTwoDigitSecondRowGuides(model) {
-    if (!model || model.guideStage !== 0) return;
+    if (!model || model.guideStage !== 3) return;
     model.shiftGuideVisible = true;
     model.guideStage = 2;
     renderTwoDigitMultiplication();
@@ -2327,7 +2327,9 @@
     if (!wrongIndexes.size) {
       row.feedback = null;
       row.wrongIndexes.clear();
-      model.guideStage = 0;
+      // Keep the upper two-digit outline mounted between the multiplication rows.
+      // Stage 3 shows only the upper outline while the lower digit guide switches.
+      model.guideStage = rowIndex === 0 ? 3 : 0;
       renderTwoDigitMultiplication();
       playTwoDigitRowCorrectEffect(row);
       if (rowIndex === 0) {
