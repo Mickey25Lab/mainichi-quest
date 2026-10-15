@@ -3792,6 +3792,7 @@
   let bgmDiagnostics = [];
   let bgmDiagnosticButton = null;
   let bgmDiagnosticLastSignature = "";
+  let bgmDiagnosticPollCount = 0;
   function bgmDiagnosticSnapshot(event, detail = {}) {
     const ctx = state.audio;
     return {
@@ -3858,11 +3859,15 @@
       const ctx = state.audio;
       const shouldPlay = !document.hidden && state.bgmEnabled && Boolean(activeBgmGroup());
       const unexpected = shouldPlay && (ctx?.state === "suspended" || (
+        !state.bgmSource && !state.bgmFadeTimer && Boolean(state.desiredBgmGroup)
+      ) || (
         state.bgmSource && (state.bgmGain?.gain?.value ?? 1) < 0.0005 && !state.bgmFadeTimer
       ));
       const signature = unexpected ? [ctx?.state, state.bgmGroup, audioMutedForBackground].join(":") : "";
       if (unexpected && signature !== bgmDiagnosticLastSignature) recordBgmDiagnostic("possible-silence");
       bgmDiagnosticLastSignature = signature;
+      // Periodic snapshots also capture silent output without a detectable state change.
+      if (++bgmDiagnosticPollCount % 5 === 0) recordBgmDiagnostic("audio-heartbeat");
     }, 2000);
   }
   let audioVisibilitySuspendTimer = null;
