@@ -133,10 +133,11 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /player\.mute\?\.\(\)/);
   assert.match(app, /player\.unMute\?\.\(\)/);
   assert.match(app, /onAutoplayBlocked/);
+  assert.match(styles, /#mode-select-phonics:disabled\s*\{[\s\S]*opacity:\s*1[\s\S]*filter:\s*none/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
-  assert.match(app, /function preparePhonicsYoutubePlayback\(\)[\s\S]*createPhonicsYoutubePlayer\(\)/);
+  assert.match(app, /function preparePhonicsYoutubePlayback\(\)[\s\S]*mode-select-phonics"\)\.disabled = true[\s\S]*createPhonicsYoutubePlayer\(\)/);
   assert.match(app, /function stopAndDestroyPhonicsYoutube\(\)[\s\S]*stopVideo\?\.\(\)[\s\S]*destroy\?\.\(\)/);
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*stopAndDestroyPhonicsYoutube\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
