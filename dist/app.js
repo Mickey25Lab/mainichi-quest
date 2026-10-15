@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.38";
+  const appVersion = "0.2.39";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -506,6 +506,7 @@
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
+            $("mode-select-phonics").disabled = false;
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -528,14 +529,14 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
+      $("mode-select-phonics").disabled = true;
     });
   }
   function preparePhonicsYoutubePlayback() {
-    // Prepare the next Player while the mode-selection screen is visible, but
-    // never gray out or disable the purple button. In normal use the Player is
-    // ready before the child taps it, so playVideo() stays inside the tap's
-    // user-gesture window and Safari allows audible playback.
-    $("mode-select-phonics").disabled = false;
+    // Keep the mode choice unavailable until the Player is ready so the tap
+    // that enters phonics can call playVideo() synchronously on iPad/Safari.
+    // CSS keeps this one disabled button visually identical to its enabled state.
+    $("mode-select-phonics").disabled = true;
     createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
