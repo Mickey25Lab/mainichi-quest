@@ -18,8 +18,7 @@ test("background suspension owns a single cancellable timer", () => {
   assert.match(hide, /clearAudioVisibilitySuspendTimer\(\)/);
   assert.match(hide, /scheduleAudioVisibilitySuspend\(requireHidden, suspendDelayMs\)/);
   assert.match(show, /clearAudioVisibilitySuspendTimer\(\)/);
-  assert.match(show, /restoreAudioGainAfterVisibility\(\)/);
-  assert.match(show, /syncBackgroundMusicForActiveScreen\(\)/);
+  assert.match(show, /restoreForegroundBackgroundMusic/);
 });
 
 test("iOS handoff preserves existing fade timings and transition cancellation", () => {
