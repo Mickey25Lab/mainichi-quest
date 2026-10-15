@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.37";
+  const appVersion = "0.2.38";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -492,7 +492,7 @@
         videoId: phonicsYoutubeConfig.videoId,
         host: "https://www.youtube-nocookie.com",
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -511,7 +511,7 @@
             resolve(phonicsYoutube.player);
             if (phonicsYoutubeActive() && phonicsYoutube.autoStartPending) {
               startPhonicsYoutubeAutomatically();
-            } else {
+            } else if (phonicsYoutubeActive()) {
               setPhonicsYoutubeStatus("動画の準備ができました。");
             }
           },
@@ -531,12 +531,12 @@
     });
   }
   function preparePhonicsYoutubePlayback() {
-    // Preload only the IFrame API. The actual Player belongs to the selected
-    // video session and is created only after the user taps the purple button.
+    // Prepare the next Player while the mode-selection screen is visible, but
+    // never gray out or disable the purple button. In normal use the Player is
+    // ready before the child taps it, so playVideo() stays inside the tap's
+    // user-gesture window and Safari allows audible playback.
     $("mode-select-phonics").disabled = false;
-    loadPhonicsYoutubeApi().catch((error) => {
-      console.error("Phonics YouTube API preload failed", error);
-    });
+    createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
     if (!phonicsYoutube.player) return;
@@ -594,6 +594,7 @@
     stopAndDestroyPhonicsYoutube();
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
+    preparePhonicsYoutubePlayback();
   }
   function pausePhonicsYoutubeForLifecycle() {
     if (!phonicsYoutubeActive() || !phonicsYoutube.player) return;
