@@ -43,7 +43,7 @@
   const key = "phonics-segment-review:" + location.pathname;
   const all = () => data.letters.flatMap(letter => letter.segments);
   const fmt = value => Number(value).toFixed(2);
-  const persist = () => localStorage.setItem(key, JSON.stringify(data.letters));
+  const persist = () => localStorage.setItem(key, JSON.stringify({proposalRevision:data.proposalRevision,letters:data.letters}));
   const cue = (player, time) => {player.pause(); player.currentTime = time;};
   const cueSelected = () => {if(!selected)return; cue(overviewVideo, selected.start); cue(clipVideo, selected.start); clipVideo.volume=1; clipStopAt=null; clipFlow=null;};
   const draw = () => {
@@ -70,7 +70,7 @@
   const download = (payload,name) => {const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=name;a.click();URL.revokeObjectURL(a.href)};
   $("save-review").onclick=()=>{download(data,data.lessonId+"-fixed-segments.json");$("status").textContent="レビュー状態を保存しました。"};
   $("export").onclick=()=>{const unfixed=all().filter(s=>!s.fixed);if(unfixed.length){$("status").textContent=`未FIX: ${unfixed.map(s=>s.id).join(", ")}`;return}const output={lessonId:data.lessonId,sourceId:data.sourceId,repeatVolume:data.repeatVolume,letters:data.letters.map(letter=>({letter:letter.letter,segments:letter.segments.map(({id,start,end})=>({id,start,end}))}))};download(output,data.lessonId+".json");$("status").textContent="アプリ用JSONを保存しました。"};
-  fetch("analysis.json").then(r=>r.json()).then(result=>{data=result;const saved=localStorage.getItem(key);if(saved)data.letters=JSON.parse(saved);const source="../../../"+data.sourceVideo.replaceAll("\\","/");overviewVideo.src=source;clipVideo.src=source;selected=all()[0];render();overviewVideo.addEventListener("loadedmetadata",cueSelected,{once:true});clipVideo.addEventListener("loadedmetadata",cueSelected,{once:true});$("status").textContent="A/Bの自動候補を読み込みました。右の区間を選んでください。"}).catch(error=>$("status").textContent="読み込み失敗: "+error.message);
+  fetch("analysis.json").then(r=>r.json()).then(result=>{data=result;const saved=localStorage.getItem(key);const savedState=saved&&JSON.parse(saved);const restored=savedState&&savedState.proposalRevision===data.proposalRevision;if(restored)data.letters=savedState.letters;const source="../../../"+data.sourceVideo.replaceAll("\\","/");overviewVideo.src=source;clipVideo.src=source;selected=all()[0];render();overviewVideo.addEventListener("loadedmetadata",cueSelected,{once:true});clipVideo.addEventListener("loadedmetadata",cueSelected,{once:true});$("status").textContent=restored?"保存済みのレビュー状態を復元しました。":"A/Bの4拍グリッド候補を読み込みました。右の区間を選んでください。"}).catch(error=>$("status").textContent="読み込み失敗: "+error.message);
 })();
 </script>
 </html>

@@ -37,10 +37,13 @@ def alternatives(candidates: np.ndarray, center: float, low: float, high: float)
             result.append(rounded)
         if len(result) == 3:
             break
-    while len(result) < 3:
-        offset = 0.08 if len(result) == 1 else -0.08
-        result.append(round_time(max(low, min(high, center + offset))))
-    return sorted(set(result))[:3]
+    for offset in (0.03, -0.03, 0.06, -0.06, 0.10, -0.10, 0.14, -0.14):
+        rounded = round_time(max(low, min(high, center + offset)))
+        if rounded not in result:
+            result.append(rounded)
+        if len(result) == 3:
+            break
+    return sorted(result)[:3]
 
 
 def local_valley(times: np.ndarray, rms: np.ndarray, target: float, radius: float) -> tuple[float, float]:
@@ -87,31 +90,60 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
     waveform = audio[: (len(audio) // waveform_hop) * waveform_hop].reshape(-1, waveform_hop)
     waveform_peaks = np.maximum(np.abs(waveform.min(axis=1)), np.abs(waveform.max(axis=1)))
     waveform_times = np.arange(len(waveform_peaks)) * waveform_hop / sample_rate
+    rhythm_config = config.get("rhythm")
+    beats_per_set = int(rhythm_config["beatsPerSet"]) if rhythm_config else None
+    anchor_index = None
+    if rhythm_config:
+        if len(beat_times) == 0:
+            raise ValueError("4拍グリッドを作れませんでした。beat tracking の結果が空です。")
+        anchor = float(rhythm_config.get("firstDownbeatSeconds", beat_times[0]))
+        anchor_index = int(np.argmin(np.abs(beat_times - anchor)))
     target_results = []
+    metered_set_offset = 0
     for target in config["targets"]:
-        scope_start, scope_end = float(target["scope"]["start"]), float(target["scope"]["end"])
+        if rhythm_config:
+            first_beat = anchor_index + metered_set_offset * beats_per_set
+            last_beat = first_beat + len(target["sets"]) * beats_per_set
+            if last_beat >= len(beat_times):
+                raise ValueError(f"{target['letter']} の4拍グリッドが動画のbeat tracking範囲を超えました。")
+            scope_start, scope_end = float(beat_times[first_beat]), float(beat_times[last_beat])
+        else:
+            scope_start, scope_end = float(target["scope"]["start"]), float(target["scope"]["end"])
         count = len(target["sets"])
-        boundary_times = [scope_start]
         boundary_meta = []
-        for index in range(1, count):
-            expected = scope_start + (scope_end - scope_start) * index / count
-            valley, valley_strength = local_valley(frame_times, rms, expected, min(2.2, (scope_end - scope_start) / count * 0.42))
-            snapped = nearest(rhythmic_points, valley)
-            if abs(snapped - valley) <= 0.34:
-                suggested = snapped
-                onset_bonus = 0.18
-            else:
-                suggested = valley
-                onset_bonus = 0.04
-            suggested = max(boundary_times[-1] + 0.6, min(scope_end - 0.6, suggested))
-            boundary_times.append(suggested)
-            boundary_meta.append({
-                "suggestedEnd": round_time(suggested),
-                "alternatives": alternatives(rhythmic_points, suggested, suggested - 0.20, suggested + 0.20),
-                "valleyStrength": round(valley_strength, 3),
-                "confidence": round(min(0.95, 0.45 + valley_strength * 0.35 + onset_bonus), 2),
-            })
-        boundary_times.append(scope_end)
+        if rhythm_config:
+            boundary_times = [float(beat_times[first_beat + index * beats_per_set]) for index in range(count + 1)]
+            for index in range(count):
+                start, end = boundary_times[index], boundary_times[index + 1]
+                _, valley_strength = local_valley(frame_times, rms, end, 0.20)
+                intervals = np.diff(beat_times[first_beat + index * beats_per_set:first_beat + (index + 1) * beats_per_set + 1])
+                stability = 1.0 - min(1.0, float(np.std(intervals) / max(np.mean(intervals), 1e-9)))
+                boundary_meta.append({
+                    "confidence": round(min(0.97, 0.72 + stability * 0.18 + valley_strength * 0.07), 2),
+                    "valleyStrength": round(valley_strength, 3),
+                    "beatsPerSet": beats_per_set,
+                    "startBeatIndex": first_beat + index * beats_per_set,
+                    "endBeatIndex": first_beat + (index + 1) * beats_per_set,
+                })
+        else:
+            boundary_times = [scope_start]
+            for index in range(1, count):
+                expected = scope_start + (scope_end - scope_start) * index / count
+                valley, valley_strength = local_valley(frame_times, rms, expected, min(2.2, (scope_end - scope_start) / count * 0.42))
+                snapped = nearest(rhythmic_points, valley)
+                if abs(snapped - valley) <= 0.34:
+                    suggested = snapped
+                    onset_bonus = 0.18
+                else:
+                    suggested = valley
+                    onset_bonus = 0.04
+                suggested = max(boundary_times[-1] + 0.6, min(scope_end - 0.6, suggested))
+                boundary_times.append(suggested)
+                boundary_meta.append({
+                    "confidence": round(min(0.95, 0.45 + valley_strength * 0.35 + onset_bonus), 2),
+                    "valleyStrength": round(valley_strength, 3),
+                })
+            boundary_times.append(scope_end)
         segments = []
         for index, set_info in enumerate(target["sets"]):
             start, end = boundary_times[index], boundary_times[index + 1]
@@ -126,17 +158,21 @@ def analyze(video: Path, config: dict, output_dir: Path) -> dict:
                 "confidence": boundary["confidence"], "evidence": {
                     "valleyStrength": boundary["valleyStrength"],
                     "nearbyOnsets": [round_time(value) for value in onset_times if start - 0.35 <= value <= end + 0.35][:24],
+                    "meter": {key: boundary[key] for key in ("beatsPerSet", "startBeatIndex", "endBeatIndex") if key in boundary},
                 },
             })
-        target_results.append({"letter": target["letter"], "scope": target["scope"], "segments": segments})
+        target_results.append({"letter": target["letter"], "scope": {"start": round_time(scope_start), "end": round_time(scope_end)}, "segments": segments})
+        metered_set_offset += count
     result = {
         "schemaVersion": 1, "lessonId": config["lessonId"], "sourceId": config["sourceId"],
+        "proposalRevision": config.get("proposalRevision", "default"),
         "sourceVideo": str(video), "sourceAudio": "analysis-audio.wav", "duration": round_time(duration),
         "repeatVolume": config.get("repeatVolume", 40), "analysis": {
             "sampleRate": sample_rate, "tempoBpm": round(float(np.asarray(tempo).item()), 2),
             "methods": ["RMS low-energy valleys", "onset detection", "beat tracking", "spectral flux"],
             "onsets": [round_time(value) for value in onset_times.tolist()],
             "beats": [round_time(value) for value in beat_times.tolist()],
+            "meter": {"beatsPerSet": beats_per_set, "anchorBeatIndex": anchor_index} if rhythm_config else None,
         },
         "waveform": {"times": [round_time(value) for value in waveform_times.tolist()], "peaks": [round(float(value), 4) for value in waveform_peaks.tolist()]},
         "letters": target_results,

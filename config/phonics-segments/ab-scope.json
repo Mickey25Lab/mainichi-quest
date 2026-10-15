@@ -1,11 +1,15 @@
 {
   "lessonId": "phonics-ab",
   "sourceId": "abc-phonics-chant-az-tora-teacher",
+  "proposalRevision": "4-beat-v1",
   "repeatVolume": 40,
+  "rhythm": {
+    "beatsPerSet": 4,
+    "firstDownbeatSeconds": 0.16
+  },
   "targets": [
     {
       "letter": "A",
-      "scope": { "start": 0.0, "end": 15.0 },
       "sets": [
         { "id": "A-1", "label": "A/A/A + a/a/a" },
         { "id": "A-2", "label": "apple/apple + a/a/a" }
@@ -13,7 +17,6 @@
     },
     {
       "letter": "B",
-      "scope": { "start": 15.0, "end": 30.0 },
       "sets": [
         { "id": "B-1", "label": "B/B/B + b/b/b" },
         { "id": "B-2", "label": "ball/ball + b/b/b" }
