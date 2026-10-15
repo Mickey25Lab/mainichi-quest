@@ -69,7 +69,33 @@
           <button class="mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button" data-mode="longdivision">
             <span class="mode-select-name">わり算ひっ算</span><span class="mode-select-remaining"></span><span class="mode-select-energy"></span>
           </button>
+          <button class="mode-select-choice mode-select-phonics" id="mode-select-phonics" type="button">
+            <span class="mode-select-name">フォニックス（動画）<small>ためしてみる</small></span>
+          </button>
         </div>
+      </div>
+    </section>
+
+    <section class="screen phonics-youtube-screen" id="phonics-youtube-screen" aria-labelledby="phonics-youtube-title">
+      <img class="phonics-youtube-background" src="./assets/ui/top/mode_select_background.webp" width="1400" height="1050" decoding="async" alt="">
+      <div class="phonics-youtube-stage">
+        <header class="phonics-youtube-header">
+          <div>
+            <p class="phonics-youtube-eyebrow">フォニックス動画・技術PoC</p>
+            <h1 id="phonics-youtube-title">音をまねしてみよう！</h1>
+          </div>
+          <button class="phonics-youtube-back" id="phonics-youtube-back" type="button">もどる</button>
+        </header>
+        <div class="phonics-youtube-player-frame" aria-label="YouTube フォニックス動画">
+          <div id="phonics-youtube-player"></div>
+        </div>
+        <p class="phonics-youtube-status" id="phonics-youtube-status" role="status">「はじめる」を押すと動画が再生されます。</p>
+        <p class="phonics-youtube-prompt" id="phonics-youtube-prompt" role="status" hidden>まねして言ってみよう！</p>
+        <div class="phonics-youtube-actions">
+          <button class="phonics-youtube-start" id="phonics-youtube-start" type="button">はじめる</button>
+          <button class="phonics-youtube-end" id="phonics-youtube-end" type="button" hidden>おわる</button>
+        </div>
+        <p class="phonics-youtube-note">動画を見たことによるポイント・報酬はありません。</p>
       </div>
     </section>
 
