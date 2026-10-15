@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.27";
+  const appVersion = "0.2.28";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -366,6 +366,7 @@
     openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
+    recordBgmDiagnostic("screen-change-request", { screenId: id });
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
@@ -791,7 +792,7 @@
     saveViewportDiagnosticsEnabled(viewportDiagnosticsEnabled);
     updateViewportDiagnosticsButton();
     updateAdminViewportDiagnosticsToggle();
-    setAdminActionStatus(viewportDiagnosticsEnabled ? "MQ-001診断をONにしました。" : "MQ-001診断をOFFにしました。");
+    setAdminActionStatus(viewportDiagnosticsEnabled ? "画面拡大診断をONにしました。" : "画面拡大診断をOFFにしました。");
   }
   function setupViewportDiagnostics() {
     viewportDiagnosticsEnabled = loadViewportDiagnosticsEnabled();
@@ -3783,6 +3784,92 @@
     renderVehicleDetail();
   }
 
+  // Opt-in BGM loss diagnostics. Only snapshots are recorded; playback behavior
+  // is never modified. Entries survive a PWA refresh for later inspection.
+  const bgmDiagnosticPreferenceKey = "mq:bgm-loss-diagnostics-enabled-v1";
+  const bgmDiagnosticStorageKey = "mq:bgm-loss-diagnostics-log-v1";
+  let bgmDiagnosticsEnabled = false;
+  let bgmDiagnostics = [];
+  let bgmDiagnosticButton = null;
+  let bgmDiagnosticLastSignature = "";
+  let bgmDiagnosticPollCount = 0;
+  function bgmDiagnosticSnapshot(event, detail = {}) {
+    const ctx = state.audio;
+    return {
+      at: new Date().toISOString(), event, ...detail, hidden: document.hidden,
+      screen: activeScreenId(), contextState: ctx?.state || "none",
+      currentTime: ctx?.currentTime ?? null, bgmEnabled: state.bgmEnabled,
+      bgmGroup: state.bgmGroup, desiredBgmGroup: state.desiredBgmGroup,
+      activeBgmGroup: activeBgmGroup(), sourcePresent: Boolean(state.bgmSource),
+      gain: state.bgmGain?.gain?.value ?? null, mutedForBackground: audioMutedForBackground,
+      suspendTimerPending: audioVisibilitySuspendTimer !== null,
+      transitionTimerPending: state.bgmFadeTimer !== null,
+      requestId: state.bgmRequestId, transitionId: state.bgmTransitionId,
+      pendingResume: Boolean(audioResumePromise)
+    };
+  }
+  function recordBgmDiagnostic(event, detail = {}) {
+    if (!bgmDiagnosticsEnabled) return;
+    bgmDiagnostics.push(bgmDiagnosticSnapshot(event, detail));
+    if (bgmDiagnostics.length > 120) bgmDiagnostics.splice(0, bgmDiagnostics.length - 120);
+    try { localStorage.setItem(bgmDiagnosticStorageKey, JSON.stringify(bgmDiagnostics)); } catch (_) {}
+  }
+  function updateAdminBgmDiagnosticsToggle() {
+    const toggle = $("admin-bgm-diagnostics-toggle");
+    if (!toggle) return;
+    toggle.setAttribute("aria-checked", String(bgmDiagnosticsEnabled));
+    toggle.querySelector("span").textContent = bgmDiagnosticsEnabled ? "ON" : "OFF";
+    if (bgmDiagnosticButton) bgmDiagnosticButton.hidden = !bgmDiagnosticsEnabled;
+  }
+  function toggleBgmDiagnostics() {
+    bgmDiagnosticsEnabled = !bgmDiagnosticsEnabled;
+    try { localStorage.setItem(bgmDiagnosticPreferenceKey, bgmDiagnosticsEnabled ? "1" : "0"); } catch (_) {}
+    updateAdminBgmDiagnosticsToggle();
+    recordBgmDiagnostic("diagnostics-enabled");
+    setAdminActionStatus(bgmDiagnosticsEnabled ? "BGM消失診断をONにしました。" : "BGM消失診断をOFFにしました。");
+  }
+  function setupBgmDiagnostics() {
+    try {
+      bgmDiagnosticsEnabled = localStorage.getItem(bgmDiagnosticPreferenceKey) === "1";
+      const saved = JSON.parse(localStorage.getItem(bgmDiagnosticStorageKey) || "[]");
+      if (Array.isArray(saved)) bgmDiagnostics = saved.slice(-120);
+    } catch (_) {}
+    const button = document.createElement("button");
+    bgmDiagnosticButton = button;
+    button.type = "button";
+    button.textContent = "BGM LOG";
+    Object.assign(button.style, {
+      position: "fixed", left: "8px", bottom: "8px", zIndex: "2147483647",
+      fontSize: "12px", padding: "6px 8px", opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      recordBgmDiagnostic("manual-log");
+      const report = JSON.stringify(bgmDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(report);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "BGM LOG"; }, 1400);
+      } catch (_) { window.prompt("BGM loss diagnostic log", report); }
+    });
+    document.body.appendChild(button);
+    updateAdminBgmDiagnosticsToggle();
+    recordBgmDiagnostic("startup");
+    window.setInterval(() => {
+      if (!bgmDiagnosticsEnabled) return;
+      const ctx = state.audio;
+      const shouldPlay = !document.hidden && state.bgmEnabled && Boolean(activeBgmGroup());
+      const unexpected = shouldPlay && (ctx?.state === "suspended" || (
+        !state.bgmSource && !state.bgmFadeTimer && Boolean(state.desiredBgmGroup)
+      ) || (
+        state.bgmSource && (state.bgmGain?.gain?.value ?? 1) < 0.0005 && !state.bgmFadeTimer
+      ));
+      const signature = unexpected ? [ctx?.state, state.bgmGroup, audioMutedForBackground].join(":") : "";
+      if (unexpected && signature !== bgmDiagnosticLastSignature) recordBgmDiagnostic("possible-silence");
+      bgmDiagnosticLastSignature = signature;
+      // Periodic snapshots also capture silent output without a detectable state change.
+      if (++bgmDiagnosticPollCount % 5 === 0) recordBgmDiagnostic("audio-heartbeat");
+    }, 2000);
+  }
   let audioVisibilitySuspendTimer = null;
   let audioResumePromise = null;
   let audioMutedForBackground = false;
@@ -3809,6 +3896,7 @@
   }
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
+    recordBgmDiagnostic("background-suspend", { reason });
     if (!ctx || ctx.state === "closed") return;
     if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
 
@@ -3831,6 +3919,7 @@
     }, suspendDelayMs);
   }
   function resumeAudioAfterVisible(reason) {
+    recordBgmDiagnostic("foreground-resume", { reason });
     if (audioVisibilitySuspendTimer !== null) {
       window.clearTimeout(audioVisibilitySuspendTimer);
       audioVisibilitySuspendTimer = null;
@@ -3845,6 +3934,7 @@
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
       state.audio.addEventListener?.("statechange", () => {
+        recordBgmDiagnostic("audio-context-statechange");
         if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
       });
     }
@@ -4467,6 +4557,7 @@
 
   setupVisualDiagnostics();
   setupViewportDiagnostics();
+  setupBgmDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   syncBackgroundMusicForActiveScreen();
@@ -4538,6 +4629,7 @@
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
   $("admin-viewport-diagnostics-toggle").addEventListener("click", toggleViewportDiagnostics);
+  $("admin-bgm-diagnostics-toggle").addEventListener("click", toggleBgmDiagnostics);
   $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
   $("admin-reenable-opening-movie").addEventListener("click", reenableOpeningMovieForActiveProfile);
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
