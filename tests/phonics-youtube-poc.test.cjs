@@ -35,14 +35,13 @@ function installMockPlayer() {
     PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2 },
     Player: function Player(id, options) {
       const player = {
-        id, options, currentTime: 0, state: -1, playCalls: 0, pauseCalls: 0, seekCalls: [], destroyed: false, muted: false, muteCalls: 0, unMuteCalls: 0,
+        id, options, currentTime: 0, state: -1, playCalls: 0, pauseCalls: 0, seekCalls: [], destroyed: false, volume: 100, volumeCalls: [],
         getPlayerState() { return this.state; },
         getCurrentTime() { return this.currentTime; },
         seekTo(seconds) { this.seekCalls.push(seconds); this.currentTime = seconds; },
         playVideo() { this.playCalls += 1; this.state = window.YT.PlayerState.PLAYING; options.events.onStateChange({ data: this.state, target: this }); },
         pauseVideo() { this.pauseCalls += 1; this.state = window.YT.PlayerState.PAUSED; options.events.onStateChange({ data: this.state, target: this }); },
-        mute() { this.muteCalls += 1; this.muted = true; },
-        unMute() { this.unMuteCalls += 1; this.muted = false; },
+        setVolume(value) { this.volume = value; this.volumeCalls.push(value); },
         stopVideo() { this.state = -1; },
         destroy() { this.destroyed = true; },
         finish() { this.state = window.YT.PlayerState.ENDED; options.events.onStateChange({ data: this.state, target: this }); }
@@ -82,23 +81,26 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
   assert.equal(playerOptions.playerVars.controls, 0);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10]);
 
-  // 10-15 voiced -> seek to 10 and mute.
+  // 10-15 voiced -> seek to 10 and reduce volume, without pause/play.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
-  await page.waitForFunction(() => window.__ytPlayers[0].muteCalls === 1);
+  await page.waitForFunction(() => window.__ytPlayers[0].volume === 40);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), true);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
 
-  // 10-15 silent -> seek to 15 and unmute.
+  // 10-15 reduced-volume repeat -> continue through 15 and restore volume only.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
-  await page.waitForFunction(() => window.__ytPlayers[0].unMuteCalls >= 2);
+  await page.waitForFunction(() => window.__ytPlayers[0].volume === 100);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), false);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
 
-  // 15-20 voiced -> seek to 15 and mute.
+  // 15-20 voiced -> seek to 15 and reduce volume, still without pause/play.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
-  await page.waitForFunction(() => window.__ytPlayers[0].muteCalls === 2);
+  await page.waitForFunction(() => window.__ytPlayers[0].volume === 40);
   assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].muted), true);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
+  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
 
   // 15-20 silent -> finish.
   await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
@@ -121,8 +123,8 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /host: "https:\/\/www\.youtube-nocookie\.com"/);
   assert.match(app, /playsinline: 1/);
   assert.match(app, /controls: 0/);
-  assert.match(app, /player\.mute\?\.\(\)/);
-  assert.match(app, /player\.unMute\?\.\(\)/);
+  assert.match(app, /player\.setVolume\?\.\(40\)/);
+  assert.match(app, /player\.setVolume\?\.\(100\)/);
   assert.match(app, /onAutoplayBlocked/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
