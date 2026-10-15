@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.34";
+  const appVersion = "0.2.40";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -406,7 +406,7 @@
     phonicsYoutube.started = false;
     phonicsYoutube.phase = 4;
     try { phonicsYoutube.player?.pauseVideo?.(); } catch (_) {}
-    try { phonicsYoutube.player?.unMute?.(); } catch (_) {}
+    try { phonicsYoutube.player?.setVolume?.(100); } catch (_) {}
     setPhonicsYoutubeStatus("20秒で終了しました。");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
@@ -421,25 +421,25 @@
 
       if (phonicsYoutube.phase === 0 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
         phonicsYoutube.phase = 1;
-        player.mute?.();
+        player.setVolume?.(40);
         player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
-        setPhonicsYoutubeStatus("10〜15秒を音なしでもう一度再生しています。", true);
+        setPhonicsYoutubeStatus("10〜15秒を小さい音でもう一度再生しています。", true);
         return;
       }
       if (phonicsYoutube.phase === 1 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
         phonicsYoutube.phase = 2;
-        // Keep playback continuous at the 15-second boundary. The silent
-        // repeat has already reached 15 seconds, so only restore audio here;
-        // seeking to 15 again causes a visible/audio discontinuity on iPad.
-        player.unMute?.();
+        // Keep playback continuous at the 15-second boundary. The reduced-
+        // volume repeat has already reached 15 seconds, so only restore the
+        // normal volume here; seeking again causes a visible/audio discontinuity.
+        player.setVolume?.(100);
         setPhonicsYoutubeStatus("15〜20秒を音ありで再生しています。");
         return;
       }
       if (phonicsYoutube.phase === 2 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
         phonicsYoutube.phase = 3;
-        player.mute?.();
+        player.setVolume?.(40);
         player.seekTo?.(phonicsYoutubeConfig.splitTimeSeconds, true);
-        setPhonicsYoutubeStatus("15〜20秒を音なしでもう一度再生しています。", true);
+        setPhonicsYoutubeStatus("15〜20秒を小さい音でもう一度再生しています。", true);
         return;
       }
       if (phonicsYoutube.phase === 3 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
@@ -547,7 +547,7 @@
     phonicsYoutube.phase = 0;
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = true;
-    try { phonicsYoutube.player.unMute?.(); } catch (_) {}
+    try { phonicsYoutube.player.setVolume?.(100); } catch (_) {}
     setPhonicsYoutubeStatus("10〜15秒を音ありで再生しています。");
     phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
     phonicsYoutube.player.playVideo();
