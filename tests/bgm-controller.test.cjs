@@ -58,8 +58,10 @@ test("startup audio unlock retries on user gestures instead of reusing a blocked
 test("background handoff cancels pending screen BGM transitions before fading", () => {
   const cancel = app.slice(app.indexOf("function cancelBgmTransitionForLifecycle"), app.indexOf("function disconnectBackgroundMusicSource"));
   assert.match(cancel, /state\.bgmRequestId \+= 1/);
-  assert.match(cancel, /state\.bgmTransitionId \+= 1/);
-  assert.match(cancel, /clearBgmFadeTimer\(\)/);
+  assert.match(cancel, /invalidateBgmFadeTransition\(\)/);
+  const invalidate = app.slice(app.indexOf("function invalidateBgmFadeTransition"), app.indexOf("function cancelBgmTransitionForLifecycle"));
+  assert.match(invalidate, /state\.bgmTransitionId \+= 1/);
+  assert.match(invalidate, /clearBgmFadeTimer\(\)/);
 
   const suspend = app.slice(app.indexOf("function suspendAudioForBackground"), app.indexOf("function resumeAudioAfterVisible"));
   assert.match(suspend, /cancelBgmTransitionForLifecycle\(\)/);
