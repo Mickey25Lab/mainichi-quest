@@ -731,8 +731,18 @@ button, input { font: inherit; }
   color:#fff;
   text-align:center;
 }
-.phonics-youtube-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; text-align:left; }
-.phonics-youtube-header h1 { margin:0; font-size:clamp(21px,2.8vw,34px); line-height:1.05; }
+.phonics-youtube-header {
+  position:relative;
+  width:min(100%,810px);
+  min-height:38px;
+  margin:0 auto 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.phonics-youtube-header h1 { width:100%; margin:0; padding:0 78px; font-size:clamp(21px,2.8vw,34px); line-height:1.05; text-align:center; }
+.phonics-youtube-header .phonics-youtube-back { position:absolute; right:0; top:50%; transform:translateY(-50%); }
 .phonics-youtube-back, .phonics-youtube-start, .phonics-youtube-end {
   border:2px solid rgba(255,255,255,.9); border-radius:999px; color:#fff; font-weight:1000; cursor:pointer;
   text-shadow:0 2px 0 rgba(0,0,0,.25);
@@ -755,7 +765,8 @@ button, input { font: inherit; }
 .phonics-youtube-end { background:linear-gradient(180deg,#2778d7,#1250a7); box-shadow:0 4px 0 #082f74; }
 @media (max-width:600px) {
   .phonics-youtube-stage { width:calc(100vw - 16px); padding:10px 8px 12px; border-radius:18px; }
-  .phonics-youtube-header { gap:8px; }
+  .phonics-youtube-header { min-height:34px; }
+  .phonics-youtube-header h1 { padding:0 64px; }
   .phonics-youtube-back { padding:6px 10px; }
   .phonics-youtube-control-row { grid-template-columns:1fr auto; }
 }
