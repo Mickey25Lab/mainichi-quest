@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.50";
+  const appVersion = "0.2.51";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3290,7 +3290,7 @@
       original.className = "incorrect-digit";
       const cross = document.createElement("span");
       cross.className = "incorrect-digit-cross";
-      cross.textContent = "×";
+      cross.setAttribute("aria-hidden", "true");
       const correction = document.createElement("span");
       correction.className = "incorrect-digit-correction " + placement;
       correction.textContent = String(expected);
@@ -3317,11 +3317,11 @@
       if (Number(state.remainderInput || 0) !== question.remainder)
         markDigit($("long-division-remainder-slot"), question.remainder, "above");
     } else if (state.mode === "normal") {
-      const expected = formatAnswer({ quotient:question.quotient, remainder:question.remainder });
       const holder = $("answer-text");
       const entered = holder.textContent;
       const parts = entered.split("…");
-      const expectedParts = expected.split("…");
+      const expectedQuotient = String(question.quotient);
+      const expectedRemainder = Number(question.remainder);
       const digits = document.createDocumentFragment();
       const addPart = (value, target, side) => {
         const span = document.createElement("span");
@@ -3330,10 +3330,16 @@
         digits.appendChild(span);
         if (value !== target) markDigit(span, target, side);
       };
-      addPart(parts[0] || "", expectedParts[0], "left");
-      if (parts.length > 1 || expectedParts.length > 1) {
+      addPart(parts[0] || "", expectedQuotient, "left");
+      if (parts.length > 1) {
         digits.appendChild(document.createTextNode("…"));
-        addPart(parts[1] || "", expectedParts[1] ?? "0", "right");
+        addPart(parts[1] || "", String(expectedRemainder), "right");
+      } else if (expectedRemainder !== 0) {
+        const missing = document.createElement("span");
+        missing.className = "missing-remainder-correction";
+        missing.textContent = "…" + expectedRemainder;
+        missing.setAttribute("aria-label", "正しいあまり " + expectedRemainder);
+        digits.appendChild(missing);
       }
       holder.replaceChildren(digits);
     }
