@@ -1,7 +1,7 @@
 {
   "lessonId": "phonics-az",
   "sourceId": "abc-phonics-chant-az-tora-teacher",
-  "proposalRevision": "mechanical-frame-v3",
+  "proposalRevision": "mechanical-frame-v4",
   "repeatVolume": 100,
   "mechanicalGrid": {
     "firstFrameSeconds": 4.49,

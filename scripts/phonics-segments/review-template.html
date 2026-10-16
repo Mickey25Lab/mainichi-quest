@@ -40,6 +40,7 @@
           <section><h3>ジャンプ時<br>開始</h3><div class="controls" data-grid="jumpStartOffsetSeconds"></div></section>
         </div>
       </details>
+      <button class="primary" id="save-settings">すべての設定値を更新・保存</button>
       <h2 id="title">—</h2><p class="metric" id="metrics">—</p>
       <details class="fine-tune">
         <summary>個別の微調整（必要なときだけ開く）</summary>
@@ -75,7 +76,7 @@
   const gridButtons = name => {const grid=data.analysis.mechanicalGrid, box=document.querySelector(`[data-grid="${name}"]`);if(!grid||!box)return;grid[name]=Number(grid[name]||0);box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const button=document.createElement("button");button.className=delta<0?"decrease":"increase";button.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;button.onclick=()=>{grid[name]=Number((grid[name]+delta).toFixed(2));if(name==="firstFrameSeconds"||name==="followingFrameSeconds")rebuildMechanicalGrid();render();cueSelected();playClipRange(selected.start,selected.end,1,null)};return button;}));};
   const renderGrid = () => {const grid=data.analysis.mechanicalGrid, panel=$("grid-controls");if(!grid){panel.classList.add("hidden");return}panel.classList.remove("hidden");$("grid-metrics").textContent=`A-1 ${fmt(grid.firstFrameSeconds)}秒 / A-2以降 ${fmt(grid.followingFrameSeconds)}秒 / ジャンプ終了 ${fmt(grid.jumpEndOffsetSeconds)}秒 / ジャンプ開始 ${fmt(grid.jumpStartOffsetSeconds)}秒 / 全${all().length}区間`;["firstFrameSeconds","followingFrameSeconds","jumpEndOffsetSeconds","jumpStartOffsetSeconds"].forEach(gridButtons);};
   const buttons = side => {const box=document.querySelector(`[data-side="${side}"]`);box.replaceChildren(...[-.10,-.05,-.01,.01,.05,.10].map(delta=>{const b=document.createElement("button");b.className=delta<0?"decrease":"increase";b.textContent=`${delta>0?"+":""}${delta.toFixed(2)}`;b.onclick=()=>{selected[side]=Number((selected[side]+delta).toFixed(2));selected.manuallyAdjusted=true;render();cueSelected()};return b;}));};
-  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;renderGrid();buttons("start");buttons("end");renderList();draw();persist();};
+  const render = () => {$("title").textContent=`${selected.id} / ${selected.letter}`;$("clip-title").textContent=selected.id;$("clip-timing").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒`;$("label").value=selected.label;$("metrics").textContent=`${fmt(selected.start)}–${fmt(selected.end)}秒  confidence ${selected.confidence}  ${selected.fixed?"FIX済み":"自動候補"}`;renderGrid();buttons("start");buttons("end");renderList();draw();};
   const select = segment => {selected=segment;render();cueSelected();playTwiceThrough(all().slice(all().indexOf(selected)));};
   const playClipRange = (start,end,volume,next) => {clipFlow=next;clipStopAt=end;clipVideo.volume=volume;clipVideo.currentTime=start;clipVideo.play();$("status").textContent=`${fmt(start)}–${fmt(end)}秒を${Math.round(volume*100)}%で再生中`};
   const clampTime = time => Math.max(0,Math.min(data.duration,time));
@@ -90,7 +91,8 @@
   $("play-flow").onclick=()=>playTwiceThrough(all().slice(all().indexOf(selected)));
   const playSecondThenContinue = (segments,index) => {const segment=segments[index];playClipRange(jumpStartTime(segment),segment.end,1,()=>{const next=segments[index+1];if(!next){$("status").textContent="A-1〜Z-2の各2回通し再生が終わりました。";return}clipStopAt=jumpEndTime(next);clipFlow=()=>playSecondThenContinue(segments,index+1);clipVideo.volume=1;clipVideo.play();$("status").textContent=`${next.id} の1回目を連続再生中`;});};
   $("play-all-double").onclick=()=>playTwiceThrough(all());
-  $("label").oninput=e=>{selected.label=e.target.value;renderList();persist()};
+  $("label").oninput=e=>{selected.label=e.target.value;renderList()};
+  $("save-settings").onclick=()=>{persist();$("status").textContent="すべての設定値を更新・保存しました。次回リロード時にも復元されます。"};
   $("fix").onclick=()=>{selected.fixed=true;selected.manuallyAdjusted=true;render()};$("unfix").onclick=()=>{selected.fixed=false;render()};
   const download = (payload,name) => {const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=name;a.click();URL.revokeObjectURL(a.href)};
   $("save-review").onclick=()=>{download(data,data.lessonId+"-fixed-segments.json");$("status").textContent="レビュー状態を保存しました。"};
