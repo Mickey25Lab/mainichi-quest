@@ -130,7 +130,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.0"/);
+  assert.match(app, /const appVersion = "0\.3\.2"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -187,4 +187,11 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(pocSection, /phonicsYoutube\.activeModeId = modeId/);
   assert.match(pocSection, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*completeDailyMissionRound\(phonicsYoutube\.activeModeId\)[\s\S]*leavePhonicsYoutube\(\)/);
   assert.match(app, /phonics-youtube-end"\)\.addEventListener\("click", completePhonicsYoutubeAndLeave\)/);
+  assert.match(html, /id="admin-phonics-diagnostics-toggle"/);
+  assert.match(app, /mq:phonics-diagnostics-enabled-v1/);
+  assert.match(app, /mq:phonics-diagnostics-log-v1/);
+  assert.match(app, /recordPhonicsDiagnostic\("prepare-start"\)/);
+  assert.match(app, /recordPhonicsDiagnostic\("player-on-ready"\)/);
+  assert.match(app, /prepare-still-disabled-after-5s/);
+  assert.match(app, /PHONICS LOG/);
 });
