@@ -157,8 +157,9 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(css, /\.phonics-youtube-background[\s\S]*width:100%;[\s\S]*height:100%;[\s\S]*object-fit:contain/);
   assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1160px;[\s\S]*overflow:hidden;[\s\S]*transform:translate\(-50%,-50%\)/);
   assert.doesNotMatch(html, /phonics-youtube-player-scale/);
-  assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1160px;[\s\S]*aspect-ratio:16 \/ 9;[\s\S]*overflow:hidden/);
-  assert.match(css, /\.phonics-youtube-player-frame > div,[\s\S]*iframe[\s\S]*width:1450px;[\s\S]*height:815\.625px;[\s\S]*transform:scale\(\.8\);[\s\S]*transform-origin:top left/);
+  assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1160px;[\s\S]*aspect-ratio:16 \/ 9;[\s\S]*transform:translate\(-50%,-50%\)/);
+  assert.match(css, /\.phonics-youtube-player-frame > div, \.phonics-youtube-player-frame iframe \{ width:100%; height:100%; border:0; \}/);
+  assert.doesNotMatch(css, /\.phonics-youtube-player-frame[\s\S]*transform:scale\(\.8\)/);
   assert.match(css, /\.play-screen \.progress-badge,[\s\S]*\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button[\s\S]*width:166px/);
   assert.match(css, /\.phonics-youtube-end \{[\s\S]*width:360px;[\s\S]*height:var\(--play-corner-control-height\);[\s\S]*border-radius:var\(--play-corner-radius\);[\s\S]*font-size:34px/);
   assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button/);
