@@ -748,12 +748,11 @@ button, input { font: inherit; }
   overflow:hidden;
 }
 .phonics-youtube-player-frame {
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:810px;
+  position:relative;
+  z-index:1;
+  width:min(810px,calc(100vw - 28px));
   aspect-ratio:16 / 9;
-  transform:translate(-50%,-50%);
+  margin:0 auto;
   background:#000;
 }
 .phonics-youtube-player-frame > div, .phonics-youtube-player-frame iframe { width:100%; height:100%; border:0; }
@@ -1822,6 +1821,7 @@ button, input { font: inherit; }
 .play-screen .answer-card,
 .play-screen .keypad button,
 .play-screen .quit-button,
+.phonics-youtube-screen .quit-button,
 .play-screen .assist-button {
   font-family: "Noto Sans JP", sans-serif;
   font-style: normal;
@@ -2218,6 +2218,7 @@ button, input { font: inherit; }
 .play-screen .keypad .remainder-key,
 .play-screen .keypad .no-remainder-key { font-weight: 900; }
 .play-screen .quit-button,
+.phonics-youtube-screen .quit-button,
 .play-screen .assist-button {
   z-index: 7;
   width: var(--play-corner-control-width);
@@ -2228,7 +2229,8 @@ button, input { font: inherit; }
   font-weight: 900;
   white-space: nowrap;
 }
-.play-screen .quit-button {
+.play-screen .quit-button,
+.phonics-youtube-screen .quit-button {
   left: 42px;
   bottom: 34px;
   min-width: 0;
@@ -2498,6 +2500,7 @@ button, input { font: inherit; }
   .play-screen .progress-badge,
   .play-screen .elapsed-time,
   .play-screen .quit-button,
+  .phonics-youtube-screen .quit-button,
   .play-screen .assist-button { font-size:var(--keypad-remainder-label-size); }
   .play-stage { --play-corner-control-width:240px; }
 }
