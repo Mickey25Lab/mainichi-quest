@@ -3763,3 +3763,15 @@ button, input { font: inherit; }
   transform:translate(-50%,-50%) rotate(45deg);
 }
 
+
+/* Each row's complete character + NEW orb is a single stacking context. */
+.collection-scene-item { isolation:isolate; }
+.collection-scene-item-robot .collection-scene-new-orb { right:auto; left:50%; transform:translateX(-50%); }
+/* Grading circle/cross must cover the addition operator. */
+.question-answer-card .answer-mark { z-index:30; }
+.has-digit-correction { position:relative !important; overflow:visible !important; }
+.incorrect-digit { position:relative; }
+.incorrect-digit-cross { position:absolute; z-index:31; left:50%; top:50%; transform:translate(-50%,-50%); color:#ec343d; font:900 .8em/1 "Noto Sans JP",sans-serif; pointer-events:none; }
+.incorrect-digit-correction { position:absolute; z-index:31; left:50%; color:#ec343d; font:900 .5em/1 "Noto Sans JP",sans-serif; white-space:nowrap; transform:translateX(-50%); pointer-events:none; }
+.incorrect-digit-correction.above { bottom:100%; }
+.incorrect-digit-correction.below { top:100%; }
