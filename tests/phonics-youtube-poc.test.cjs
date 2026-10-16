@@ -74,6 +74,10 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.locator("#mode-select-phonics").click();
   await page.locator("#phonics-youtube-screen.active").waitFor();
   await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 1);
+  const completionButton = page.locator("#phonics-youtube-end");
+  assert.equal(await completionButton.isVisible(), true);
+  assert.equal(await completionButton.isDisabled(), false);
+  assert.equal(await completionButton.evaluate((button) => button.classList.contains("is-pending")), true);
 
   const playerOptions = await page.evaluate(() => window.__ytPlayers[0].options);
   assert.equal(playerOptions.videoId, "ChqnN3cKzXQ");
@@ -106,11 +110,13 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
     assert.equal(start <= end, true, `${id} has an ordered frame`);
   }
 
-  await page.locator("#phonics-youtube-end").waitFor({ state: "visible" });
-  assert.equal(await page.locator("#phonics-youtube-end").isVisible(), true);
+  await page.waitForFunction(() => !document.querySelector("#phonics-youtube-end").classList.contains("is-pending"));
+  assert.equal(await completionButton.isVisible(), true);
+  assert.equal(await completionButton.isDisabled(), false);
+  assert.equal(await completionButton.textContent(), "動画を見たよ");
   assert.match(await page.locator("#phonics-youtube-status").textContent(), /パート2（G〜K）が終わりました/);
 
-  await page.locator("#phonics-youtube-end").click();
+  await completionButton.click();
   await page.locator("#mode-select-screen.active").waitFor();
   await page.waitForFunction(() => window.__ytPlayers.length === 2);
   assert.deepEqual(pageErrors, []);
@@ -118,6 +124,8 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
 
 test("phonics YouTube PoC is explicitly playback-only", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /lessonId: "phonics-part-2-g-k"/);
   assert.match(app, /firstFrameSeconds: 4\.59/);
@@ -134,6 +142,15 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*preparePhonicsYoutubePlayback\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
+  assert.match(html, /フォニックス パート2/);
+  assert.match(html, /<small>G〜K<\/small>/);
+  assert.doesNotMatch(html, /ためしてみる/);
+  assert.match(html, /class="quit-button phonics-youtube-quit"[^>]*>やめる<\/button>/);
+  assert.match(html, /class="phonics-youtube-end is-pending"[^>]*>動画を見たよ<\/button>/);
+  assert.doesNotMatch(html, /phonics-youtube-header/);
+  assert.match(css, /\.phonics-youtube-stage[\s\S]*border:0;[\s\S]*background:transparent;[\s\S]*box-shadow:none;/);
+  assert.match(css, /\.phonics-youtube-status \{ display:none; \}/);
+  assert.match(css, /\.phonics-youtube-end\.is-pending/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
   assert.doesNotMatch(pocSection, /setVolume\?\.\(40\)/);
   assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
