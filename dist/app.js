@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.41";
+  const appVersion = "0.2.42";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -438,6 +438,7 @@
     setPhonicsYoutubeStatus("パート2（G〜K）が終わりました。");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
+    $("phonics-youtube-end").classList.remove("is-pending");
   }
   function runPhonicsYoutubeCheckpointPoll() {
     stopPhonicsYoutubePolling();
@@ -566,7 +567,8 @@
     phonicsYoutube.frameIndex = 0;
     phonicsYoutube.pass = "first";
     $("phonics-youtube-start").hidden = true;
-    $("phonics-youtube-end").hidden = true;
+    $("phonics-youtube-end").hidden = false;
+    $("phonics-youtube-end").classList.add("is-pending");
     setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(currentPhonicsYoutubeFrame()));
     phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.frames[0].start, true);
     phonicsYoutube.player.playVideo();
@@ -584,7 +586,8 @@
   function openPhonicsYoutube() {
     showScreen("phonics-youtube-screen");
     $("phonics-youtube-start").hidden = true;
-    $("phonics-youtube-end").hidden = true;
+    $("phonics-youtube-end").hidden = false;
+    $("phonics-youtube-end").classList.add("is-pending");
     $("phonics-youtube-start").disabled = false;
     $("phonics-youtube-status").classList.remove("is-practice");
     setPhonicsYoutubeStatus("動画を準備しています…");
