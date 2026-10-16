@@ -734,40 +734,21 @@ button, input { font: inherit; }
   .mode-select-choice { min-height:78px; padding-block:7px; }
 }
 
-.phonics-youtube-screen { padding:0; overflow:hidden; background:#000; }
+.phonics-youtube-screen { padding:0; overflow:auto; background:#061638; }
+.phonics-youtube-background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.34; }
 .phonics-youtube-stage {
-  position:absolute;
-  left:50%;
-  top:50%;
+  position:relative;
   z-index:1;
-  width:1448px;
-  height:1086px;
-  transform:translate(-50%,-50%) scale(var(--stage-scale,1));
-  transform-origin:center;
-  overflow:hidden;
+  width:min(810px,calc(100vw - 28px));
+  margin:0 auto;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  text-align:center;
 }
-.phonics-youtube-background {
-  position:absolute;
-  inset:0;
-  z-index:0;
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  object-position:center;
-  opacity:.34;
-  pointer-events:none;
-}
-.phonics-youtube-player-frame {
-  position:absolute;
-  left:50%;
-  top:50%;
-  z-index:1;
-  width:1160px;
-  aspect-ratio:16 / 9;
-  transform:translate(-50%,-50%);
-  background:#000;
-}
+.phonics-youtube-player-frame { width:100%; aspect-ratio:16 / 9; margin:0 auto; background:#000; }
 .phonics-youtube-player-frame > div, .phonics-youtube-player-frame iframe { width:100%; height:100%; border:0; }
 .phonics-youtube-status { display:none; }
 .phonics-youtube-start {
@@ -783,32 +764,32 @@ button, input { font: inherit; }
 .phonics-youtube-end {
   position:absolute;
   left:50%;
-  bottom:34px;
-  z-index:7;
-  width:360px;
-  height:var(--play-corner-control-height);
-  padding:0;
+  bottom:clamp(18px,3vh,34px);
+  z-index:3;
+  min-width:220px;
+  padding:14px 30px;
   transform:translateX(-50%);
-  border:3px solid #7aa8d6;
-  border-radius:var(--play-corner-radius);
+  border:0;
+  border-radius:999px;
   color:#fff;
-  background:#2f79c7;
-  box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18);
-  font-size:34px;
-  line-height:1;
+  background:linear-gradient(180deg,#2778d7,#1250a7);
+  box-shadow:0 6px 0 #082f74,0 12px 24px rgba(3,52,109,.2);
+  font-size:clamp(20px,2.5vw,31px);
   font-weight:900;
-  white-space:nowrap;
   cursor:pointer;
 }
 .phonics-youtube-end.is-pending {
-  color:#f4f4f4;
-  border-color:#b4bcc5;
-  background:#8e959d;
-  box-shadow:0 6px 0 #737a82,0 12px 22px rgba(3,52,109,.14);
+  color:#f1f1f1;
+  background:linear-gradient(180deg,#a5abb3,#777e87);
+  box-shadow:0 6px 0 #5e646c,0 12px 24px rgba(3,52,109,.14);
 }
-.phonics-youtube-end:active { transform:translate(-50%,3px); box-shadow:0 3px 0 #4f79a2,0 7px 14px rgba(3,52,109,.16); }
-.phonics-youtube-end.is-pending:active { box-shadow:0 3px 0 #737a82,0 7px 14px rgba(3,52,109,.12); }
-
+.phonics-youtube-end:active { transform:translate(-50%,3px); box-shadow:0 3px 0 #082f74,0 7px 14px rgba(3,52,109,.16); }
+.phonics-youtube-end.is-pending:active { box-shadow:0 3px 0 #5e646c,0 7px 14px rgba(3,52,109,.12); }
+.phonics-youtube-quit { z-index:3; }
+@media (max-width:600px) {
+  .phonics-youtube-stage { width:calc(100vw - 16px); }
+  .phonics-youtube-end { min-width:190px; }
+}
 .top-image-buttons {
   position:absolute;
   z-index:1;
