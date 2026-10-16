@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.48";
+  const appVersion = "0.2.49";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3279,6 +3279,48 @@
   function runAnswerTransition(step) {
     try { step(); } catch (error) { state.transitioning = false; console.error("Answer transition failed", error); }
   }
+
+  function showWrongDigitCorrections() {
+    const question = state.current;
+    if (!question || ["numbercards", "counting1", "counting2"].includes(state.mode)) return;
+    const markDigit = (slot, expected, placement) => {
+      if (!slot || slot.textContent.trim() === String(expected)) return;
+      const original = document.createElement("span");
+      original.textContent = slot.textContent.trim() || "＿";
+      original.className = "incorrect-digit";
+      const cross = document.createElement("span");
+      cross.className = "incorrect-digit-cross";
+      cross.textContent = "×";
+      const correction = document.createElement("span");
+      correction.className = "incorrect-digit-correction " + placement;
+      correction.textContent = String(expected);
+      slot.replaceChildren(original, cross, correction);
+      slot.classList.add("has-digit-correction");
+    };
+    if (state.mode === "multiplication" && state.multiplication) {
+      const expected = String(question.product ?? question.quotient);
+      Array.from($("multiplication-answer-row").children).forEach((slot, i) => {
+        if (state.multiplication.cells[i] !== expected[i]) markDigit(slot, expected[i] ?? "", "below");
+      });
+    } else if (state.mode === "multiplication2x2" && state.multiplication2x2) {
+      state.multiplication2x2.rows.forEach((row) => {
+        Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
+          if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
+        });
+      });
+    } else if (state.mode === "longdivision" && state.longDivision) {
+      const slots = Array.from($("long-division-slots").children);
+      const expected = String(question.quotient).padStart(slots.length, " ");
+      slots.forEach((slot, i) => {
+        if (expected[i] !== " " && state.longDivision.cells[i] !== expected[i]) markDigit(slot, expected[i], "above");
+      });
+      if (Number(state.remainderInput || 0) !== question.remainder)
+        markDigit($("long-division-remainder-slot"), question.remainder, "above");
+    } else if (state.mode === "normal") {
+      const expected = formatAnswer({ quotient:question.quotient, remainder:question.remainder });
+      markDigit($("answer-text"), expected, "above");
+    }
+  }
   function judge(answer) {
     if (state.transitioning) return;
     state.transitioning = true;
@@ -3317,6 +3359,7 @@
       state.current.resultType = state.current.hintUsed ? "hint_wrong" : "self_wrong";
       state.current.hadWrong = true;
       setQuestionCardState("wrong");
+      showWrongDigitCorrections();
       playWrongSound();
       if (state.phase === "initial") {
         enqueueReview(state.missed, state.current);
@@ -3838,7 +3881,25 @@
         profileStore.setCollectionSceneOrder(next);
       } catch (_) {}
     }
-    return current.filter((index) => collectionSceneQualifies(index, kind));
+    const visible = current.filter((index) => collectionSceneQualifies(index, kind));
+    if (kind !== "vehicle") return visible;
+    let history = [];
+    try { history = profileStore.getAcquisitionHistory(); } catch (_) {}
+    const friendshipOrder = new Map();
+    history.forEach((entry) => {
+      if (entry?.acquisitionType !== "friendship_complete") return;
+      const index = vehicles.findIndex((vehicle) => vehicle.stem === entry.vehicleId);
+      if (index >= 0 && !friendshipOrder.has(index)) friendshipOrder.set(index, Number(entry.sequence) || Number.MAX_SAFE_INTEGER);
+    });
+    const discoveryOrder = new Map(visible.map((index, position) => [index, position]));
+    return visible.sort((a, b) => {
+      const aFriendly = vehicleProgress(a).friendly;
+      const bFriendly = vehicleProgress(b).friendly;
+      if (aFriendly !== bFriendly) return aFriendly ? -1 : 1;
+      if (!aFriendly) return discoveryOrder.get(a) - discoveryOrder.get(b);
+      return (friendshipOrder.get(a) ?? Number.MAX_SAFE_INTEGER) - (friendshipOrder.get(b) ?? Number.MAX_SAFE_INTEGER)
+        || discoveryOrder.get(a) - discoveryOrder.get(b);
+    });
   }
   function robotCollectionPageCount() { return collectionSceneOrder("robot").length > 10 ? 2 : 1; }
 
@@ -3850,8 +3911,9 @@
     const shadowHeight = kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13);
     const shadowY = layout.contactY - (kind === "vehicle" ? 0 : 7);
     const top = layout.contactY - layout.size * anchorY;
+    const rowDepth = Math.round(layout.contactY);
     const isNew = state.collectionShowSessionMarkers && state.collectionNewVehicleIndexes.has(vehicleIndex);
-    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
+    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="z-index:${rowDepth};--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
   }
   function renderVehicleCollectionScene() {
     return collectionSceneOrder("vehicle").slice(0, vehicleCollectionSlots.length).map((vehicleIndex, position) => {
