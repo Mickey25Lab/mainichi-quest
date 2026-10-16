@@ -1,0 +1,32 @@
+{
+  "lessonId": "phonics-part-2-g-k",
+  "sourceVideoId": "ChqnN3cKzXQ",
+  "sourceTitle": "ABC Phonics Chant for Children",
+  "savedGlobalSettings": {
+    "a1FrameSeconds": 4.59,
+    "a2AndLaterFrameSeconds": 5.05,
+    "jumpEndOffsetSeconds": 0,
+    "jumpStartOffsetSeconds": 0.39,
+    "frameCount": 52
+  },
+  "part1Exception": {
+    "frameId": "A-1",
+    "startSeconds": -0.4,
+    "jumpEndSeconds": 4.84,
+    "jumpStartSeconds": 0,
+    "endSeconds": 4.84,
+    "note": "冒頭だけの個別調整。パート2では使用しない。"
+  },
+  "segments": [
+    { "id": "G-1", "start": 60.14, "jumpEnd": 65.19, "jumpStart": 60.53, "end": 65.19 },
+    { "id": "G-2", "start": 65.19, "jumpEnd": 70.24, "jumpStart": 65.58, "end": 70.24 },
+    { "id": "H-1", "start": 70.24, "jumpEnd": 75.29, "jumpStart": 70.63, "end": 75.29 },
+    { "id": "H-2", "start": 75.29, "jumpEnd": 80.34, "jumpStart": 75.68, "end": 80.34 },
+    { "id": "I-1", "start": 80.34, "jumpEnd": 85.39, "jumpStart": 80.73, "end": 85.39 },
+    { "id": "I-2", "start": 85.39, "jumpEnd": 90.44, "jumpStart": 85.78, "end": 90.44 },
+    { "id": "J-1", "start": 90.44, "jumpEnd": 95.49, "jumpStart": 90.83, "end": 95.49 },
+    { "id": "J-2", "start": 95.49, "jumpEnd": 100.54, "jumpStart": 95.88, "end": 100.54 },
+    { "id": "K-1", "start": 100.54, "jumpEnd": 105.59, "jumpStart": 100.93, "end": 105.59 },
+    { "id": "K-2", "start": 105.59, "jumpEnd": 110.64, "jumpStart": 105.98, "end": 110.64 }
+  ]
+}

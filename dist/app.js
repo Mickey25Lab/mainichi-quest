@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.40";
+  const appVersion = "0.2.41";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -33,12 +33,33 @@
   const modeSelectPath = "./assets/ui/top/mode_select_background.webp";
   // This is a playback-only technical proof of concept. It deliberately has no
   // score, progress, reward, storage, or collection integration.
+  // These are the saved global settings from the rhythm review tool. A-1 has
+  // a separate exception, but Part 2 starts at G so every frame below follows
+  // the shared A-2-and-later length.
+  const phonicsYoutubeFrames = Object.freeze(
+    ["G", "G", "H", "H", "I", "I", "J", "J", "K", "K"].map((letter, index) => {
+      const start = Number((4.59 + ((12 + index) - 1) * 5.05).toFixed(2));
+      const end = Number((start + 5.05).toFixed(2));
+      return Object.freeze({
+        id: `${letter}-${(index % 2) + 1}`,
+        letter,
+        start,
+        jumpEnd: end,
+        jumpStart: Number((start + 0.39).toFixed(2)),
+        end
+      });
+    })
+  );
   const phonicsYoutubeConfig = Object.freeze({
     videoId: "ChqnN3cKzXQ",
     iframeApiUrl: "https://www.youtube.com/iframe_api",
-    startTimeSeconds: 10,
-    splitTimeSeconds: 15,
-    endTimeSeconds: 20
+    lessonId: "phonics-part-2-g-k",
+    title: "フォニックス パート2（G〜K）",
+    firstFrameSeconds: 4.59,
+    followingFrameSeconds: 5.05,
+    jumpEndOffsetSeconds: 0,
+    jumpStartOffsetSeconds: 0.39,
+    frames: phonicsYoutubeFrames
   });
   const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.webp";
   const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.webp";
@@ -385,7 +406,8 @@
   }
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
-    started: false, ready: false, autoStartPending: false, phase: 0
+    started: false, ready: false, autoStartPending: false,
+    frameIndex: 0, pass: "first"
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -401,13 +423,19 @@
     $("phonics-youtube-status").classList.remove("is-practice");
   }
   function youtubePlayerState(name) { return window.YT?.PlayerState?.[name]; }
+  function currentPhonicsYoutubeFrame() { return phonicsYoutubeConfig.frames[phonicsYoutube.frameIndex] || null; }
+  function phonicsYoutubeFrameMessage(frame, pass = phonicsYoutube.pass) {
+    if (!frame) return "";
+    return pass === "first"
+      ? `${frame.id} を再生しています。`
+      : `${frame.id} をもう一度再生しています。`;
+  }
   function finishPhonicsYoutubeSequence() {
     stopPhonicsYoutubePolling();
     phonicsYoutube.started = false;
-    phonicsYoutube.phase = 4;
+    phonicsYoutube.pass = "complete";
     try { phonicsYoutube.player?.pauseVideo?.(); } catch (_) {}
-    try { phonicsYoutube.player?.setVolume?.(100); } catch (_) {}
-    setPhonicsYoutubeStatus("20秒で終了しました。");
+    setPhonicsYoutubeStatus("パート2（G〜K）が終わりました。");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
   }
@@ -419,39 +447,30 @@
       if (player.getPlayerState?.() !== youtubePlayerState("PLAYING")) return;
       const currentTime = Number(player.getCurrentTime?.()) || 0;
 
-      if (phonicsYoutube.phase === 0 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
-        phonicsYoutube.phase = 1;
-        player.setVolume?.(40);
-        player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
-        setPhonicsYoutubeStatus("10〜15秒を小さい音でもう一度再生しています。", true);
+      const frame = currentPhonicsYoutubeFrame();
+      if (!frame) { finishPhonicsYoutubeSequence(); return; }
+
+      if (phonicsYoutube.pass === "first" && currentTime >= frame.jumpEnd) {
+        // Only the repeat uses a seek. The second pass deliberately continues
+        // into the next frame without pausing or seeking, preserving the chant.
+        phonicsYoutube.pass = "second";
+        player.seekTo?.(frame.jumpStart, true);
+        setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(frame), true);
         return;
       }
-      if (phonicsYoutube.phase === 1 && currentTime >= phonicsYoutubeConfig.splitTimeSeconds) {
-        phonicsYoutube.phase = 2;
-        // Keep playback continuous at the 15-second boundary. The reduced-
-        // volume repeat has already reached 15 seconds, so only restore the
-        // normal volume here; seeking again causes a visible/audio discontinuity.
-        player.setVolume?.(100);
-        setPhonicsYoutubeStatus("15〜20秒を音ありで再生しています。");
-        return;
+      if (phonicsYoutube.pass === "second" && currentTime >= frame.end) {
+        phonicsYoutube.frameIndex += 1;
+        if (!currentPhonicsYoutubeFrame()) { finishPhonicsYoutubeSequence(); return; }
+        phonicsYoutube.pass = "first";
+        setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(currentPhonicsYoutubeFrame()));
       }
-      if (phonicsYoutube.phase === 2 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
-        phonicsYoutube.phase = 3;
-        player.setVolume?.(40);
-        player.seekTo?.(phonicsYoutubeConfig.splitTimeSeconds, true);
-        setPhonicsYoutubeStatus("15〜20秒を小さい音でもう一度再生しています。", true);
-        return;
-      }
-      if (phonicsYoutube.phase === 3 && currentTime >= phonicsYoutubeConfig.endTimeSeconds) {
-        finishPhonicsYoutubeSequence();
-      }
-    }, 100);
+    }, 50);
   }
   function onPhonicsYoutubeStateChange(event) {
     const stateCode = event.data;
     if (stateCode === youtubePlayerState("PLAYING")) {
       if (phonicsYoutube.started) {
-        if (phonicsYoutube.phase === 0) setPhonicsYoutubeStatus("10〜15秒を音ありで再生しています。");
+        setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(currentPhonicsYoutubeFrame()));
         runPhonicsYoutubeCheckpointPoll();
       }
       return;
@@ -499,7 +518,7 @@
           playsinline: 1,
           rel: 0,
           enablejsapi: 1,
-          start: phonicsYoutubeConfig.startTimeSeconds,
+          start: phonicsYoutubeConfig.frames[0].start,
           origin: window.location.origin
         },
         events: {
@@ -544,12 +563,12 @@
     if (!phonicsYoutube.player) return;
     phonicsYoutube.started = true;
     phonicsYoutube.autoStartPending = false;
-    phonicsYoutube.phase = 0;
+    phonicsYoutube.frameIndex = 0;
+    phonicsYoutube.pass = "first";
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = true;
-    try { phonicsYoutube.player.setVolume?.(100); } catch (_) {}
-    setPhonicsYoutubeStatus("10〜15秒を音ありで再生しています。");
-    phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.startTimeSeconds, true);
+    setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(currentPhonicsYoutubeFrame()));
+    phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.frames[0].start, true);
     phonicsYoutube.player.playVideo();
   }
   function startPhonicsYoutubeAutomatically() {
@@ -584,7 +603,8 @@
     phonicsYoutube.started = false;
     phonicsYoutube.ready = false;
     phonicsYoutube.autoStartPending = false;
-    phonicsYoutube.phase = 0;
+    phonicsYoutube.frameIndex = 0;
+    phonicsYoutube.pass = "first";
     $("phonics-youtube-player").replaceChildren();
   }
   function leavePhonicsYoutube() {

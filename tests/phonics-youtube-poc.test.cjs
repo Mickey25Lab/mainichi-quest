@@ -53,7 +53,7 @@ function installMockPlayer() {
   };
 }
 
-test("phonics YouTube PoC alternates voiced and silent repeat segments", async (t) => {
+test("phonics Part 2 repeats G-K normally, then moves to the next frame seamlessly", async (t) => {
   if (!chromium) {
     t.skip("Playwright is not installed in this local checkout; run this browser test in CI or with the project browser-test dependency.");
     return;
@@ -79,34 +79,36 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
   assert.equal(playerOptions.videoId, "ChqnN3cKzXQ");
   assert.equal(playerOptions.host, "https://www.youtube-nocookie.com");
   assert.equal(playerOptions.playerVars.controls, 0);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10]);
+  const expectedFrames = [
+    ["G-1", 60.14, 65.19, 60.53], ["G-2", 65.19, 70.24, 65.58],
+    ["H-1", 70.24, 75.29, 70.63], ["H-2", 75.29, 80.34, 75.68],
+    ["I-1", 80.34, 85.39, 80.73], ["I-2", 85.39, 90.44, 85.78],
+    ["J-1", 90.44, 95.49, 90.83], ["J-2", 95.49, 100.54, 95.88],
+    ["K-1", 100.54, 105.59, 100.93], ["K-2", 105.59, 110.64, 105.98]
+  ];
+  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [60.14]);
 
-  // 10-15 voiced -> seek to 10 and reduce volume, without pause/play.
-  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
-  await page.waitForFunction(() => window.__ytPlayers[0].volume === 40);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
+  for (let index = 0; index < expectedFrames.length; index += 1) {
+    const [id, start, end, repeatStart] = expectedFrames[index];
+    await page.evaluate((time) => { window.__ytPlayers[0].currentTime = time; }, end);
+    await page.waitForFunction((length) => window.__ytPlayers[0].seekCalls.length === length, index + 2);
+    assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls[index + 1]), repeatStart);
+    assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
+    assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
 
-  // 10-15 reduced-volume repeat -> continue through 15 and restore volume only.
-  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 15; });
-  await page.waitForFunction(() => window.__ytPlayers[0].volume === 100);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
+    // The second pass reaches the frame end, then continues into the next
+    // first pass without any pause, play, or seek command.
+    await page.evaluate((time) => { window.__ytPlayers[0].currentTime = time; }, end);
+    if (index < expectedFrames.length - 1) {
+      await page.waitForFunction((nextId) => document.querySelector("#phonics-youtube-status").textContent.includes(nextId), expectedFrames[index + 1][0]);
+      assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [60.14, ...expectedFrames.slice(0, index + 1).map(([, , , value]) => value)]);
+    }
+    assert.equal(start <= end, true, `${id} has an ordered frame`);
+  }
 
-  // 15-20 voiced -> seek to 15 and reduce volume, still without pause/play.
-  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
-  await page.waitForFunction(() => window.__ytPlayers[0].volume === 40);
-  assert.deepEqual(await page.evaluate(() => window.__ytPlayers[0].seekCalls), [10, 10, 15]);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].pauseCalls), 0);
-  assert.equal(await page.evaluate(() => window.__ytPlayers[0].playCalls), 1);
-
-  // 15-20 silent -> finish.
-  await page.evaluate(() => { window.__ytPlayers[0].currentTime = 20; });
   await page.locator("#phonics-youtube-end").waitFor({ state: "visible" });
   assert.equal(await page.locator("#phonics-youtube-end").isVisible(), true);
-  assert.match(await page.locator("#phonics-youtube-status").textContent(), /20秒で終了/);
+  assert.match(await page.locator("#phonics-youtube-status").textContent(), /パート2（G〜K）が終わりました/);
 
   await page.locator("#phonics-youtube-end").click();
   await page.locator("#mode-select-screen.active").waitFor();
@@ -117,14 +119,15 @@ test("phonics YouTube PoC alternates voiced and silent repeat segments", async (
 test("phonics YouTube PoC is explicitly playback-only", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
-  assert.match(app, /startTimeSeconds: 10/);
-  assert.match(app, /splitTimeSeconds: 15/);
-  assert.match(app, /endTimeSeconds: 20/);
+  assert.match(app, /lessonId: "phonics-part-2-g-k"/);
+  assert.match(app, /firstFrameSeconds: 4\.59/);
+  assert.match(app, /followingFrameSeconds: 5\.05/);
+  assert.match(app, /jumpStartOffsetSeconds: 0\.39/);
+  assert.match(app, /\["G", "G", "H", "H", "I", "I", "J", "J", "K", "K"\]/);
   assert.match(app, /host: "https:\/\/www\.youtube-nocookie\.com"/);
   assert.match(app, /playsinline: 1/);
   assert.match(app, /controls: 0/);
-  assert.match(app, /player\.setVolume\?\.\(40\)/);
-  assert.match(app, /player\.setVolume\?\.\(100\)/);
+  assert.match(app, /player\.seekTo\?\.\(frame\.jumpStart, true\)/);
   assert.match(app, /onAutoplayBlocked/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
   assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
@@ -132,5 +135,6 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*preparePhonicsYoutubePlayback\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
+  assert.doesNotMatch(pocSection, /setVolume\?\.\(40\)/);
   assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
 });
