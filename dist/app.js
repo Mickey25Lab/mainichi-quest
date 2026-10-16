@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.1";
+  const appVersion = "0.3.2";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -513,28 +513,44 @@
     }
   }
   function loadPhonicsYoutubeApi() {
-    if (window.YT?.Player) return Promise.resolve(window.YT);
-    if (phonicsYoutube.apiPromise) return phonicsYoutube.apiPromise;
+    if (window.YT?.Player) {
+      recordPhonicsDiagnostic("api-already-ready");
+      return Promise.resolve(window.YT);
+    }
+    if (phonicsYoutube.apiPromise) {
+      recordPhonicsDiagnostic("api-promise-reused");
+      return phonicsYoutube.apiPromise;
+    }
+    recordPhonicsDiagnostic("api-load-start");
     phonicsYoutube.apiPromise = new Promise((resolve, reject) => {
       const previousReady = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => {
         previousReady?.();
+        recordPhonicsDiagnostic("iframe-api-ready-callback", { hasPlayer: Boolean(window.YT?.Player) });
         if (window.YT?.Player) resolve(window.YT);
         else reject(new Error("YouTube IFrame Player API did not provide a player."));
       };
       const script = document.createElement("script");
       script.src = phonicsYoutubeConfig.iframeApiUrl;
       script.async = true;
-      script.onerror = () => reject(new Error("YouTube IFrame Player API could not be loaded."));
+      script.onerror = () => {
+        recordPhonicsDiagnostic("iframe-api-script-error");
+        reject(new Error("YouTube IFrame Player API could not be loaded."));
+      };
       document.head.appendChild(script);
     });
     return phonicsYoutube.apiPromise;
   }
   function createPhonicsYoutubePlayer() {
-    if (phonicsYoutube.player) return Promise.resolve(phonicsYoutube.player);
+    if (phonicsYoutube.player) {
+      recordPhonicsDiagnostic("player-create-reused");
+      return Promise.resolve(phonicsYoutube.player);
+    }
+    recordPhonicsDiagnostic("player-create-start");
     setPhonicsYoutubeStatus("動画を準備しています…");
     $("phonics-youtube-start").disabled = true;
     return loadPhonicsYoutubeApi().then(() => new Promise((resolve) => {
+      recordPhonicsDiagnostic("player-constructor-call");
       phonicsYoutube.player = new window.YT.Player("phonics-youtube-player", {
         videoId: phonicsYoutubeConfig.videoId,
         host: "https://www.youtube-nocookie.com",
@@ -554,6 +570,7 @@
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
             document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = false; });
+            recordPhonicsDiagnostic("player-on-ready");
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -573,6 +590,7 @@
         }
       });
     })).catch((error) => {
+      recordPhonicsDiagnostic("player-setup-error", { message: String(error?.message || error) });
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
@@ -584,8 +602,15 @@
     // That guarantees the eventual phonics-mode tap can call playVideo()
     // synchronously inside the user gesture instead of falling through to an
     // async autoplay attempt that Safari/iPadOS may block.
+    recordPhonicsDiagnostic("prepare-start");
     document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
+    recordPhonicsDiagnostic("buttons-disabled-for-prepare");
     createPhonicsYoutubePlayer();
+    window.setTimeout(() => {
+      if (!phonicsDiagnosticsEnabled) return;
+      const disabled = phonicsButtonSnapshot().filter((button) => button.disabled);
+      if (disabled.length) recordPhonicsDiagnostic("prepare-still-disabled-after-5s", { disabledIds: disabled.map((button) => button.id) });
+    }, 5000);
   }
   function beginPhonicsYoutubePlayback() {
     if (!phonicsYoutube.player) return;
@@ -618,6 +643,7 @@
     return true;
   }
   function openPhonicsYoutube(lessonId, modeId) {
+    recordPhonicsDiagnostic("lesson-open-request", { lessonId, modeId });
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
@@ -634,6 +660,7 @@
     beginPhonicsYoutubePlayback();
   }
   function stopAndDestroyPhonicsYoutube() {
+    recordPhonicsDiagnostic("player-destroy-start");
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
@@ -646,8 +673,10 @@
     phonicsYoutube.frameIndex = 0;
     phonicsYoutube.pass = "first";
     $("phonics-youtube-player").replaceChildren();
+    recordPhonicsDiagnostic("player-destroy-complete");
   }
   function leavePhonicsYoutube() {
+    recordPhonicsDiagnostic("leave-phonics");
     stopAndDestroyPhonicsYoutube();
     phonicsYoutube.activeModeId = null;
     renderModeSelectMission();
@@ -2188,6 +2217,7 @@
   }
 
   function openModeSelect() {
+    recordPhonicsDiagnostic("mode-select-open");
     recordVisualDiagnostic("top-start-tap", visualVehicleSnapshot());
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
@@ -4281,6 +4311,90 @@
       if (++bgmDiagnosticPollCount % 5 === 0) recordBgmDiagnostic("audio-heartbeat");
     }, 2000);
   }
+  // Opt-in phonics availability diagnostics. This only records state; it never
+  // changes player readiness, button disabled state, or playback behavior.
+  const phonicsDiagnosticPreferenceKey = "mq:phonics-diagnostics-enabled-v1";
+  const phonicsDiagnosticStorageKey = "mq:phonics-diagnostics-log-v1";
+  let phonicsDiagnosticsEnabled = false;
+  let phonicsDiagnostics = [];
+  let phonicsDiagnosticButton = null;
+  let phonicsDiagnosticSequence = 0;
+  function phonicsButtonSnapshot() {
+    return Array.from(document.querySelectorAll("[data-phonics-lesson]")).map((button) => ({
+      id: button.id,
+      mode: button.dataset.mode || null,
+      lesson: button.dataset.phonicsLesson || null,
+      disabled: Boolean(button.disabled),
+      hidden: Boolean(button.hidden)
+    }));
+  }
+  function phonicsDiagnosticSnapshot(event, detail = {}) {
+    return {
+      sequence: ++phonicsDiagnosticSequence,
+      at: new Date().toISOString(),
+      event,
+      ...detail,
+      hidden: document.hidden,
+      screen: activeScreenId(),
+      playerPresent: Boolean(phonicsYoutube.player),
+      ready: Boolean(phonicsYoutube.ready),
+      started: Boolean(phonicsYoutube.started),
+      autoStartPending: Boolean(phonicsYoutube.autoStartPending),
+      activeModeId: phonicsYoutube.activeModeId,
+      apiPromisePresent: Boolean(phonicsYoutube.apiPromise),
+      ytPresent: Boolean(window.YT),
+      ytPlayerPresent: Boolean(window.YT?.Player),
+      buttons: phonicsButtonSnapshot()
+    };
+  }
+  function recordPhonicsDiagnostic(event, detail = {}) {
+    if (!phonicsDiagnosticsEnabled) return;
+    phonicsDiagnostics.push(phonicsDiagnosticSnapshot(event, detail));
+    if (phonicsDiagnostics.length > 160) phonicsDiagnostics.splice(0, phonicsDiagnostics.length - 160);
+    try { localStorage.setItem(phonicsDiagnosticStorageKey, JSON.stringify(phonicsDiagnostics)); } catch (_) {}
+  }
+  function updateAdminPhonicsDiagnosticsToggle() {
+    const toggle = $("admin-phonics-diagnostics-toggle");
+    if (!toggle) return;
+    toggle.setAttribute("aria-checked", String(phonicsDiagnosticsEnabled));
+    toggle.querySelector("span").textContent = phonicsDiagnosticsEnabled ? "ON" : "OFF";
+    if (phonicsDiagnosticButton) phonicsDiagnosticButton.hidden = !phonicsDiagnosticsEnabled;
+  }
+  function togglePhonicsDiagnostics() {
+    phonicsDiagnosticsEnabled = !phonicsDiagnosticsEnabled;
+    try { localStorage.setItem(phonicsDiagnosticPreferenceKey, phonicsDiagnosticsEnabled ? "1" : "0"); } catch (_) {}
+    updateAdminPhonicsDiagnosticsToggle();
+    recordPhonicsDiagnostic("diagnostics-enabled");
+    setAdminActionStatus(phonicsDiagnosticsEnabled ? "フォニックス診断をONにしました。" : "フォニックス診断をOFFにしました。");
+  }
+  function setupPhonicsDiagnostics() {
+    try {
+      phonicsDiagnosticsEnabled = localStorage.getItem(phonicsDiagnosticPreferenceKey) === "1";
+      const saved = JSON.parse(localStorage.getItem(phonicsDiagnosticStorageKey) || "[]");
+      if (Array.isArray(saved)) phonicsDiagnostics = saved.slice(-160);
+    } catch (_) {}
+    const button = document.createElement("button");
+    phonicsDiagnosticButton = button;
+    button.type = "button";
+    button.textContent = "PHONICS LOG";
+    Object.assign(button.style, {
+      position: "fixed", left: "8px", bottom: "44px", zIndex: "2147483647",
+      fontSize: "12px", padding: "6px 8px", opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      recordPhonicsDiagnostic("manual-log");
+      const report = JSON.stringify(phonicsDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(report);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "PHONICS LOG"; }, 1400);
+      } catch (_) { window.prompt("Phonics diagnostic log", report); }
+    });
+    document.body.appendChild(button);
+    updateAdminPhonicsDiagnosticsToggle();
+    recordPhonicsDiagnostic("startup");
+  }
+
   let audioVisibilitySuspendTimer = null;
   let audioResumePromise = null;
   let audioMutedForBackground = false;
@@ -5001,6 +5115,7 @@
   setupVisualDiagnostics();
   setupViewportDiagnostics();
   setupBgmDiagnostics();
+  setupPhonicsDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   syncBackgroundMusicForActiveScreen();
@@ -5010,12 +5125,14 @@
   window.addEventListener("resize", () => schedulePlayStageSize("resize"));
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
+    recordPhonicsDiagnostic("pageshow", { persisted: Boolean(event.persisted) });
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
     if (!recoverAbnormalPwaZoom("pageshow")) schedulePlayStageSize("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("pagehide", () => {
+    recordPhonicsDiagnostic("pagehide");
     // Do not stop/disconnect the BufferSource during iOS app handoff.
     // An abrupt source.stop() here can create a short click/beep before the OS
     // suspends Web Audio. Reuse the same short fade+suspend path as blur.
@@ -5074,6 +5191,7 @@
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
   $("admin-viewport-diagnostics-toggle").addEventListener("click", toggleViewportDiagnostics);
   $("admin-bgm-diagnostics-toggle").addEventListener("click", toggleBgmDiagnostics);
+  $("admin-phonics-diagnostics-toggle").addEventListener("click", togglePhonicsDiagnostics);
   $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
   $("admin-reenable-opening-movie").addEventListener("click", reenableOpeningMovieForActiveProfile);
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
