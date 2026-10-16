@@ -174,6 +174,8 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /introMinimumElapsed = true[\s\S]*updatePhonicsIntroReadyState\(\)/);
   assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
+  assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);
+  assert.match(app, /const legacyPhonicsSetting = modeId\.startsWith\("phonics-part-"\)[\s\S]*const settingsKey = legacyPhonicsSetting \? "phonics" : modeId/);
   assert.match(app, /id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true/);
   assert.match(app, /id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true/);
   assert.doesNotMatch(html, /ためしてみる/);
