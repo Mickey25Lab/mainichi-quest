@@ -397,6 +397,7 @@
     openCollection({ showSessionMarkers: false });
   }
   function showScreen(id) {
+    recordBgmDiagnostic("screen-change-request", { screenId: id });
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
@@ -1047,7 +1048,7 @@
     saveViewportDiagnosticsEnabled(viewportDiagnosticsEnabled);
     updateViewportDiagnosticsButton();
     updateAdminViewportDiagnosticsToggle();
-    setAdminActionStatus(viewportDiagnosticsEnabled ? "MQ-001診断をONにしました。" : "MQ-001診断をOFFにしました。");
+    setAdminActionStatus(viewportDiagnosticsEnabled ? "画面拡大診断をONにしました。" : "画面拡大診断をOFFにしました。");
   }
   function setupViewportDiagnostics() {
     viewportDiagnosticsEnabled = loadViewportDiagnosticsEnabled();
@@ -2534,14 +2535,10 @@
         slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
       });
     });
-    const multiplicand = $("multiplication-2x2-multiplicand");
-    const multiplierDigits = Array.from($("multiplication-2x2-multiplier").children);
-    multiplicand.classList.toggle("is-operation-guide", model.guideStage === 1 || model.guideStage === 2 || model.guideStage === 3);
-    multiplierDigits.forEach((digit, index) => {
-      const guidesThisDigit = (model.guideStage === 1 && index === multiplierDigits.length - 1)
-        || (model.guideStage === 2 && index === multiplierDigits.length - 2);
-      digit.classList.toggle("is-operation-guide", guidesThisDigit);
-    });
+    const operationGuide = $("multiplication-2x2-operation-guide");
+    const isGuidedMultiplicationRow = model.guideStage === 1 || model.guideStage === 2;
+    operationGuide.hidden = !isGuidedMultiplicationRow;
+    operationGuide.dataset.stage = model.guideStage === 1 ? "ones" : "tens";
     $("multiplication-2x2-shift-guide").hidden = !model.shiftGuideVisible;
     const sumOperator = $("multiplication-2x2-sum-operator");
     sumOperator.hidden = !model.sumOperatorVisible;
@@ -4049,6 +4046,92 @@
     renderVehicleDetail();
   }
 
+  // Opt-in BGM loss diagnostics. Only snapshots are recorded; playback behavior
+  // is never modified. Entries survive a PWA refresh for later inspection.
+  const bgmDiagnosticPreferenceKey = "mq:bgm-loss-diagnostics-enabled-v1";
+  const bgmDiagnosticStorageKey = "mq:bgm-loss-diagnostics-log-v1";
+  let bgmDiagnosticsEnabled = false;
+  let bgmDiagnostics = [];
+  let bgmDiagnosticButton = null;
+  let bgmDiagnosticLastSignature = "";
+  let bgmDiagnosticPollCount = 0;
+  function bgmDiagnosticSnapshot(event, detail = {}) {
+    const ctx = state.audio;
+    return {
+      at: new Date().toISOString(), event, ...detail, hidden: document.hidden,
+      screen: activeScreenId(), contextState: ctx?.state || "none",
+      currentTime: ctx?.currentTime ?? null, bgmEnabled: state.bgmEnabled,
+      bgmGroup: state.bgmGroup, desiredBgmGroup: state.desiredBgmGroup,
+      activeBgmGroup: activeBgmGroup(), sourcePresent: Boolean(state.bgmSource),
+      gain: state.bgmGain?.gain?.value ?? null, mutedForBackground: audioMutedForBackground,
+      suspendTimerPending: audioVisibilitySuspendTimer !== null,
+      transitionTimerPending: state.bgmFadeTimer !== null,
+      requestId: state.bgmRequestId, transitionId: state.bgmTransitionId,
+      pendingResume: Boolean(audioResumePromise)
+    };
+  }
+  function recordBgmDiagnostic(event, detail = {}) {
+    if (!bgmDiagnosticsEnabled) return;
+    bgmDiagnostics.push(bgmDiagnosticSnapshot(event, detail));
+    if (bgmDiagnostics.length > 120) bgmDiagnostics.splice(0, bgmDiagnostics.length - 120);
+    try { localStorage.setItem(bgmDiagnosticStorageKey, JSON.stringify(bgmDiagnostics)); } catch (_) {}
+  }
+  function updateAdminBgmDiagnosticsToggle() {
+    const toggle = $("admin-bgm-diagnostics-toggle");
+    if (!toggle) return;
+    toggle.setAttribute("aria-checked", String(bgmDiagnosticsEnabled));
+    toggle.querySelector("span").textContent = bgmDiagnosticsEnabled ? "ON" : "OFF";
+    if (bgmDiagnosticButton) bgmDiagnosticButton.hidden = !bgmDiagnosticsEnabled;
+  }
+  function toggleBgmDiagnostics() {
+    bgmDiagnosticsEnabled = !bgmDiagnosticsEnabled;
+    try { localStorage.setItem(bgmDiagnosticPreferenceKey, bgmDiagnosticsEnabled ? "1" : "0"); } catch (_) {}
+    updateAdminBgmDiagnosticsToggle();
+    recordBgmDiagnostic("diagnostics-enabled");
+    setAdminActionStatus(bgmDiagnosticsEnabled ? "BGM消失診断をONにしました。" : "BGM消失診断をOFFにしました。");
+  }
+  function setupBgmDiagnostics() {
+    try {
+      bgmDiagnosticsEnabled = localStorage.getItem(bgmDiagnosticPreferenceKey) === "1";
+      const saved = JSON.parse(localStorage.getItem(bgmDiagnosticStorageKey) || "[]");
+      if (Array.isArray(saved)) bgmDiagnostics = saved.slice(-120);
+    } catch (_) {}
+    const button = document.createElement("button");
+    bgmDiagnosticButton = button;
+    button.type = "button";
+    button.textContent = "BGM LOG";
+    Object.assign(button.style, {
+      position: "fixed", left: "8px", bottom: "8px", zIndex: "2147483647",
+      fontSize: "12px", padding: "6px 8px", opacity: "0.85"
+    });
+    button.addEventListener("click", async () => {
+      recordBgmDiagnostic("manual-log");
+      const report = JSON.stringify(bgmDiagnostics, null, 2);
+      try {
+        await navigator.clipboard.writeText(report);
+        button.textContent = "LOG COPIED";
+        window.setTimeout(() => { button.textContent = "BGM LOG"; }, 1400);
+      } catch (_) { window.prompt("BGM loss diagnostic log", report); }
+    });
+    document.body.appendChild(button);
+    updateAdminBgmDiagnosticsToggle();
+    recordBgmDiagnostic("startup");
+    window.setInterval(() => {
+      if (!bgmDiagnosticsEnabled) return;
+      const ctx = state.audio;
+      const shouldPlay = !document.hidden && state.bgmEnabled && Boolean(activeBgmGroup());
+      const unexpected = shouldPlay && (ctx?.state === "suspended" || (
+        !state.bgmSource && !state.bgmFadeTimer && Boolean(state.desiredBgmGroup)
+      ) || (
+        state.bgmSource && (state.bgmGain?.gain?.value ?? 1) < 0.0005 && !state.bgmFadeTimer
+      ));
+      const signature = unexpected ? [ctx?.state, state.bgmGroup, audioMutedForBackground].join(":") : "";
+      if (unexpected && signature !== bgmDiagnosticLastSignature) recordBgmDiagnostic("possible-silence");
+      bgmDiagnosticLastSignature = signature;
+      // Periodic snapshots also capture silent output without a detectable state change.
+      if (++bgmDiagnosticPollCount % 5 === 0) recordBgmDiagnostic("audio-heartbeat");
+    }, 2000);
+  }
   let audioVisibilitySuspendTimer = null;
   let audioResumePromise = null;
   let audioMutedForBackground = false;
@@ -4073,10 +4156,25 @@
       audioResumePromise = null;
     }
   }
+  // One owner for the pending background suspension timer. Keeping the
+  // cancellation and clearing logic together avoids stale timer handles.
+  function clearAudioVisibilitySuspendTimer() {
+    if (audioVisibilitySuspendTimer === null) return;
+    window.clearTimeout(audioVisibilitySuspendTimer);
+    audioVisibilitySuspendTimer = null;
+  }
+  function scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs) {
+    audioVisibilitySuspendTimer = window.setTimeout(() => {
+      audioVisibilitySuspendTimer = null;
+      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
+      try { state.audio.suspend(); } catch (_) {}
+    }, suspendDelayMs);
+  }
   function suspendAudioForBackground(reason, { requireHidden = true, fadeMs = 80, suspendDelayMs = 100 } = {}) {
     const ctx = state.audio;
+    recordBgmDiagnostic("background-suspend", { reason });
     if (!ctx || ctx.state === "closed") return;
-    if (audioVisibilitySuspendTimer !== null) window.clearTimeout(audioVisibilitySuspendTimer);
+    clearAudioVisibilitySuspendTimer();
 
     // Background handoff owns the audio lifecycle. Cancel every pending
     // screen-to-screen BGM transition first so no delayed BufferSource.stop()
@@ -4090,28 +4188,27 @@
       gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeMs / 1000);
       audioMutedForBackground = true;
     }
-    audioVisibilitySuspendTimer = window.setTimeout(() => {
-      audioVisibilitySuspendTimer = null;
-      if ((requireHidden && !document.hidden) || !state.audio || state.audio.state === "closed" || state.audio.state === "suspended") return;
-      try { state.audio.suspend(); } catch (_) {}
-    }, suspendDelayMs);
+    scheduleAudioVisibilitySuspend(requireHidden, suspendDelayMs);
+  }
+  // Keep foreground restoration in one place. The AudioContext may still be
+  // suspended when focus/pageshow fires; its statechange listener also retries
+  // gain restoration as soon as Web Audio actually becomes running.
+  function restoreForegroundBackgroundMusic() {
+    restoreAudioGainAfterVisibility();
+    if (!document.hidden) syncBackgroundMusicForActiveScreen();
   }
   function resumeAudioAfterVisible(reason) {
-    if (audioVisibilitySuspendTimer !== null) {
-      window.clearTimeout(audioVisibilitySuspendTimer);
-      audioVisibilitySuspendTimer = null;
-    }
+    recordBgmDiagnostic("foreground-resume", { reason });
+    clearAudioVisibilitySuspendTimer();
     const resumed = resumeAudioContext(reason);
-    Promise.resolve(resumed).finally(() => {
-      restoreAudioGainAfterVisibility();
-      if (!document.hidden) syncBackgroundMusicForActiveScreen();
-    });
+    Promise.resolve(resumed).finally(restoreForegroundBackgroundMusic);
   }
   function audioContext() {
     if (!state.audio) {
       state.audio = new (window.AudioContext || window.webkitAudioContext)();
       state.audio.addEventListener?.("statechange", () => {
-        if (state.audio?.state === "running" && !document.hidden) restoreAudioGainAfterVisibility();
+        recordBgmDiagnostic("audio-context-statechange");
+        if (state.audio?.state === "running" && !document.hidden) restoreForegroundBackgroundMusic();
       });
     }
     return state.audio;
@@ -4190,10 +4287,16 @@
     window.clearTimeout(state.bgmFadeTimer);
     state.bgmFadeTimer = null;
   }
-  function cancelBgmTransitionForLifecycle() {
-    state.bgmRequestId += 1;
+  // Invalidate pending BGM fade callbacks before changing audio lifecycle.
+  // Screen changes and background handoff share this cancellation path.
+  function invalidateBgmFadeTransition() {
     state.bgmTransitionId += 1;
     clearBgmFadeTimer();
+    return state.bgmTransitionId;
+  }
+  function cancelBgmTransitionForLifecycle() {
+    state.bgmRequestId += 1;
+    invalidateBgmFadeTransition();
   }
   function disconnectBackgroundMusicSource() {
     const source = state.bgmSource;
@@ -4246,21 +4349,26 @@
     if (clearDesired) state.desiredBgmGroup = null;
     if (state.bgmGain) state.bgmGain.gain.value = backgroundMusicVolume();
   }
+  function isBgmTransitionObsolete(transitionId) {
+    return transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground;
+  }
+  function isBgmStartRequestObsolete(requestId, group) {
+    return requestId !== state.bgmRequestId || state.desiredBgmGroup !== group;
+  }
   function transitionBackgroundMusic(nextGroup) {
     if (!state.bgmSource || state.bgmGroup === nextGroup) {
       if (nextGroup) startBackgroundMusic(nextGroup);
       return;
     }
     state.bgmRequestId += 1;
-    const transitionId = ++state.bgmTransitionId;
-    clearBgmFadeTimer();
+    const transitionId = invalidateBgmFadeTransition();
     const ctx = audioContext();
     const gain = ensureBgmGain();
     if (nextGroup) ensureBackgroundMusic(nextGroup);
     cancelBgmGainAutomation(ctx, gain);
     gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + bgmConfig.transitionDurationSeconds);
     state.bgmFadeTimer = window.setTimeout(() => {
-      if (transitionId !== state.bgmTransitionId || document.hidden || audioMutedForBackground) return;
+      if (isBgmTransitionObsolete(transitionId)) return;
       state.bgmFadeTimer = null;
       disconnectBackgroundMusicSource();
       if (nextGroup && state.desiredBgmGroup === nextGroup && state.bgmEnabled) startBackgroundMusic(nextGroup);
@@ -4285,7 +4393,7 @@
     const requestId = ++state.bgmRequestId;
     setBackgroundMusicDucked(false);
     ensureBackgroundMusic(group).then((buffer) => {
-      if (requestId !== state.bgmRequestId || state.desiredBgmGroup !== group) return;
+      if (isBgmStartRequestObsolete(requestId, group)) return;
       startDecodedBackgroundMusic(buffer, group);
     });
   }
@@ -4294,8 +4402,7 @@
     state.desiredBgmGroup = normalized;
     document.documentElement.dataset.bgmDesiredGroup = normalized || "";
     if (state.bgmSource && state.bgmGroup === normalized && state.bgmFadeTimer !== null) {
-      state.bgmTransitionId += 1;
-      clearBgmFadeTimer();
+      invalidateBgmFadeTransition();
       const ctx = audioContext();
       const gain = ensureBgmGain();
       cancelBgmGainAutomation(ctx, gain);
@@ -4740,6 +4847,7 @@
 
   setupVisualDiagnostics();
   setupViewportDiagnostics();
+  setupBgmDiagnostics();
   state.bgmEnabled = loadBgmEnabledPreference();
   updateBgmToggleButton();
   syncBackgroundMusicForActiveScreen();
@@ -4812,6 +4920,7 @@
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
   $("admin-viewport-diagnostics-toggle").addEventListener("click", toggleViewportDiagnostics);
+  $("admin-bgm-diagnostics-toggle").addEventListener("click", toggleBgmDiagnostics);
   $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
   $("admin-reenable-opening-movie").addEventListener("click", reenableOpeningMovieForActiveProfile);
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
