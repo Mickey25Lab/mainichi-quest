@@ -80,7 +80,7 @@ button, input { font: inherit; }
 
 .screen.active { display: block; }
 
-.start-screen.active, .mode-select-screen.active, .phonics-youtube-screen.active, .transition-screen.active, .result-screen.active, .reward-screen.active {
+.start-screen.active, .mode-select-screen.active, .phonics-intro-screen.active, .phonics-youtube-screen.active, .transition-screen.active, .result-screen.active, .reward-screen.active {
   display: grid;
   place-items: center;
 }
@@ -734,6 +734,116 @@ button, input { font: inherit; }
 @media (max-height:800px) {
   .mode-select-list { top:12.5%; bottom:5%; gap:5px; }
   .mode-select-choice { min-height:64px; padding-block:5px; }
+}
+
+.phonics-intro-screen { padding:0; overflow:hidden; background:#000; }
+.phonics-intro-stage {
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:1;
+  width:1448px;
+  height:1086px;
+  transform:translate(-50%,-50%) scale(var(--stage-scale,1));
+  transform-origin:center;
+  overflow:hidden;
+  background:#071c38;
+}
+.phonics-intro-background {
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  filter:brightness(.68);
+}
+.phonics-intro-stage::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:rgba(3,20,45,.18);
+  pointer-events:none;
+}
+.phonics-intro-card {
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:50%;
+  width:1040px;
+  min-height:650px;
+  transform:translate(-50%,-50%);
+  display:grid;
+  grid-template-columns:1fr 330px;
+  grid-template-rows:auto auto auto;
+  column-gap:30px;
+  align-items:center;
+  padding:54px 62px 48px;
+  border:5px solid rgba(255,255,255,.94);
+  border-radius:44px;
+  background:rgba(255,255,255,.95);
+  box-shadow:0 24px 70px rgba(0,0,0,.3);
+}
+.phonics-intro-copy { align-self:center; }
+.phonics-intro-kicker {
+  margin:0 0 26px;
+  color:#176fc4;
+  font:1000 42px/1.2 "Noto Sans JP",sans-serif;
+}
+.phonics-intro-line {
+  margin:12px 0;
+  color:#173e5e;
+  font:900 32px/1.6 "Noto Sans JP",sans-serif;
+}
+.phonics-intro-line ruby,
+.phonics-intro-gesture ruby { ruby-position:over; }
+.phonics-intro-line rt,
+.phonics-intro-gesture rt { font-size:.46em; font-weight:800; }
+.phonics-intro-gesture {
+  margin:24px 0 0;
+  color:#e26018;
+  font:1000 35px/1.5 "Noto Sans JP",sans-serif;
+}
+.phonics-intro-gesture-child {
+  width:315px;
+  height:325px;
+  object-fit:cover;
+  object-position:center;
+  border:0;
+  border-radius:34px;
+  box-shadow:0 10px 24px rgba(12,63,112,.16);
+}
+.phonics-intro-status {
+  grid-column:1 / -1;
+  min-height:34px;
+  margin:16px 0 12px;
+  color:#60768a;
+  text-align:center;
+  font:800 22px/1.3 "Noto Sans JP",sans-serif;
+}
+.phonics-intro-start {
+  grid-column:1 / -1;
+  justify-self:center;
+  width:360px;
+  height:88px;
+  border:3px solid #fff;
+  border-radius:28px;
+  color:#fff;
+  background:linear-gradient(180deg,#ff9c2d,#e75a13);
+  box-shadow:0 8px 0 #ad3b0d,0 14px 24px rgba(145,65,12,.24);
+  font:1000 36px/1 "Noto Sans JP",sans-serif;
+  cursor:pointer;
+}
+.phonics-intro-start:disabled {
+  cursor:default;
+  opacity:.55;
+  filter:saturate(.45);
+}
+.phonics-intro-start:active:not(:disabled) {
+  transform:translateY(4px);
+  box-shadow:0 4px 0 #ad3b0d,0 8px 16px rgba(145,65,12,.2);
 }
 
 .phonics-youtube-screen { padding:0; overflow:hidden; background:#000; }
