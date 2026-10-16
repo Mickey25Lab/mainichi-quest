@@ -3813,3 +3813,14 @@ button, input { font: inherit; }
 .play-screen .question-answer-card.multiplication-mode.wrong .incorrect-digit-correction {
   z-index:40;
 }
+
+/* 2-digit × 1-digit: render the correction outside the clipped problem card. */
+.play-screen .multiplication-correction-overlay {
+  position:absolute;
+  z-index:100;
+  transform:translateX(-50%);
+  color:#ec343d;
+  font:900 46px/1 "Noto Sans JP",sans-serif;
+  white-space:nowrap;
+  pointer-events:none;
+}
