@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.49";
+  const appVersion = "0.2.50";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -3318,7 +3318,24 @@
         markDigit($("long-division-remainder-slot"), question.remainder, "above");
     } else if (state.mode === "normal") {
       const expected = formatAnswer({ quotient:question.quotient, remainder:question.remainder });
-      markDigit($("answer-text"), expected, "above");
+      const holder = $("answer-text");
+      const entered = holder.textContent;
+      const parts = entered.split("…");
+      const expectedParts = expected.split("…");
+      const digits = document.createDocumentFragment();
+      const addPart = (value, target, side) => {
+        const span = document.createElement("span");
+        span.className = "inline-answer-part";
+        span.textContent = value;
+        digits.appendChild(span);
+        if (value !== target) markDigit(span, target, side);
+      };
+      addPart(parts[0] || "", expectedParts[0], "left");
+      if (parts.length > 1 || expectedParts.length > 1) {
+        digits.appendChild(document.createTextNode("…"));
+        addPart(parts[1] || "", expectedParts[1] ?? "0", "right");
+      }
+      holder.replaceChildren(digits);
     }
   }
   function judge(answer) {
