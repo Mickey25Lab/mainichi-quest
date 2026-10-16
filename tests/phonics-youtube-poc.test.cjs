@@ -153,6 +153,9 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(html, /class="phonics-youtube-end is-pending"[^>]*>動画を見たよ<\/button>/);
   assert.doesNotMatch(html, /phonics-youtube-header/);
   assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1448px;[\s\S]*height:1086px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
+  assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:min\(810px,calc\(100vw - 28px\)\)/);
+  assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button/);
+  assert.match(app, /energy\.classList\.toggle\("disabled", Boolean\(mode\.energyDisabled\)\)/);
   assert.match(css, /\.phonics-youtube-status \{ display:none; \}/);
   assert.match(css, /\.phonics-youtube-end\.is-pending/);
   assert.match(css, /\.parent-energy-unavailable/);
