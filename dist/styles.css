@@ -3772,12 +3772,13 @@ button, input { font: inherit; }
 .has-digit-correction { position:relative !important; overflow:visible !important; }
 .incorrect-digit { position:relative; }
 .incorrect-digit-cross {
-  position:absolute; z-index:31; left:7%; top:8%; width:86%; height:84%;
-  pointer-events:none; transform:none; font-size:0;
+  position:absolute; z-index:31; inset:0;
+  pointer-events:none; font-size:0;
 }
 .incorrect-digit-cross::after {
-  content:""; position:absolute; left:0; top:0; width:125%; height:1.5px;
-  background:#ec343d; transform-origin:top left; transform:rotate(45deg);
+  content:""; position:absolute; left:50%; top:50%;
+  width:141.421%; height:1.5px; background:#ec343d;
+  transform-origin:center; transform:translate(-50%, -50%) rotate(45deg);
 }
 .incorrect-digit-correction { position:absolute; z-index:31; left:50%; color:#ec343d; font:900 .8em/1 "Noto Sans JP",sans-serif; white-space:nowrap; transform:translateX(-50%); pointer-events:none; }
 .incorrect-digit-correction.above { bottom:100%; }
@@ -3796,4 +3797,19 @@ button, input { font: inherit; }
   position:absolute; left:calc(100% + .12em); top:50%;
   transform:translateY(-50%); color:#ec343d; white-space:nowrap;
   font-size:.8em; font-weight:900; line-height:1; pointer-events:none;
+}
+
+/* Incorrect multiplication answers extend outside the bottom of the answer
+   card. Do not crop the correction or put it behind the keypad. */
+.play-screen .question-answer-card.multiplication-mode.wrong {
+  overflow:visible;
+  z-index:20;
+}
+.play-screen .question-answer-card.multiplication-mode.wrong .multiplication-panel,
+.play-screen .question-answer-card.multiplication-mode.wrong .multiplication-answer-row,
+.play-screen .question-answer-card.multiplication-mode.wrong .multiplication-answer-slot {
+  overflow:visible;
+}
+.play-screen .question-answer-card.multiplication-mode.wrong .incorrect-digit-correction {
+  z-index:40;
 }
