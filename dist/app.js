@@ -1157,6 +1157,7 @@
     }
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
+    $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
     return true;
   }
