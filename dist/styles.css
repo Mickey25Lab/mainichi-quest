@@ -3771,7 +3771,14 @@ button, input { font: inherit; }
 .question-answer-card .answer-mark { z-index:30; }
 .has-digit-correction { position:relative !important; overflow:visible !important; }
 .incorrect-digit { position:relative; }
-.incorrect-digit-cross { position:absolute; z-index:31; left:50%; top:50%; transform:translate(-50%,-50%); color:#ec343d; font:900 .8em/1 "Noto Sans JP",sans-serif; pointer-events:none; }
+.incorrect-digit-cross { position:absolute; z-index:31; right:calc(100% - 0.14em); bottom:calc(100% - 0.08em); color:#ec343d; font:900 .3em/1 "Noto Sans JP",sans-serif; pointer-events:none; }
 .incorrect-digit-correction { position:absolute; z-index:31; left:50%; color:#ec343d; font:900 .5em/1 "Noto Sans JP",sans-serif; white-space:nowrap; transform:translateX(-50%); pointer-events:none; }
 .incorrect-digit-correction.above { bottom:100%; }
 .incorrect-digit-correction.below { top:100%; }
+
+/* Keep the horizontal division answer anchored: position corrections sideways. */
+#answer-text .inline-answer-part { display:inline-block; position:relative; }
+#answer-text .has-digit-correction { display:inline-block; position:relative !important; }
+#answer-text .incorrect-digit-correction { font-size:.45em; top:50%; bottom:auto; }
+#answer-text .incorrect-digit-correction.left { left:auto; right:calc(100% + .2em); transform:translateY(-50%); }
+#answer-text .incorrect-digit-correction.right { left:calc(100% + .2em); right:auto; transform:translateY(-50%); }
