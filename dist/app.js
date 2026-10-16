@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.50";
+  const appVersion = "0.3.0";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -434,7 +434,7 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first"
+    frameIndex: 0, pass: "first", activeModeId: null
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -620,6 +620,7 @@
   function openPhonicsYoutube(lessonId, modeId) {
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
+    phonicsYoutube.activeModeId = modeId;
     showScreen("phonics-youtube-screen");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
@@ -648,12 +649,17 @@
   }
   function leavePhonicsYoutube() {
     stopAndDestroyPhonicsYoutube();
+    phonicsYoutube.activeModeId = null;
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
     // Recreate and preload the player for the next phonics entry. Without this,
     // the second visit has to create the iframe after the mode tap, so Safari
     // sees playVideo() after the user-gesture window has expired and blocks it.
     preparePhonicsYoutubePlayback();
+  }
+  function completePhonicsYoutubeAndLeave() {
+    if (phonicsYoutube.activeModeId) completeDailyMissionRound(phonicsYoutube.activeModeId);
+    leavePhonicsYoutube();
   }
   function pausePhonicsYoutubeForLifecycle() {
     if (!phonicsYoutubeActive() || !phonicsYoutube.player) return;
@@ -4918,7 +4924,7 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", leavePhonicsYoutube); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
