@@ -155,7 +155,9 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1448px;[\s\S]*height:1086px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
   assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1448px;[\s\S]*height:1086px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
   assert.match(css, /\.phonics-youtube-background[\s\S]*width:100%;[\s\S]*height:100%;[\s\S]*object-fit:contain/);
-  assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:810px;[\s\S]*transform:translate\(-50%,-50%\)/);
+  assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1160px;[\s\S]*transform:translate\(-50%,-50%\)/);
+  assert.match(css, /\.play-screen \.progress-badge,[\s\S]*\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button[\s\S]*width:166px/);
+  assert.match(css, /\.phonics-youtube-end \{[\s\S]*width:360px;[\s\S]*height:var\(--play-corner-control-height\);[\s\S]*border-radius:var\(--play-corner-radius\);[\s\S]*font-size:34px/);
   assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button/);
   assert.match(app, /energy\.classList\.toggle\("disabled", Boolean\(mode\.energyDisabled\)\)/);
   assert.match(css, /\.phonics-youtube-status \{ display:none; \}/);
