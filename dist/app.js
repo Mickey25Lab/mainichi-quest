@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.49";
+  const appVersion = "0.2.50";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -15,7 +15,11 @@
     Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
-    Object.freeze({ id:"phonics", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true })
+    Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-2", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -549,7 +553,7 @@
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
-            document.querySelectorAll("[data-phonics-picker], [data-phonics-lesson]").forEach((button) => { button.disabled = false; });
+            document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = false; });
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -572,7 +576,7 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
-      document.querySelectorAll("[data-phonics-picker], [data-phonics-lesson]").forEach((button) => { button.disabled = true; });
+      document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
     });
   }
   function preparePhonicsYoutubePlayback() {
@@ -580,7 +584,7 @@
     // That guarantees the eventual phonics-mode tap can call playVideo()
     // synchronously inside the user gesture instead of falling through to an
     // async autoplay attempt that Safari/iPadOS may block.
-    document.querySelectorAll("[data-phonics-picker], [data-phonics-lesson]").forEach((button) => { button.disabled = true; });
+    document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
     createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
@@ -613,12 +617,10 @@
     $("phonics-youtube-screen").setAttribute("aria-label", lesson.title);
     return true;
   }
-  function openPhonicsYoutube(lessonId) {
-    if (!isModeAvailableForMission("phonics")) { renderModeSelectMission(); return; }
+  function openPhonicsYoutube(lessonId, modeId) {
+    if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     showScreen("phonics-youtube-screen");
-    $("phonics-youtube-part-picker").hidden = true;
-    $("phonics-youtube-player-frame").hidden = false;
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
     $("phonics-youtube-end").classList.add("is-pending");
@@ -626,15 +628,6 @@
     $("phonics-youtube-status").classList.remove("is-practice");
     setPhonicsYoutubeStatus("動画を準備しています…");
     startPhonicsYoutubeAutomatically();
-  }
-  function openPhonicsYoutubeLessonPicker() {
-    if (!isModeAvailableForMission("phonics")) { renderModeSelectMission(); return; }
-    showScreen("phonics-youtube-screen");
-    $("phonics-youtube-part-picker").hidden = false;
-    $("phonics-youtube-player-frame").hidden = true;
-    $("phonics-youtube-start").hidden = true;
-    $("phonics-youtube-end").hidden = true;
-    $("phonics-youtube-status").hidden = true;
   }
   function startPhonicsYoutubeFromGesture() {
     beginPhonicsYoutubePlayback();
@@ -4552,13 +4545,17 @@
   }
 
   function parentModeSetting(settings, modeId) {
-    const storedEnergy = settings.energyMultipliers?.[modeId];
+    const legacyPhonicsSetting = modeId.startsWith("phonics-part-")
+      && settings.dailyTargetCounts?.[modeId] === undefined
+      && settings.enabledModes?.[modeId] === undefined;
+    const settingsKey = legacyPhonicsSetting ? "phonics" : modeId;
+    const storedEnergy = settings.energyMultipliers?.[settingsKey];
     const energy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : "medium";
-    const rawTarget = Number(settings.dailyTargetCounts?.[modeId]);
+    const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
-      : settings.enabledModes?.[modeId] === false ? 0 : 1;
+      : settings.enabledModes?.[settingsKey] === false ? 0 : 1;
     return { enabled: target > 0, energy, target };
   }
 
@@ -4921,7 +4918,7 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics").addEventListener("click", openPhonicsYoutubeLessonPicker); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", leavePhonicsYoutube); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", leavePhonicsYoutube); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
