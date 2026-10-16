@@ -71,7 +71,25 @@
           <button class="mode-select-choice mode-select-long-division" id="mode-select-long-division" type="button" data-mode="longdivision">
             <span class="mode-select-name">わり算ひっ算</span><span class="mode-select-remaining"></span><span class="mode-select-energy"></span>
           </button>
+          <button class="mode-select-choice mode-select-phonics" id="mode-select-phonics" type="button" data-mode="phonics">
+            <span class="mode-select-name"><b>フォニックス</b><small>パート2　G〜K</small></span><span class="mode-select-remaining"></span><span class="mode-select-energy"></span>
+          </button>
         </div>
+      </div>
+    </section>
+
+    <section class="screen phonics-youtube-screen" id="phonics-youtube-screen" aria-label="フォニックス パート2 GからK">
+      <div class="phonics-youtube-stage" id="phonics-youtube-stage">
+        <img class="phonics-youtube-background" src="./assets/ui/top/mode_select_background.webp" width="1400" height="1050" decoding="async" alt="">
+        <div class="phonics-youtube-player-frame" aria-label="YouTube フォニックス動画">
+          <div class="phonics-youtube-player-scale">
+            <div id="phonics-youtube-player"></div>
+          </div>
+        </div>
+        <button class="quit-button" id="phonics-youtube-back" type="button">やめる</button>
+        <p class="phonics-youtube-status" id="phonics-youtube-status" role="status" hidden></p>
+        <button class="phonics-youtube-start" id="phonics-youtube-start" type="button" hidden>再生する</button>
+        <button class="phonics-youtube-end is-pending" id="phonics-youtube-end" type="button">動画を見たよ</button>
       </div>
     </section>
 
