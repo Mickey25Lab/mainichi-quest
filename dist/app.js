@@ -2141,9 +2141,10 @@
   }
 
   function normalizedMissionTarget(settings, modeId) {
-    const raw = Number(settings.dailyTargetCounts?.[modeId]);
-    if (Number.isInteger(raw)) return Math.max(0, Math.min(9, raw));
-    return settings.enabledModes?.[modeId] === false ? 0 : 1;
+    // Use the same legacy-phonics fallback as the parent settings screen.
+    // Otherwise an untouched Part can look OFF in "おうちの人へ" but fall
+    // back to the generic default of 1 in mode selection.
+    return parentModeSetting(settings, modeId).target;
   }
 
   function dailyMissionState() {
