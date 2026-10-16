@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.52";
+  const appVersion = "0.2.53";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1901,6 +1901,7 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
+    if (kind !== "wrong") removeMultiplicationCorrectionOverlays();
     $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "multiplication2x2" ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
@@ -3280,6 +3281,21 @@
     try { step(); } catch (error) { state.transitioning = false; console.error("Answer transition failed", error); }
   }
 
+  function removeMultiplicationCorrectionOverlays() {
+    $("play-stage").querySelectorAll(".multiplication-correction-overlay").forEach((node) => node.remove());
+  }
+  function addMultiplicationCorrectionOverlay(slot, expected) {
+    const stage = $("play-stage");
+    const stageRect = stage.getBoundingClientRect();
+    const slotRect = slot.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    const correction = document.createElement("span");
+    correction.className = "multiplication-correction-overlay";
+    correction.textContent = expected;
+    correction.style.left = ((slotRect.left + slotRect.width / 2 - stageRect.left) / scale) + "px";
+    correction.style.top = ((slotRect.bottom - stageRect.top) / scale + 4) + "px";
+    stage.appendChild(correction);
+  }
   function showWrongDigitCorrections() {
     const question = state.current;
     if (!question || ["numbercards", "counting1", "counting2"].includes(state.mode)) return;
@@ -3299,8 +3315,15 @@
     };
     if (state.mode === "multiplication" && state.multiplication) {
       const expected = String(question.product ?? question.quotient);
+      removeMultiplicationCorrectionOverlays();
       Array.from($("multiplication-answer-row").children).forEach((slot, i) => {
-        if (state.multiplication.cells[i] !== expected[i]) markDigit(slot, expected[i] ?? "", "below");
+        if (state.multiplication.cells[i] !== expected[i]) {
+          markDigit(slot, expected[i] ?? "", "below");
+          // Corrections in the grid are clipped by ancestor paint containment.
+          // Mount the red answer directly in the scaled play stage instead.
+          slot.querySelector(".incorrect-digit-correction")?.remove();
+          addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
+        }
       });
     } else if (state.mode === "multiplication2x2" && state.multiplication2x2) {
       state.multiplication2x2.rows.forEach((row) => {
