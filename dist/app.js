@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.42";
+  const appVersion = "0.2.43";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -14,7 +14,8 @@
     Object.freeze({ id:"multiplication", label:"かけ算ひっ算", detail:"2けた×1けた" }),
     Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
-    Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" })
+    Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
+    Object.freeze({ id:"phonics", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -584,6 +585,7 @@
     beginPhonicsYoutubePlayback();
   }
   function openPhonicsYoutube() {
+    if (!isModeAvailableForMission("phonics")) { renderModeSelectMission(); return; }
     showScreen("phonics-youtube-screen");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
@@ -2099,10 +2101,16 @@
         ? '<strong class="mode-select-done-text">できた！</strong>'
         : `<span class="mode-select-remaining-prefix">あと</span><strong class="mode-select-remaining-number">${item.remaining}</strong><span class="mode-select-remaining-suffix">回</span>`;
       const energy = button.querySelector(".mode-select-energy");
-      const presentation = childEnergyPresentation[item.energyId];
-      energy.className = `mode-select-energy energy-level-${presentation.level}`;
-      energy.innerHTML = `<i aria-hidden="true"></i><span>${presentation.label}</span>`;
-      energy.setAttribute("aria-label", `エネルギーのたまりやすさ ${presentation.label}`);
+      if (item.energyDisabled) {
+        energy.className = "mode-select-energy energy-disabled";
+        energy.innerHTML = "<span>なし</span>";
+        energy.setAttribute("aria-label", "エネルギーのたまりやすさ なし");
+      } else {
+        const presentation = childEnergyPresentation[item.energyId];
+        energy.className = `mode-select-energy energy-level-${presentation.level}`;
+        energy.innerHTML = `<i aria-hidden="true"></i><span>${presentation.label}</span>`;
+        energy.setAttribute("aria-label", `エネルギーのたまりやすさ ${presentation.label}`);
+      }
     });
     const banner = $("mode-select-mission-complete");
     banner.hidden = !overview.allComplete;
@@ -4493,20 +4501,27 @@
 
       const energy = document.createElement("div");
       energy.className = "parent-energy-options";
-      energy.classList.toggle("disabled", !current.enabled);
+      energy.classList.toggle("disabled", !current.enabled || mode.energyDisabled);
       energy.setAttribute("aria-label", mode.label + "のエネルギー");
-      parentEnergyLevels.forEach((level) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = level.label;
-        button.dataset.energy = level.id;
-        button.disabled = !current.enabled;
-        const selected = current.energy === level.id;
-        button.classList.toggle("selected", selected);
-        button.setAttribute("aria-pressed", String(selected));
-        button.addEventListener("click", () => setParentEnergy(mode.id, level.id));
-        energy.append(button);
-      });
+      if (mode.energyDisabled) {
+        const unavailable = document.createElement("span");
+        unavailable.className = "parent-energy-unavailable";
+        unavailable.textContent = "なし";
+        energy.append(unavailable);
+      } else {
+        parentEnergyLevels.forEach((level) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = level.label;
+          button.dataset.energy = level.id;
+          button.disabled = !current.enabled;
+          const selected = current.energy === level.id;
+          button.classList.toggle("selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+          button.addEventListener("click", () => setParentEnergy(mode.id, level.id));
+          energy.append(button);
+        });
+      }
 
       row.append(name, target, energy);
       container.append(row);
