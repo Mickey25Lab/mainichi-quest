@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.54";
+  const appVersion = "0.3.1";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -15,7 +15,11 @@
     Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
-    Object.freeze({ id:"phonics", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true })
+    Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-2", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U", energyDisabled:true }),
+    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -34,33 +38,54 @@
   const modeSelectPath = "./assets/ui/top/mode_select_background.webp";
   // This is a playback-only technical proof of concept. It deliberately has no
   // score, progress, reward, storage, or collection integration.
-  // These are the saved global settings from the rhythm review tool. A-1 has
-  // a separate exception, but Part 2 starts at G so every frame below follows
-  // the shared A-2-and-later length.
-  const phonicsYoutubeFrames = Object.freeze(
-    ["G", "G", "H", "H", "I", "I", "J", "J", "K", "K"].map((letter, index) => {
-      const start = Number((4.59 + ((12 + index) - 1) * 5.05).toFixed(2));
-      const end = Number((start + 5.05).toFixed(2));
-      return Object.freeze({
-        id: `${letter}-${(index % 2) + 1}`,
-        letter,
-        start,
-        jumpEnd: end,
-        jumpStart: Number((start + 0.39).toFixed(2)),
-        end
-      });
-    })
-  );
-  const phonicsYoutubeConfig = Object.freeze({
-    videoId: "ChqnN3cKzXQ",
-    iframeApiUrl: "https://www.youtube.com/iframe_api",
-    lessonId: "phonics-part-2-g-k",
-    title: "フォニックス パート2（G〜K）",
-    firstFrameSeconds: 4.59,
+  // Saved global settings from the rhythm review tool. A-1 is the only
+  // manually adjusted exception; every other A-2-to-Z-2 frame is mechanical.
+  const phonicsFrameSettings = Object.freeze({
+    a1FrameSeconds: 4.59,
     followingFrameSeconds: 5.05,
     jumpEndOffsetSeconds: 0,
     jumpStartOffsetSeconds: 0.39,
-    frames: phonicsYoutubeFrames
+    frameCount: 52
+  });
+  function roundPhonicsTime(seconds) { return Number(seconds.toFixed(2)); }
+  function phonicsFrameAt(globalIndex, letter) {
+    const start = globalIndex === 0
+      ? 0
+      : roundPhonicsTime(phonicsFrameSettings.a1FrameSeconds + (globalIndex - 1) * phonicsFrameSettings.followingFrameSeconds);
+    const end = roundPhonicsTime(start + phonicsFrameSettings.followingFrameSeconds);
+    return Object.freeze({
+      id: `${letter}-${(globalIndex % 2) + 1}`,
+      letter,
+      start,
+      jumpEnd: end,
+      jumpStart: roundPhonicsTime(start + phonicsFrameSettings.jumpStartOffsetSeconds),
+      end
+    });
+  }
+  function phonicsFramesForLetters(letters, firstGlobalIndex) {
+    return Object.freeze(letters.flatMap((letter, letterIndex) => [
+      phonicsFrameAt(firstGlobalIndex + letterIndex * 2, letter),
+      phonicsFrameAt(firstGlobalIndex + letterIndex * 2 + 1, letter)
+    ]));
+  }
+  const phonicsPart1Frames = Object.freeze([
+    // The review tool saved A-1 as -0.40 / 4.84 / 0.00 / 4.84. YouTube cannot
+    // seek before zero, so playback begins at 0 while retaining the saved end.
+    Object.freeze({ id:"A-1", letter:"A", sourceStart:-0.4, start:0, jumpEnd:4.84, jumpStart:0, end:4.84 }),
+    ...phonicsFramesForLetters(["A", "B", "C", "D", "E", "F"], 0).slice(1)
+  ]);
+  const phonicsYoutubeLessons = Object.freeze({
+    "part-1": Object.freeze({ id:"part-1", title:"フォニックス パート1（A〜F）", letters:"A〜F", frames:phonicsPart1Frames }),
+    "part-2": Object.freeze({ id:"part-2", title:"フォニックス パート2（G〜K）", letters:"G〜K", frames:phonicsFramesForLetters(["G", "H", "I", "J", "K"], 12) }),
+    "part-3": Object.freeze({ id:"part-3", title:"フォニックス パート3（L〜P）", letters:"L〜P", frames:phonicsFramesForLetters(["L", "M", "N", "O", "P"], 22) }),
+    "part-4": Object.freeze({ id:"part-4", title:"フォニックス パート4（Q〜U）", letters:"Q〜U", frames:phonicsFramesForLetters(["Q", "R", "S", "T", "U"], 32) }),
+    "part-5": Object.freeze({ id:"part-5", title:"フォニックス パート5（V〜Z）", letters:"V〜Z", frames:phonicsFramesForLetters(["V", "W", "X", "Y", "Z"], 42) })
+  });
+  let activePhonicsYoutubeLesson = phonicsYoutubeLessons["part-2"];
+  const phonicsYoutubeConfig = Object.freeze({
+    videoId: "ChqnN3cKzXQ",
+    iframeApiUrl: "https://www.youtube.com/iframe_api",
+    lessons: phonicsYoutubeLessons
   });
   const rewardNextVehicleOverlayPath = "./assets/ui/reward_popup/vehicle_transition_next.webp";
   const vehicleTransitionFiveClearPath = "./assets/ui/reward_popup/vehicle_transition_five_clear.webp";
@@ -409,7 +434,7 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first"
+    frameIndex: 0, pass: "first", activeModeId: null
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -425,7 +450,7 @@
     $("phonics-youtube-status").classList.remove("is-practice");
   }
   function youtubePlayerState(name) { return window.YT?.PlayerState?.[name]; }
-  function currentPhonicsYoutubeFrame() { return phonicsYoutubeConfig.frames[phonicsYoutube.frameIndex] || null; }
+  function currentPhonicsYoutubeFrame() { return activePhonicsYoutubeLesson.frames[phonicsYoutube.frameIndex] || null; }
   function phonicsYoutubeFrameMessage(frame, pass = phonicsYoutube.pass) {
     if (!frame) return "";
     return pass === "first"
@@ -437,7 +462,7 @@
     phonicsYoutube.started = false;
     phonicsYoutube.pass = "complete";
     try { phonicsYoutube.player?.pauseVideo?.(); } catch (_) {}
-    setPhonicsYoutubeStatus("パート2（G〜K）が終わりました。");
+    setPhonicsYoutubeStatus(`${activePhonicsYoutubeLesson.title}が終わりました。`);
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
     $("phonics-youtube-end").classList.remove("is-pending");
@@ -521,14 +546,14 @@
           playsinline: 1,
           rel: 0,
           enablejsapi: 1,
-          start: phonicsYoutubeConfig.frames[0].start,
+          start: activePhonicsYoutubeLesson.frames[0].start,
           origin: window.location.origin
         },
         events: {
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
-            $("mode-select-phonics").disabled = false;
+            document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = false; });
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -551,7 +576,7 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
-      $("mode-select-phonics").disabled = true;
+      document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
     });
   }
   function preparePhonicsYoutubePlayback() {
@@ -559,7 +584,7 @@
     // That guarantees the eventual phonics-mode tap can call playVideo()
     // synchronously inside the user gesture instead of falling through to an
     // async autoplay attempt that Safari/iPadOS may block.
-    $("mode-select-phonics").disabled = true;
+    document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
     createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
@@ -572,7 +597,7 @@
     $("phonics-youtube-end").hidden = false;
     $("phonics-youtube-end").classList.add("is-pending");
     setPhonicsYoutubeStatus(phonicsYoutubeFrameMessage(currentPhonicsYoutubeFrame()));
-    phonicsYoutube.player.seekTo?.(phonicsYoutubeConfig.frames[0].start, true);
+    phonicsYoutube.player.seekTo?.(activePhonicsYoutubeLesson.frames[0].start, true);
     phonicsYoutube.player.playVideo();
   }
   function startPhonicsYoutubeAutomatically() {
@@ -585,8 +610,17 @@
     }
     beginPhonicsYoutubePlayback();
   }
-  function openPhonicsYoutube() {
-    if (!isModeAvailableForMission("phonics")) { renderModeSelectMission(); return; }
+  function selectPhonicsYoutubeLesson(lessonId) {
+    const lesson = phonicsYoutubeConfig.lessons[lessonId];
+    if (!lesson) return false;
+    activePhonicsYoutubeLesson = lesson;
+    $("phonics-youtube-screen").setAttribute("aria-label", lesson.title);
+    return true;
+  }
+  function openPhonicsYoutube(lessonId, modeId) {
+    if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
+    if (!selectPhonicsYoutubeLesson(lessonId)) return;
+    phonicsYoutube.activeModeId = modeId;
     showScreen("phonics-youtube-screen");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
@@ -615,12 +649,17 @@
   }
   function leavePhonicsYoutube() {
     stopAndDestroyPhonicsYoutube();
+    phonicsYoutube.activeModeId = null;
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen");
     // Recreate and preload the player for the next phonics entry. Without this,
     // the second visit has to create the iframe after the mode tap, so Safari
     // sees playVideo() after the user-gesture window has expired and blocks it.
     preparePhonicsYoutubePlayback();
+  }
+  function completePhonicsYoutubeAndLeave() {
+    if (phonicsYoutube.activeModeId) completeDailyMissionRound(phonicsYoutube.activeModeId);
+    leavePhonicsYoutube();
   }
   function pausePhonicsYoutubeForLifecycle() {
     if (!phonicsYoutubeActive() || !phonicsYoutube.player) return;
@@ -4622,13 +4661,17 @@
   }
 
   function parentModeSetting(settings, modeId) {
-    const storedEnergy = settings.energyMultipliers?.[modeId];
+    const legacyPhonicsSetting = modeId.startsWith("phonics-part-")
+      && settings.dailyTargetCounts?.[modeId] === undefined
+      && settings.enabledModes?.[modeId] === undefined;
+    const settingsKey = legacyPhonicsSetting ? "phonics" : modeId;
+    const storedEnergy = settings.energyMultipliers?.[settingsKey];
     const energy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : "medium";
-    const rawTarget = Number(settings.dailyTargetCounts?.[modeId]);
+    const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
-      : settings.enabledModes?.[modeId] === false ? 0 : 1;
+      : settings.enabledModes?.[settingsKey] === false ? 0 : 1;
     return { enabled: target > 0, energy, target };
   }
 
@@ -4991,7 +5034,7 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics").addEventListener("click", openPhonicsYoutube); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", leavePhonicsYoutube); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
