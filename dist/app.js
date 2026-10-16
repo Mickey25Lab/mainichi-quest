@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.53";
+  const appVersion = "0.2.54";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1901,7 +1901,6 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    if (kind !== "wrong") removeMultiplicationCorrectionOverlays();
     $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "multiplication2x2" ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
@@ -1928,6 +1927,9 @@
   ensureGameplayFontsReady();
 
   function displayQuestion(question, onRevealed = null) {
+    // Keep the previous red correction through the blue grading mark and
+    // any interim notice; remove it only as the next problem takes over.
+    removeMultiplicationCorrectionOverlays();
     const displayStartedAt = performance.now();
     recordVisualDiagnostic("display-question-start", { vehicleIndex: question.vehicleIndex, ...visualVehicleSnapshot(question.vehicleIndex) });
     clearIdleGuide();
