@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.2.43";
+  const appVersion = "0.2.44";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4502,7 +4502,7 @@
 
       const energy = document.createElement("div");
       energy.className = "parent-energy-options";
-      energy.classList.toggle("disabled", !current.enabled || mode.energyDisabled);
+      energy.classList.toggle("disabled", Boolean(mode.energyDisabled));
       energy.setAttribute("aria-label", mode.label + "のエネルギー");
       if (mode.energyDisabled) {
         const unavailable = document.createElement("span");
