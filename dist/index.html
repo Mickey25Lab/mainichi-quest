@@ -7,7 +7,9 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./assets/ui/branding/favicon-mique-logo.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/ui/branding/apple-touch-icon.png">
-  <meta name="description" content="ミナト向け、キーパッドで答える10問の割り算復習アプリ">
+  <meta name="description" content="「やらせなきゃ」を「自分からやりたい！」に。毎日の学びが冒険に変わる、子ども向け学習アプリ「マイクエ」">
+  <meta property="og:title" content="マイクエ｜毎日クエスト">
+  <meta property="og:description" content="「やらせなきゃ」を「自分からやりたい！」に。毎日の学びが冒険に変わる、子ども向け学習アプリ「マイクエ」">
   <title>マイクエ｜毎日クエスト</title>
   <link rel="preload" as="image" href="./assets/ui/top/top_key_visual.webp" fetchpriority="high">
   <link rel="preload" as="image" href="./assets/ui/top/top_button_start.webp">
@@ -155,6 +157,7 @@
             <div class="multiplication-2x2-multiplicand" id="multiplication-2x2-multiplicand"></div>
             <span class="multiplication-2x2-operator" aria-hidden="true">×</span>
             <div class="multiplication-2x2-multiplier" id="multiplication-2x2-multiplier"></div>
+            <span class="multiplication-2x2-operation-guide" id="multiplication-2x2-operation-guide" hidden aria-hidden="true"></span>
             <div class="multiplication-2x2-bar multiplication-2x2-bar-first" aria-hidden="true"></div>
             <div class="multiplication-2x2-row" id="multiplication-2x2-partial-1"></div>
             <div class="multiplication-2x2-row" id="multiplication-2x2-partial-2"></div>
@@ -473,8 +476,12 @@
         <button class="admin-qa-toggle" id="admin-qa-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
       <div class="admin-setting-row">
-        <span>MQ-001診断</span>
+        <span>画面拡大診断</span>
         <button class="admin-qa-toggle" id="admin-viewport-diagnostics-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
+      </div>
+      <div class="admin-setting-row">
+        <span>BGM消失診断</span>
+        <button class="admin-qa-toggle" id="admin-bgm-diagnostics-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
       <div class="admin-action-list">
         <button class="admin-action-button" id="admin-reenable-collection" type="button">コレクションを今日もう一度見られるようにする</button>
