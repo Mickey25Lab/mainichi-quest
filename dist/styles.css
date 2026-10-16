@@ -721,54 +721,56 @@ button, input { font: inherit; }
 .phonics-youtube-stage {
   position:relative;
   z-index:1;
-  width:min(936px,calc(100vw - 28px));
-  margin:clamp(10px,2vh,22px) auto;
-  padding:clamp(10px,1.8vw,18px);
-  border:3px solid rgba(214,246,255,.9);
-  border-radius:24px;
-  background:rgba(4,20,62,.92);
-  box-shadow:0 18px 48px rgba(0,0,0,.5),inset 0 0 34px rgba(63,199,255,.2);
-  color:#fff;
+  width:min(810px,calc(100vw - 28px));
+  margin:0 auto;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
   text-align:center;
 }
-.phonics-youtube-header {
-  position:relative;
-  width:min(100%,810px);
-  min-height:38px;
-  margin:0 auto 8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.phonics-youtube-header h1 { width:100%; margin:0; padding:0 78px; font-size:clamp(21px,2.8vw,34px); line-height:1.05; text-align:center; }
-.phonics-youtube-header .phonics-youtube-back { position:absolute; right:0; top:50%; transform:translateY(-50%); }
-.phonics-youtube-back, .phonics-youtube-start, .phonics-youtube-end {
-  border:2px solid rgba(255,255,255,.9); border-radius:999px; color:#fff; font-weight:1000; cursor:pointer;
-  text-shadow:0 2px 0 rgba(0,0,0,.25);
-}
-.phonics-youtube-back { padding:6px 13px; background:#1659ae; font-size:clamp(13px,1.5vw,17px); }
-.phonics-youtube-player-frame { width:min(100%,810px); aspect-ratio:16 / 9; margin:0 auto; background:#000; }
+.phonics-youtube-player-frame { width:100%; aspect-ratio:16 / 9; margin:0 auto; background:#000; }
 .phonics-youtube-player-frame > div, .phonics-youtube-player-frame iframe { width:100%; height:100%; border:0; }
-.phonics-youtube-control-row {
-  width:min(100%,810px);
-  margin:8px auto 0;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;
-  gap:9px;
+.phonics-youtube-status { display:none; }
+.phonics-youtube-start {
+  border:2px solid rgba(255,255,255,.9);
+  border-radius:999px;
+  color:#fff;
+  background:linear-gradient(180deg,#ff962d,#df4d13);
+  box-shadow:0 4px 0 #9f2f0d;
+  font-size:clamp(16px,1.9vw,21px);
+  font-weight:1000;
+  cursor:pointer;
 }
-.phonics-youtube-status { min-width:0; margin:0; color:#fff; font-size:clamp(12px,1.45vw,16px); font-weight:900; line-height:1.25; text-align:left; }
-.phonics-youtube-status.is-practice { color:#fff6a7; text-shadow:0 1px 0 #643900,0 0 10px #ffb92d; }
-.phonics-youtube-actions { display:flex; justify-content:center; gap:8px; }
-.phonics-youtube-start, .phonics-youtube-end { min-width:150px; padding:8px 18px; background:linear-gradient(180deg,#ff962d,#df4d13); box-shadow:0 4px 0 #9f2f0d; font-size:clamp(16px,1.9vw,21px); }
-.phonics-youtube-end { background:linear-gradient(180deg,#2778d7,#1250a7); box-shadow:0 4px 0 #082f74; }
+.phonics-youtube-end {
+  position:absolute;
+  left:50%;
+  bottom:clamp(18px,3vh,34px);
+  z-index:3;
+  min-width:220px;
+  padding:14px 30px;
+  transform:translateX(-50%);
+  border:0;
+  border-radius:999px;
+  color:#fff;
+  background:linear-gradient(180deg,#2778d7,#1250a7);
+  box-shadow:0 6px 0 #082f74,0 12px 24px rgba(3,52,109,.2);
+  font-size:clamp(20px,2.5vw,31px);
+  font-weight:900;
+  cursor:pointer;
+}
+.phonics-youtube-end.is-pending {
+  color:#f1f1f1;
+  background:linear-gradient(180deg,#a5abb3,#777e87);
+  box-shadow:0 6px 0 #5e646c,0 12px 24px rgba(3,52,109,.14);
+}
+.phonics-youtube-end:active { transform:translate(-50%,3px); box-shadow:0 3px 0 #082f74,0 7px 14px rgba(3,52,109,.16); }
+.phonics-youtube-end.is-pending:active { box-shadow:0 3px 0 #5e646c,0 7px 14px rgba(3,52,109,.12); }
+.phonics-youtube-quit { z-index:3; }
 @media (max-width:600px) {
-  .phonics-youtube-stage { width:calc(100vw - 16px); padding:10px 8px 12px; border-radius:18px; }
-  .phonics-youtube-header { min-height:34px; }
-  .phonics-youtube-header h1 { padding:0 64px; }
-  .phonics-youtube-back { padding:6px 10px; }
-  .phonics-youtube-control-row { grid-template-columns:1fr auto; }
+  .phonics-youtube-stage { width:calc(100vw - 16px); }
+  .phonics-youtube-end { min-width:190px; }
 }
 .top-image-buttons {
   position:absolute;
