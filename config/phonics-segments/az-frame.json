@@ -1,11 +1,13 @@
 {
   "lessonId": "phonics-az",
   "sourceId": "abc-phonics-chant-az-tora-teacher",
-  "proposalRevision": "mechanical-frame-v2",
+  "proposalRevision": "mechanical-frame-v3",
   "repeatVolume": 100,
   "mechanicalGrid": {
-    "firstFrameSeconds": 4.63,
-    "followingFrameSeconds": 5.04,
+    "firstFrameSeconds": 4.49,
+    "followingFrameSeconds": 5.06,
+    "jumpEndOffsetSeconds": 0.0,
+    "jumpStartOffsetSeconds": 0.0,
     "letters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "setsPerLetter": 2,
     "videoDurationSeconds": 262.55
