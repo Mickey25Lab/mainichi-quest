@@ -116,9 +116,13 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   assert.equal(await completionButton.textContent(), "動画を見たよ");
   assert.match(await page.locator("#phonics-youtube-status").textContent(), /パート2（G〜K）が終わりました/);
 
+  const remainingBefore = await page.locator("#mode-select-phonics-part-2 .mode-select-remaining-number").textContent();
   await completionButton.click();
   await page.locator("#mode-select-screen.active").waitFor();
   await page.waitForFunction(() => window.__ytPlayers.length === 2);
+  const remainingAfter = await page.locator("#mode-select-phonics-part-2 .mode-select-remaining").textContent();
+  assert.equal(Number(remainingBefore), 1);
+  assert.match(remainingAfter, /できた！/);
   assert.deepEqual(pageErrors, []);
 });
 
@@ -126,6 +130,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  assert.match(app, /const appVersion = "0\.3\.0"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -177,5 +182,9 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.mode-select-energy\.energy-disabled/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
   assert.doesNotMatch(pocSection, /setVolume\?\.\(40\)/);
-  assert.doesNotMatch(pocSection, /profileStore|setReward|scaledEnergyGain|completeDailyMission/);
+  assert.doesNotMatch(pocSection, /setReward|scaledEnergyGain/);
+  assert.match(pocSection, /activeModeId: null/);
+  assert.match(pocSection, /phonicsYoutube\.activeModeId = modeId/);
+  assert.match(pocSection, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*completeDailyMissionRound\(phonicsYoutube\.activeModeId\)[\s\S]*leavePhonicsYoutube\(\)/);
+  assert.match(app, /phonics-youtube-end"\)\.addEventListener\("click", completePhonicsYoutubeAndLeave\)/);
 });
