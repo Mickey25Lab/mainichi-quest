@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.1";
+  const appVersion = "0.3.2";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -27,7 +27,7 @@
     Object.freeze({ id:"medium", label:"中" }),
     Object.freeze({ id:"large", label:"大" })
   ]);
-  const screens = ["start-screen", "mode-select-screen", "phonics-youtube-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
+  const screens = ["start-screen", "mode-select-screen", "phonics-intro-screen", "phonics-youtube-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
   const startKeyVisualPath = "./assets/ui/top/top_key_visual.webp";
@@ -126,6 +126,7 @@
     screenGroups: Object.freeze({
       "start-screen": "heroic",
       "mode-select-screen": "heroic",
+      "phonics-intro-screen": "heroic",
       "play-screen": "game",
       "transition-screen": "game",
       "reward-screen": "game",
@@ -434,7 +435,8 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first", activeModeId: null
+    frameIndex: 0, pass: "first", activeModeId: null,
+    introMinimumElapsed: false, introTimerId: 0
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -553,7 +555,7 @@
           onReady: () => {
             phonicsYoutube.ready = true;
             $("phonics-youtube-start").disabled = false;
-            document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = false; });
+            updatePhonicsIntroReadyState();
             const iframe = phonicsYoutube.player?.getIframe?.();
             iframe?.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
             resolve(phonicsYoutube.player);
@@ -576,15 +578,12 @@
       console.error("Phonics YouTube player setup failed", error);
       setPhonicsYoutubeStatus("動画を準備できませんでした。ネットワーク設定を確認してください。");
       $("phonics-youtube-start").disabled = true;
-      document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
+      if ($("phonics-intro-screen").classList.contains("active")) {
+        $("phonics-intro-status").textContent = "動画を準備できませんでした。もう一度やりなおしてね。";
+      }
     });
   }
   function preparePhonicsYoutubePlayback() {
-    // Keep the mode choice unavailable until the player is actually ready.
-    // That guarantees the eventual phonics-mode tap can call playVideo()
-    // synchronously inside the user gesture instead of falling through to an
-    // async autoplay attempt that Safari/iPadOS may block.
-    document.querySelectorAll("[data-phonics-lesson]").forEach((button) => { button.disabled = true; });
     createPhonicsYoutubePlayer();
   }
   function beginPhonicsYoutubePlayback() {
@@ -617,23 +616,70 @@
     $("phonics-youtube-screen").setAttribute("aria-label", lesson.title);
     return true;
   }
-  function openPhonicsYoutube(lessonId, modeId) {
+  function phonicsLessonLettersText() {
+    const seen = [];
+    activePhonicsYoutubeLesson.frames.forEach((frame) => {
+      if (!seen.includes(frame.letter)) seen.push(frame.letter);
+    });
+    return seen.join("、");
+  }
+  function clearPhonicsIntroTimer() {
+    if (phonicsYoutube.introTimerId) window.clearTimeout(phonicsYoutube.introTimerId);
+    phonicsYoutube.introTimerId = 0;
+  }
+  function updatePhonicsIntroReadyState() {
+    const button = $("phonics-intro-start");
+    const status = $("phonics-intro-status");
+    if (!button || !status) return;
+    const ready = phonicsYoutube.introMinimumElapsed && phonicsYoutube.ready && Boolean(phonicsYoutube.player);
+    button.disabled = !ready;
+    if (ready) status.textContent = "じゅんびOK！";
+    else if (!phonicsYoutube.introMinimumElapsed) status.textContent = "説明を読んでね";
+    else status.textContent = "動画を準備しています…";
+  }
+  function showPhonicsIntro(lessonId, modeId) {
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    phonicsYoutube.introMinimumElapsed = false;
+    clearPhonicsIntroTimer();
+    $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
+    $("phonics-intro-line").innerHTML = `これから、${phonicsLessonLettersText()}を<ruby>発音<rt>はつおん</rt></ruby>するよ。`;
+    $("phonics-intro-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    $("phonics-intro-start").disabled = true;
+    $("phonics-intro-status").textContent = "説明を読んでね";
+    showScreen("phonics-intro-screen");
+    schedulePlayStageSize("phonics-intro");
+    preparePhonicsYoutubePlayback();
+    phonicsYoutube.introTimerId = window.setTimeout(() => {
+      phonicsYoutube.introTimerId = 0;
+      phonicsYoutube.introMinimumElapsed = true;
+      updatePhonicsIntroReadyState();
+    }, 3000);
+  }
+  function startPhonicsFromIntroGesture() {
+    if (!phonicsYoutube.ready || !phonicsYoutube.player || !phonicsYoutube.introMinimumElapsed) return;
+    clearPhonicsIntroTimer();
     showScreen("phonics-youtube-screen");
     $("phonics-youtube-start").hidden = true;
     $("phonics-youtube-end").hidden = false;
     $("phonics-youtube-end").classList.add("is-pending");
     $("phonics-youtube-start").disabled = false;
     $("phonics-youtube-status").classList.remove("is-practice");
-    setPhonicsYoutubeStatus("動画を準備しています…");
-    startPhonicsYoutubeAutomatically();
+    beginPhonicsYoutubePlayback();
+  }
+  function leavePhonicsIntro() {
+    clearPhonicsIntroTimer();
+    phonicsYoutube.introMinimumElapsed = false;
+    phonicsYoutube.activeModeId = null;
+    renderModeSelectMission();
+    showFixedScreenWhenReady("mode-select-screen");
   }
   function startPhonicsYoutubeFromGesture() {
     beginPhonicsYoutubePlayback();
   }
   function stopAndDestroyPhonicsYoutube() {
+    clearPhonicsIntroTimer();
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
@@ -1197,6 +1243,7 @@
     }
     const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
     $("play-stage").style.setProperty("--stage-scale", String(scale));
+    $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
     $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     lastStableAppScale = scale;
     return true;
@@ -5034,7 +5081,7 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => openPhonicsYoutube(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);

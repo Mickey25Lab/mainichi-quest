@@ -72,6 +72,13 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.locator("#start-button").click();
   await page.waitForFunction(() => window.__ytPlayers.length === 1);
   await page.locator("#mode-select-phonics-part-2").click();
+  await page.locator("#phonics-intro-screen.active").waitFor();
+  const introStart = page.locator("#phonics-intro-start");
+  assert.equal(await introStart.isDisabled(), true);
+  assert.match(await page.locator("#phonics-intro-line").textContent(), /G、H、I、J、Kを発音するよ/);
+  await page.waitForTimeout(3100);
+  await page.waitForFunction(() => !document.querySelector("#phonics-intro-start").disabled);
+  await introStart.click();
   await page.locator("#phonics-youtube-screen.active").waitFor();
   await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 1);
   const completionButton = page.locator("#phonics-youtube-end");
@@ -130,7 +137,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.0"/);
+  assert.match(app, /const appVersion = "0\.3\.2"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -158,6 +165,15 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /data-mode="phonics-part-4"[\s\S]*パート4　Q〜U/);
   assert.match(html, /data-mode="phonics-part-5"[\s\S]*パート5　V〜Z/);
   assert.match(html, /id="mode-select-phonics-part-2"[\s\S]*mode-select-remaining[\s\S]*mode-select-energy/);
+  assert.match(html, /id="phonics-intro-screen"/);
+  assert.match(html, /3分の<ruby>動画<rt>どうが<\/rt><\/ruby>を見ながら、いっしょに<ruby>声<rt>こえ<\/rt><\/ruby>に出そう/);
+  assert.match(html, /<ruby>手<rt>て<\/rt><\/ruby>と<ruby>口<rt>くち<\/rt><\/ruby>のうごきも、まねしてみよう！/);
+  assert.match(html, /phonics_intro_gesture_child\.webp/);
+  assert.match(html, /id="phonics-intro-start"[^>]*>やってみる！<\/button>/);
+  assert.match(app, /showPhonicsIntro\(button\.dataset\.phonicsLesson, button\.dataset\.mode\)/);
+  assert.match(app, /introMinimumElapsed = true[\s\S]*updatePhonicsIntroReadyState\(\)/);
+  assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
+  assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true/);
   assert.match(app, /id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true/);
   assert.doesNotMatch(html, /ためしてみる/);
@@ -181,6 +197,8 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.parent-energy-unavailable/);
   assert.match(css, /\.mode-select-energy\.energy-disabled/);
   const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
+  const prepareSection = app.slice(app.indexOf("function preparePhonicsYoutubePlayback"), app.indexOf("function beginPhonicsYoutubePlayback"));
+  assert.doesNotMatch(prepareSection, /data-phonics-lesson/);
   assert.doesNotMatch(pocSection, /setVolume\?\.\(40\)/);
   assert.doesNotMatch(pocSection, /setReward|scaledEnergyGain/);
   assert.match(pocSection, /activeModeId: null/);
