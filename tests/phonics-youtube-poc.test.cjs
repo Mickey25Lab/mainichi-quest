@@ -72,6 +72,8 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.locator("#start-button").click();
   await page.waitForFunction(() => window.__ytPlayers.length === 1);
   await page.locator("#mode-select-phonics").click();
+  await page.locator("#phonics-youtube-part-picker").waitFor({ state: "visible" });
+  await page.locator('[data-phonics-lesson="part-2"]').click();
   await page.locator("#phonics-youtube-screen.active").waitFor();
   await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 1);
   const completionButton = page.locator("#phonics-youtube-end");
@@ -122,23 +124,26 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   assert.deepEqual(pageErrors, []);
 });
 
-test("phonics YouTube PoC is explicitly playback-only", () => {
+test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
-  assert.match(app, /lessonId: "phonics-part-2-g-k"/);
-  assert.match(app, /firstFrameSeconds: 4\.59/);
+  assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
   assert.match(app, /jumpStartOffsetSeconds: 0\.39/);
-  assert.match(app, /\["G", "G", "H", "H", "I", "I", "J", "J", "K", "K"\]/);
+  assert.match(app, /id:"part-1"[\s\S]*letters:"A〜F"/);
+  assert.match(app, /id:"part-2"[\s\S]*letters:"G〜K"/);
+  assert.match(app, /id:"part-3"[\s\S]*letters:"L〜P"/);
+  assert.match(app, /id:"part-4"[\s\S]*letters:"Q〜U"/);
+  assert.match(app, /id:"part-5"[\s\S]*letters:"V〜Z"/);
+  assert.match(app, /sourceStart:-0\.4, start:0, jumpEnd:4\.84, jumpStart:0, end:4\.84/);
   assert.match(app, /host: "https:\/\/www\.youtube-nocookie\.com"/);
   assert.match(app, /playsinline: 1/);
   assert.match(app, /controls: 0/);
   assert.match(app, /player\.seekTo\?\.\(frame\.jumpStart, true\)/);
   assert.match(app, /onAutoplayBlocked/);
-  assert.match(app, /\$\("mode-select-phonics"\)\.disabled = true/);
-  assert.match(app, /\$\("mode-select-phonics"\)\.disabled = false/);
+  assert.match(app, /\[data-phonics-picker\], \[data-phonics-lesson\]/);
   assert.match(app, /autoplay; encrypted-media; picture-in-picture/);
   assert.match(app, /function leavePhonicsYoutube\(\)[\s\S]*preparePhonicsYoutubePlayback\(\)/);
   assert.match(app, /pausePhonicsYoutubeForLifecycle/);
@@ -146,7 +151,9 @@ test("phonics YouTube PoC is explicitly playback-only", () => {
   assert.match(app, /parent-energy-unavailable/);
   assert.match(app, /energy\.className = "mode-select-energy energy-disabled"/);
   assert.match(html, /data-mode="phonics"/);
-  assert.match(html, /<b>フォニックス<\/b><small>パート2　G〜K<\/small>/);
+  assert.match(html, /<b>フォニックス<\/b><small>パートをえらぶ<\/small>/);
+  assert.match(html, /data-phonics-lesson="part-1">パート1　A〜F/);
+  assert.match(html, /data-phonics-lesson="part-5">パート5　V〜Z/);
   assert.match(html, /id="mode-select-phonics"[\s\S]*mode-select-remaining[\s\S]*mode-select-energy/);
   assert.doesNotMatch(html, /ためしてみる/);
   assert.match(html, /class="quit-button" id="phonics-youtube-back"[^>]*>やめる<\/button>/);
