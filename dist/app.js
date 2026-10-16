@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.0";
+  const appVersion = "0.3.1";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1966,6 +1966,9 @@
   ensureGameplayFontsReady();
 
   function displayQuestion(question, onRevealed = null) {
+    // Keep the previous red correction through the blue grading mark and
+    // any interim notice; remove it only as the next problem takes over.
+    removeMultiplicationCorrectionOverlays();
     const displayStartedAt = performance.now();
     recordVisualDiagnostic("display-question-start", { vehicleIndex: question.vehicleIndex, ...visualVehicleSnapshot(question.vehicleIndex) });
     clearIdleGuide();
@@ -3318,6 +3321,93 @@
   function runAnswerTransition(step) {
     try { step(); } catch (error) { state.transitioning = false; console.error("Answer transition failed", error); }
   }
+
+  function removeMultiplicationCorrectionOverlays() {
+    $("play-stage").querySelectorAll(".multiplication-correction-overlay").forEach((node) => node.remove());
+  }
+  function addMultiplicationCorrectionOverlay(slot, expected) {
+    const stage = $("play-stage");
+    const stageRect = stage.getBoundingClientRect();
+    const slotRect = slot.getBoundingClientRect();
+    const scale = stageRect.width / 1448 || 1;
+    const correction = document.createElement("span");
+    correction.className = "multiplication-correction-overlay";
+    correction.textContent = expected;
+    correction.style.left = ((slotRect.left + slotRect.width / 2 - stageRect.left) / scale) + "px";
+    correction.style.top = ((slotRect.bottom - stageRect.top) / scale + 4) + "px";
+    stage.appendChild(correction);
+  }
+  function showWrongDigitCorrections() {
+    const question = state.current;
+    if (!question || ["numbercards", "counting1", "counting2"].includes(state.mode)) return;
+    const markDigit = (slot, expected, placement) => {
+      if (!slot || slot.textContent.trim() === String(expected)) return;
+      const original = document.createElement("span");
+      original.textContent = slot.textContent.trim() || "＿";
+      original.className = "incorrect-digit";
+      const cross = document.createElement("span");
+      cross.className = "incorrect-digit-cross";
+      cross.setAttribute("aria-hidden", "true");
+      const correction = document.createElement("span");
+      correction.className = "incorrect-digit-correction " + placement;
+      correction.textContent = String(expected);
+      slot.replaceChildren(original, cross, correction);
+      slot.classList.add("has-digit-correction");
+    };
+    if (state.mode === "multiplication" && state.multiplication) {
+      const expected = String(question.product ?? question.quotient);
+      removeMultiplicationCorrectionOverlays();
+      Array.from($("multiplication-answer-row").children).forEach((slot, i) => {
+        if (state.multiplication.cells[i] !== expected[i]) {
+          markDigit(slot, expected[i] ?? "", "below");
+          // Corrections in the grid are clipped by ancestor paint containment.
+          // Mount the red answer directly in the scaled play stage instead.
+          slot.querySelector(".incorrect-digit-correction")?.remove();
+          addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
+        }
+      });
+    } else if (state.mode === "multiplication2x2" && state.multiplication2x2) {
+      state.multiplication2x2.rows.forEach((row) => {
+        Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
+          if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
+        });
+      });
+    } else if (state.mode === "longdivision" && state.longDivision) {
+      const slots = Array.from($("long-division-slots").children);
+      const expected = String(question.quotient).padStart(slots.length, " ");
+      slots.forEach((slot, i) => {
+        if (expected[i] !== " " && state.longDivision.cells[i] !== expected[i]) markDigit(slot, expected[i], "above");
+      });
+      if (Number(state.remainderInput || 0) !== question.remainder)
+        markDigit($("long-division-remainder-slot"), question.remainder, "above");
+    } else if (state.mode === "normal") {
+      const holder = $("answer-text");
+      const entered = holder.textContent;
+      const parts = entered.split("…");
+      const expectedQuotient = String(question.quotient);
+      const expectedRemainder = Number(question.remainder);
+      const digits = document.createDocumentFragment();
+      const addPart = (value, target, side) => {
+        const span = document.createElement("span");
+        span.className = "inline-answer-part";
+        span.textContent = value;
+        digits.appendChild(span);
+        if (value !== target) markDigit(span, target, side);
+      };
+      addPart(parts[0] || "", expectedQuotient, "left");
+      if (parts.length > 1) {
+        digits.appendChild(document.createTextNode("…"));
+        addPart(parts[1] || "", String(expectedRemainder), "right");
+      } else if (expectedRemainder !== 0) {
+        const missing = document.createElement("span");
+        missing.className = "missing-remainder-correction";
+        missing.textContent = "…" + expectedRemainder;
+        missing.setAttribute("aria-label", "正しいあまり " + expectedRemainder);
+        digits.appendChild(missing);
+      }
+      holder.replaceChildren(digits);
+    }
+  }
   function judge(answer) {
     if (state.transitioning) return;
     state.transitioning = true;
@@ -3356,6 +3446,7 @@
       state.current.resultType = state.current.hintUsed ? "hint_wrong" : "self_wrong";
       state.current.hadWrong = true;
       setQuestionCardState("wrong");
+      showWrongDigitCorrections();
       playWrongSound();
       if (state.phase === "initial") {
         enqueueReview(state.missed, state.current);
@@ -3877,7 +3968,25 @@
         profileStore.setCollectionSceneOrder(next);
       } catch (_) {}
     }
-    return current.filter((index) => collectionSceneQualifies(index, kind));
+    const visible = current.filter((index) => collectionSceneQualifies(index, kind));
+    if (kind !== "vehicle") return visible;
+    let history = [];
+    try { history = profileStore.getAcquisitionHistory(); } catch (_) {}
+    const friendshipOrder = new Map();
+    history.forEach((entry) => {
+      if (entry?.acquisitionType !== "friendship_complete") return;
+      const index = vehicles.findIndex((vehicle) => vehicle.stem === entry.vehicleId);
+      if (index >= 0 && !friendshipOrder.has(index)) friendshipOrder.set(index, Number(entry.sequence) || Number.MAX_SAFE_INTEGER);
+    });
+    const discoveryOrder = new Map(visible.map((index, position) => [index, position]));
+    return visible.sort((a, b) => {
+      const aFriendly = vehicleProgress(a).friendly;
+      const bFriendly = vehicleProgress(b).friendly;
+      if (aFriendly !== bFriendly) return aFriendly ? -1 : 1;
+      if (!aFriendly) return discoveryOrder.get(a) - discoveryOrder.get(b);
+      return (friendshipOrder.get(a) ?? Number.MAX_SAFE_INTEGER) - (friendshipOrder.get(b) ?? Number.MAX_SAFE_INTEGER)
+        || discoveryOrder.get(a) - discoveryOrder.get(b);
+    });
   }
   function robotCollectionPageCount() { return collectionSceneOrder("robot").length > 10 ? 2 : 1; }
 
@@ -3889,8 +3998,9 @@
     const shadowHeight = kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13);
     const shadowY = layout.contactY - (kind === "vehicle" ? 0 : 7);
     const top = layout.contactY - layout.size * anchorY;
+    const rowDepth = Math.round(layout.contactY);
     const isNew = state.collectionShowSessionMarkers && state.collectionNewVehicleIndexes.has(vehicleIndex);
-    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
+    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="z-index:${rowDepth};--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
   }
   function renderVehicleCollectionScene() {
     return collectionSceneOrder("vehicle").slice(0, vehicleCollectionSlots.length).map((vehicleIndex, position) => {
