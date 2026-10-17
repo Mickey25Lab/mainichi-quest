@@ -331,8 +331,8 @@
     <section class="screen collection-screen" id="collection-screen" aria-label="コレクション">
       <div class="collection-stage" id="collection-stage">
         <header class="collection-header">
-          <h2>COLLECTION <span>GARAGE</span></h2>
-          <div class="medal-count"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
+          <h2 id="collection-header-title">COLLECTION <span>GARAGE</span></h2>
+          <div class="medal-count" id="collection-medal-count-block"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
           <button class="collection-end" id="collection-exit" aria-label="コレクションを閉じる">×</button>
         </header>
         <div class="collection-grid" id="collection-grid"></div>
@@ -344,6 +344,19 @@
         </div>
         
         <div class="collection-time collection-time-panel">あと<strong id="collection-seconds">60</strong>秒</div>
+        <div class="answer-confirm phonics-grow-confirm" id="phonics-grow-confirm" role="dialog" aria-modal="true" aria-labelledby="phonics-grow-confirm-title" hidden>
+          <div class="answer-confirm-card phonics-grow-confirm-card">
+            <h2 id="phonics-grow-confirm-title">この乗り物を育てる？</h2>
+            <p class="phonics-grow-vehicle-name" id="phonics-grow-vehicle-name"></p>
+            <div class="phonics-grow-confirm-actions">
+              <button class="phonics-grow-cancel" id="phonics-grow-cancel" type="button">やめる</button>
+              <div class="phonics-grow-confirm-choice">
+                <button class="phonics-grow-accept" id="phonics-grow-accept" type="button">育てる</button>
+                <small id="phonics-grow-amount">♥ +5</small>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="answer-confirm quit-confirm collection-exit-confirm" id="collection-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="collection-exit-question" hidden>
           <div class="answer-confirm-card quit-confirm-card collection-exit-box">
             <h2 id="collection-exit-question">見るのをやめる？</h2>
