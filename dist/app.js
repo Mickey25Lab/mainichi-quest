@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.21";
+  const appVersion = "0.3.22";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4394,7 +4394,7 @@
     const artworkPath = ({
       vehicle:vehicleArtworkPath,
       robot:robotArtworkPath,
-      "super-robot":superRobotArtworkPath,
+      "super-robot":(index) => vehicleProgress(index).stage >= 5 ? equippedSuperRobotArtworkPath(index) : superRobotArtworkPath(index),
       equipment:equipmentArtworkPath,
       medal:masterMedalArtworkPath
     })[kind](vehicleIndex);
@@ -4473,6 +4473,33 @@
     if (nextPage === state.collectionCategoryPage) return;
     state.collectionCategoryPage = nextPage;
     renderCollectionCategoryScene(state.collectionCategory);
+  }
+  function openCollectionCategoryFromDetail(category) {
+    const index = state.detailVehicleIndex;
+    if (!collectionCategoryAvailable(category)) return;
+    setCollectionCategory(category);
+    const position = collectionSceneOrder(category).indexOf(index);
+    if (position >= 0) {
+      state.collectionCategoryPage = Math.floor(position / collectionCategoryPageSize(category));
+      renderCollectionCategoryScene(category);
+    }
+    sizeCollectionStage();
+    showScreen("collection-screen");
+  }
+  function attachDetailCategoryLink(element, category) {
+    element.setAttribute("role", "button");
+    element.setAttribute("tabindex", "0");
+    element.setAttribute("aria-label", `${category === "medal" ? "マスターメダル" : category === "super-robot" ? "スーパーロボット" : category === "robot" ? "ロボット" : "乗り物"}一覧を見る`);
+    const activate = () => {
+      if (element.hidden || element.closest("[hidden]")) return;
+      openCollectionCategoryFromDetail(category);
+    };
+    element.addEventListener("click", activate);
+    element.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      activate();
+    });
   }
   function detailCategoryForVehicle(index) {
     const progress = vehicleProgress(index);
@@ -5568,6 +5595,10 @@
     if (Math.abs(deltaX) < 70) return;
     setCollectionCategoryPage(deltaX > 0 ? state.collectionCategoryPage + 1 : state.collectionCategoryPage - 1);
   });
+  attachDetailCategoryLink(document.querySelector(".detail-slot-vehicle"), "vehicle");
+  attachDetailCategoryLink(document.querySelector(".detail-slot-robot"), "robot");
+  attachDetailCategoryLink(document.querySelector(".detail-slot-super"), "super-robot");
+  attachDetailCategoryLink($("detail-master-medal-display"), "medal");
   $("detail-prev").addEventListener("click", () => moveVehicleDetail(-1));
   $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
   $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
