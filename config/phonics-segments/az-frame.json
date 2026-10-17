@@ -1,0 +1,23 @@
+{
+  "lessonId": "phonics-az",
+  "sourceId": "abc-phonics-chant-az-tora-teacher",
+  "proposalRevision": "adopted-main-2026-10-16",
+  "repeatVolume": 100,
+  "mechanicalGrid": {
+    "firstFrameSeconds": 4.59,
+    "followingFrameSeconds": 5.05,
+    "jumpEndOffsetSeconds": 0.0,
+    "jumpStartOffsetSeconds": 0.39,
+    "letters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "setsPerLetter": 2,
+    "videoDurationSeconds": 262.55
+  },
+  "segmentOverrides": {
+    "A-1": {
+      "sourceStartSeconds": -0.4,
+      "startSeconds": 0.0,
+      "endSeconds": 4.84,
+      "note": "YouTube cannot seek before zero; playback starts at 0 while retaining the adopted end."
+    }
+  }
+}

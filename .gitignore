@@ -1,2 +1,5 @@
 .worktrees/
 review/
+
+asset-source/phonics/videos/*.mp4
+scripts/phonics-segments/__pycache__/
