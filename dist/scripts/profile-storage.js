@@ -77,6 +77,7 @@
         openingMovieLastPlayedJst: null,
         dailyMission: { date: null, completedCounts: {} },
         collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] },
+        collectionCategorySeen: [],
         legacyHistory: null,
         legacyRanking: null
       },
@@ -144,6 +145,10 @@
       equipment: Array.isArray(sceneOrder?.equipment) ? sceneOrder.equipment.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : [],
       medal: Array.isArray(sceneOrder?.medal) ? sceneOrder.medal.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : []
     };
+    const collectionCategorySeen = value.progress?.collectionCategorySeen;
+    profile.progress.collectionCategorySeen = Array.isArray(collectionCategorySeen)
+      ? [...new Set(collectionCategorySeen.filter((item) => ["vehicle", "robot", "super-robot", "equipment", "medal"].includes(item)))]
+      : null;
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
@@ -367,6 +372,18 @@
       });
     }
 
+    function getCollectionCategorySeen() {
+      const value = getActiveProfile()?.progress?.collectionCategorySeen;
+      return Array.isArray(value) ? clone(value) : null;
+    }
+    function setCollectionCategorySeen(value) {
+      const allowed = new Set(["vehicle", "robot", "super-robot", "equipment", "medal"]);
+      const next = Array.isArray(value) ? [...new Set(value.filter((item) => allowed.has(item)))] : [];
+      return mutateActiveProfile((profile) => {
+        profile.progress.collectionCategorySeen = next;
+      });
+    }
+
     function getAcquisitionHistory() { return clone(getActiveProfile()?.acquisitionHistory ?? []); }
     function appendAcquisitionHistory(entry) {
       if (!entry || typeof entry !== "object") throw new Error("acquisition entry is required");
@@ -404,7 +421,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
       });
@@ -440,6 +457,7 @@
       getDailyMission, setDailyMission,
       getProfileLearningSettings, setProfileLearningSettings,
       getCollectionSceneOrder, setCollectionSceneOrder,
+      getCollectionCategorySeen, setCollectionCategorySeen,
       getAcquisitionHistory, appendAcquisitionHistory,
       resetActiveProfileData, getActiveQaState, setActiveQaState
     };

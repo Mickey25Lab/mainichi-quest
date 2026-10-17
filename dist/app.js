@@ -255,7 +255,7 @@
     recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false, collectionShowSessionMarkers: true,
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
-    energyDisplayOverride: null, collectionCategory: "summary", collectionCategoryPage: 0, collectionSwipeStartX: null,
+    energyDisplayOverride: null, collectionCategory: "summary", collectionCategoryPage: 0, collectionSwipeStartX: null, collectionNewCategoryKeys: new Set(),
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0, bgmTransitionId: 0, bgmFadeTimer: null
   };
@@ -4019,6 +4019,7 @@
     if (runId !== state.runId || !state.collectionUsed) return;
     state.collectionDeadline = Date.now() + 60000;
     state.collectionShowSessionMarkers = showSessionMarkers;
+    prepareCollectionCategoryTabs();
     setCollectionCategory("summary"); renderCollectionGrid({ showSessionMarkers }); sizeCollectionStage(); showScreen("collection-screen"); updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
@@ -4031,6 +4032,7 @@
   function collectionTimeUp() {
     if (state.collectionClosing) return;
     state.collectionClosing = true;
+    acknowledgeCollectionCategoryTabs();
     stopCollectionTimer(); playCollectionEndSound(); $("time-up").hidden = false;
     window.setTimeout(() => endToModeSelect(), collectionEndTransitionDurationMs);
   }
@@ -4038,9 +4040,11 @@
     if (state.collectionTimerId !== null) { window.clearInterval(state.collectionTimerId); state.collectionTimerId = null; }
   }
   function setCollectionCategory(category) {
-    const normalizedCategory = category || "summary";
+    const requestedCategory = category || "summary";
+    const normalizedCategory = requestedCategory === "summary" || collectionCategoryAvailable(requestedCategory) ? requestedCategory : "summary";
     if (normalizedCategory !== state.collectionCategory) state.collectionCategoryPage = 0;
     state.collectionCategory = normalizedCategory;
+    renderCollectionCategoryTabs();
     document.querySelectorAll(".category-button").forEach((button) => {
       const selected = button.dataset.category === normalizedCategory;
       button.classList.toggle("selected", selected);
@@ -4072,6 +4076,46 @@
     if (kind === "equipment") return progress.discovered && progress.stage >= 5;
     if (kind === "medal") return progress.discovered && progress.masterMedal;
     return false;
+  }
+  function collectionCategoryAvailable(category) {
+    return collectionSceneOrderKeys.includes(category) && vehicles.some((_, index) => collectionSceneQualifies(index, category));
+  }
+  function availableCollectionCategoryKeys() {
+    return collectionSceneOrderKeys.filter(collectionCategoryAvailable);
+  }
+  function renderCollectionCategoryTabs() {
+    const available = new Set(availableCollectionCategoryKeys());
+    document.querySelectorAll(".category-button").forEach((button) => {
+      const category = button.dataset.category;
+      const visible = category === "summary" || available.has(category);
+      button.hidden = !visible;
+      button.classList.toggle("is-new-category", visible && state.collectionNewCategoryKeys.has(category));
+    });
+  }
+  function prepareCollectionCategoryTabs() {
+    const available = availableCollectionCategoryKeys();
+    let seen = null;
+    try { seen = profileStore.getCollectionCategorySeen(); } catch (_) {}
+    if (seen === null) {
+      // Profiles saved before category tabs became progressive already knew their
+      // current categories. Seed those as seen so an update does not mark every tab red.
+      try { profileStore.setCollectionCategorySeen(available); } catch (_) {}
+      state.collectionNewCategoryKeys = new Set();
+    } else {
+      const seenSet = new Set(seen);
+      state.collectionNewCategoryKeys = new Set(available.filter((category) => !seenSet.has(category)));
+    }
+    renderCollectionCategoryTabs();
+  }
+  function acknowledgeCollectionCategoryTabs() {
+    const available = availableCollectionCategoryKeys();
+    if (state.collectionNewCategoryKeys.size) {
+      let seen = [];
+      try { seen = profileStore.getCollectionCategorySeen() || []; } catch (_) {}
+      try { profileStore.setCollectionCategorySeen([...seen, ...available]); } catch (_) {}
+    }
+    state.collectionNewCategoryKeys = new Set();
+    renderCollectionCategoryTabs();
   }
   function collectionSceneAcquisitionType(kind) {
     return ({ vehicle:"vehicle_discovered", robot:"robot", "super-robot":"super_robot", equipment:"super_robot_equipped", medal:"master_medal" })[kind];
@@ -5279,7 +5323,7 @@
     }
   });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
-  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; endToModeSelect(); });
+  $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; acknowledgeCollectionCategoryTabs(); endToModeSelect(); });
   document.querySelectorAll(".category-button").forEach((button) => button.addEventListener("click", () => {
     const category = button.dataset.category;
     setCollectionCategory(category);

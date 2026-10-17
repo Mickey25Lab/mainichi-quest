@@ -43,3 +43,12 @@ test("four-up categories paginate after four acquisitions and share swipe naviga
   assert.match(app, /setCollectionCategoryPage\(deltaX > 0 \? state\.collectionCategoryPage \+ 1 : state\.collectionCategoryPage - 1\)/);
   assert.match(html, /id="collection-page-indicator"[^>]*><\/div>/);
 });
+
+test("collection tabs unlock from progress and new tabs use the timer red until collection closes", () => {
+  assert.match(app, /function collectionCategoryAvailable\(category\)[\s\S]*vehicles\.some\(\(_, index\) => collectionSceneQualifies\(index, category\)\)/);
+  assert.match(app, /button\.hidden = !visible/);
+  assert.match(app, /button\.classList\.toggle\("is-new-category"/);
+  assert.match(app, /function collectionTimeUp\(\)[\s\S]*acknowledgeCollectionCategoryTabs\(\)/);
+  assert.match(app, /collection-exit-yes[\s\S]*acknowledgeCollectionCategoryTabs\(\)/);
+  assert.match(css, /\.category-button\.is-new-category,[\s\S]*border-color:#ff9b37;[\s\S]*background:linear-gradient\(#ee421e,#a01512\)/);
+});
