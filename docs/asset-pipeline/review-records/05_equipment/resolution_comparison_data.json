@@ -1,0 +1,96 @@
+{
+  "source": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\review\\collection\\05_equipment\\v4_review_work_2026-10-09\\normalized_centered_alpha16_2026-10-09",
+  "settings": {
+    "sizes": [
+      1254,
+      896,
+      768,
+      640,
+      512,
+      430
+    ],
+    "rgb_quality": 90,
+    "alpha_quality": 100,
+    "method": 6,
+    "resampling": "LANCZOS",
+    "lossless": false,
+    "exact": false,
+    "metadata": "not copied"
+  },
+  "items": [
+    {
+      "source": "04_delivery_truck_equipment.png",
+      "label": "宅配便車",
+      "reason": "描画量が多く、面・細線・発光の差を確認",
+      "candidates": [
+        {
+          "size": 1254,
+          "file": "04_delivery_truck_equipment_1254.webp",
+          "bytes": 151470
+        },
+        {
+          "size": 896,
+          "file": "04_delivery_truck_equipment_896.webp",
+          "bytes": 102518
+        },
+        {
+          "size": 768,
+          "file": "04_delivery_truck_equipment_768.webp",
+          "bytes": 82336
+        },
+        {
+          "size": 640,
+          "file": "04_delivery_truck_equipment_640.webp",
+          "bytes": 63136
+        },
+        {
+          "size": 512,
+          "file": "04_delivery_truck_equipment_512.webp",
+          "bytes": 45890
+        },
+        {
+          "size": 430,
+          "file": "04_delivery_truck_equipment_430.webp",
+          "bytes": 35964
+        }
+      ]
+    },
+    {
+      "source": "17_racing_bike_equipment.png",
+      "label": "レーシングバイク",
+      "reason": "細身で透明余白が多く、輪郭と細線の差を確認",
+      "candidates": [
+        {
+          "size": 1254,
+          "file": "17_racing_bike_equipment_1254.webp",
+          "bytes": 46794
+        },
+        {
+          "size": 896,
+          "file": "17_racing_bike_equipment_896.webp",
+          "bytes": 34034
+        },
+        {
+          "size": 768,
+          "file": "17_racing_bike_equipment_768.webp",
+          "bytes": 27396
+        },
+        {
+          "size": 640,
+          "file": "17_racing_bike_equipment_640.webp",
+          "bytes": 21456
+        },
+        {
+          "size": 512,
+          "file": "17_racing_bike_equipment_512.webp",
+          "bytes": 15966
+        },
+        {
+          "size": 430,
+          "file": "17_racing_bike_equipment_430.webp",
+          "bytes": 12680
+        }
+      ]
+    }
+  ]
+}
