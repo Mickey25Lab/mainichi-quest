@@ -4173,3 +4173,16 @@ button, input { font: inherit; }
 }
 .start-screen .profile-switch-button strong {font-size:14px;}
 .start-screen .profile-switch-button span {font-size:12px;}
+
+/* Stage 5 uses the exact collection detail composition, with GET overlaid. */
+.reward-stage[data-stage="5"] #reward-complete-composition {position:absolute;inset:0;z-index:1;}
+.reward-stage #reward-complete-composition[hidden] {display:none;}
+.reward-stage[data-stage="5"] .reward-complete-detail {box-sizing:border-box;width:100%;height:100%;aspect-ratio:4/3;border:0;border-radius:0;box-shadow:none;}
+.reward-stage[data-stage="5"] .reward-complete-detail img {animation:none;filter:initial;transform:none;}
+.reward-stage[data-stage="5"] .reward-complete-detail > .detail-background {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.reward-stage[data-stage="5"] .reward-complete-detail .detail-vehicle-logo {position:absolute;width:36%;height:auto;filter:drop-shadow(0 5px 7px rgba(0,7,25,.6));}
+.reward-stage[data-stage="5"] .reward-complete-detail .detail-master-medal-hologram {position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+.reward-stage[data-stage="5"] .reward-complete-detail .detail-master-medal-art {position:absolute;left:50%;top:48%;width:55%;height:55%;object-fit:contain;transform:translate(-50%,-50%);filter:drop-shadow(0 11px 13px rgba(2,14,47,.82)) drop-shadow(0 3px 5px rgba(2,17,52,.92));}
+.reward-stage[data-stage="5"] .reward-complete-detail .detail-character {position:relative;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 10px 9px rgba(0,7,25,.42));}
+.reward-stage[data-stage="5"] .reward-complete-detail .detail-character.is-equipped-super-robot {transform:translate(var(--detail-super-x),var(--detail-super-y)) scale(var(--detail-super-scale));}
+.reward-stage[data-stage="5"] #reward-image {z-index:3;}
