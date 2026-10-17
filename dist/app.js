@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.16";
+  const appVersion = "0.3.17";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -458,7 +458,7 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first", activeModeId: null,
+    frameIndex: 0, pass: "first", activeModeId: null, backgroundPath: null,
     introMinimumElapsed: false, introTimerId: 0,
     countdownTimerId: 0, countdownValue: 0
   };
@@ -726,6 +726,7 @@
     $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
     renderPhonicsIntroLetters();
     const phonicsBackgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    phonicsYoutube.backgroundPath = phonicsBackgroundPath;
     $("phonics-intro-background").src = phonicsBackgroundPath;
     document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
     $("phonics-intro-start").disabled = true;
@@ -4043,6 +4044,10 @@
   function setCollectionPresentationMode(mode = "browse") {
     state.collectionMode = mode;
     const selectionMode = mode === "phonics-reward-select";
+    $("collection-stage").style.setProperty(
+      "--phonics-reward-background",
+      selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
+    );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
     $("collection-header-title").innerHTML = selectionMode ? "どの乗り物を育てる？" : "COLLECTION <span>GARAGE</span>";
     if (!selectionMode) {
