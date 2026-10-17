@@ -2850,11 +2850,8 @@ button, input { font: inherit; }
   .keypad button:focus { outline: none; }
   .play-screen .progress-badge,
   .play-screen .elapsed-time,
-  .play-screen .quit-button,
-  .phonics-intro-screen .quit-button,
-  .phonics-youtube-screen .quit-button,
   .play-screen .assist-button { font-size:var(--keypad-remainder-label-size); }
-  .play-stage { --play-corner-control-width:240px; }
+  /* Corner-button geometry and typography are canvas-fixed on every device. */
 }
 
 @media (max-width: 760px), (max-height: 620px) {
@@ -4145,4 +4142,17 @@ button, input { font: inherit; }
   font:900 46px/1 "Noto Sans JP",sans-serif;
   white-space:nowrap;
   pointer-events:none;
+}
+
+/* Canvas-fixed navigation: shield 1400x1050 controls from device media queries. */
+.play-screen .quit-button,
+.phonics-intro-screen .quit-button,
+.phonics-youtube-screen .quit-button {
+  left:42px;
+  bottom:34px;
+  width:166px;
+  height:var(--play-corner-control-height);
+  font-size:38px;
+  min-width:0;
+  padding:0;
 }
