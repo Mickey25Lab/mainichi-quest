@@ -823,7 +823,7 @@ button, input { font: inherit; }
 .phonics-intro-gesture {
   margin:54px 0 0;
   color:#e26018;
-  font:1000 35px/1.35 "Noto Sans JP",sans-serif;
+  font:1000 58px/1.2 "Noto Sans JP",sans-serif;
   white-space:nowrap;
 }
 .phonics-intro-gesture-child {
