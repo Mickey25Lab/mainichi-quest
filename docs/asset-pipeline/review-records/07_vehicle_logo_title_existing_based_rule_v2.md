@@ -136,7 +136,7 @@
 - 13 `WateringTruck`
 - 17 `RacingBike`
 
-保存先：`review/collection/07_vehicle_logo_title/new_generation_v1/`
+当時の保存先はローカルレビュー領域。正式化後に削除済みで、現在の正本は`asset-source/collection/07_vehicle_logo_title/png/`とする。
 
 共通の機械処理：
 
@@ -176,13 +176,7 @@ Kimiの指示により、横幅一律ではなく見た目の高さを優先す�
 - 長い名称は高さを下げず、横方向を圧縮して最大幅へ収める
 - 縦横中央配置
 
-レビューシート：
-
-`review/collection/07_vehicle_logo_title/new_generation_v1/vehicle_logo_20_review_v1.png`
-
-個別レビュー候補：
-
-`review/collection/07_vehicle_logo_title/new_generation_v1/normalized20/`
+レビューシートと個別候補は正式化後に削除済み。
 
 この段階はレビュー候補であり、正式PNG Fix、WebP化、`dist`反映は未実施。
 
@@ -198,9 +192,10 @@ Kimiの指示により、横幅一律ではなく見た目の高さを優先す�
 - 承認者：Kimi
 - 対象：`07_vehicle_logo_title` 全20車種
 - 状態：デザインFIX
-- 承認済み個別画像：`review/collection/07_vehicle_logo_title/new_generation_v1/normalized20/`
-- 承認済みレビューシート：`review/collection/07_vehicle_logo_title/new_generation_v1/vehicle_logo_20_review_v1.png`
+- 正式PNG：`asset-source/collection/07_vehicle_logo_title/png/`
+- 正式WebP：`asset-source/collection/07_vehicle_logo_title/webp/`
+- 配信用WebP：`dist/assets/collection/07_vehicle_logo_title/`
 
 `FormulaRacer`は実車に合わせた白・黒・紫～マゼンタ版を承認対象とする。
 
-このFIXはデザイン承認を示す。正式PNG配置、WebP化、`dist`反映、アプリ実装、commit、push、PR、公開は未実施。
+このFIXを基に正式PNG・WebPを生成し、`dist`反映まで完了済み。生成条件とハッシュは`docs/asset-pipeline/review-records/07_vehicle_logo_title/`を正とする。

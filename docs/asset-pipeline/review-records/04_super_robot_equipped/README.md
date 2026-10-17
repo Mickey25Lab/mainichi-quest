@@ -12,7 +12,7 @@
 - レッカー車: 2本ウインチ版を採用
 - ブルドーザー: 両肩のスペシャル装備を約1.5倍に拡大し、頭頂部より上へ張り出す版を採用
 - 飛行機: 円形スペシャル装備の穴越しに背後の機体を描画した版を採用
-- 正式PNG生成元: `review/collection/04_super_robot_equipped/eye_aligned_face_center_review_v4_2026-10-10/`の高解像度個別PNG
+- 正式PNG: `asset-source/collection/04_super_robot_equipped/png/`の高解像度個別PNG。正式化前のレビュー成果物は削除済み
 - レビューシートからの切り出しは不使用
 
 ## 承認証跡
@@ -24,7 +24,9 @@ Kimiが`04_super_robot_equipped_eye_aligned_face_center_review_v4_20.png`を確�
 - 正式PNG: `asset-source/collection/04_super_robot_equipped/png/`
 - 配置・ハッシュ記録: `docs/asset-pipeline/review-records/04_super_robot_equipped/final_layout_params.csv`
 - 正式PNGマニフェスト: `docs/asset-pipeline/review-records/04_super_robot_equipped/formal_png_manifest.json`
-- 正式PNGレビュー: `review/collection/04_super_robot_equipped/final_png_review_2026-10-10/04_super_robot_equipped_final_png_review_20.png`
+- 正式PNGの配置・ハッシュ記録: `docs/asset-pipeline/review-records/04_super_robot_equipped/final_layout_params.csv`
+
+`final_layout_params.csv`と`formal_png_manifest.json`の`source`欄は、正式化時に使ったレビュー領域の履歴名を保持している。該当レビュー画像は正式化後に削除済みであり、現在の正本は`asset-source`側とする。
 
 ## 正式WebP
 

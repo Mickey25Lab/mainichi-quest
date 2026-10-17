@@ -9,5 +9,5 @@
 - 配信用WebP: `dist/assets/collection/category_backgrounds/`
 - 正式WebPと配信用WebPは5/5でSHA-256一致
 - `dist/app.js` は5カテゴリすべてWebPを参照
-- 比較記録: `review/collection/category_background_webp_quality_2026-10-17/`
+- 比較画像は正式化後に削除済み。採用条件は本記録を正とする
 - 詳細ハッシュ・容量: `formal_webp_manifest.json`

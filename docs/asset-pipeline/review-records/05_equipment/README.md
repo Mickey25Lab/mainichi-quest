@@ -6,7 +6,7 @@
 
 - 保存先：`asset-source/collection/05_equipment/png/`
 - 20枚、1254×1254、RGBA
-- 入力：`review/collection/05_equipment/v4_review_work_2026-10-09/normalized_centered_alpha16_2026-10-09/`
+- 入力：承認済み高解像度PNG。正式化前のレビュー成果物は削除済みで、現在の正本は上記保存先とする
 - 正規化・中央配置済みで、PNGの`alpha < 16`は透明化済み
 - EXIF、ICC、XMP、コメントは含まない
 
