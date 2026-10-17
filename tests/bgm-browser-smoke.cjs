@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require("playwright");
 
-const browserExecutable = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+const browserExecutable = process.platform === "win32" ? "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" : undefined;
 const root = path.resolve(__dirname, "../dist");
 let server;
 let baseUrl;
@@ -34,7 +34,7 @@ async function waitForBgmGroup(page, group) {
 async function bgmStarts(page) { return page.evaluate(() => window.__bgmStarts || 0); }
 
 test("BGM follows screens, persists OFF, and does not restart inside a group", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable, args: ["--autoplay-policy=user-gesture-required"] });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}), args: ["--autoplay-policy=user-gesture-required"] });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   await context.addInitScript(() => {
