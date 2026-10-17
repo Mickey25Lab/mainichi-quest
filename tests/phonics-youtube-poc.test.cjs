@@ -246,7 +246,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-youtube-player-scale \{[\s\S]*width:1522\.5px;[\s\S]*height:856\.40625px;[\s\S]*transform:scale\(\.8\);[\s\S]*transform-origin:top left/);
   assert.match(css, /\.phonics-youtube-player-scale > div,[\s\S]*iframe[\s\S]*width:100%;[\s\S]*height:100%;/);
   assert.match(css, /\.play-screen \.progress-badge,[\s\S]*\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button[\s\S]*width:166px/);
-  assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-intro-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button \{[\s\S]*width: var\(--play-corner-control-width\);[\s\S]*height: var\(--play-corner-control-height\);/);
+  assert.match(css, /\.play-screen \.quit-button,\s*\.phonics-intro-screen \.quit-button,\s*\.phonics-youtube-screen \.quit-button,\s*\.play-screen \.assist-button \{[\s\S]*width: var\(--play-corner-control-width\);[\s\S]*height: var\(--play-corner-control-height\);/);
   assert.match(css, /\.phonics-youtube-end \{[\s\S]*width:360px;[\s\S]*height:var\(--play-corner-control-height\);[\s\S]*border-radius:var\(--play-corner-radius\);[\s\S]*font-size:34px/);
   assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button/);
   assert.match(app, /energy\.classList\.toggle\("disabled", Boolean\(mode\.energyDisabled\)\)/);
