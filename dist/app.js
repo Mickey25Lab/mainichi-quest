@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.19";
+  const appVersion = "0.3.20";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -1057,7 +1057,7 @@
   }
   function vehicleLogoTitlePath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
-    return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.png`;
+    return `./assets/collection/07_vehicle_logo_title/${stem}_vehicle_logo_title.webp`;
   }
   function masterMedalArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
