@@ -75,7 +75,7 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.locator("#phonics-intro-screen.active").waitFor();
   const introStart = page.locator("#phonics-intro-start");
   assert.equal(await introStart.isDisabled(), true);
-  assert.equal(await introStart.textContent(), "ちょっと待ってね");
+  assert.equal(await introStart.textContent(), "ちょっとまってね");
   assert.match(await page.locator("#phonics-intro-line").textContent(), /GHIJKを発音するよ/);
   await page.waitForTimeout(3100);
   await page.waitForFunction(() => !document.querySelector("#phonics-intro-start").disabled);
@@ -162,7 +162,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.14"/);
+  assert.match(app, /const appVersion = "0\.3\.15"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -201,11 +201,12 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-intro-gesture \{[\s\S]*margin:24px auto 0[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
   assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-350px[\s\S]*width:432px/);
   assert.match(css, /\.phonics-intro-start \{[\s\S]*display:block[\s\S]*width:420px[\s\S]*margin:28px auto 0/);
+  assert.match(css, /\.phonics-intro-start:disabled \{[\s\S]*opacity:1[\s\S]*background:linear-gradient\(180deg,#a9b0b8,#7f8790\)/);
   assert.doesNotMatch(html, />説明を読んでね</);
   assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"|status\.textContent = "じゅんびOK！"|status\.textContent = "動画を準備しています…"/);
   assert.match(html, /<ruby>手<rt>て<\/rt><\/ruby>と<ruby>口<rt>くち<\/rt><\/ruby>のうごきも、まねしてみよう！/);
   assert.match(html, /phonics_intro_gesture_child\.webp/);
-  assert.match(html, /id="phonics-intro-start"[^>]*>ちょっと待ってね<\/button>/);
+  assert.match(html, /id="phonics-intro-start"[^>]*>ちょっとまってね<\/button>/);
   assert.match(app, /showPhonicsIntro\(button\.dataset\.phonicsLesson, button\.dataset\.mode\)/);
   assert.match(app, /introMinimumElapsed = true[\s\S]*updatePhonicsIntroReadyState\(\)/);
   assert.match(html, /id="phonics-countdown"[\s\S]*id="phonics-countdown-number">3/);
