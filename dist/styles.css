@@ -827,7 +827,7 @@ button, input { font: inherit; }
 .phonics-intro-gesture {
   position:relative;
   z-index:2;
-  margin:0 auto;
+  margin:24px auto 0;
   color:#e26018;
   text-align:center;
   font:1000 58px/1.2 "Noto Sans JP",sans-serif;
@@ -857,7 +857,7 @@ button, input { font: inherit; }
   z-index:3;
   display:block;
   width:360px;
-  margin:52px auto 0;
+  margin:28px auto 0;
   height:88px;
   border:3px solid #fff;
   border-radius:28px;
