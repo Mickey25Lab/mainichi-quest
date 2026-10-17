@@ -772,21 +772,19 @@ button, input { font: inherit; }
   z-index:2;
   left:50%;
   top:50%;
-  width:1040px;
-  min-height:650px;
+  width:1180px;
+  min-height:760px;
   transform:translate(-50%,-50%);
-  display:grid;
-  grid-template-columns:1fr 330px;
-  grid-template-rows:auto auto auto;
-  column-gap:30px;
-  align-items:center;
-  padding:54px 62px 48px;
+  padding:48px 62px 44px;
   border:5px solid rgba(255,255,255,.94);
   border-radius:44px;
   background:rgba(255,255,255,.95);
   box-shadow:0 24px 70px rgba(0,0,0,.3);
 }
-.phonics-intro-copy { align-self:center; }
+.phonics-intro-copy {
+  width:650px;
+  text-align:left;
+}
 .phonics-intro-kicker {
   margin:0 0 26px;
   color:#176fc4;
@@ -795,20 +793,53 @@ button, input { font: inherit; }
 .phonics-intro-line {
   margin:12px 0;
   color:#173e5e;
-  font:900 32px/1.6 "Noto Sans JP",sans-serif;
+  font:900 32px/1.5 "Noto Sans JP",sans-serif;
 }
+.phonics-intro-first-line { margin-top:8px; }
+.phonics-intro-pronounce { display:inline-block; }
+.phonics-intro-letters {
+  display:inline-flex;
+  align-items:center;
+  gap:14px;
+  margin:8px 0 2px;
+  font:1000 58px/1 "Noto Sans JP",sans-serif;
+  letter-spacing:.01em;
+  text-shadow:0 2px 0 rgba(255,255,255,.9);
+}
+.phonics-intro-letter:nth-child(1) { color:#ff3b30; }
+.phonics-intro-letter:nth-child(2) { color:#007aff; }
+.phonics-intro-letter:nth-child(3) { color:#ffb000; }
+.phonics-intro-letter:nth-child(4) { color:#00a86b; }
+.phonics-intro-letter:nth-child(5) { color:#8e44ec; }
+.phonics-intro-letter:nth-child(6) { color:#ff2d8d; }
+.phonics-intro-video-line { margin-top:28px; }
 .phonics-intro-line ruby,
 .phonics-intro-gesture ruby { ruby-position:over; }
 .phonics-intro-line rt,
 .phonics-intro-gesture rt { font-size:.46em; font-weight:800; }
+.phonics-intro-cta {
+  position:relative;
+  width:100%;
+  margin-top:48px;
+  padding-top:12px;
+  text-align:center;
+}
 .phonics-intro-gesture {
-  margin:24px 0 0;
+  position:relative;
+  z-index:2;
+  margin:24px auto 0;
   color:#e26018;
-  font:1000 35px/1.5 "Noto Sans JP",sans-serif;
+  text-align:center;
+  font:1000 58px/1.2 "Noto Sans JP",sans-serif;
+  white-space:nowrap;
 }
 .phonics-intro-gesture-child {
-  width:315px;
-  height:325px;
+  position:absolute;
+  z-index:1;
+  right:-18px;
+  top:-350px;
+  width:432px;
+  height:432px;
   object-fit:cover;
   object-position:center;
   border:0;
@@ -816,17 +847,17 @@ button, input { font: inherit; }
   box-shadow:0 10px 24px rgba(12,63,112,.16);
 }
 .phonics-intro-status {
-  grid-column:1 / -1;
-  min-height:34px;
-  margin:16px 0 12px;
-  color:#60768a;
-  text-align:center;
-  font:800 22px/1.3 "Noto Sans JP",sans-serif;
+  min-height:0;
+  height:0;
+  margin:0;
+  overflow:hidden;
 }
 .phonics-intro-start {
-  grid-column:1 / -1;
-  justify-self:center;
+  position:relative;
+  z-index:3;
+  display:block;
   width:360px;
+  margin:28px auto 0;
   height:88px;
   border:3px solid #fff;
   border-radius:28px;
@@ -844,6 +875,61 @@ button, input { font: inherit; }
 .phonics-intro-start:active:not(:disabled) {
   transform:translateY(4px);
   box-shadow:0 4px 0 #ad3b0d,0 8px 16px rgba(145,65,12,.2);
+}
+
+
+.phonics-countdown {
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  background:rgba(4,16,36,.72);
+  backdrop-filter:blur(2px);
+}
+.phonics-countdown[hidden] { display:none; }
+.phonics-countdown-dial {
+  position:relative;
+  width:220px;
+  height:220px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  box-shadow:0 18px 54px rgba(0,0,0,.32), inset 0 0 0 2px rgba(255,255,255,.2);
+}
+.phonics-countdown-ring {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  transform:rotate(-90deg);
+}
+.phonics-countdown-track,
+.phonics-countdown-progress {
+  fill:none;
+  stroke-width:12;
+}
+.phonics-countdown-track { stroke:rgba(255,255,255,.22); }
+.phonics-countdown-progress {
+  stroke:#ff922b;
+  stroke-linecap:round;
+  stroke-dasharray:477.52;
+  stroke-dashoffset:0;
+}
+.phonics-countdown-progress.is-running {
+  animation:phonics-countdown-drain 1s linear forwards;
+}
+.phonics-countdown-number {
+  position:relative;
+  z-index:1;
+  color:#fff;
+  font:1000 112px/1 "Noto Sans JP",sans-serif;
+  text-shadow:0 5px 18px rgba(0,0,0,.34);
+}
+@keyframes phonics-countdown-drain {
+  from { stroke-dashoffset:0; }
+  to { stroke-dashoffset:477.52; }
 }
 
 .phonics-youtube-screen { padding:0; overflow:hidden; background:#000; }

@@ -96,13 +96,29 @@
         <div class="phonics-intro-card">
           <div class="phonics-intro-copy">
             <p class="phonics-intro-kicker" id="phonics-intro-kicker">フォニックス　パート1</p>
-            <p class="phonics-intro-line" id="phonics-intro-line">これから、A、B、C、D、E、Fを<ruby>発音<rt>はつおん</rt></ruby>するよ。</p>
-            <p class="phonics-intro-line">3分の<ruby>動画<rt>どうが</rt></ruby>を見ながら、いっしょに<ruby>声<rt>こえ</rt></ruby>に出そう。</p>
-            <p class="phonics-intro-gesture"><ruby>手<rt>て</rt></ruby>と<ruby>口<rt>くち</rt></ruby>のうごきも、まねしてみよう！</p>
+            <p class="phonics-intro-line phonics-intro-first-line" id="phonics-intro-line">
+              <span class="phonics-intro-letters" id="phonics-intro-letters" aria-label="A、B、C、D、E、F"></span><span class="phonics-intro-pronounce">を<ruby>発音<rt>はつおん</rt></ruby>するよ。</span>
+            </p>
+            <p class="phonics-intro-line phonics-intro-video-line">
+              <span>3分の<ruby>動画<rt>どうが</rt></ruby>を見ながら、</span><br>
+              <span>いっしょに<ruby>声<rt>こえ</rt></ruby>に出そう！</span>
+            </p>
           </div>
-          <img class="phonics-intro-gesture-child" src="./assets/ui/phonics/phonics_intro_gesture_child.webp" alt="まねをしている子どものイラスト">
-          <p class="phonics-intro-status" id="phonics-intro-status" role="status">説明を読んでね</p>
-          <button class="phonics-intro-start" id="phonics-intro-start" type="button" disabled>やってみる！</button>
+          <div class="phonics-intro-cta">
+            <p class="phonics-intro-gesture"><ruby>手<rt>て</rt></ruby>と<ruby>口<rt>くち</rt></ruby>のうごきも、まねしてみよう！</p>
+            <img class="phonics-intro-gesture-child" src="./assets/ui/phonics/phonics_intro_gesture_child.webp" alt="まねをしている子どものイラスト">
+            <p class="phonics-intro-status" id="phonics-intro-status" role="status"></p>
+            <button class="phonics-intro-start" id="phonics-intro-start" type="button" disabled>やってみる！</button>
+          </div>
+        </div>
+        <div class="phonics-countdown" id="phonics-countdown" hidden aria-live="polite">
+          <div class="phonics-countdown-dial" aria-hidden="true">
+            <svg class="phonics-countdown-ring" viewBox="0 0 180 180">
+              <circle class="phonics-countdown-track" cx="90" cy="90" r="76"></circle>
+              <circle class="phonics-countdown-progress" id="phonics-countdown-progress" cx="90" cy="90" r="76"></circle>
+            </svg>
+            <span class="phonics-countdown-number" id="phonics-countdown-number">3</span>
+          </div>
         </div>
         <button class="quit-button" id="phonics-intro-back" type="button">やめる</button>
       </div>
