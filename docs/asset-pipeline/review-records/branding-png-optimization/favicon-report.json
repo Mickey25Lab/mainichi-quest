@@ -1,0 +1,40 @@
+{
+  "source": "asset-source/ui/branding/favicon-mique-logo.png",
+  "destination": "dist/assets/ui/branding/favicon-mique-logo.png",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "before_bytes": 863491,
+  "after_bytes": 807135,
+  "saved_bytes": 56356,
+  "saved_percent": 6.53,
+  "rgba_identical": true,
+  "decompressed_scanlines_identical": true,
+  "non_idat_chunks_identical": true,
+  "source_sha256": "14064126d0441e8e430caf4c036283203907b6d7e62a79ca8916cd7a8379df75",
+  "destination_sha256": "b22c2a893f9acc1098775bbd2a0cff65b34b1f6776f3c68ec54074eddf2c54a9",
+  "compression": {
+    "level": 9,
+    "strategy": "filtered",
+    "idat_bytes": 785185
+  },
+  "chunk_types": [
+    "IHDR",
+    "caBX",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IEND"
+  ]
+}
