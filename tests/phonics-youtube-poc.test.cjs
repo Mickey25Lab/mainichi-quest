@@ -129,8 +129,25 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
 
   const remainingBefore = await page.locator("#mode-select-phonics-part-2 .mode-select-remaining-number").textContent();
   await completionButton.click();
+  await page.locator("#collection-screen.active").waitFor();
+  assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-select")), true);
+  assert.equal(await page.locator("#collection-header-title").textContent(), "どの乗り物を育てる？");
+  assert.equal(await page.locator("#collection-grid .collection-card").count(), 20);
+  assert.equal(await page.locator("#collection-grid .collection-card:not(.locked)").count(), 1);
+  await page.locator('#collection-grid .collection-card[data-vehicle="0"]').click();
+  await page.locator("#phonics-grow-confirm:not([hidden])").waitFor();
+  assert.equal(await page.locator("#phonics-grow-amount").textContent(), "♥ +5");
+  await page.locator("#phonics-grow-accept").click();
+  await page.waitForFunction(() => {
+    const collection = document.querySelector("#collection-screen");
+    const reward = document.querySelector("#reward-screen");
+    return collection.classList.contains("active")
+      && !collection.classList.contains("is-phonics-reward-select")
+      && !reward.classList.contains("active");
+  }, null, { timeout: 7000 });
+  await page.locator("#collection-exit").click();
+  await page.locator("#collection-exit-yes").click();
   await page.locator("#mode-select-screen.active").waitFor();
-  await page.waitForFunction(() => window.__ytPlayers.length === 2);
   const remainingAfter = await page.locator("#mode-select-phonics-part-2 .mode-select-remaining").textContent();
   assert.equal(Number(remainingBefore), 1);
   assert.match(remainingAfter, /できた！/);
@@ -141,7 +158,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.9"/);
+  assert.match(app, /const appVersion = "0\.3\.12"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -193,6 +210,14 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*playVideo\?\.\(\)[\s\S]*pauseVideo\?\.\(\)[\s\S]*startPhonicsIntroCountdown\(\)/);
   assert.match(app, /function startPhonicsIntroCountdown\(\)[\s\S]*countdownValue = 3[\s\S]*setTimeout\(advance, 1000\)/);
   assert.match(app, /function finishPhonicsIntroCountdown\(\)[\s\S]*showScreen\("phonics-youtube-screen"\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
+  assert.match(html, /id="collection-header-title"/);
+  assert.match(html, /id="phonics-grow-confirm"[\s\S]*id="phonics-grow-amount"[\s\S]*♥ \+5/);
+  assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-categories[\s\S]*display:none/);
+  assert.match(app, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*openPhonicsRewardSelection\(\)/);
+  assert.match(app, /function seedPatrolCarForPhonicsRewardIfNeeded\(\)[\s\S]*vehicleProgress\(0\)[\s\S]*discovered = true/);
+  assert.match(app, /function applyPhonicsRewardGrowth\(vehicleIndex\)[\s\S]*friendship \+ 5[\s\S]*applyEnergyGain\(progress, vehicleIndex, 25\)/);
+  assert.match(app, /function collectionTimeUp\(\)[\s\S]*phonics-reward-select[\s\S]*recommendedPhonicsRewardVehicleIndex\(\)/);
+  assert.match(app, /function openNormalCollectionAfterPhonicsReward\(\)[\s\S]*Date\.now\(\) \+ 60000/);
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);
   assert.match(app, /const legacyPhonicsSetting = modeId\.startsWith\("phonics-part-"\)[\s\S]*const settingsKey = legacyPhonicsSetting \? "phonics" : modeId/);
