@@ -2053,6 +2053,7 @@ button, input { font: inherit; }
 .play-screen .answer-card,
 .play-screen .keypad button,
 .play-screen .quit-button,
+.phonics-intro-screen .quit-button,
 .phonics-youtube-screen .quit-button,
 .play-screen .assist-button {
   font-family: "Noto Sans JP", sans-serif;
@@ -2471,6 +2472,7 @@ button, input { font: inherit; }
 .play-screen .keypad .remainder-key,
 .play-screen .keypad .no-remainder-key { font-weight: 900; }
 .play-screen .quit-button,
+.phonics-intro-screen .quit-button,
 .phonics-youtube-screen .quit-button,
 .play-screen .assist-button {
   z-index: 7;
@@ -2483,6 +2485,7 @@ button, input { font: inherit; }
   white-space: nowrap;
 }
 .play-screen .quit-button,
+.phonics-intro-screen .quit-button,
 .phonics-youtube-screen .quit-button {
   left: 42px;
   bottom: 34px;
@@ -2838,6 +2841,7 @@ button, input { font: inherit; }
   .play-screen .progress-badge,
   .play-screen .elapsed-time,
   .play-screen .quit-button,
+  .phonics-intro-screen .quit-button,
   .phonics-youtube-screen .quit-button,
   .play-screen .assist-button { font-size:var(--keypad-remainder-label-size); }
   .play-stage { --play-corner-control-width:240px; }
@@ -3640,6 +3644,7 @@ button, input { font: inherit; }
 
 .play-screen .progress-badge,
 .play-screen .quit-button,
+.phonics-intro-screen .quit-button,
 .phonics-youtube-screen .quit-button {
   width:166px;
   white-space:nowrap;
