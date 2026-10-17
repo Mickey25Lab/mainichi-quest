@@ -231,8 +231,10 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);
   assert.match(app, /const legacyPhonicsSetting = modeId\.startsWith\("phonics-part-"\)[\s\S]*const settingsKey = legacyPhonicsSetting \? "phonics" : modeId/);
-  assert.match(app, /id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true/);
-  assert.match(app, /id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true/);
+  assert.match(app, /id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F" \}/);
+  assert.doesNotMatch(app, /id:"phonics-part-1"[^\n]*energyDisabled:true/);
+  assert.match(app, /id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" \}/);
+  assert.doesNotMatch(app, /id:"phonics-part-5"[^\n]*energyDisabled:true/);
   assert.doesNotMatch(html, /ためしてみる/);
   assert.match(html, /class="quit-button" id="phonics-youtube-back"[^>]*>やめる<\/button>/);
   assert.match(html, /class="phonics-youtube-end is-pending"[^>]*>動画を見たよ<\/button>/);
