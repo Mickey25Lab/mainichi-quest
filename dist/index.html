@@ -518,6 +518,19 @@
         <div class="parent-mode-settings" id="parent-mode-settings"></div>
       </div>
       <p class="parent-settings-note">0回にすると、そのモードはOFFになります。</p>
+      <div class="parent-free-play-settings">
+        <div class="admin-setting-row">
+          <span>「全部終わった」あと、すきなものをやれる</span>
+          <button class="admin-qa-toggle" id="parent-free-play-toggle" type="button" role="switch" aria-checked="true"><span>ON</span></button>
+        </div>
+        <div id="parent-free-play-energy">
+          <span class="parent-settings-label">そのときのエネルギー</span>
+          <div class="parent-energy-options">
+            <button type="button" data-free-play-energy="normal">通常プレイの個別設定済み値</button>
+            <button type="button" data-free-play-energy="almost-zero">ほぼゼロ</button>
+          </div>
+        </div>
+      </div>
       <div class="parent-settings-actions">
         <button class="parent-settings-cancel" id="parent-settings-cancel" type="button">保存せずに戻る</button>
         <button class="parent-settings-save" id="parent-settings-save" type="button">保存する</button>
