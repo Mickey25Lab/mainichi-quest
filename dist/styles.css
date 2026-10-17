@@ -912,7 +912,7 @@ button, input { font: inherit; }
 }
 .phonics-countdown-track { stroke:rgba(255,255,255,.22); }
 .phonics-countdown-progress {
-  stroke:#ff922b;
+  stroke:#59c7ff;
   stroke-linecap:round;
   stroke-dasharray:477.52;
   stroke-dashoffset:0;
