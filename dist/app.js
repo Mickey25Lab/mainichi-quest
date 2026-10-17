@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.18";
+  const appVersion = "0.3.19";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -15,11 +15,11 @@
     Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
-    Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F", energyDisabled:true }),
-    Object.freeze({ id:"phonics-part-2", label:"フォニックス", detail:"パート2　G〜K", energyDisabled:true }),
-    Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P", energyDisabled:true }),
-    Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U", energyDisabled:true }),
-    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z", energyDisabled:true })
+    Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F" }),
+    Object.freeze({ id:"phonics-part-2", label:"フォニックス", detail:"パート2　G〜K" }),
+    Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P" }),
+    Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
+    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -5202,6 +5202,9 @@
       profileStore.setProfileLearningSettings(profileId, settings);
     });
     closeParentSettings();
+    // Recalculate completed / remaining counts against the newly saved goals.
+    // In particular, raising a completed goal by one must show 「あと1回」.
+    renderModeSelectMission();
   }
 
   function openParentPin() {
