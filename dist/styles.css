@@ -856,7 +856,7 @@ button, input { font: inherit; }
   position:relative;
   z-index:3;
   display:block;
-  width:360px;
+  width:420px;
   margin:28px auto 0;
   height:88px;
   border:3px solid #fff;
@@ -961,15 +961,15 @@ button, input { font: inherit; }
   left:50%;
   top:50%;
   z-index:1;
-  width:1160px;
-  height:652.5px;
+  width:1218px;
+  height:685.125px;
   overflow:hidden;
   transform:translate(-50%,-50%);
   background:#000;
 }
 .phonics-youtube-player-scale {
-  width:1450px;
-  height:815.625px;
+  width:1522.5px;
+  height:856.40625px;
   transform:scale(.8);
   transform-origin:top left;
 }
