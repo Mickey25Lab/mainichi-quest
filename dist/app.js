@@ -1083,9 +1083,46 @@
     paths.forEach((path) => preloadDecodedImage(path).catch(() => {}));
   }
   function preloadStage5RewardVisuals(vehicleIndex) {
-    const vehicle = vehicles[vehicleIndex];
-    const completePath = `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
-    return Promise.all([completePath, "./assets/ui/reward_popup/reward_stage05_master-medal-get-overlay.webp"].map(preloadDecodedImage));
+    return Promise.all([
+      playBackgroundPath(vehicleIndex),
+      vehicleLogoTitlePath(vehicleIndex),
+      vehicleArtworkPath(vehicleIndex),
+      robotArtworkPath(vehicleIndex),
+      equippedSuperRobotArtworkPath(vehicleIndex),
+      masterMedalArtworkPath(vehicleIndex),
+      "./assets/ui/collection_detail/master_medal_hologram_pedestal.webp",
+      "./assets/ui/reward_popup/reward_stage05_master-medal-get-overlay.webp"
+    ].map(preloadDecodedImage));
+  }
+  // Reuse the collection vehicle-detail DOM, positions, and drawing order for
+  // Stage 5. The only extra visual is the existing GET overlay above it.
+  function buildStage5CollectionComposition(vehicleIndex) {
+    const scene = $("detail-picture").cloneNode(true);
+    scene.removeAttribute("id");
+    scene.classList.add("reward-complete-detail");
+    scene.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+    scene.querySelectorAll("button").forEach((node) => node.remove());
+    scene.querySelector(".detail-background").src = playBackgroundPath(vehicleIndex);
+    const logo = scene.querySelector(".detail-vehicle-logo");
+    logo.hidden = false;
+    logo.src = vehicleLogoTitlePath(vehicleIndex);
+    const medal = scene.querySelector(".detail-master-medal-display");
+    medal.hidden = false;
+    medal.querySelector(".detail-master-medal-art").src = masterMedalArtworkPath(vehicleIndex);
+    const layout = scene.querySelector(".detail-evolution-layout");
+    layout.hidden = false;
+    layout.className = "detail-evolution-layout is-three-up has-equipped-super-robot";
+    scene.querySelector(".detail-vehicle-art, .detail-slot-vehicle img").src = vehicleArtworkPath(vehicleIndex);
+    scene.querySelector(".detail-slot-robot img").src = robotArtworkPath(vehicleIndex);
+    const superArt = scene.querySelector(".detail-slot-super img");
+    superArt.src = equippedSuperRobotArtworkPath(vehicleIndex);
+    superArt.className = "detail-character is-equipped-super-robot";
+    const shared = superRobotDisplaySettings.collectionDetail.superRobotEquipped;
+    superArt.dataset.displaySeries = "superRobotEquipped";
+    superArt.style.setProperty("--detail-super-scale", String(shared.scale));
+    superArt.style.setProperty("--detail-super-x", shared.x);
+    superArt.style.setProperty("--detail-super-y", shared.y);
+    return scene;
   }
   function preloadNormalQuestionBackgrounds() {
     vehicles.filter((vehicle) => vehicle.rarity === "normal")
@@ -3690,16 +3727,23 @@
     }
     if (stage === 5) {
       const backplate = $("reward-backplate"), artwork = $("reward-image");
-      const backplatePath = `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
+      const composition = $("reward-complete-composition");
+      const scene = buildStage5CollectionComposition(vehicleIndex);
       const artworkPath = "./assets/ui/reward_popup/reward_stage05_master-medal-get-overlay.webp";
-      backplate.style.visibility = "hidden";
+      backplate.hidden = true;
       artwork.style.visibility = "hidden";
       artwork.hidden = replay;
-      Promise.all((replay ? [backplatePath] : [backplatePath, artworkPath]).map(preloadDecodedImage))
-        .then(() => Promise.all([decodeImageElement(backplate, backplatePath), replay ? Promise.resolve() : decodeImageElement(artwork, artworkPath)]))
+      composition.replaceChildren();
+      composition.hidden = true;
+      preloadStage5RewardVisuals(vehicleIndex)
+        .then(() => Promise.all([
+          ...Array.from(scene.querySelectorAll("img[src]"), (image) => image.decode()),
+          replay ? Promise.resolve() : decodeImageElement(artwork, artworkPath)
+        ]))
         .then(() => {
           if (runId !== state.runId) return;
-          backplate.style.visibility = "";
+          composition.replaceChildren(scene);
+          composition.hidden = false;
           if (!replay) { artwork.hidden = false; artwork.style.visibility = ""; }
           pauseGameTimer();
           // Keep the prepared play scene mounted beneath Stage 5 as well, so
@@ -3721,6 +3765,8 @@
     }
 
     const backplate = $("reward-backplate"), artwork = $("reward-image");
+    $("reward-complete-composition").hidden = true;
+    $("reward-complete-composition").replaceChildren();
     backplate.hidden = false;
     artwork.hidden = false;
     backplate.style.visibility = "hidden";
@@ -3855,7 +3901,7 @@
   function resultArtworkPath(vehicleIndex, stage, masterMedal = false) {
     const vehicle = vehicles[vehicleIndex];
     if (!vehicle) return "";
-    if (masterMedal) return `./assets/collection/09_complete/reward/${String(vehicleIndex + 1).padStart(2, "0")}_${vehicle.nameEn.replaceAll(" ", "_")}_complete.png`;
+    if (masterMedal) return equippedSuperRobotArtworkPath(vehicleIndex);
     const path = answerArtworkPath(vehicleIndex, Math.max(2, Math.min(5, stage)));
     return path ? `./${path.replace(/^\.\//, "")}` : vehicleArtworkPath(vehicleIndex);
   }
@@ -4451,7 +4497,7 @@
       const grayscaleClass = formStage === 2 && !progress.friendly ? " is-pre-friendship" : "";
       const artwork = discovered ? `<img class="card-vehicle ${formClass}${grayscaleClass}" src="${artPath}" alt="" decoding="async">`
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
-      const medal = complete ? `<img class="card-master-medal-bg" src="${resultArtworkPath(vehicle.index, formStage, true)}" alt="" decoding="async">` : "";
+      const medal = complete ? `<img class="card-master-medal-bg" src="${masterMedalArtworkPath(vehicle.index)}" alt="" decoding="async">` : "";
       const isNew = showSessionMarkers && state.collectionNewVehicleIndexes.has(vehicle.index);
       const before = state.resultStartProgress[vehicle.index] || emptyVehicleProgress();
       const friendshipGrew = progress.friendship > before.friendship;
