@@ -1,0 +1,197 @@
+{
+  "category": "07_vehicle_logo_title",
+  "master_png": {
+    "directory": "asset-source/collection/07_vehicle_logo_title/png",
+    "count": 20,
+    "size": [
+      1254,
+      320
+    ],
+    "mode": "RGBA",
+    "alpha_threshold": "alpha < 16 -> 0",
+    "files_with_alpha_1_15": 0
+  },
+  "formal_webp": {
+    "directory": "asset-source/collection/07_vehicle_logo_title/webp",
+    "dist_directory": "dist/assets/collection/07_vehicle_logo_title",
+    "count": 20,
+    "size": [
+      640,
+      163
+    ],
+    "mode": "RGBA",
+    "lossless": false,
+    "rgb_quality": 60,
+    "alpha_quality": 40,
+    "method": 6,
+    "resampling": "LANCZOS",
+    "exact": false,
+    "metadata": "not copied",
+    "pillow": "12.3.0",
+    "libwebp": "1.6.0",
+    "total_bytes": 203698,
+    "asset_source_dist_sha256_matches": 20
+  },
+  "files": [
+    {
+      "png": "01_patrol_car_vehicle_logo_title.png",
+      "webp": "01_patrol_car_vehicle_logo_title.webp",
+      "png_bytes": 254776,
+      "webp_bytes": 11000,
+      "alpha_1_15": 0,
+      "sha256": "c5914af75618d22d4230c51fe9d89fa2414cd2ae3c8c0c7b0497d574ca087a41"
+    },
+    {
+      "png": "02_fire_engine_vehicle_logo_title.png",
+      "webp": "02_fire_engine_vehicle_logo_title.webp",
+      "png_bytes": 215308,
+      "webp_bytes": 9746,
+      "alpha_1_15": 0,
+      "sha256": "deb92b7defbcc55b9babb6132d1cfc6cb01ee4081f51f72df93075be1a5b9b97"
+    },
+    {
+      "png": "03_ambulance_vehicle_logo_title.png",
+      "webp": "03_ambulance_vehicle_logo_title.webp",
+      "png_bytes": 275873,
+      "webp_bytes": 10340,
+      "alpha_1_15": 0,
+      "sha256": "fbb04024044f50a3cb584e73da5b91bf8acf857077a7e211d6c4c8a2dadf67f2"
+    },
+    {
+      "png": "04_delivery_truck_vehicle_logo_title.png",
+      "webp": "04_delivery_truck_vehicle_logo_title.webp",
+      "png_bytes": 276309,
+      "webp_bytes": 11304,
+      "alpha_1_15": 0,
+      "sha256": "13247d6ae2388aa106881df4b2950e9aa43fba3e65b89155fe39e002fe107338"
+    },
+    {
+      "png": "05_mail_van_vehicle_logo_title.png",
+      "webp": "05_mail_van_vehicle_logo_title.webp",
+      "png_bytes": 326144,
+      "webp_bytes": 10720,
+      "alpha_1_15": 0,
+      "sha256": "94dd1fbd7f28299676be93fd8416a2ab8b99b680904975e66bc50c86e3062442"
+    },
+    {
+      "png": "06_garbage_truck_vehicle_logo_title.png",
+      "webp": "06_garbage_truck_vehicle_logo_title.webp",
+      "png_bytes": 274507,
+      "webp_bytes": 10850,
+      "alpha_1_15": 0,
+      "sha256": "e7463bdc5f48b1db34f6b355611d4720fa3d97c4d3709ebb15e28e42a8f45811"
+    },
+    {
+      "png": "07_tow_truck_vehicle_logo_title.png",
+      "webp": "07_tow_truck_vehicle_logo_title.webp",
+      "png_bytes": 261907,
+      "webp_bytes": 10560,
+      "alpha_1_15": 0,
+      "sha256": "2633ede751e4b6b5b65e47894ab9e426c2f63c5a31b27f908b2451a23ef4be1f"
+    },
+    {
+      "png": "08_crane_truck_vehicle_logo_title.png",
+      "webp": "08_crane_truck_vehicle_logo_title.webp",
+      "png_bytes": 209552,
+      "webp_bytes": 7906,
+      "alpha_1_15": 0,
+      "sha256": "a23d7bb810a67d2a7e58e919ecc2d051416de5176c1b81f9913afd897fff4fb8"
+    },
+    {
+      "png": "09_concrete_mixer_vehicle_logo_title.png",
+      "webp": "09_concrete_mixer_vehicle_logo_title.webp",
+      "png_bytes": 287892,
+      "webp_bytes": 11124,
+      "alpha_1_15": 0,
+      "sha256": "b3c1c1b1da9a9b33e2d38d2de2bfd93156ec7b2f3c0056ceb02d2fab6503abb2"
+    },
+    {
+      "png": "10_bulldozer_vehicle_logo_title.png",
+      "webp": "10_bulldozer_vehicle_logo_title.webp",
+      "png_bytes": 236569,
+      "webp_bytes": 8336,
+      "alpha_1_15": 0,
+      "sha256": "1baba5924ceabdd9ad3578ba9c286e33abde40bd26f9c6d09cadd2a1cd6d752b"
+    },
+    {
+      "png": "11_road_roller_vehicle_logo_title.png",
+      "webp": "11_road_roller_vehicle_logo_title.webp",
+      "png_bytes": 283837,
+      "webp_bytes": 8702,
+      "alpha_1_15": 0,
+      "sha256": "3e392aefcabb97579dd1812834641f824100325444c81839002a7dd6f9667881"
+    },
+    {
+      "png": "12_tank_lorry_vehicle_logo_title.png",
+      "webp": "12_tank_lorry_vehicle_logo_title.webp",
+      "png_bytes": 263447,
+      "webp_bytes": 9698,
+      "alpha_1_15": 0,
+      "sha256": "8c6a03164fd236b7e1a25bb48e6e08949041fd6d1377948493a59316ec275605"
+    },
+    {
+      "png": "13_watering_truck_vehicle_logo_title.png",
+      "webp": "13_watering_truck_vehicle_logo_title.webp",
+      "png_bytes": 240977,
+      "webp_bytes": 10476,
+      "alpha_1_15": 0,
+      "sha256": "8cb7a8fdc7e291e4e7237f107f50e0ad78de9a8a11d8ca170e3007f0cf314694"
+    },
+    {
+      "png": "14_kindergarten_bus_vehicle_logo_title.png",
+      "webp": "14_kindergarten_bus_vehicle_logo_title.webp",
+      "png_bytes": 291473,
+      "webp_bytes": 12476,
+      "alpha_1_15": 0,
+      "sha256": "a2618ecbfca4eb3fa3b1b22fdaa7a01e3118c4ce7a73f0a747df8acc0d709cb2"
+    },
+    {
+      "png": "15_sightseeing_bus_vehicle_logo_title.png",
+      "webp": "15_sightseeing_bus_vehicle_logo_title.webp",
+      "png_bytes": 251677,
+      "webp_bytes": 9992,
+      "alpha_1_15": 0,
+      "sha256": "2bfe7ea9867caaff930607da9fc34c44f0dedece47cf3503fb1c4157553954ec"
+    },
+    {
+      "png": "16_formula_racer_vehicle_logo_title.png",
+      "webp": "16_formula_racer_vehicle_logo_title.webp",
+      "png_bytes": 296059,
+      "webp_bytes": 10628,
+      "alpha_1_15": 0,
+      "sha256": "f7eb3de45318ecf7dab6a066ea0d017d114a39bd3c01269cdeb3054d4c461b6d"
+    },
+    {
+      "png": "17_racing_bike_vehicle_logo_title.png",
+      "webp": "17_racing_bike_vehicle_logo_title.webp",
+      "png_bytes": 250770,
+      "webp_bytes": 11650,
+      "alpha_1_15": 0,
+      "sha256": "84a48ef22b5d10e7fa4c2c4800cc693bde64c7f0f6fdf6929337e851ec31edd0"
+    },
+    {
+      "png": "18_snowmobile_vehicle_logo_title.png",
+      "webp": "18_snowmobile_vehicle_logo_title.webp",
+      "png_bytes": 266551,
+      "webp_bytes": 10434,
+      "alpha_1_15": 0,
+      "sha256": "35511220c03456d547bb1f3c2095951d6e6d09ff28e81b998adc1a70cb9d451e"
+    },
+    {
+      "png": "19_helicopter_vehicle_logo_title.png",
+      "webp": "19_helicopter_vehicle_logo_title.webp",
+      "png_bytes": 226063,
+      "webp_bytes": 8738,
+      "alpha_1_15": 0,
+      "sha256": "24014701c76ff2bf9b44aa4fe777bcc8157743178e1b7ef91c5d75a37c899181"
+    },
+    {
+      "png": "20_airplane_vehicle_logo_title.png",
+      "webp": "20_airplane_vehicle_logo_title.webp",
+      "png_bytes": 265307,
+      "webp_bytes": 9018,
+      "alpha_1_15": 0,
+      "sha256": "158c1db5261815d18db987dd884fba6aec9efbcc9bacf99dcfbf7d577687b54f"
+    }
+  ]
+}
