@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.17";
+  const appVersion = "0.3.18";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -806,7 +806,6 @@
       setPhonicsYoutubeStatus("一時停止中です。戻ったらプレーヤーの再生ボタンで続けられます。");
     }
   }
-  let collectionScaleRequest = 0;
   function stageScaleFor(width, height) {
     return Math.min(width / stageCanvasWidth, height / stageCanvasHeight);
   }
@@ -824,16 +823,14 @@
     }
     return scale;
   }
+  // All game canvases use one validated viewport and one resize scheduler.
+  // Keep these wrappers for existing collection callers; never bypass the
+  // Safari visualViewport zoom guard when sizing the garage.
   function sizeCollectionStage() {
-    const width = document.documentElement.clientWidth || window.innerWidth;
-    const height = document.documentElement.clientHeight || window.innerHeight;
-    return sizeStages({ width, height, includeCollection: true });
+    return sizePlayStage();
   }
   function scheduleCollectionStageSize() {
-    const requestId = ++collectionScaleRequest;
-    window.requestAnimationFrame(() => {
-      if (requestId === collectionScaleRequest) sizeCollectionStage();
-    });
+    schedulePlayStageSize("collection");
   }
   function setNeutralBackground() {
     $("app").style.setProperty("--background-image", "none");
@@ -1348,7 +1345,7 @@
     if (!isNormalViewport(snapshot)) {
       return false;
     }
-    const scale = sizeStages({ width: snapshot.innerWidth, height: snapshot.innerHeight, includePlay: true });
+    const scale = sizeStages({ width: snapshot.innerWidth, height: snapshot.innerHeight, includePlay: true, includeCollection: true });
     lastStableAppScale = scale;
     return true;
   }
@@ -5416,12 +5413,10 @@
   window.addEventListener("orientationchange", () => {
     schedulePlayStageSize("orientationchange");
   });
-  window.addEventListener("orientationchange", scheduleCollectionStageSize);
   window.visualViewport?.addEventListener("resize", () => {
     recordViewportDiagnostic("visualViewport.resize");
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
-  window.visualViewport?.addEventListener("resize", scheduleCollectionStageSize);
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
