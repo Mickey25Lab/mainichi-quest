@@ -1,0 +1,31 @@
+name: Browser smoke tests (Playwright)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smokes:
+    name: Playwright browser smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.58.2
+
+      - name: Install Chromium and system libraries
+        run: npx playwright install --with-deps chromium
+
+      - name: Run two browser smoke suites
+        run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
