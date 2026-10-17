@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.12";
+  const appVersion = "0.3.13";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -721,7 +721,9 @@
     clearPhonicsIntroTimer();
     $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
     renderPhonicsIntroLetters();
-    $("phonics-intro-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    const phonicsBackgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    $("phonics-intro-background").src = phonicsBackgroundPath;
+    document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
     $("phonics-intro-start").disabled = true;
     $("phonics-intro-status").textContent = "";
     showScreen("phonics-intro-screen");
@@ -4131,6 +4133,8 @@
     state.collectionClosing = false;
     state.collectionUsed = true;
     seedPatrolCarForPhonicsRewardIfNeeded();
+    state.collectionNewVehicleIndexes = new Set();
+    state.resultStartProgress = state.rewardProgress.map((progress) => ({ ...progress }));
     await preloadCollectionVehicleArtwork();
     setCollectionPresentationMode("phonics-reward-select");
     state.collectionDeadline = Date.now() + 60000;
