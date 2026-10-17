@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.26";
+  const appVersion = "0.3.27";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -332,7 +332,7 @@
     try { profileStore.setCollectionStages(state.collection); } catch (_) {}
   }
   function qaProgressModeEnabled() {
-    return new URLSearchParams(window.location.search).get("qa") === "progress";
+    return profileStore.getActiveQaState().qaEnabled === true;
   }
   function updateAdminQaToggle() {
     const toggle = $("admin-qa-toggle");
@@ -353,19 +353,15 @@
     } catch (_) {}
   }
   function toggleQaProgressMode() {
-    const url = new URL(window.location.href);
     if (qaProgressModeEnabled()) {
       restoreQaProgressBackup();
-      url.searchParams.delete("qa");
-      url.searchParams.delete("reset");
     } else {
-      url.searchParams.set("qa", "progress");
-      url.searchParams.set("reset", "1");
+      // QA progress snapshots and the QA enable flag are isolated per profile.
+      profileStore.setActiveQaState({ qaEnabled: true });
     }
-    window.location.assign(url.toString());
+    window.location.reload();
   }
   function seedPreviewQaProgressPreset() {
-    const params = new URLSearchParams(window.location.search);
     if (!qaProgressModeEnabled()) return null;
     try {
       const qaState = profileStore.getActiveQaState();
@@ -374,7 +370,7 @@
         qaState.progressBackup = profileStore.getProgressSnapshot();
         profileStore.setActiveQaState(qaState);
       }
-      if (params.get("reset") !== "1" && qaState.presetApplied) return null;
+      if (qaState.presetApplied) return null;
       const preset = Array.from({ length: vehicles.length }, emptyVehicleProgress);
       const qaVehicleIndexes = collectionDisplayOrder.slice(0, 20);
       const progressStates = [
@@ -2317,20 +2313,23 @@
       settings,
       mission,
       items,
-      allComplete: items.length > 0 && items.every((item) => item.remaining === 0)
+      allComplete: items.length > 0 && items.every((item) => item.remaining === 0),
+      freePlayEnabled: settings.freePlayEnabled !== false,
+      freePlayEnergyMode: settings.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal"
     };
   }
 
   function renderModeSelectMission() {
     const overview = missionOverview();
+    const freePlayActive = overview.allComplete && overview.freePlayEnabled;
     document.querySelectorAll(".mode-select-choice[data-mode]").forEach((button) => {
       const item = overview.items.find((entry) => entry.id === button.dataset.mode);
       button.hidden = !item;
       if (!item) return;
       const completed = item.remaining === 0;
-      button.disabled = completed && !overview.allComplete;
+      button.disabled = completed && !freePlayActive;
       button.classList.toggle("is-complete", completed);
-      button.classList.toggle("is-free-play", overview.allComplete);
+      button.classList.toggle("is-free-play", freePlayActive);
       const remaining = button.querySelector(".mode-select-remaining");
       remaining.innerHTML = completed
         ? '<strong class="mode-select-done-text">できた！</strong>'
@@ -2341,7 +2340,7 @@
         energy.innerHTML = "<span>なし</span>";
         energy.setAttribute("aria-label", "エネルギーのたまりやすさ なし");
       } else {
-        const presentation = childEnergyPresentation[item.energyId];
+        const presentation = childEnergyPresentation[freePlayActive && overview.freePlayEnergyMode === "almost-zero" ? "almost-zero" : item.energyId];
         energy.className = `mode-select-energy energy-level-${presentation.level}`;
         energy.innerHTML = `<i aria-hidden="true"></i><span>${presentation.label}</span>`;
         energy.setAttribute("aria-label", `エネルギーのたまりやすさ ${presentation.label}`);
@@ -2355,7 +2354,7 @@
     const overview = missionOverview();
     const item = overview.items.find((entry) => entry.id === mode);
     if (!item) return false;
-    return overview.allComplete || item.remaining > 0;
+    return (overview.allComplete && overview.freePlayEnabled) || item.remaining > 0;
   }
 
   function completeDailyMissionRound(mode) {
@@ -2369,6 +2368,8 @@
 
   function energyPresentationForMode(mode) {
     const settings = activeLearningSettings();
+    const overview = missionOverview();
+    if (overview.allComplete && overview.freePlayEnabled && overview.freePlayEnergyMode === "almost-zero") return childEnergyPresentation["almost-zero"];
     return childEnergyPresentation[settings.energyMultipliers?.[mode]] || childEnergyPresentation.medium;
   }
 
@@ -5177,6 +5178,7 @@
         parentSettingsProfileId = profile.profileId;
         renderParentProfileTabs();
         renderParentModeSettings();
+        renderParentFreePlaySettings();
       });
       tabs.append(button);
     });
@@ -5249,6 +5251,22 @@
 
       row.append(name, target, energy);
       container.append(row);
+    });
+  }
+
+  function renderParentFreePlaySettings() {
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    const enabled = settings?.freePlayEnabled !== false;
+    const energyMode = settings?.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
+    const toggle = $("parent-free-play-toggle");
+    toggle.setAttribute("aria-checked", String(enabled));
+    toggle.querySelector("span").textContent = enabled ? "ON" : "OFF";
+    const options = $("parent-free-play-energy");
+    options.hidden = !enabled;
+    options.querySelectorAll("[data-free-play-energy]").forEach((button) => {
+      const selected = button.dataset.freePlayEnergy === energyMode;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
     });
   }
 
@@ -5325,6 +5343,7 @@
     initializeParentSettingsDrafts();
     renderParentProfileTabs();
     renderParentModeSettings();
+    renderParentFreePlaySettings();
     $("parent-settings-overlay").hidden = false;
     $("parent-settings-close").focus();
   }
@@ -5536,6 +5555,18 @@
   $("admin-pin-cancel").addEventListener("click", closeAdminPin);
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
+  $("parent-free-play-toggle").addEventListener("click", () => {
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    if (!settings) return;
+    settings.freePlayEnabled = settings.freePlayEnabled === false;
+    renderParentFreePlaySettings();
+  });
+  document.querySelectorAll("[data-free-play-energy]").forEach((button) => button.addEventListener("click", () => {
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    if (!settings) return;
+    settings.freePlayEnergyMode = button.dataset.freePlayEnergy;
+    renderParentFreePlaySettings();
+  }));
   $("admin-viewport-diagnostics-toggle").addEventListener("click", toggleViewportDiagnostics);
   $("admin-bgm-diagnostics-toggle").addEventListener("click", toggleBgmDiagnostics);
   $("admin-reenable-collection").addEventListener("click", reenableTopCollectionForActiveProfile);
