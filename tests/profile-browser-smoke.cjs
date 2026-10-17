@@ -4,7 +4,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require("playwright");
-const browserExecutable = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+const browserExecutable = process.platform === "win32" ? "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" : undefined;
 
 const root = path.resolve(__dirname, "../dist");
 let server;
@@ -72,7 +72,7 @@ async function exitQaMode(page) {
 }
 
 test("admin PIN gates QA and the old direct controls are absent", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -107,7 +107,7 @@ test("admin PIN gates QA and the old direct controls are absent", async (t) => {
 });
 
 test("admin can re-enable today's collection and opening movie only for the active profile", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -153,7 +153,7 @@ test("admin can re-enable today's collection and opening movie only for the acti
 });
 
 test("new profile, profile separation, persistence, and game smoke", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -196,7 +196,7 @@ test("new profile, profile separation, persistence, and game smoke", async (t) =
 });
 
 test("a real new acquisition is recorded once and QA preset does not add history", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -232,7 +232,7 @@ test("a real new acquisition is recorded once and QA preset does not add history
 });
 
 test("legacy migration copies progress and keeps legacy keys", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -267,7 +267,7 @@ test("legacy migration copies progress and keeps legacy keys", async (t) => {
 });
 
 test("new profile returns to its exact empty progress after QA mode and reload", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -294,7 +294,7 @@ test("new profile returns to its exact empty progress after QA mode and reload",
 });
 
 test("QA restores existing progress exactly and does not affect another profile", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -345,7 +345,7 @@ test("QA restores existing progress exactly and does not affect another profile"
 });
 
 test("collection-only fallback persists transition-consistent progress for every stage", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
@@ -373,7 +373,7 @@ test("collection-only fallback persists transition-consistent progress for every
 });
 
 test("admin reset cancels safely then clears only the active profile progress", async (t) => {
-  const browser = await chromium.launch({ headless: true, executablePath: browserExecutable });
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
   const page = await context.newPage();
