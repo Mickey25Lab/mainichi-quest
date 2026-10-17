@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.3";
+  const appVersion = "0.3.4";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -635,12 +635,6 @@
       value.className = "phonics-intro-letter";
       value.textContent = letter;
       container.append(value);
-      if (index < letters.length - 1) {
-        const comma = document.createElement("span");
-        comma.className = "phonics-intro-comma";
-        comma.textContent = "、";
-        container.append(comma);
-      }
     });
     container.setAttribute("aria-label", letters.join("、"));
   }
@@ -654,9 +648,7 @@
     if (!button || !status) return;
     const ready = phonicsYoutube.introMinimumElapsed && phonicsYoutube.ready && Boolean(phonicsYoutube.player);
     button.disabled = !ready;
-    if (ready) status.textContent = "じゅんびOK！";
-    else if (!phonicsYoutube.introMinimumElapsed) status.textContent = "";
-    else status.textContent = "動画を準備しています…";
+    status.textContent = "";
   }
   function showPhonicsIntro(lessonId, modeId) {
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
