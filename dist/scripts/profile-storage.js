@@ -88,7 +88,9 @@
       acquisitionHistory: [],
       enabledModes: {},
       energyMultipliers: {},
-      dailyTargetCounts: {}
+      dailyTargetCounts: {},
+      freePlayEnabled: true,
+      freePlayEnergyMode: "normal"
     };
   }
 
@@ -157,6 +159,8 @@
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
     profile.energyMultipliers = value.energyMultipliers && typeof value.energyMultipliers === "object" ? clone(value.energyMultipliers) : {};
     profile.dailyTargetCounts = value.dailyTargetCounts && typeof value.dailyTargetCounts === "object" ? clone(value.dailyTargetCounts) : {};
+    profile.freePlayEnabled = value.freePlayEnabled !== false;
+    profile.freePlayEnergyMode = value.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
     return profile;
   }
 
@@ -343,7 +347,9 @@
       return clone({
         enabledModes: profile.enabledModes || {},
         energyMultipliers: profile.energyMultipliers || {},
-        dailyTargetCounts: profile.dailyTargetCounts || {}
+        dailyTargetCounts: profile.dailyTargetCounts || {},
+        freePlayEnabled: profile.freePlayEnabled !== false,
+        freePlayEnergyMode: profile.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal"
       });
     }
     function setProfileLearningSettings(profileId, value) {
@@ -352,6 +358,8 @@
         profile.enabledModes = settings.enabledModes && typeof settings.enabledModes === "object" ? clone(settings.enabledModes) : {};
         profile.energyMultipliers = settings.energyMultipliers && typeof settings.energyMultipliers === "object" ? clone(settings.energyMultipliers) : {};
         profile.dailyTargetCounts = settings.dailyTargetCounts && typeof settings.dailyTargetCounts === "object" ? clone(settings.dailyTargetCounts) : {};
+        profile.freePlayEnabled = settings.freePlayEnabled !== false;
+        profile.freePlayEnergyMode = settings.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
       });
     }
 
