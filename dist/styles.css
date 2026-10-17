@@ -3677,6 +3677,7 @@ button, input { font: inherit; }
   filter:none;
 }
 .collection-scene-art.is-pre-friendship { filter:grayscale(1); }
+.collection-scene-art.is-flipped { transform:scaleX(-1); }
 .collection-scene-shadow {
   position:absolute;
   z-index:0;
@@ -3695,6 +3696,18 @@ button, input { font: inherit; }
 .collection-scene-item-robot .collection-scene-shadow {
   background:rgba(3,14,18,.439);
   filter:blur(13px);
+}
+.collection-scene-item-super-robot .collection-scene-shadow {
+  background:rgba(3,14,18,.439);
+  filter:blur(13px);
+}
+.collection-scene-item-super-robot.is-rear .collection-scene-shadow {
+  background:rgba(3,14,18,.412);
+  filter:blur(11px);
+}
+.collection-scene-item-equipment .collection-scene-shadow {
+  background:rgba(0,20,70,.314);
+  filter:blur(24px);
 }
 .collection-scene-new-orb {
   position:absolute;

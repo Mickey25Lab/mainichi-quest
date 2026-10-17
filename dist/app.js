@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.10";
+  const appVersion = "0.3.11";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -158,6 +158,21 @@
     Object.freeze({ localIds:[4,5], size:295, contactY:676, centers:[460,940] }),
     Object.freeze({ localIds:[1,2,3], size:340, contactY:908, centers:[250,700,1150] })
   ]);
+  const superRobotCollectionSlots = Object.freeze([
+    Object.freeze({ x:250, contactY:690, size:595, anchorY:.9338, shadowWidth:387, shadowHeight:54, shadowOffsetY:-7, shadowVariant:"front" }),
+    Object.freeze({ x:870, contactY:690, size:595, anchorY:.9338, shadowWidth:387, shadowHeight:54, shadowOffsetY:-7, shadowVariant:"front", flip:true }),
+    Object.freeze({ x:545, contactY:545, size:351, anchorY:.9338, shadowWidth:228, shadowHeight:32, shadowOffsetY:-7, shadowVariant:"rear" }),
+    Object.freeze({ x:1180, contactY:545, size:351, anchorY:.9338, shadowWidth:228, shadowHeight:32, shadowOffsetY:-7, shadowVariant:"rear", flip:true })
+  ]);
+  const equipmentCollectionSlots = Object.freeze([
+    Object.freeze({ x:350, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:1050, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:350, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:1050, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 })
+  ]);
+  const medalCollectionSlots = Object.freeze([805,615,420,230].flatMap((centerY) =>
+    [230,465,700,935,1170].map((x) => Object.freeze({ x, contactY:centerY, size:140, anchorY:.5 }))
+  ));
   const questionTimeoutMs = 5 * 60 * 1000;
   const rarityConfig = Object.freeze({
     normal: { label: "ノーマル", stars: "★", weight: 10 },
@@ -240,7 +255,7 @@
     recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false, collectionShowSessionMarkers: true,
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
-    energyDisplayOverride: null, collectionCategory: "summary", collectionRobotPage: 0, collectionSwipeStartX: null,
+    energyDisplayOverride: null, collectionCategory: "summary", collectionCategoryPage: 0, collectionSwipeStartX: null,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0, bgmTransitionId: 0, bgmFadeTimer: null
   };
@@ -1010,6 +1025,10 @@
   function equippedSuperRobotArtworkPath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
     return `./assets/collection/04_super_robot_equipped/${stem}_super_robot_equipped.webp`;
+  }
+  function equipmentArtworkPath(vehicleIndex) {
+    const stem = vehicles[vehicleIndex].stem;
+    return `./assets/collection/05_equipment/${stem}_equipment.webp`;
   }
   function vehicleLogoTitlePath(vehicleIndex) {
     const stem = vehicles[vehicleIndex].stem;
@@ -4020,7 +4039,7 @@
   }
   function setCollectionCategory(category) {
     const normalizedCategory = category || "summary";
-    if (normalizedCategory === "robot" && state.collectionCategory !== "robot") state.collectionRobotPage = 0;
+    if (normalizedCategory !== state.collectionCategory) state.collectionCategoryPage = 0;
     state.collectionCategory = normalizedCategory;
     document.querySelectorAll(".category-button").forEach((button) => {
       const selected = button.dataset.category === normalizedCategory;
@@ -4043,16 +4062,27 @@
   }
   const vehicleCollectionSlots = Object.freeze(collectionSceneSlots(vehicleCollectionRows, "ids"));
   const robotCollectionSlots = Object.freeze(collectionSceneSlots(robotCollectionRows, "localIds"));
+  const collectionSceneOrderKeys = Object.freeze(["vehicle", "robot", "super-robot", "equipment", "medal"]);
 
   function collectionSceneQualifies(vehicleIndex, kind) {
     const progress = vehicleProgress(vehicleIndex);
-    return kind === "vehicle" ? progress.discovered : progress.discovered && progress.stage >= 3;
+    if (kind === "vehicle") return progress.discovered;
+    if (kind === "robot") return progress.discovered && progress.stage >= 3;
+    if (kind === "super-robot") return progress.discovered && progress.stage >= 4;
+    if (kind === "equipment") return progress.discovered && progress.stage >= 5;
+    if (kind === "medal") return progress.discovered && progress.masterMedal;
+    return false;
   }
-  function collectionSceneAcquisitionType(kind) { return kind === "vehicle" ? "vehicle_discovered" : "robot"; }
+  function collectionSceneAcquisitionType(kind) {
+    return ({ vehicle:"vehicle_discovered", robot:"robot", "super-robot":"super_robot", equipment:"super_robot_equipped", medal:"master_medal" })[kind];
+  }
+  function emptyCollectionSceneOrder() {
+    return { vehicle:[], robot:[], "super-robot":[], equipment:[], medal:[] };
+  }
   function collectionSceneOrder(kind) {
     const qualified = vehicles.map((_, index) => index).filter((index) => collectionSceneQualifies(index, kind));
     let saved;
-    try { saved = profileStore.getCollectionSceneOrder(); } catch (_) { saved = { vehicle:[], robot:[] }; }
+    try { saved = profileStore.getCollectionSceneOrder(); } catch (_) { saved = emptyCollectionSceneOrder(); }
     const current = Array.isArray(saved?.[kind]) ? saved[kind].filter((index, position, values) => Number.isInteger(index) && index >= 0 && index < vehicles.length && values.indexOf(index) === position) : [];
     const placed = new Set(current);
     const missing = qualified.filter((index) => !placed.has(index));
@@ -4072,7 +4102,8 @@
       const known = missing.filter((index) => sequenceByVehicle.has(index)).sort((a,b) => sequenceByVehicle.get(a) - sequenceByVehicle.get(b) || a - b);
       current.push(...unknown, ...known);
       try {
-        const next = { vehicle:[...(saved?.vehicle || [])], robot:[...(saved?.robot || [])], [kind]:current };
+        const next = Object.fromEntries(collectionSceneOrderKeys.map((key) => [key, [...(saved?.[key] || [])]]));
+        next[kind] = current;
         profileStore.setCollectionSceneOrder(next);
       } catch (_) {}
     }
@@ -4096,19 +4127,33 @@
         || discoveryOrder.get(a) - discoveryOrder.get(b);
     });
   }
-  function robotCollectionPageCount() { return collectionSceneOrder("robot").length > 10 ? 2 : 1; }
+  function collectionCategoryPageSize(category) {
+    return ({ robot:10, "super-robot":4, equipment:4 })[category] || 20;
+  }
+  function collectionCategoryPageCount(category) {
+    return Math.max(1, Math.ceil(collectionSceneOrder(category).length / collectionCategoryPageSize(category)));
+  }
 
   function collectionItemMarkup(vehicleIndex, kind, layout, grayscale = false) {
     const vehicle = vehicles[vehicleIndex];
-    const artworkPath = kind === "vehicle" ? vehicleArtworkPath(vehicleIndex) : robotArtworkPath(vehicleIndex);
-    const anchorY = kind === "vehicle" ? .925 : .955;
-    const shadowWidth = kind === "vehicle" ? layout.size * .70 : layout.size * .88;
-    const shadowHeight = kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13);
-    const shadowY = layout.contactY - (kind === "vehicle" ? 0 : 7);
+    const artworkPath = ({
+      vehicle:vehicleArtworkPath,
+      robot:robotArtworkPath,
+      "super-robot":superRobotArtworkPath,
+      equipment:equipmentArtworkPath,
+      medal:masterMedalArtworkPath
+    })[kind](vehicleIndex);
+    const anchorY = layout.anchorY ?? (kind === "vehicle" ? .925 : .955);
+    const shadowWidth = layout.shadowWidth ?? (kind === "vehicle" ? layout.size * .70 : layout.size * .88);
+    const shadowHeight = layout.shadowHeight ?? (kind === "vehicle" ? layout.size * .075 : Math.max(16, layout.size * .13));
+    const shadowY = layout.contactY + (layout.shadowOffsetY ?? (kind === "vehicle" ? 0 : -7));
     const top = layout.contactY - layout.size * anchorY;
     const rowDepth = Math.round(layout.contactY);
     const isNew = state.collectionShowSessionMarkers && state.collectionNewVehicleIndexes.has(vehicleIndex);
-    return `<button class="collection-scene-item collection-scene-item-${kind}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="z-index:${rowDepth};--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px"><span class="collection-scene-shadow"></span><img class="collection-scene-art${grayscale ? " is-pre-friendship" : ""}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
+    const shadow = kind === "medal" ? "" : '<span class="collection-scene-shadow"></span>';
+    const artClasses = `collection-scene-art${grayscale ? " is-pre-friendship" : ""}${layout.flip ? " is-flipped" : ""}`;
+    const shadowClass = layout.shadowVariant ? ` is-${layout.shadowVariant}` : "";
+    return `<button class="collection-scene-item collection-scene-item-${kind}${shadowClass}${isNew ? " is-new" : ""}" data-vehicle="${vehicleIndex}" aria-label="${vehicle.nameJa}" style="z-index:${rowDepth};--item-x:${layout.x}px;--item-y:${top}px;--item-size:${layout.size}px;--shadow-x:${layout.x}px;--shadow-y:${shadowY}px;--shadow-width:${shadowWidth}px;--shadow-height:${shadowHeight}px">${shadow}<img class="${artClasses}" src="${artworkPath}" alt="" decoding="async">${isNew ? '<span class="collection-scene-new-orb" aria-hidden="true">NEW</span>' : ""}</button>`;
   }
   function renderVehicleCollectionScene() {
     return collectionSceneOrder("vehicle").slice(0, vehicleCollectionSlots.length).map((vehicleIndex, position) => {
@@ -4117,11 +4162,27 @@
     }).join("");
   }
   function renderRobotCollectionScene() {
-    const order = collectionSceneOrder("robot");
-    const pageCount = order.length > 10 ? 2 : 1;
-    if (state.collectionRobotPage >= pageCount) state.collectionRobotPage = 0;
-    const pageItems = order.slice(state.collectionRobotPage * 10, state.collectionRobotPage * 10 + 10);
+    const order = collectionSceneOrder("robot"), pageSize = 10;
+    const pageItems = order.slice(state.collectionCategoryPage * pageSize, state.collectionCategoryPage * pageSize + pageSize);
     return pageItems.map((vehicleIndex, position) => collectionItemMarkup(vehicleIndex, "robot", robotCollectionSlots[position])).join("");
+  }
+  function renderFourUpCollectionScene(category, slots) {
+    const order = collectionSceneOrder(category), pageSize = 4;
+    const pageItems = order.slice(state.collectionCategoryPage * pageSize, state.collectionCategoryPage * pageSize + pageSize);
+    return pageItems.map((vehicleIndex, position) => collectionItemMarkup(vehicleIndex, category, slots[position])).join("");
+  }
+  function renderMedalCollectionScene() {
+    return collectionSceneOrder("medal").slice(0, medalCollectionSlots.length)
+      .map((vehicleIndex, position) => collectionItemMarkup(vehicleIndex, "medal", medalCollectionSlots[position])).join("");
+  }
+  function renderCollectionPageIndicator(category, pageCount) {
+    const indicator = $("collection-page-indicator");
+    const labels = { robot:"ロボット", "super-robot":"スーパーロボット", equipment:"スペシャル装備" };
+    indicator.setAttribute("aria-label", `${labels[category] || "一覧"}のページ`);
+    indicator.innerHTML = Array.from({ length:pageCount }, (_, page) =>
+      `<button type="button" data-collection-page="${page}" aria-label="${page + 1}ページ目"${page === state.collectionCategoryPage ? ' class="selected" aria-current="page"' : ' aria-current="false"'}></button>`
+    ).join("");
+    indicator.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setCollectionCategoryPage(button.dataset.collectionPage)));
   }
   function renderCollectionCategoryScene(category) {
     const scene = $("collection-category-scene");
@@ -4129,30 +4190,34 @@
     const indicator = $("collection-page-indicator");
     scene.dataset.category = category;
     scene.style.backgroundImage = `url("${collectionCategoryBackgroundPaths[category]}")`;
-    items.innerHTML = category === "vehicle" ? renderVehicleCollectionScene() : category === "robot" ? renderRobotCollectionScene() : "";
-    const paged = category === "robot" && robotCollectionPageCount() > 1;
+    const pageCount = collectionCategoryPageCount(category);
+    if (state.collectionCategoryPage >= pageCount) state.collectionCategoryPage = 0;
+    items.innerHTML = category === "vehicle" ? renderVehicleCollectionScene()
+      : category === "robot" ? renderRobotCollectionScene()
+      : category === "super-robot" ? renderFourUpCollectionScene(category, superRobotCollectionSlots)
+      : category === "equipment" ? renderFourUpCollectionScene(category, equipmentCollectionSlots)
+      : category === "medal" ? renderMedalCollectionScene()
+      : "";
+    const paged = ["robot", "super-robot", "equipment"].includes(category) && pageCount > 1;
     indicator.hidden = !paged;
-    indicator.querySelectorAll("button").forEach((button) => {
-      const selected = Number(button.dataset.collectionPage) === state.collectionRobotPage;
-      button.classList.toggle("selected", selected);
-      button.setAttribute("aria-current", selected ? "page" : "false");
-    });
+    if (paged) renderCollectionPageIndicator(category, pageCount);
+    else indicator.innerHTML = "";
     $("collection-series-prev").hidden = !paged;
     $("collection-series-next").hidden = !paged;
     items.querySelectorAll(".collection-scene-item").forEach((item) => item.addEventListener("click", () => openVehicleDetail(Number(item.dataset.vehicle))));
   }
-  function setCollectionRobotPage(page) {
-    const pageCount = robotCollectionPageCount();
+  function setCollectionCategoryPage(page) {
+    const pageCount = collectionCategoryPageCount(state.collectionCategory);
     if (pageCount < 2) {
-      state.collectionRobotPage = 0;
-      if (state.collectionCategory === "robot") renderCollectionCategoryScene("robot");
+      state.collectionCategoryPage = 0;
+      renderCollectionCategoryScene(state.collectionCategory);
       return;
     }
     const rawPage = Number(page) || 0;
     const nextPage = ((rawPage % pageCount) + pageCount) % pageCount;
-    if (nextPage === state.collectionRobotPage) return;
-    state.collectionRobotPage = nextPage;
-    if (state.collectionCategory === "robot") renderCollectionCategoryScene("robot");
+    if (nextPage === state.collectionCategoryPage) return;
+    state.collectionCategoryPage = nextPage;
+    renderCollectionCategoryScene(state.collectionCategory);
   }
   function detailCategoryForVehicle(index) {
     const progress = vehicleProgress(index);
@@ -5221,22 +5286,21 @@
     sizeCollectionStage();
     showScreen("collection-screen");
   }));
-  $("collection-page-indicator").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setCollectionRobotPage(button.dataset.collectionPage)));
   $("collection-series-prev").addEventListener("click", () => {
-    if (state.collectionCategory === "robot") setCollectionRobotPage(state.collectionRobotPage - 1);
+    setCollectionCategoryPage(state.collectionCategoryPage - 1);
   });
   $("collection-series-next").addEventListener("click", () => {
-    if (state.collectionCategory === "robot") setCollectionRobotPage(state.collectionRobotPage + 1);
+    setCollectionCategoryPage(state.collectionCategoryPage + 1);
   });
   $("collection-category-scene").addEventListener("pointerdown", (event) => {
-    if (state.collectionCategory === "robot") state.collectionSwipeStartX = event.clientX;
+    if (collectionCategoryPageCount(state.collectionCategory) > 1) state.collectionSwipeStartX = event.clientX;
   });
   $("collection-category-scene").addEventListener("pointerup", (event) => {
-    if (state.collectionCategory !== "robot" || state.collectionSwipeStartX === null || robotCollectionPageCount() < 2) return;
+    if (state.collectionSwipeStartX === null || collectionCategoryPageCount(state.collectionCategory) < 2) return;
     const deltaX = event.clientX - state.collectionSwipeStartX;
     state.collectionSwipeStartX = null;
     if (Math.abs(deltaX) < 70) return;
-    setCollectionRobotPage(deltaX > 0 ? state.collectionRobotPage + 1 : state.collectionRobotPage - 1);
+    setCollectionCategoryPage(deltaX > 0 ? state.collectionCategoryPage + 1 : state.collectionCategoryPage - 1);
   });
   $("detail-prev").addEventListener("click", () => moveVehicleDetail(-1));
   $("detail-next").addEventListener("click", () => moveVehicleDetail(1));

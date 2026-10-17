@@ -76,7 +76,7 @@
         topCollectionLastUsedJst: null,
         openingMovieLastPlayedJst: null,
         dailyMission: { date: null, completedCounts: {} },
-        collectionSceneOrder: { vehicle: [], robot: [] },
+        collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] },
         legacyHistory: null,
         legacyRanking: null
       },
@@ -139,7 +139,10 @@
     const sceneOrder = value.progress?.collectionSceneOrder;
     profile.progress.collectionSceneOrder = {
       vehicle: Array.isArray(sceneOrder?.vehicle) ? sceneOrder.vehicle.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : [],
-      robot: Array.isArray(sceneOrder?.robot) ? sceneOrder.robot.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : []
+      robot: Array.isArray(sceneOrder?.robot) ? sceneOrder.robot.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : [],
+      "super-robot": Array.isArray(sceneOrder?.["super-robot"]) ? sceneOrder["super-robot"].filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : [],
+      equipment: Array.isArray(sceneOrder?.equipment) ? sceneOrder.equipment.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : [],
+      medal: Array.isArray(sceneOrder?.medal) ? sceneOrder.medal.filter((value) => Number.isInteger(value) && value >= 0 && value < 20) : []
     };
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
@@ -349,14 +352,17 @@
 
     function getCollectionSceneOrder() {
       const value = getActiveProfile()?.progress?.collectionSceneOrder;
-      return clone(value || { vehicle: [], robot: [] });
+      return clone(value || { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] });
     }
     function setCollectionSceneOrder(value) {
       const next = value && typeof value === "object" ? value : {};
       return mutateActiveProfile((profile) => {
         profile.progress.collectionSceneOrder = {
           vehicle: Array.isArray(next.vehicle) ? next.vehicle.filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : [],
-          robot: Array.isArray(next.robot) ? next.robot.filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : []
+          robot: Array.isArray(next.robot) ? next.robot.filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : [],
+          "super-robot": Array.isArray(next["super-robot"]) ? next["super-robot"].filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : [],
+          equipment: Array.isArray(next.equipment) ? next.equipment.filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : [],
+          medal: Array.isArray(next.medal) ? next.medal.filter((item) => Number.isInteger(item) && item >= 0 && item < 20) : []
         };
       });
     }
@@ -398,7 +404,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [] }, legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
       });
