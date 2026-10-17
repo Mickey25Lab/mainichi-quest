@@ -3588,6 +3588,10 @@ button, input { font: inherit; }
 .detail-evolution-layout.is-three-up { left:2%; right:2%; top:13%; bottom:3.5%; display:block; }
 .detail-evolution-layout.is-three-up .detail-evolution-slot { position:absolute; z-index:2; bottom:0; width:33%; height:72%; display:block; }
 .detail-evolution-layout.is-three-up .detail-slot-vehicle { left:-3.5%; }
+/* Prefer smaller evolution artworks when overlapping hit regions compete. */
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-slot-vehicle { z-index:5; }
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-slot-robot { z-index:4; }
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-slot-super { z-index:3; }
 .detail-evolution-layout.is-three-up .detail-slot-robot { left:21%; }
 .detail-evolution-layout.is-three-up .detail-slot-super { left:56%; }
 .detail-evolution-layout.is-three-up .detail-art-box { position:absolute; inset:0; overflow:visible; transform:translateY(-12.5%); }
