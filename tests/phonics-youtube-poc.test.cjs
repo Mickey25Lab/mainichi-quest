@@ -238,6 +238,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1400px;[\s\S]*height:1050px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
   assert.match(app, /const stageCanvasWidth = 1400;[\s\S]*const stageCanvasHeight = 1050;/);
   assert.match(app, /function sizeStages\(\{ width, height, includePlay = false, includeCollection = false \}\)[\s\S]*stageScaleFor\(width, height\)/);
+  assert.match(css, /\.play-screen \.game-area \{[\s\S]*left: 741px; width: 619px;/);
   assert.match(css, /\.phonics-youtube-background[\s\S]*width:100%;[\s\S]*height:100%;[\s\S]*object-fit:contain/);
   assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1218px;[\s\S]*overflow:hidden;[\s\S]*transform:translate\(-50%,-50%\)/);
   assert.match(html, /class="phonics-youtube-player-scale"[\s\S]*id="phonics-youtube-player"/);

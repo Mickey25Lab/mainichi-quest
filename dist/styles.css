@@ -2079,9 +2079,9 @@ button, input { font: inherit; }
 .play-screen .elapsed-time { width: var(--play-corner-control-width); }
 .play-screen .progress-badge.is-retry { flex-direction: row; min-height: 0; gap: .2em; }
 .play-screen .game-area {
-  /* Shared reference canvas: align the question/keypad column's
-     right edge (766 + 640 = 1406) with the timer and hint controls. */
-  position: absolute; z-index: 3; top: 140px; left: 766px; width: 640px;
+  /* Coordinates are normalized from the former 1448px stage so the
+     question/keypad column retains its right-side margin on a 1400px canvas. */
+  position: absolute; z-index: 3; top: 140px; left: 741px; width: 619px;
   display: grid; justify-items: stretch; gap: 12px; padding: 0;
 }
 .play-screen .question-answer-card {
