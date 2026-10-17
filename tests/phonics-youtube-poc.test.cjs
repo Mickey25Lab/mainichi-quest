@@ -141,7 +141,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.8"/);
+  assert.match(app, /const appVersion = "0\.3\.9"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -189,6 +189,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /introMinimumElapsed = true[\s\S]*updatePhonicsIntroReadyState\(\)/);
   assert.match(html, /id="phonics-countdown"[\s\S]*id="phonics-countdown-number">3/);
   assert.match(css, /@keyframes phonics-countdown-drain[\s\S]*stroke-dashoffset:477\.52/);
+  assert.match(css, /\.phonics-countdown-progress \{[\s\S]*stroke:#59c7ff/);
   assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*playVideo\?\.\(\)[\s\S]*pauseVideo\?\.\(\)[\s\S]*startPhonicsIntroCountdown\(\)/);
   assert.match(app, /function startPhonicsIntroCountdown\(\)[\s\S]*countdownValue = 3[\s\S]*setTimeout\(advance, 1000\)/);
   assert.match(app, /function finishPhonicsIntroCountdown\(\)[\s\S]*showScreen\("phonics-youtube-screen"\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
