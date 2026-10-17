@@ -2715,8 +2715,7 @@ button, input { font: inherit; }
 }
 .collection-screen.is-phonics-reward-select #collection-medal-count-block,
 .collection-screen.is-phonics-reward-select #collection-exit,
-.collection-screen.is-phonics-reward-select + .collection-categories,
-.collection-screen.is-phonics-reward-select ~ .collection-categories {
+.collection-screen.is-phonics-reward-select .collection-categories {
   display:none;
 }
 .collection-screen.is-phonics-reward-select .collection-card.locked {
