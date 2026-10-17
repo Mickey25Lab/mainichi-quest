@@ -141,7 +141,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.6"/);
+  assert.match(app, /const appVersion = "0\.3\.7"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -172,11 +172,13 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-intro-screen"/);
   assert.match(html, /3分の<ruby>動画<rt>どうが<\/rt><\/ruby>を見ながら、<\/span><br>[\s\S]*いっしょに<ruby>声<rt>こえ<\/rt><\/ruby>に出そう！/);
   assert.match(html, /id="phonics-intro-letters"/);
+  assert.doesNotMatch(html, /phonics-intro-lead|これから、/);
+  assert.match(html, /id="phonics-intro-letters"[^>]*><\/span><span class="phonics-intro-pronounce">を<ruby>発音/);
   assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter/);\n  assert.doesNotMatch(app, /phonics-intro-comma|comma\.textContent = "、"/);
   assert.match(css, /\.phonics-intro-letters \{[\s\S]*font:1000 58px/);
   assert.match(css, /\.phonics-intro-cta \{[\s\S]*text-align:center/);
   assert.match(css, /\.phonics-intro-gesture \{[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
-  assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-330px[\s\S]*width:360px/);
+  assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-350px[\s\S]*width:432px/);
   assert.match(css, /\.phonics-intro-start \{[\s\S]*display:block[\s\S]*margin:52px auto 0/);
   assert.doesNotMatch(html, />説明を読んでね</);
   assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"|status\.textContent = "じゅんびOK！"|status\.textContent = "動画を準備しています…"/);
