@@ -176,7 +176,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-intro-letters \{[\s\S]*font:1000 58px/);
   assert.match(css, /\.phonics-intro-cta \{[\s\S]*text-align:center/);
   assert.match(css, /\.phonics-intro-gesture \{[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
-  assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-168px[\s\S]*width:360px/);
+  assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-330px[\s\S]*width:360px/);
   assert.match(css, /\.phonics-intro-start \{[\s\S]*display:block[\s\S]*margin:52px auto 0/);
   assert.doesNotMatch(html, />説明を読んでね</);
   assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"|status\.textContent = "じゅんびOK！"|status\.textContent = "動画を準備しています…"/);
