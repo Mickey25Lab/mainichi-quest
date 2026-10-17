@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.13";
+  const appVersion = "0.3.14";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -711,6 +711,7 @@
     if (!button || !status) return;
     const ready = phonicsYoutube.introMinimumElapsed && phonicsYoutube.ready && Boolean(phonicsYoutube.player);
     button.disabled = !ready;
+    button.textContent = ready ? "やってみる！" : "ちょっと待ってね";
     status.textContent = "";
   }
   function showPhonicsIntro(lessonId, modeId) {
@@ -725,6 +726,7 @@
     $("phonics-intro-background").src = phonicsBackgroundPath;
     document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
     $("phonics-intro-start").disabled = true;
+    $("phonics-intro-start").textContent = "ちょっと待ってね";
     $("phonics-intro-status").textContent = "";
     showScreen("phonics-intro-screen");
     schedulePlayStageSize("phonics-intro");
