@@ -145,6 +145,8 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
       && !collection.classList.contains("is-phonics-reward-select")
       && !reward.classList.contains("active");
   }, null, { timeout: 7000 });
+  const markerCount = await page.locator("#collection-grid .collection-card.is-new, #collection-grid .collection-card.is-up").count();
+  assert.equal(markerCount, 1);
   await page.locator("#collection-exit").click();
   await page.locator("#collection-exit-yes").click();
   await page.locator("#mode-select-screen.active").waitFor();
@@ -158,7 +160,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.12"/);
+  assert.match(app, /const appVersion = "0\.3\.13"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -214,6 +216,8 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-grow-confirm"[\s\S]*id="phonics-grow-amount"[\s\S]*♥ \+5/);
   assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-categories[\s\S]*display:none/);
   assert.match(app, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*openPhonicsRewardSelection\(\)/);
+  assert.match(app, /const phonicsBackgroundPath = playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)[\s\S]*phonics-intro-background[\s\S]*phonics-youtube-background/);
+  assert.match(app, /function openPhonicsRewardSelection\(\)[\s\S]*collectionNewVehicleIndexes = new Set\(\)[\s\S]*resultStartProgress = state\.rewardProgress\.map/);
   assert.match(app, /function seedPatrolCarForPhonicsRewardIfNeeded\(\)[\s\S]*vehicleProgress\(0\)[\s\S]*discovered = true/);
   assert.match(app, /function applyPhonicsRewardGrowth\(vehicleIndex\)[\s\S]*friendship \+ 5[\s\S]*applyEnergyGain\(progress, vehicleIndex, 25\)/);
   assert.match(app, /function collectionTimeUp\(\)[\s\S]*phonics-reward-select[\s\S]*recommendedPhonicsRewardVehicleIndex\(\)/);
