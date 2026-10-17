@@ -2701,6 +2701,92 @@ button, input { font: inherit; }
 .collection-grid { position:relative; z-index:1; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); grid-template-rows:repeat(4,minmax(0,1fr)); gap:clamp(5px,.65vw,10px); flex:1; min-height:0; padding-top:8px; }
 .collection-card { position:relative; overflow:hidden; min-width:0; min-height:0; padding:0; border:3px solid #9ba5af; border-radius:14px; color:#fff; background:linear-gradient(#69717b,#252a30); box-shadow:inset 0 0 0 3px rgba(255,255,255,.15); cursor:pointer; }
 .collection-card.complete { border-color:var(--card-color,#32c4ff); box-shadow:inset 0 0 0 3px rgba(255,255,255,.25),0 0 16px var(--card-color,#32c4ff); }
+
+.collection-screen.is-phonics-reward-select .collection-header {
+  grid-template-columns:1fr;
+}
+.collection-screen.is-phonics-reward-select .collection-header h2 {
+  justify-self:center;
+  min-width:620px;
+  text-align:center;
+  font-style:normal;
+  font-size:48px;
+  color:#eaffff;
+}
+.collection-screen.is-phonics-reward-select #collection-medal-count-block,
+.collection-screen.is-phonics-reward-select #collection-exit,
+.collection-screen.is-phonics-reward-select + .collection-categories,
+.collection-screen.is-phonics-reward-select ~ .collection-categories {
+  display:none;
+}
+.collection-screen.is-phonics-reward-select .collection-card.locked {
+  cursor:default;
+  pointer-events:none;
+  opacity:.42;
+  filter:saturate(.35);
+}
+.collection-screen.is-phonics-reward-select .collection-card:not(.locked) {
+  border-color:#63d8ff;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 0 13px rgba(68,204,255,.36);
+}
+.collection-screen.is-phonics-reward-select .collection-card:not(.locked):active {
+  transform:translateY(3px);
+}
+.phonics-grow-confirm { z-index:45; }
+.phonics-grow-confirm-card {
+  width:min(620px,78vw);
+  padding:34px 40px 32px;
+  border-color:#79e2ff;
+  background:rgba(248,253,255,.98);
+  color:#173e5e;
+}
+.phonics-grow-confirm-card h2 {
+  margin:0 0 10px;
+  text-align:center;
+  font-size:42px;
+}
+.phonics-grow-vehicle-name {
+  margin:0 0 26px!important;
+  color:#176fc4;
+  text-align:center;
+  font-size:34px;
+  font-weight:1000;
+}
+.phonics-grow-confirm-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:start;
+  gap:24px;
+}
+.phonics-grow-confirm-actions button {
+  width:100%;
+  min-height:88px;
+  border:0;
+  border-radius:22px;
+  color:#fff;
+  font-size:32px;
+  font-weight:1000;
+  cursor:pointer;
+}
+.phonics-grow-cancel {
+  background:linear-gradient(#7d8b98,#4c5965);
+  box-shadow:0 6px 0 #303944;
+}
+.phonics-grow-confirm-choice {
+  display:grid;
+  gap:10px;
+  text-align:center;
+}
+.phonics-grow-accept {
+  background:linear-gradient(#39c9ff,#0879d6);
+  box-shadow:0 6px 0 #04549c;
+}
+.phonics-grow-confirm-choice small {
+  color:#e26018;
+  font-size:30px;
+  font-weight:1000;
+}
+
 .card-art { position:absolute; inset:0 0 28%; background-size:270% auto; background-position:3% 82%; background-repeat:no-repeat; }
 .collection-card.locked .card-art { filter:grayscale(1) brightness(.28) contrast(1.8); opacity:.72; }
 .card-name { position:absolute; left:0; right:0; bottom:19%; padding:2px 3px; background:rgba(4,18,38,.88); font-size:clamp(11px,1.18vw,18px); font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
