@@ -4155,11 +4155,11 @@ button, input { font: inherit; }
 
 /* The artwork only shrinks: retain the existing 4-slot anchors and shadows. */
 .collection-scene-item-equipment .collection-scene-art {
-  transform:scale(.8);
+  transform:scale(.68);
   transform-origin:center center;
 }
 .collection-scene-item-equipment .collection-scene-art.is-flipped {
-  transform:scaleX(-1) scale(.8);
+  transform:scaleX(-1) scale(.68);
 }
 /* Match the home player switch to the parent-settings pill geometry. */
 .start-screen .profile-switch-button {
