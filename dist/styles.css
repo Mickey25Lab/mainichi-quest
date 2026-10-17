@@ -796,7 +796,6 @@ button, input { font: inherit; }
   font:900 32px/1.5 "Noto Sans JP",sans-serif;
 }
 .phonics-intro-first-line { margin-top:8px; }
-.phonics-intro-lead,
 .phonics-intro-pronounce { display:inline-block; }
 .phonics-intro-letters {
   display:inline-flex;
@@ -838,9 +837,9 @@ button, input { font: inherit; }
   position:absolute;
   z-index:1;
   right:-18px;
-  top:-330px;
-  width:360px;
-  height:360px;
+  top:-350px;
+  width:432px;
+  height:432px;
   object-fit:cover;
   object-position:center;
   border:0;
