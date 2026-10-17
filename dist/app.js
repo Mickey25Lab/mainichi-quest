@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.9";
+  const appVersion = "0.3.10";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -140,11 +140,11 @@
   const collectionStageWidth = 1400;
   const collectionStageHeight = 1050;
   const collectionCategoryBackgroundPaths = Object.freeze({
-    vehicle: "./assets/collection/category_backgrounds/01_vehicle_collection_background.png",
-    robot: "./assets/collection/category_backgrounds/02_robot_collection_background.png",
-    "super-robot": "./assets/collection/category_backgrounds/03_super_robot_collection_background.png",
-    equipment: "./assets/collection/category_backgrounds/05_special_equipment_collection_background.png",
-    medal: "./assets/collection/category_backgrounds/06_master_medal_collection_background.png"
+    vehicle: "./assets/collection/category_backgrounds/01_vehicle_collection_background.webp",
+    robot: "./assets/collection/category_backgrounds/02_robot_collection_background.webp",
+    "super-robot": "./assets/collection/category_backgrounds/03_super_robot_collection_background.webp",
+    equipment: "./assets/collection/category_backgrounds/05_special_equipment_collection_background.webp",
+    medal: "./assets/collection/category_backgrounds/06_master_medal_collection_background.webp"
   });
   const vehicleCollectionRows = Object.freeze([
     Object.freeze({ ids:[16,17,18,19,20], size:160, contactY:360, centers:[354.4,527.2,700,872.8,1045.6] }),
