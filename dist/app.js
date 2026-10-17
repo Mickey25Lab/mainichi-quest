@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.5";
+  const appVersion = "0.3.6";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -436,7 +436,8 @@
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
     frameIndex: 0, pass: "first", activeModeId: null,
-    introMinimumElapsed: false, introTimerId: 0
+    introMinimumElapsed: false, introTimerId: 0,
+    countdownTimerId: 0, countdownValue: 0
   };
   function phonicsYoutubeActive() { return $("phonics-youtube-screen").classList.contains("active"); }
   function setPhonicsYoutubeStatus(message, practice = false) {
@@ -642,6 +643,48 @@
     if (phonicsYoutube.introTimerId) window.clearTimeout(phonicsYoutube.introTimerId);
     phonicsYoutube.introTimerId = 0;
   }
+  function clearPhonicsCountdown() {
+    if (phonicsYoutube.countdownTimerId) window.clearTimeout(phonicsYoutube.countdownTimerId);
+    phonicsYoutube.countdownTimerId = 0;
+    phonicsYoutube.countdownValue = 0;
+    const overlay = $("phonics-countdown");
+    if (overlay) overlay.hidden = true;
+  }
+  function renderPhonicsCountdownTick(value) {
+    const overlay = $("phonics-countdown");
+    const number = $("phonics-countdown-number");
+    const progress = $("phonics-countdown-progress");
+    overlay.hidden = false;
+    number.textContent = String(value);
+    progress.classList.remove("is-running");
+    void progress.getBoundingClientRect();
+    progress.classList.add("is-running");
+  }
+  function finishPhonicsIntroCountdown() {
+    clearPhonicsCountdown();
+    showScreen("phonics-youtube-screen");
+    $("phonics-youtube-start").hidden = true;
+    $("phonics-youtube-end").hidden = false;
+    $("phonics-youtube-end").classList.add("is-pending");
+    $("phonics-youtube-start").disabled = false;
+    $("phonics-youtube-status").classList.remove("is-practice");
+    beginPhonicsYoutubePlayback();
+  }
+  function startPhonicsIntroCountdown() {
+    clearPhonicsCountdown();
+    phonicsYoutube.countdownValue = 3;
+    renderPhonicsCountdownTick(3);
+    const advance = () => {
+      phonicsYoutube.countdownValue -= 1;
+      if (phonicsYoutube.countdownValue <= 0) {
+        finishPhonicsIntroCountdown();
+        return;
+      }
+      renderPhonicsCountdownTick(phonicsYoutube.countdownValue);
+      phonicsYoutube.countdownTimerId = window.setTimeout(advance, 1000);
+    };
+    phonicsYoutube.countdownTimerId = window.setTimeout(advance, 1000);
+  }
   function updatePhonicsIntroReadyState() {
     const button = $("phonics-intro-start");
     const status = $("phonics-intro-status");
@@ -673,16 +716,19 @@
   function startPhonicsFromIntroGesture() {
     if (!phonicsYoutube.ready || !phonicsYoutube.player || !phonicsYoutube.introMinimumElapsed) return;
     clearPhonicsIntroTimer();
-    showScreen("phonics-youtube-screen");
-    $("phonics-youtube-start").hidden = true;
-    $("phonics-youtube-end").hidden = false;
-    $("phonics-youtube-end").classList.add("is-pending");
-    $("phonics-youtube-start").disabled = false;
-    $("phonics-youtube-status").classList.remove("is-practice");
-    beginPhonicsYoutubePlayback();
+    // Prime the iframe while this click still counts as a user gesture on iPad Safari.
+    // The actual lesson remains hidden and paused until the silent 3-2-1 countdown ends.
+    try {
+      phonicsYoutube.player.seekTo?.(activePhonicsYoutubeLesson.frames[0].start, true);
+      phonicsYoutube.player.playVideo?.();
+      phonicsYoutube.player.pauseVideo?.();
+    } catch (_) {}
+    phonicsYoutube.started = false;
+    startPhonicsIntroCountdown();
   }
   function leavePhonicsIntro() {
     clearPhonicsIntroTimer();
+    clearPhonicsCountdown();
     phonicsYoutube.introMinimumElapsed = false;
     phonicsYoutube.activeModeId = null;
     renderModeSelectMission();
@@ -693,6 +739,7 @@
   }
   function stopAndDestroyPhonicsYoutube() {
     clearPhonicsIntroTimer();
+    clearPhonicsCountdown();
     stopPhonicsYoutubePolling();
     cancelPhonicsYoutubePrompt();
     if (phonicsYoutube.player) {
