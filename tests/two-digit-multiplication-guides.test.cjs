@@ -10,9 +10,9 @@ const html = fs.readFileSync(path.join(root, "dist/index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "dist/styles.css"), "utf8");
 
 function loadTwoDigitQuestionGenerator() {
-  const match = app.match(/function makeTwoDigitMultiplicationQuestions\(\) \{[\s\S]*?\n  \}\n\n  function setGameMode/);
+  const match = app.match(/function makeTwoDigitMultiplicationQuestions\(\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function setGameMode/);
   assert.ok(match, "two-digit multiplication generator must be present");
-  const source = match[0].replace(/\n\n  function setGameMode$/, "");
+  const source = match[0].replace(/\r?\n\r?\n  function setGameMode$/, "");
   return vm.runInNewContext(`(${source})`, { Math, Set });
 }
 

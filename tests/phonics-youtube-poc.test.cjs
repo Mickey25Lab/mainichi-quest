@@ -256,7 +256,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-youtube-end\.is-pending/);
   assert.match(css, /\.parent-energy-unavailable/);
   assert.match(css, /\.mode-select-energy\.energy-disabled/);
-  const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("let collectionScaleRequest"));
+  const pocSection = app.slice(app.indexOf("const phonicsYoutube ="), app.indexOf("function stageScaleFor"));
   const prepareSection = app.slice(app.indexOf("function preparePhonicsYoutubePlayback"), app.indexOf("function beginPhonicsYoutubePlayback"));
   assert.doesNotMatch(prepareSection, /data-phonics-lesson/);
   assert.doesNotMatch(pocSection, /setVolume\?\.\(40\)/);
