@@ -1,0 +1,74 @@
+{
+  "source": "C:\\Users\\Kimihiko Sato\\mainichi-quest\\review\\collection\\05_equipment\\v4_review_work_2026-10-09\\normalized_centered_alpha16_2026-10-09",
+  "settings": {
+    "size": 640,
+    "rgb_quality": 70,
+    "alpha_qualities": [
+      10,
+      40,
+      70,
+      100
+    ],
+    "method": 6,
+    "resampling": "LANCZOS",
+    "lossless": false,
+    "exact": false,
+    "metadata": "not copied"
+  },
+  "items": [
+    {
+      "source": "04_delivery_truck_equipment.png",
+      "label": "宅配便車",
+      "reason": "描画量が多く、面・細線・発光の差を確認",
+      "candidates": [
+        {
+          "alpha_quality": 10,
+          "file": "04_delivery_truck_equipment_640_q70_a10.webp",
+          "bytes": 30264
+        },
+        {
+          "alpha_quality": 40,
+          "file": "04_delivery_truck_equipment_640_q70_a40.webp",
+          "bytes": 31002
+        },
+        {
+          "alpha_quality": 70,
+          "file": "04_delivery_truck_equipment_640_q70_a70.webp",
+          "bytes": 34792
+        },
+        {
+          "alpha_quality": 100,
+          "file": "04_delivery_truck_equipment_640_q70_a100.webp",
+          "bytes": 39534
+        }
+      ]
+    },
+    {
+      "source": "17_racing_bike_equipment.png",
+      "label": "レーシングバイク",
+      "reason": "細身で透明余白が多く、輪郭と透明境界の差を確認",
+      "candidates": [
+        {
+          "alpha_quality": 10,
+          "file": "17_racing_bike_equipment_640_q70_a10.webp",
+          "bytes": 10000
+        },
+        {
+          "alpha_quality": 40,
+          "file": "17_racing_bike_equipment_640_q70_a40.webp",
+          "bytes": 10542
+        },
+        {
+          "alpha_quality": 70,
+          "file": "17_racing_bike_equipment_640_q70_a70.webp",
+          "bytes": 11338
+        },
+        {
+          "alpha_quality": 100,
+          "file": "17_racing_bike_equipment_640_q70_a100.webp",
+          "bytes": 15280
+        }
+      ]
+    }
+  ]
+}

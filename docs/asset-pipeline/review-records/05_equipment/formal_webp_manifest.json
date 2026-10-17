@@ -1,0 +1,175 @@
+{
+  "category": "05_equipment",
+  "master_png": {
+    "directory": "asset-source/collection/05_equipment/png",
+    "count": 20,
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA"
+  },
+  "formal_webp": {
+    "directory": "asset-source/collection/05_equipment/webp",
+    "dist_directory": "dist/assets/collection/05_equipment",
+    "count": 20,
+    "size": [
+      640,
+      640
+    ],
+    "mode": "RGBA",
+    "lossless": false,
+    "rgb_quality": 70,
+    "alpha_quality": 40,
+    "method": 6,
+    "resampling": "LANCZOS",
+    "exact": false,
+    "metadata": "not copied",
+    "pillow": "12.3.0",
+    "libwebp": "1.6.0",
+    "total_bytes": 557138,
+    "asset_source_dist_sha256_matches": 20
+  },
+  "files": [
+    {
+      "png": "01_patrol_car_equipment.png",
+      "webp": "01_patrol_car_equipment.webp",
+      "png_bytes": 738167,
+      "webp_bytes": 24820,
+      "sha256": "ae4dfd9f7ad63112eaef1f8158c8fdfec52380a276fb2807fb7ffbb956a307e8"
+    },
+    {
+      "png": "02_fire_engine_equipment.png",
+      "webp": "02_fire_engine_equipment.webp",
+      "png_bytes": 459224,
+      "webp_bytes": 17874,
+      "sha256": "a249f345ef6cba374271d82bdca504292d96bc3a8140768742970f3e0046efa8"
+    },
+    {
+      "png": "03_ambulance_equipment.png",
+      "webp": "03_ambulance_equipment.webp",
+      "png_bytes": 632173,
+      "webp_bytes": 23288,
+      "sha256": "87cecf0cbc43af3cbffb8d646fcc387682589316161560d2be61c0e18d8260d8"
+    },
+    {
+      "png": "04_delivery_truck_equipment.png",
+      "webp": "04_delivery_truck_equipment.webp",
+      "png_bytes": 1053690,
+      "webp_bytes": 31002,
+      "sha256": "bd2fc19a50586540521a810e4c1c53715d05bd34219dc6b6adeefdecaa0b3982"
+    },
+    {
+      "png": "05_mail_van_equipment.png",
+      "webp": "05_mail_van_equipment.webp",
+      "png_bytes": 681510,
+      "webp_bytes": 25610,
+      "sha256": "13abfa04676e33d1439c02a45c80972861eeedf8d48bbe5f9d09a988d51f1c2c"
+    },
+    {
+      "png": "06_garbage_truck_equipment.png",
+      "webp": "06_garbage_truck_equipment.webp",
+      "png_bytes": 1142646,
+      "webp_bytes": 37452,
+      "sha256": "b8036ff9fe3aabd57b696aff0c30c1c1718944c6acd60920192b6bb84240fa51"
+    },
+    {
+      "png": "07_tow_truck_equipment.png",
+      "webp": "07_tow_truck_equipment.webp",
+      "png_bytes": 875589,
+      "webp_bytes": 37758,
+      "sha256": "40f3e43a6eb8a08d25834212b02222f2512f5bb9934e05ab526a8585578a838d"
+    },
+    {
+      "png": "08_crane_truck_equipment.png",
+      "webp": "08_crane_truck_equipment.webp",
+      "png_bytes": 774194,
+      "webp_bytes": 28738,
+      "sha256": "afc8ae3e5061f511513be288bc3ffc767f6d86d32f3c7afa4ab1ae81c6227117"
+    },
+    {
+      "png": "09_concrete_mixer_equipment.png",
+      "webp": "09_concrete_mixer_equipment.webp",
+      "png_bytes": 857645,
+      "webp_bytes": 30952,
+      "sha256": "f143a2235286fbb2237b159d8f621f2cc05b631da7fe1373e512b06d87019a2a"
+    },
+    {
+      "png": "10_bulldozer_equipment.png",
+      "webp": "10_bulldozer_equipment.webp",
+      "png_bytes": 656003,
+      "webp_bytes": 21170,
+      "sha256": "0515b6e46aee03cffc806dbe40393da33a2fe4e65355d9ade7e7a08607d63976"
+    },
+    {
+      "png": "11_road_roller_equipment.png",
+      "webp": "11_road_roller_equipment.webp",
+      "png_bytes": 1354690,
+      "webp_bytes": 32770,
+      "sha256": "248747cf67a1a6a55acd08245c3bbf44e8059275879b76229b4f1897b439e5fd"
+    },
+    {
+      "png": "12_tank_lorry_equipment.png",
+      "webp": "12_tank_lorry_equipment.webp",
+      "png_bytes": 1220274,
+      "webp_bytes": 41458,
+      "sha256": "193cd640cfba7e9f0eb28e2a3899edfe6de18025b616ac8269b888e452f95fc0"
+    },
+    {
+      "png": "13_watering_truck_equipment.png",
+      "webp": "13_watering_truck_equipment.webp",
+      "png_bytes": 828057,
+      "webp_bytes": 32084,
+      "sha256": "bafc492dfbf9fe515cba83b27e1ceb7e1543aa7719183cf2c238cae519af6580"
+    },
+    {
+      "png": "14_kindergarten_bus_equipment.png",
+      "webp": "14_kindergarten_bus_equipment.webp",
+      "png_bytes": 509125,
+      "webp_bytes": 22576,
+      "sha256": "4060cfa6d26381bfe9a7bdc76fb488767085b19e1ccf6c7cae8ba5ddc01d8d51"
+    },
+    {
+      "png": "15_sightseeing_bus_equipment.png",
+      "webp": "15_sightseeing_bus_equipment.webp",
+      "png_bytes": 775568,
+      "webp_bytes": 30606,
+      "sha256": "286146bb961e44d366b2672e640e8fcae37ee8969b6c5601580ec5b23db5b166"
+    },
+    {
+      "png": "16_formula_racer_equipment.png",
+      "webp": "16_formula_racer_equipment.webp",
+      "png_bytes": 676501,
+      "webp_bytes": 30648,
+      "sha256": "28232da97a78a0e92c018f14dc9846df6acf8f84cf06241116dfdec8f0407e56"
+    },
+    {
+      "png": "17_racing_bike_equipment.png",
+      "webp": "17_racing_bike_equipment.webp",
+      "png_bytes": 196234,
+      "webp_bytes": 10542,
+      "sha256": "d604a7595f00fad4b63fb2a0c5b5351bb5d178a5c4bf72366013eedd6d1f3fc3"
+    },
+    {
+      "png": "18_snowmobile_equipment.png",
+      "webp": "18_snowmobile_equipment.webp",
+      "png_bytes": 692917,
+      "webp_bytes": 28092,
+      "sha256": "2e886d432fc84b045a51bd7f4d46e54b882dfc222c5a6627d2b3e88b5382af59"
+    },
+    {
+      "png": "19_helicopter_equipment.png",
+      "webp": "19_helicopter_equipment.webp",
+      "png_bytes": 539859,
+      "webp_bytes": 19672,
+      "sha256": "1734024bbb78538bffffdef04458930b8ce1dd48813952e781866beb16b8d5ee"
+    },
+    {
+      "png": "20_airplane_equipment.png",
+      "webp": "20_airplane_equipment.webp",
+      "png_bytes": 775285,
+      "webp_bytes": 30026,
+      "sha256": "149ee39c3e79c397d30ee66ff3048eaa2f6bb190adab7d2d4c35f63cc7ada028"
+    }
+  ]
+}
