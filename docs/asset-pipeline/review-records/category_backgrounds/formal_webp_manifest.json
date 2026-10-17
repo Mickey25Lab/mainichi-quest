@@ -1,0 +1,78 @@
+{
+  "adopted_at": "2026-10-17",
+  "format": "WebP lossy",
+  "canvas": [
+    1400,
+    1050
+  ],
+  "rgb_quality": 60,
+  "method": 6,
+  "resize": false,
+  "crop": false,
+  "metadata": "not added",
+  "source": "asset-source/collection/category_backgrounds/png",
+  "formal_webp": "asset-source/collection/category_backgrounds/webp",
+  "dist": "dist/assets/collection/category_backgrounds",
+  "files": [
+    {
+      "name": "01_vehicle_collection_background",
+      "canvas": [
+        1400,
+        1050
+      ],
+      "png_bytes": 1346939,
+      "png_sha256": "dfa7085e6ca9825ffed61ce28fa589af7664a3fa38aca27a6ddbd4cf98ba5e39",
+      "webp_bytes": 50644,
+      "webp_sha256": "4d7c4dee62e72725373889a86e4086730ef179a57d24b82c6acc60552ca97216",
+      "dist_sha256": "4d7c4dee62e72725373889a86e4086730ef179a57d24b82c6acc60552ca97216"
+    },
+    {
+      "name": "02_robot_collection_background",
+      "canvas": [
+        1400,
+        1050
+      ],
+      "png_bytes": 1812641,
+      "png_sha256": "688096ce5c139c8f05bef871462513415af7119309435c7a34f04dffc7536b04",
+      "webp_bytes": 58840,
+      "webp_sha256": "3991565255aa06fad8635f39974dd9ace2e6eba230e5a65643a179d716e34fef",
+      "dist_sha256": "3991565255aa06fad8635f39974dd9ace2e6eba230e5a65643a179d716e34fef"
+    },
+    {
+      "name": "03_super_robot_collection_background",
+      "canvas": [
+        1400,
+        1050
+      ],
+      "png_bytes": 2289053,
+      "png_sha256": "a5e93b61e263c04b0d79e59d1607e601fde4a726a43c5fc9d1ca0ed726b83a86",
+      "webp_bytes": 157578,
+      "webp_sha256": "3458f114bf058001590e9ff347a8f31b14819b96fdc1d4c1d3e1f1b1d9b0b0d6",
+      "dist_sha256": "3458f114bf058001590e9ff347a8f31b14819b96fdc1d4c1d3e1f1b1d9b0b0d6"
+    },
+    {
+      "name": "05_special_equipment_collection_background",
+      "canvas": [
+        1400,
+        1050
+      ],
+      "png_bytes": 2132056,
+      "png_sha256": "d9d2b2e5b4cdc733a5e4a80192f4db6a1f1a7890ad3609ee41af8e8ebad1ea6f",
+      "webp_bytes": 74534,
+      "webp_sha256": "d3a02286d780898f2ad0f90a185d49b26e4f098199db9e8df56393056b9df0eb",
+      "dist_sha256": "d3a02286d780898f2ad0f90a185d49b26e4f098199db9e8df56393056b9df0eb"
+    },
+    {
+      "name": "06_master_medal_collection_background",
+      "canvas": [
+        1400,
+        1050
+      ],
+      "png_bytes": 2157480,
+      "png_sha256": "705fc5510263e154896a87476ad7b12e7573b993f491ca1083edd01a5d8cc810",
+      "webp_bytes": 143354,
+      "webp_sha256": "4f7de7b96fd178974607eb866c378b747aa0d9bcf62e9618af5eda8202caf7e5",
+      "dist_sha256": "4f7de7b96fd178974607eb866c378b747aa0d9bcf62e9618af5eda8202caf7e5"
+    }
+  ]
+}
