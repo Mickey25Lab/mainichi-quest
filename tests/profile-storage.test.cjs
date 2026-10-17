@@ -305,18 +305,50 @@ test("collection scene order is persisted per profile and reset with child data"
   const storage = new MemoryStorage();
   const store = makeStore(storage);
   const profileA = store.createProfile("A");
-  store.setCollectionSceneOrder({ vehicle:[3,1,8], robot:[1,3] });
-  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3] });
+  store.setCollectionSceneOrder({ vehicle:[3,1,8], robot:[1,3], "super-robot":[8,4], equipment:[4,8], medal:[3] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3], "super-robot":[8,4], equipment:[4,8], medal:[3] });
 
   const profileB = store.createProfile("B");
-  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[], "super-robot":[], equipment:[], medal:[] });
   store.setCollectionSceneOrder({ vehicle:[2], robot:[2] });
 
   store.setActiveProfile(profileA.profileId);
-  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[3,1,8], robot:[1,3], "super-robot":[8,4], equipment:[4,8], medal:[3] });
   store.resetActiveProfileData();
-  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[], robot:[], "super-robot":[], equipment:[], medal:[] });
 
   store.setActiveProfile(profileB.profileId);
-  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[2], robot:[2] });
+  assert.deepEqual(store.getCollectionSceneOrder(), { vehicle:[2], robot:[2], "super-robot":[], equipment:[], medal:[] });
+});
+
+test("collection category seen state is profile-specific and reset with child data", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const profileA = store.createProfile("A");
+  assert.deepEqual(store.getCollectionCategorySeen(), []);
+  store.setCollectionCategorySeen(["vehicle", "robot", "robot", "invalid"]);
+  assert.deepEqual(store.getCollectionCategorySeen(), ["vehicle", "robot"]);
+
+  const profileB = store.createProfile("B");
+  assert.deepEqual(store.getCollectionCategorySeen(), []);
+  store.setCollectionCategorySeen(["vehicle"]);
+
+  store.setActiveProfile(profileA.profileId);
+  assert.deepEqual(store.getCollectionCategorySeen(), ["vehicle", "robot"]);
+  store.resetActiveProfileData();
+  assert.deepEqual(store.getCollectionCategorySeen(), []);
+
+  store.setActiveProfile(profileB.profileId);
+  assert.deepEqual(store.getCollectionCategorySeen(), ["vehicle"]);
+});
+
+test("profiles from before progressive collection tabs preserve a legacy unseen sentinel", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  store.createProfile("A");
+  const registry = JSON.parse(storage.getItem(keys.profiles));
+  delete registry.profiles[0].progress.collectionCategorySeen;
+  storage.setItem(keys.profiles, JSON.stringify(registry));
+
+  assert.equal(store.getCollectionCategorySeen(), null);
 });
