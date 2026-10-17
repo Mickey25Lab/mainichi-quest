@@ -1,0 +1,20 @@
+{
+  "source": "asset-source/ui/branding/favicon-mique-logo.png",
+  "destination": "dist/assets/ui/branding/favicon-mique-logo.png",
+  "source_dimensions": [
+    1254,
+    1254
+  ],
+  "destination_dimensions": [
+    64,
+    64
+  ],
+  "resample": "LANCZOS",
+  "mode": "RGBA",
+  "source_sha256": "14064126d0441e8e430caf4c036283203907b6d7e62a79ca8916cd7a8379df75",
+  "destination_sha256": "aebd52467bb2a6e10068569776ff9d2459cde7b6a733425c28489d9764ef9f79",
+  "destination_bytes": 6821,
+  "has_transparent_pixels": true,
+  "has_opaque_pixels": true,
+  "has_partial_alpha": true
+}

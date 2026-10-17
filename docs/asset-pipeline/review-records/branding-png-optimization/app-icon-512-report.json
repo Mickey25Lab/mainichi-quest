@@ -1,0 +1,34 @@
+{
+  "source": "asset-source/ui/branding/app-icon-512.png",
+  "destination": "dist/assets/ui/branding/app-icon-512.png",
+  "dimensions": [
+    512,
+    512
+  ],
+  "before_bytes": 475232,
+  "after_bytes": 460136,
+  "saved_bytes": 15096,
+  "saved_percent": 3.18,
+  "rgba_identical": true,
+  "decompressed_scanlines_identical": true,
+  "non_idat_chunks_identical": true,
+  "source_sha256": "f08cdb614f6bf8941eae2c76017ccfb1ae3a2d4a33ba41fdc34b0e7915e19595",
+  "destination_sha256": "b0a5533f86bf885b2837df7a284bb4c7edd5fc699ad2c41215c5ffc5966b6ba2",
+  "compression": {
+    "level": 9,
+    "strategy": "filtered",
+    "idat_bytes": 460079
+  },
+  "chunk_types": [
+    "IHDR",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IDAT",
+    "IEND"
+  ]
+}
