@@ -4152,7 +4152,7 @@ button, input { font: inherit; }
   bottom:34px;
   width:166px;
   height:var(--play-corner-control-height);
-  font-size:38px;
+  font-size:31px;
   min-width:0;
   padding:0;
 }
