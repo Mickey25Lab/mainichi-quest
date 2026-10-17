@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.2";
+  const appVersion = "0.3.3";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -616,12 +616,33 @@
     $("phonics-youtube-screen").setAttribute("aria-label", lesson.title);
     return true;
   }
-  function phonicsLessonLettersText() {
+  function phonicsLessonLetters() {
     const seen = [];
     activePhonicsYoutubeLesson.frames.forEach((frame) => {
       if (!seen.includes(frame.letter)) seen.push(frame.letter);
     });
-    return seen.join("、");
+    return seen;
+  }
+  function phonicsLessonLettersText() {
+    return phonicsLessonLetters().join("、");
+  }
+  function renderPhonicsIntroLetters() {
+    const container = $("phonics-intro-letters");
+    const letters = phonicsLessonLetters();
+    container.replaceChildren();
+    letters.forEach((letter, index) => {
+      const value = document.createElement("span");
+      value.className = "phonics-intro-letter";
+      value.textContent = letter;
+      container.append(value);
+      if (index < letters.length - 1) {
+        const comma = document.createElement("span");
+        comma.className = "phonics-intro-comma";
+        comma.textContent = "、";
+        container.append(comma);
+      }
+    });
+    container.setAttribute("aria-label", letters.join("、"));
   }
   function clearPhonicsIntroTimer() {
     if (phonicsYoutube.introTimerId) window.clearTimeout(phonicsYoutube.introTimerId);
@@ -634,7 +655,7 @@
     const ready = phonicsYoutube.introMinimumElapsed && phonicsYoutube.ready && Boolean(phonicsYoutube.player);
     button.disabled = !ready;
     if (ready) status.textContent = "じゅんびOK！";
-    else if (!phonicsYoutube.introMinimumElapsed) status.textContent = "説明を読んでね";
+    else if (!phonicsYoutube.introMinimumElapsed) status.textContent = "";
     else status.textContent = "動画を準備しています…";
   }
   function showPhonicsIntro(lessonId, modeId) {
@@ -644,10 +665,10 @@
     phonicsYoutube.introMinimumElapsed = false;
     clearPhonicsIntroTimer();
     $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
-    $("phonics-intro-line").innerHTML = `これから、${phonicsLessonLettersText()}を<ruby>発音<rt>はつおん</rt></ruby>するよ。`;
+    renderPhonicsIntroLetters();
     $("phonics-intro-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     $("phonics-intro-start").disabled = true;
-    $("phonics-intro-status").textContent = "説明を読んでね";
+    $("phonics-intro-status").textContent = "";
     showScreen("phonics-intro-screen");
     schedulePlayStageSize("phonics-intro");
     preparePhonicsYoutubePlayback();
