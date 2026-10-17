@@ -79,8 +79,12 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.waitForTimeout(3100);
   await page.waitForFunction(() => !document.querySelector("#phonics-intro-start").disabled);
   await introStart.click();
+  await page.locator("#phonics-countdown:not([hidden])").waitFor();
+  assert.equal(await page.locator("#phonics-countdown-number").textContent(), "3");
+  await page.waitForFunction(() => document.querySelector("#phonics-countdown-number").textContent === "2");
+  await page.waitForFunction(() => document.querySelector("#phonics-countdown-number").textContent === "1");
   await page.locator("#phonics-youtube-screen.active").waitFor();
-  await page.waitForFunction(() => window.__ytPlayers[0].playCalls === 1);
+  await page.waitForFunction(() => window.__ytPlayers[0].playCalls >= 2);
   const completionButton = page.locator("#phonics-youtube-end");
   assert.equal(await completionButton.isVisible(), true);
   assert.equal(await completionButton.isDisabled(), false);
@@ -137,7 +141,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.5"/);
+  assert.match(app, /const appVersion = "0\.3\.6"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -170,7 +174,10 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-intro-letters"/);
   assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter/);\n  assert.doesNotMatch(app, /phonics-intro-comma|comma\.textContent = "、"/);
   assert.match(css, /\.phonics-intro-letters \{[\s\S]*font:1000 58px/);
-  assert.match(css, /\.phonics-intro-gesture \{[\s\S]*margin:54px 0 0;[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
+  assert.match(css, /\.phonics-intro-cta \{[\s\S]*text-align:center/);
+  assert.match(css, /\.phonics-intro-gesture \{[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
+  assert.match(css, /\.phonics-intro-gesture-child \{[\s\S]*position:absolute[\s\S]*right:-18px[\s\S]*top:-168px[\s\S]*width:360px/);
+  assert.match(css, /\.phonics-intro-start \{[\s\S]*display:block[\s\S]*margin:52px auto 0/);
   assert.doesNotMatch(html, />説明を読んでね</);
   assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"|status\.textContent = "じゅんびOK！"|status\.textContent = "動画を準備しています…"/);
   assert.match(html, /<ruby>手<rt>て<\/rt><\/ruby>と<ruby>口<rt>くち<\/rt><\/ruby>のうごきも、まねしてみよう！/);
@@ -178,7 +185,11 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-intro-start"[^>]*>やってみる！<\/button>/);
   assert.match(app, /showPhonicsIntro\(button\.dataset\.phonicsLesson, button\.dataset\.mode\)/);
   assert.match(app, /introMinimumElapsed = true[\s\S]*updatePhonicsIntroReadyState\(\)/);
-  assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
+  assert.match(html, /id="phonics-countdown"[\s\S]*id="phonics-countdown-number">3/);
+  assert.match(css, /@keyframes phonics-countdown-drain[\s\S]*stroke-dashoffset:477\.52/);
+  assert.match(app, /function startPhonicsFromIntroGesture\(\)[\s\S]*playVideo\?\.\(\)[\s\S]*pauseVideo\?\.\(\)[\s\S]*startPhonicsIntroCountdown\(\)/);
+  assert.match(app, /function startPhonicsIntroCountdown\(\)[\s\S]*countdownValue = 3[\s\S]*setTimeout\(advance, 1000\)/);
+  assert.match(app, /function finishPhonicsIntroCountdown\(\)[\s\S]*showScreen\("phonics-youtube-screen"\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);
   assert.match(app, /const legacyPhonicsSetting = modeId\.startsWith\("phonics-part-"\)[\s\S]*const settingsKey = legacyPhonicsSetting \? "phonics" : modeId/);
