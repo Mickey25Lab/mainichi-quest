@@ -809,17 +809,12 @@ button, input { font: inherit; }
   letter-spacing:.01em;
   text-shadow:0 2px 0 rgba(255,255,255,.9);
 }
-.phonics-intro-letter:nth-child(6n+1) { color:#e53b3b; }
-.phonics-intro-letter:nth-child(6n+2) { color:#1879d4; }
-.phonics-intro-letter:nth-child(6n+3) { color:#e4a400; }
-.phonics-intro-letter:nth-child(6n+4) { color:#2d9b52; }
-.phonics-intro-letter:nth-child(6n+5) { color:#7a4acb; }
-.phonics-intro-letter:nth-child(6n) { color:#ec6b2d; }
-.phonics-intro-comma {
-  margin-left:-6px;
-  color:#173e5e;
-  font-size:.64em;
-}
+.phonics-intro-letter:nth-child(1) { color:#ff3b30; }
+.phonics-intro-letter:nth-child(2) { color:#007aff; }
+.phonics-intro-letter:nth-child(3) { color:#ffb000; }
+.phonics-intro-letter:nth-child(4) { color:#00a86b; }
+.phonics-intro-letter:nth-child(5) { color:#8e44ec; }
+.phonics-intro-letter:nth-child(6) { color:#ff2d8d; }
 .phonics-intro-video-line { margin-top:28px; }
 .phonics-intro-line ruby,
 .phonics-intro-gesture ruby { ruby-position:over; }
