@@ -75,7 +75,7 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await page.locator("#phonics-intro-screen.active").waitFor();
   const introStart = page.locator("#phonics-intro-start");
   assert.equal(await introStart.isDisabled(), true);
-  assert.match(await page.locator("#phonics-intro-line").textContent(), /G、H、I、J、Kを発音するよ/);
+  assert.match(await page.locator("#phonics-intro-line").textContent(), /GHIJKを発音するよ/);
   await page.waitForTimeout(3100);
   await page.waitForFunction(() => !document.querySelector("#phonics-intro-start").disabled);
   await introStart.click();
@@ -137,7 +137,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.3"/);
+  assert.match(app, /const appVersion = "0\.3\.4"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -168,11 +168,11 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-intro-screen"/);
   assert.match(html, /3分の<ruby>動画<rt>どうが<\/rt><\/ruby>を見ながら、<\/span><br>[\s\S]*いっしょに<ruby>声<rt>こえ<\/rt><\/ruby>に出そう/);
   assert.match(html, /id="phonics-intro-letters"/);
-  assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter[\s\S]*phonics-intro-comma/);
+  assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter/);\n  assert.doesNotMatch(app, /phonics-intro-comma|comma\.textContent = "、"/);
   assert.match(css, /\.phonics-intro-letters \{[\s\S]*font:1000 58px/);
   assert.match(css, /\.phonics-intro-gesture \{[\s\S]*margin:54px 0 0;[\s\S]*white-space:nowrap/);
   assert.doesNotMatch(html, />説明を読んでね</);
-  assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"/);
+  assert.doesNotMatch(app, /status\.textContent = "説明を読んでね"|status\.textContent = "じゅんびOK！"|status\.textContent = "動画を準備しています…"/);
   assert.match(html, /<ruby>手<rt>て<\/rt><\/ruby>と<ruby>口<rt>くち<\/rt><\/ruby>のうごきも、まねしてみよう！/);
   assert.match(html, /phonics_intro_gesture_child\.webp/);
   assert.match(html, /id="phonics-intro-start"[^>]*>やってみる！<\/button>/);
