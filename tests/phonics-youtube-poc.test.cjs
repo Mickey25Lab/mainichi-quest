@@ -162,7 +162,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
-  assert.match(app, /const appVersion = "0\.3\.15"/);
+  assert.match(app, /const appVersion = "0\.3\.16"/);
   assert.match(app, /videoId: "ChqnN3cKzXQ"/);
   assert.match(app, /a1FrameSeconds: 4\.59/);
   assert.match(app, /followingFrameSeconds: 5\.05/);
@@ -195,7 +195,8 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /id="phonics-intro-letters"/);
   assert.doesNotMatch(html, /phonics-intro-lead|これから、/);
   assert.match(html, /id="phonics-intro-letters"[^>]*><\/span><span class="phonics-intro-pronounce">を<ruby>発音/);
-  assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter/);\n  assert.doesNotMatch(app, /phonics-intro-comma|comma\.textContent = "、"/);
+  assert.match(app, /function renderPhonicsIntroLetters\(\)[\s\S]*phonics-intro-letter/);
+  assert.doesNotMatch(app, /phonics-intro-comma|comma\.textContent = "、"/);
   assert.match(css, /\.phonics-intro-letters \{[\s\S]*font:1000 58px/);
   assert.match(css, /\.phonics-intro-cta \{[\s\S]*text-align:center/);
   assert.match(css, /\.phonics-intro-gesture \{[\s\S]*margin:24px auto 0[\s\S]*font:1000 58px\/1\.2[\s\S]*white-space:nowrap/);
@@ -234,8 +235,10 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(html, /class="quit-button" id="phonics-youtube-back"[^>]*>やめる<\/button>/);
   assert.match(html, /class="phonics-youtube-end is-pending"[^>]*>動画を見たよ<\/button>/);
   assert.doesNotMatch(html, /phonics-youtube-header/);
-  assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1448px;[\s\S]*height:1086px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
-  assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1448px;[\s\S]*height:1086px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
+  assert.match(css, /\.phonics-youtube-stage[\s\S]*width:1400px;[\s\S]*height:1050px;[\s\S]*scale\(var\(--stage-scale,1\)\)/);
+  assert.match(app, /const stageCanvasWidth = 1400;[\s\S]*const stageCanvasHeight = 1050;/);
+  assert.match(app, /function sizeStages\(\{ width, height, includePlay = false, includeCollection = false \}\)[\s\S]*stageScaleFor\(width, height\)/);
+  assert.match(css, /\.play-screen \.game-area \{[\s\S]*left: 741px; width: 619px;/);
   assert.match(css, /\.phonics-youtube-background[\s\S]*width:100%;[\s\S]*height:100%;[\s\S]*object-fit:contain/);
   assert.match(css, /\.phonics-youtube-player-frame[\s\S]*width:1218px;[\s\S]*overflow:hidden;[\s\S]*transform:translate\(-50%,-50%\)/);
   assert.match(html, /class="phonics-youtube-player-scale"[\s\S]*id="phonics-youtube-player"/);
@@ -243,6 +246,7 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.phonics-youtube-player-scale \{[\s\S]*width:1522\.5px;[\s\S]*height:856\.40625px;[\s\S]*transform:scale\(\.8\);[\s\S]*transform-origin:top left/);
   assert.match(css, /\.phonics-youtube-player-scale > div,[\s\S]*iframe[\s\S]*width:100%;[\s\S]*height:100%;/);
   assert.match(css, /\.play-screen \.progress-badge,[\s\S]*\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button[\s\S]*width:166px/);
+  assert.match(css, /\.play-screen \.quit-button,\s*\.phonics-intro-screen \.quit-button,\s*\.phonics-youtube-screen \.quit-button,\s*\.play-screen \.assist-button \{[\s\S]*width: var\(--play-corner-control-width\);[\s\S]*height: var\(--play-corner-control-height\);/);
   assert.match(css, /\.phonics-youtube-end \{[\s\S]*width:360px;[\s\S]*height:var\(--play-corner-control-height\);[\s\S]*border-radius:var\(--play-corner-radius\);[\s\S]*font-size:34px/);
   assert.match(css, /\.play-screen \.quit-button,[\s\S]*\.phonics-youtube-screen \.quit-button/);
   assert.match(app, /energy\.classList\.toggle\("disabled", Boolean\(mode\.energyDisabled\)\)/);
@@ -257,6 +261,6 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.doesNotMatch(pocSection, /setReward|scaledEnergyGain/);
   assert.match(pocSection, /activeModeId: null/);
   assert.match(pocSection, /phonicsYoutube\.activeModeId = modeId/);
-  assert.match(pocSection, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*completeDailyMissionRound\(phonicsYoutube\.activeModeId\)[\s\S]*leavePhonicsYoutube\(\)/);
+  assert.match(pocSection, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*completeDailyMissionRound\(phonicsYoutube\.activeModeId\)[\s\S]*openPhonicsRewardSelection\(\)/);
   assert.match(app, /phonics-youtube-end"\)\.addEventListener\("click", completePhonicsYoutubeAndLeave\)/);
 });

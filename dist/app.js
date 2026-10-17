@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.15";
+  const appVersion = "0.3.16";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -137,8 +137,11 @@
   });
   const wrongFeedbackDurationMs = 500;
   const revealedAnswerDurationMs = 2000 * 2;
-  const collectionStageWidth = 1400;
-  const collectionStageHeight = 1050;
+  // All interactive scenes use the native size of the delivered backgrounds.
+  // Keeping this in one place avoids a second coordinate system creeping back
+  // into play, phonics, or the collection garage.
+  const stageCanvasWidth = 1400;
+  const stageCanvasHeight = 1050;
   const collectionCategoryBackgroundPaths = Object.freeze({
     vehicle: "./assets/collection/category_backgrounds/01_vehicle_collection_background.webp",
     robot: "./assets/collection/category_backgrounds/02_robot_collection_background.webp",
@@ -803,14 +806,27 @@
     }
   }
   let collectionScaleRequest = 0;
+  function stageScaleFor(width, height) {
+    return Math.min(width / stageCanvasWidth, height / stageCanvasHeight);
+  }
+  function sizeStages({ width, height, includePlay = false, includeCollection = false }) {
+    const scale = stageScaleFor(width, height);
+    if (includePlay) {
+      $("play-stage").style.setProperty("--stage-scale", String(scale));
+      $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
+      $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
+    }
+    if (includeCollection) {
+      const stage = $("collection-stage");
+      stage.style.setProperty("--collection-scale", String(scale));
+      stage.style.setProperty("--collection-scale-inverse", String(scale > 0 ? 1 / scale : 1));
+    }
+    return scale;
+  }
   function sizeCollectionStage() {
     const width = document.documentElement.clientWidth || window.innerWidth;
     const height = document.documentElement.clientHeight || window.innerHeight;
-    const scale = Math.min(width / collectionStageWidth, height / collectionStageHeight);
-    const stage = $("collection-stage");
-    stage.style.setProperty("--collection-scale", String(scale));
-    stage.style.setProperty("--collection-scale-inverse", String(scale > 0 ? 1 / scale : 1));
-    return scale;
+    return sizeStages({ width, height, includeCollection: true });
   }
   function scheduleCollectionStageSize() {
     const requestId = ++collectionScaleRequest;
@@ -1331,10 +1347,7 @@
     if (!isNormalViewport(snapshot)) {
       return false;
     }
-    const scale = Math.min(snapshot.innerWidth / 1448, snapshot.innerHeight / 1086);
-    $("play-stage").style.setProperty("--stage-scale", String(scale));
-    $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
-    $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
+    const scale = sizeStages({ width: snapshot.innerWidth, height: snapshot.innerHeight, includePlay: true });
     lastStableAppScale = scale;
     return true;
   }
@@ -1399,7 +1412,7 @@
       const timer = $("elapsed-time");
       const stageRect = playStage?.getBoundingClientRect();
       const timerRect = timer?.getBoundingClientRect();
-      const stageScale = stageRect?.width ? stageRect.width / 1448 : 0;
+      const stageScale = stageRect?.width ? stageRect.width / stageCanvasWidth : 0;
       if (stageRect && timerRect && stageScale) {
         top = (timerRect.top + timerRect.height / 2 - stageRect.top) / stageScale;
       }
@@ -1422,10 +1435,10 @@
     if (!summon || !playStage || character.hidden) return false;
     const stageRect = playStage.getBoundingClientRect();
     const characterRect = character.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     if (!stageRect.width || !characterRect.width || !characterRect.height || !scale) return false;
     const centerX = (characterRect.left - stageRect.left + characterRect.width / 2) / scale;
-    const footY = Math.min(1086, Math.max(120, (characterRect.bottom - stageRect.top) / scale));
+    const footY = Math.min(stageCanvasHeight, Math.max(120, (characterRect.bottom - stageRect.top) / scale));
     summon.style.setProperty("--summon-x", `${centerX.toFixed(1)}px`);
     summon.style.setProperty("--summon-foot-y", `${footY.toFixed(1)}px`);
     summon.classList.toggle("is-stage5", stageNumber === 5);
@@ -1446,7 +1459,7 @@
     const sparkle = $("robot-dissolve-sparkle"), stage = $("play-stage");
     if (!sparkle || !stage || character.hidden) return;
     const stageRect = stage.getBoundingClientRect(), characterRect = character.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     if (!characterRect.width || !characterRect.height || !scale) return;
     sparkle.style.left = `${(characterRect.left - stageRect.left) / scale}px`;
     sparkle.style.top = `${(characterRect.top - stageRect.top) / scale}px`;
@@ -1514,7 +1527,7 @@
     if (!stage || !character || character.hidden) return null;
     const stageRect = stage.getBoundingClientRect();
     const charRect = character.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     const dust = document.createElement("div");
     dust.className = `vehicle-dust is-${phase}`;
     dust.setAttribute("aria-hidden", "true");
@@ -3169,7 +3182,7 @@
     const stageRect = stage.getBoundingClientRect();
     const sourceRect = source?.getBoundingClientRect();
     const targetRect = target?.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     let dx = -875, dy = -150, waveAmplitude = 46;
     if (sourceRect && targetRect && scale > 0) {
       // Start just outside the lower-left of the correct mark, rather than
@@ -3467,7 +3480,7 @@
     const stage = $("play-stage");
     const stageRect = stage.getBoundingClientRect();
     const slotRect = slot.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     const correction = document.createElement("span");
     correction.className = "multiplication-correction-overlay";
     correction.textContent = expected;
@@ -3959,7 +3972,7 @@
         : $("assist-button");
     if (!target || target.disabled) return;
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
-    const scale = stageRect.width / 1448 || 1;
+    const scale = stageRect.width / stageCanvasWidth || 1;
     const guide = $("idle-guide");
     const targetCenterX = (targetRect.left + targetRect.width / 2 - stageRect.left) / scale;
     const targetCenterY = (targetRect.top + targetRect.height / 2 - stageRect.top) / scale;
