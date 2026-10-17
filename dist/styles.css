@@ -869,8 +869,12 @@ button, input { font: inherit; }
 }
 .phonics-intro-start:disabled {
   cursor:default;
-  opacity:.55;
-  filter:saturate(.45);
+  opacity:1;
+  filter:none;
+  color:#f7f8fa;
+  border-color:#d7dce2;
+  background:linear-gradient(180deg,#a9b0b8,#7f8790);
+  box-shadow:0 8px 0 #646b73,0 14px 24px rgba(52,60,68,.22);
 }
 .phonics-intro-start:active:not(:disabled) {
   transform:translateY(4px);
