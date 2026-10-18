@@ -4206,3 +4206,12 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-slot,
 #collection-detail-screen .detail-master-medal-display { cursor:pointer; }
 #collection-detail-screen .detail-master-medal-display { pointer-events:auto; }
+
+
+/* Startup loading: transform-only, independent of the app stage scaler. */
+#startup-loader{position:fixed;inset:0;z-index:2147483000;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(20px,5vh,55px);overflow:hidden;touch-action:none}
+#startup-loader[hidden]{display:none!important}
+#startup-loader-car-zone{height:min(47vh,380px);width:100%;display:grid;place-items:center;overflow:visible;position:relative;z-index:2}
+#startup-loader-car{display:block;max-width:min(40.6vw,350px);max-height:100%;width:auto;height:auto;object-fit:contain;will-change:transform;transform:translate3d(-100vw,0,0) scaleX(-1)}
+#startup-loader-label{position:relative;z-index:1;font-size:clamp(25px,4.4vw,48px);font-weight:900;color:white;letter-spacing:.08em;text-align:center;font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif}
+@media (prefers-reduced-motion:reduce){#startup-loader-car{will-change:auto}}
