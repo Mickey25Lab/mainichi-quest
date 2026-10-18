@@ -21,6 +21,12 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+  <div id="startup-loader" role="status" aria-live="polite" aria-label="じゅんびしているよ">
+    <div id="startup-loader-car-zone"><img id="startup-loader-car" alt="" decoding="async"></div>
+    <div id="startup-loader-label">じゅんびしているよ</div>
+  </div>
+
+
   <main class="app" id="app">
     <section class="screen start-screen active" id="start-screen" aria-labelledby="start-title">
       <div class="start-layer">
@@ -574,6 +580,81 @@
   </div>
   <script src="./scripts/profile-storage.js"></script>
   <script src="./scripts/artwork-metrics.js"></script>
+  <script>
+  (() => {
+    "use strict";
+    const loader = document.getElementById("startup-loader");
+    const car = document.getElementById("startup-loader-car");
+    const candidates = [
+      "./assets/collection/01_vehicle/01_patrol_car_vehicle.webp",
+      "./assets/collection/01_vehicle/02_fire_engine_vehicle.webp",
+      "./assets/collection/01_vehicle/03_ambulance_vehicle.webp"
+    ];
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const preloadPaths = [
+      "./assets/ui/top/top_key_visual.webp",
+      "./assets/ui/top/top_background.webp",
+      "./assets/ui/top/top_button_start.webp",
+      "./assets/ui/top/top_button_collection.webp",
+      "./assets/ui/top/top_button_no_collection.webp"
+    ];
+    let finished = false;
+    let animation = null;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function prepare(path) {
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = async () => { try { if (image.decode) await image.decode(); } catch (_) {} resolve(); };
+        image.onerror = resolve; // A missing asset must never trap the app on loading.
+        image.src = path;
+        if (image.complete) { if (image.naturalWidth) image.onload(); else image.onerror(); }
+      });
+    }
+    function animate(frames, duration, easing = "ease-in-out") {
+      if (finished) return Promise.resolve();
+      if (reducedMotion || !car.animate) {
+        car.style.transform = frames[frames.length - 1].transform;
+        return new Promise((r) => setTimeout(r, duration));
+      }
+      animation = car.animate(frames, {duration, easing, fill:"forwards"});
+      return animation.finished.catch(() => {}).then(() => {
+        if (!finished) {
+          car.style.transform = frames[frames.length - 1].transform;
+          animation.cancel();
+        }
+      });
+    }
+    function pos(px, y=0) { return "translate3d(" + px + "px," + y + "px,0) scaleX(-1)"; }
+    async function move() {
+      // Enter, hop twice at the same snappy speed, then drive right.
+      // Linear horizontal motion stops sharply rather than easing slowly.
+      await animate([{transform:pos(-window.innerWidth)},{transform:pos(0)}], 950, "linear");
+      if (finished) return;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (finished) return;
+      await animate([{transform:pos(0)},{transform:pos(0,-55)},{transform:pos(0)}], 350);
+      if (finished) return;
+      await animate([{transform:pos(0)},{transform:pos(0,-55)},{transform:pos(0)}], 350);
+      if (finished) return;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (finished) return;
+      await animate([{transform:pos(0)},{transform:pos(window.innerWidth)}], 1200, "linear");
+    }
+    const start=performance.now();
+    car.src=chosen;
+    const assetsReady=Promise.all(preloadPaths.map(prepare));
+    const motionReady = move().catch((error) => {
+      console.error("Startup loading animation failed", error);
+      // On animation errors, put the vehicle offscreen before hiding the loader.
+      car.style.transform = pos(window.innerWidth);
+    });
+    const minimumReady = new Promise((resolve) => setTimeout(resolve, Math.max(0, 3000 - (performance.now() - start))));
+    // Never reveal the top while the vehicle is still on screen.
+    Promise.all([assetsReady, minimumReady, motionReady])
+      .then(() => { finished = true; if (animation) animation.cancel(); loader.hidden = true; })
+      .catch(() => { finished = true; car.style.transform = pos(window.innerWidth); if (animation) animation.cancel(); loader.hidden = true; });
+  })();
+  </script>
   <script src="./app.js"></script>
 </body>
 </html>
