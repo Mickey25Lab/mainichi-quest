@@ -58,16 +58,22 @@ async function unlockAdmin(page, pin = "3710") {
 async function enterQaMode(page) {
   await unlockAdmin(page);
   assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "false");
-  await page.locator("#admin-qa-toggle").click();
-  await page.waitForURL(/\?qa=progress&reset=1$/);
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.locator("#admin-qa-toggle").click()
+  ]);
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveQaState().qaEnabled), true);
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
 async function exitQaMode(page) {
   await unlockAdmin(page);
   assert.equal(await page.locator("#admin-qa-toggle").getAttribute("aria-checked"), "true");
-  await page.locator("#admin-qa-toggle").click();
-  await page.waitForURL((url) => !url.searchParams.has("qa"));
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.locator("#admin-qa-toggle").click()
+  ]);
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveQaState().qaEnabled), false);
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
@@ -282,7 +288,6 @@ test("new profile returns to its exact empty progress after QA mode and reload",
 
   await page.locator("#top-collection-button").click();
   await page.locator("#collection-screen.active").waitFor();
-  await page.goto(`${baseUrl}/?qa=progress`);
   await exitQaMode(page);
   assert.deepEqual(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getProgressSnapshot()), before);
   await page.reload();
