@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.32";
+  const appVersion = "0.3.33";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -298,7 +298,9 @@
     syncCollectionFromRewardProgress();
   }
   function saveRewardProgress() {
-    try { profileStore.setRewardProgress(state.rewardProgress); } catch (_) {}
+    // QA presets must never become permanent player points.
+    if (qaProgressModeEnabled()) { profileStore.setRewardProgress(state.rewardProgress); return; }
+    profileStore.commitRewardProgressWithPoints(state.rewardProgress);
   }
   function syncCollectionFromRewardProgress() {
     state.collection = state.rewardProgress.map(collectionStageForProgress);
@@ -5481,6 +5483,7 @@
     updateActiveProfileUi();
     const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset();
     loadRewardProgress();
+    if (!qaProgressModeEnabled()) profileStore.initializePointLedger(state.rewardProgress);
     loadRecentVehicles();
     state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex;
     setNeutralBackground();
