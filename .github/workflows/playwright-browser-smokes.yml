@@ -27,5 +27,8 @@ jobs:
       - name: Install Chromium and system libraries
         run: npx playwright install --with-deps chromium
 
+      - name: Run point ledger unit tests
+        run: node --test tests/point-ledger.test.cjs
+
       - name: Run two browser smoke suites
         run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
