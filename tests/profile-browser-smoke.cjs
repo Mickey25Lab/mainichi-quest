@@ -73,7 +73,7 @@ async function exitQaMode(page) {
     page.waitForEvent("load"),
     page.locator("#admin-qa-toggle").click()
   ]);
-  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getActiveQaState().qaEnabled), false);
+  assert.equal(await page.evaluate(() => Boolean(window.MQProfileStorage.createProfileStorage(localStorage).getActiveQaState().qaEnabled)), false);
   await page.locator("#profile-setup-overlay").waitFor({ state: "hidden" });
 }
 
@@ -288,6 +288,7 @@ test("new profile returns to its exact empty progress after QA mode and reload",
 
   await page.locator("#top-collection-button").click();
   await page.locator("#collection-screen.active").waitFor();
+  await page.reload(); // Admin gear is on TOP, not inside the collection screen.
   await exitQaMode(page);
   assert.deepEqual(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getProgressSnapshot()), before);
   await page.reload();
