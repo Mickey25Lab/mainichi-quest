@@ -2745,11 +2745,30 @@ button, input { font: inherit; }
   transform:translateY(3px);
 }
 .phonics-grow-confirm { z-index:45; }
-.phonics-reward-intro { z-index:46; }
+.phonics-reward-intro { z-index:46; pointer-events:auto; }
+.collection-screen.is-phonics-reward-intro-open .collection-header,
+.collection-screen.is-phonics-reward-intro-open .collection-grid,
+.collection-screen.is-phonics-reward-intro-open .collection-category-scene,
+.collection-screen.is-phonics-reward-intro-open .collection-time-panel,
+.collection-screen.is-phonics-reward-intro-open .collection-categories {
+  pointer-events:none;
+}
 .phonics-reward-intro .quit-confirm-actions button {
   min-height:96px;
   line-height:1.25;
   white-space:normal;
+}
+.phonics-reward-intro .quit-confirm-cancel {
+  border-color:#9aa3ad;
+  color:#fff;
+  background:linear-gradient(#8f98a2,#626b75);
+  box-shadow:0 6px 0 #4b535c,0 10px 20px rgba(47,55,63,.2);
+}
+.phonics-reward-intro .quit-confirm-continue {
+  border-color:#8fe8ff;
+  color:#fff;
+  background:linear-gradient(#59d7ff,#159bd8);
+  box-shadow:0 6px 0 #0876ab,0 12px 22px rgba(18,157,216,.22);
 }
 
 .phonics-grow-confirm-card {
