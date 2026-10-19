@@ -226,6 +226,10 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /function startPhonicsIntroCountdown\(\)[\s\S]*countdownValue = 3[\s\S]*setTimeout\(advance, 1000\)/);
   assert.match(app, /function finishPhonicsIntroCountdown\(\)[\s\S]*showScreen\("phonics-youtube-screen"\)[\s\S]*beginPhonicsYoutubePlayback\(\)/);
   assert.match(html, /id="collection-header-title"/);
+  assert.match(html, /id="collection-header-title">のりものひみつきち<\/h2>/);
+  assert.match(css, /#collection-medal-count-block \{ display:none !important; \}/);
+  assert.match(app, /function collectionBaseTitle\(\)[\s\S]*getActiveProfile\(\)[\s\S]*displayName[\s\S]*ののりものひみつきち/);
+  assert.match(app, /collection-header-title"\)\.textContent = selectionMode \? "どののりものを育てる？" : collectionBaseTitle\(\)/);
   assert.match(html, /id="phonics-grow-confirm"[\s\S]*id="phonics-grow-amount"[\s\S]*♥ \+5/);
   assert.match(html, /id="phonics-reward-intro"[\s\S]*よくがんばったね！[\s\S]*どののりものを育てる？[\s\S]*育てるのりものを[\s\S]*選ぶ/);
   assert.match(html, /id="phonics-reward-intro"[^>]*quit-confirm[\s\S]*answer-confirm-card quit-confirm-card/);
