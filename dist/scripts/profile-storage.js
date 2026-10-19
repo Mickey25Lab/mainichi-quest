@@ -322,11 +322,11 @@
       const friendly = raw.friendly === true || stage > 2 || medal;
       const hearts = friendly ? 5 : Math.max(0, Math.min(5, Math.floor(Number(raw.friendship) || 0)));
       let points = 5 + hearts * 2 + (friendly ? 10 : 0);
-      const thresholds = [30, 50, 70, 100];
-      const bonuses = [30, 50, 70, 100];
+      const thresholds = [30, 50, 100, 200];
+      const bonuses = [30, 50, 100, 200];
       const completed = medal ? 4 : stage - 2;
       for (let i = 0; i < completed; i += 1) points += thresholds[i] + bonuses[i];
-      if (friendly && !medal) points += Math.max(0, Math.min(thresholds[completed], Math.floor(Number(raw.energy) || 0)));
+      if (friendly) points += Math.max(0, Math.min(medal ? 500 : thresholds[completed], Math.floor(Number(raw.energy) || 0)));
       return points;
     }
     function getPointLedger() { return clone(getActiveProfile()?.pointLedger ?? null); }
