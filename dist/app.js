@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.28";
+  const appVersion = "0.3.29";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -454,7 +454,7 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first", activeModeId: null, backgroundPath: null,
+    frameIndex: 0, pass: "first", activeModeId: null, backgroundPath: null, rewardAlmostZero: false,
     introMinimumElapsed: false, introTimerId: 0,
     countdownTimerId: 0, countdownValue: 0
   };
@@ -717,6 +717,10 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    const missionAtStart = missionOverview();
+    phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
+      && missionAtStart.freePlayEnabled
+      && missionAtStart.freePlayEnergyMode === "almost-zero";
     phonicsYoutube.introMinimumElapsed = false;
     clearPhonicsIntroTimer();
     $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
@@ -4101,6 +4105,7 @@
     $("collection-header-title").innerHTML = selectionMode ? "どの乗り物を育てる？" : "COLLECTION <span>GARAGE</span>";
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
+      $("phonics-reward-intro").hidden = true;
       state.phonicsRewardSelectedVehicleIndex = null;
     }
   }
@@ -4135,9 +4140,15 @@
     const discovered = state.rewardProgress.findIndex((progress) => progress?.discovered);
     return discovered >= 0 ? discovered : 0;
   }
+  function phonicsGrowthAmounts() {
+    return phonicsYoutube.rewardAlmostZero
+      ? { friendship:1, energy:5 }
+      : { friendship:5, energy:25 };
+  }
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
-    return progress.friendly ? "エネルギー +25" : "♥ +5";
+    const amounts = phonicsGrowthAmounts();
+    return progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`;
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -4176,17 +4187,20 @@
     $("phonics-grow-confirm").hidden = true;
     state.phonicsRewardSelectedVehicleIndex = null;
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
+    const amounts = phonicsGrowthAmounts();
     let reward = null;
     if (!progress.friendly) {
-      progress.friendship = Math.min(5, progress.friendship + 5);
-      reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1, source: "phonics" });
+      progress.friendship = Math.min(5, progress.friendship + amounts.friendship);
+      if (progress.friendship === 5) {
+        reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1, source: "phonics" });
+      }
       if (!reward) saveCollectionProgress();
     } else if (progress.masterMedal) {
       const required = requiredEnergyForStage(progress.stage);
-      progress.energy = Math.min(required, progress.energy + 25);
+      progress.energy = Math.min(required, progress.energy + amounts.energy);
       saveCollectionProgress();
     } else {
-      const gain = applyEnergyGain(progress, vehicleIndex, 25);
+      const gain = applyEnergyGain(progress, vehicleIndex, amounts.energy);
       reward = gain.reward;
       if (!reward) saveCollectionProgress();
     }
@@ -4197,6 +4211,17 @@
     }
     openNormalCollectionAfterPhonicsReward();
   }
+  function startPhonicsRewardVehicleSelection() {
+    $("phonics-reward-intro").hidden = true;
+    state.collectionDeadline = Date.now() + 60000;
+    updateCollectionClock();
+    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+  }
+  function cancelPhonicsRewardSelection() {
+    $("phonics-reward-intro").hidden = true;
+    setCollectionPresentationMode("browse");
+    endToModeSelect();
+  }
   async function openPhonicsRewardSelection() {
     stopCollectionTimer();
     state.collectionClosing = false;
@@ -4206,14 +4231,16 @@
     state.resultStartProgress = state.rewardProgress.map((progress) => ({ ...progress }));
     await preloadCollectionVehicleArtwork();
     setCollectionPresentationMode("phonics-reward-select");
-    state.collectionDeadline = Date.now() + 60000;
+    state.collectionDeadline = 0;
     state.collectionShowSessionMarkers = false;
     setCollectionCategory("summary");
     renderCollectionGrid({ showSessionMarkers: false });
     sizeCollectionStage();
+    $("collection-seconds").textContent = "60";
+    $("detail-seconds").textContent = "60";
     showScreen("collection-screen");
-    updateCollectionClock();
-    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+    $("phonics-reward-intro").hidden = false;
+    $("phonics-reward-intro-continue").focus();
   }
 
   async function openCollection({ showSessionMarkers = true } = {}) {
@@ -5600,6 +5627,8 @@
       setProfileError($("profile-manager-error"), "プロフィールを作れませんでした。なまえを確認してください。");
     }
   });
+  $("phonics-reward-intro-cancel").addEventListener("click", cancelPhonicsRewardSelection);
+  $("phonics-reward-intro-continue").addEventListener("click", startPhonicsRewardVehicleSelection);
   $("phonics-grow-cancel").addEventListener("click", closePhonicsGrowConfirm);
   $("phonics-grow-accept").addEventListener("click", () => applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex));
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
