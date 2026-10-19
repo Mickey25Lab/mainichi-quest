@@ -2689,9 +2689,17 @@ button, input { font: inherit; }
 .collection-screen, .collection-detail-screen { color:#fff; background:#000; }
 .collection-screen.active, .collection-detail-screen.active { display:flex; flex-direction:column; }
 .collection-screen::before, .collection-detail-screen::before { content:""; position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(rgba(22,180,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(22,180,255,.07) 1px,transparent 1px); background-size:42px 42px; }
-.collection-header { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(0,1.2fr) auto auto; align-items:center; gap:clamp(8px,1.2vw,18px); min-height:clamp(68px,9vh,102px); }
+.collection-header { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:clamp(8px,1.2vw,18px); min-height:clamp(68px,9vh,102px); }
+#collection-medal-count-block { display:none !important; }
 .collection-header h2, .medal-count, .collection-time { border:3px solid #34cfff; border-radius:18px; background:linear-gradient(#0c4c9d,#062d72); box-shadow:inset 0 0 16px rgba(41,213,255,.36),0 0 14px rgba(20,161,255,.35); }
 .collection-header h2 { margin:0; padding:8px 18px; font-size:clamp(27px,3.5vw,52px); font-style:italic; }
+.collection-header h2 ruby { ruby-position:over; }
+.collection-header h2 rt {
+  font-size:.38em;
+  font-style:normal;
+  font-weight:900;
+  letter-spacing:.08em;
+}
 .collection-header h2 span { color:#70dfff; }
 .medal-count, .collection-time { padding:12px 18px; text-align:center; font-size:clamp(18px,2.1vw,31px); font-weight:900; white-space:nowrap; }
 .medal-count { display:flex; align-items:center; justify-content:center; gap:.22em; }
@@ -2745,6 +2753,32 @@ button, input { font: inherit; }
   transform:translateY(3px);
 }
 .phonics-grow-confirm { z-index:45; }
+.phonics-reward-intro { z-index:46; pointer-events:auto; }
+.collection-screen.is-phonics-reward-intro-open .collection-header,
+.collection-screen.is-phonics-reward-intro-open .collection-grid,
+.collection-screen.is-phonics-reward-intro-open .collection-category-scene,
+.collection-screen.is-phonics-reward-intro-open .collection-time-panel,
+.collection-screen.is-phonics-reward-intro-open .collection-categories {
+  pointer-events:none;
+}
+.phonics-reward-intro .quit-confirm-actions button {
+  min-height:96px;
+  line-height:1.25;
+  white-space:normal;
+}
+.phonics-reward-intro .quit-confirm-cancel {
+  border-color:#9aa3ad;
+  color:#fff;
+  background:linear-gradient(#8f98a2,#626b75);
+  box-shadow:0 6px 0 #4b535c,0 10px 20px rgba(47,55,63,.2);
+}
+.phonics-reward-intro .quit-confirm-continue {
+  border-color:#8fe8ff;
+  color:#fff;
+  background:linear-gradient(#59d7ff,#159bd8);
+  box-shadow:0 6px 0 #0876ab,0 12px 22px rgba(18,157,216,.22);
+}
+
 .phonics-grow-confirm-card {
   width:min(620px,78vw);
   padding:34px 40px 32px;

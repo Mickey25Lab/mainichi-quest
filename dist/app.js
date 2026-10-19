@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.28";
+  const appVersion = "0.3.32";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -28,7 +28,7 @@
     Object.freeze({ id:"large", label:"大" })
   ]);
   const screens = ["start-screen", "mode-select-screen", "phonics-intro-screen", "phonics-youtube-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
-  const correctSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
+  const fanfareSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
   const startKeyVisualPath = "./assets/ui/top/top_key_visual.webp";
   const topBackgroundPath = "./assets/ui/top/top_background.webp";
@@ -252,8 +252,8 @@
     questions: [], queue: [], current: null, phase: "start", initialIndex: 0, initialCorrect: 0,
     missed: [], startedAt: 0, finalElapsedMs: 0, timerId: null, timerPaused: false, timerPausedAt: 0, pausedTimerMs: 0,
     transitioning: false, confirmingAnswer: false, confirmingQuit: false, runId: 0,
-    inputMode: "quotient", quotientInput: "", remainderInput: "", correctSoundBuffers: [],
-    correctSoundsLoading: null, lastCorrectSoundIndex: -1, startSound: null,
+    inputMode: "quotient", quotientInput: "", remainderInput: "", fanfareSoundBuffers: [],
+    fanfareSoundsLoading: null, lastFanfareSoundIndex: -1, startSound: null,
     collection: Array(20).fill(0), rewardProgress: [], currentVehicleIndex: 0, currentStage: 1, preparedInitialVehicleIndex: null,
     recentVehicleHistory: [], sessionUnlocks: [0, 0, 0, 0, 0, 0], sessionResultGets: [], resultStartProgress: [], collectionNewVehicleIndexes: new Set(), collectionUsed: false, collectionShowSessionMarkers: true,
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
@@ -454,7 +454,7 @@
   const phonicsYoutube = {
     player: null, apiPromise: null, checkpointPollId: 0,
     started: false, ready: false, autoStartPending: false,
-    frameIndex: 0, pass: "first", activeModeId: null, backgroundPath: null,
+    frameIndex: 0, pass: "first", activeModeId: null, backgroundPath: null, rewardAlmostZero: false,
     introMinimumElapsed: false, introTimerId: 0,
     countdownTimerId: 0, countdownValue: 0
   };
@@ -717,6 +717,10 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    const missionAtStart = missionOverview();
+    phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
+      && missionAtStart.freePlayEnabled
+      && missionAtStart.freePlayEnergyMode === "almost-zero";
     phonicsYoutube.introMinimumElapsed = false;
     clearPhonicsIntroTimer();
     $("phonics-intro-kicker").textContent = activePhonicsYoutubeLesson.title.replace(/（.*$/, "");
@@ -731,6 +735,7 @@
     showScreen("phonics-intro-screen");
     schedulePlayStageSize("phonics-intro");
     preparePhonicsYoutubePlayback();
+    preloadFanfareSounds();
     phonicsYoutube.introTimerId = window.setTimeout(() => {
       phonicsYoutube.introTimerId = 0;
       phonicsYoutube.introMinimumElapsed = true;
@@ -2390,7 +2395,7 @@
   function startGameFromGesture(mode) {
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
     recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
-    primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadCorrectSounds(); beginRound(mode);
+    primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadFanfareSounds(); beginRound(mode);
   }
   function startApp() { startGameFromGesture("normal"); }
   function startLongDivisionApp() { startGameFromGesture("longdivision"); }
@@ -2603,7 +2608,7 @@
       else if (progression.energyGain) playProgressGainAnimation({ kind: "energy", amount: progression.energyGain, completed: Boolean(reward) });
     }
     if (reward && reward.stage < 5) preloadRewardVisuals(reward.stage, reward.vehicleIndex, reward.kind).catch(() => {});
-    if (reward?.isNew || reward?.replay) playCorrectSound();
+    playSimpleCorrectSound();
     const runId = state.runId;
     window.setTimeout(() => {
       if (runId !== state.runId) return;
@@ -3633,7 +3638,7 @@
         });
       }
       if (reward && reward.stage < 5) preloadRewardVisuals(reward.stage, reward.vehicleIndex, reward.kind).catch(() => {});
-      if (reward?.isNew || reward?.replay) playCorrectSound(); else playSimpleCorrectSound();
+      playSimpleCorrectSound();
     } else {
       state.current.resultType = state.current.hintUsed ? "hint_wrong" : "self_wrong";
       state.current.hadWrong = true;
@@ -3757,6 +3762,7 @@
           setBackgroundMusicDucked(true);
           if (onDone) showRewardOverCollection();
           else showRewardOverPlay();
+          if (isNew || replay) playFanfareSound();
           window.requestAnimationFrame(() => finishAfter((isNew || replay) ? 5000 : 1400, prepareNextVisuals()));
         }).catch((error) => {
           if (runId !== state.runId) return;
@@ -3791,6 +3797,7 @@
       setBackgroundMusicDucked(true);
       if (onDone) showRewardOverCollection();
       else showRewardOverPlay();
+      if (isNew || replay) playFanfareSound();
       window.requestAnimationFrame(() => {
         if (runId !== state.runId) return;
         const nextVisualsReady = new Promise((resolve) => {
@@ -4090,6 +4097,17 @@
     });
   }
 
+  function renderCollectionBaseTitle() {
+    const profile = profileStore.getActiveProfile();
+    const playerName = profile?.displayName || "プレイヤー";
+    const title = $("collection-header-title");
+    const ruby = document.createElement("ruby");
+    ruby.append(document.createTextNode("秘密基地"));
+    const rt = document.createElement("rt");
+    rt.textContent = "ひみつきち";
+    ruby.append(rt);
+    title.replaceChildren(document.createTextNode(`${playerName}のロボット`), ruby);
+  }
   function setCollectionPresentationMode(mode = "browse") {
     state.collectionMode = mode;
     const selectionMode = mode === "phonics-reward-select";
@@ -4098,9 +4116,12 @@
       selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
     );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    $("collection-header-title").innerHTML = selectionMode ? "どの乗り物を育てる？" : "COLLECTION <span>GARAGE</span>";
+    if (selectionMode) $("collection-header-title").textContent = "どののりものを育てる？";
+    else renderCollectionBaseTitle();
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
+      $("phonics-reward-intro").hidden = true;
+      $("collection-screen").classList.remove("is-phonics-reward-intro-open");
       state.phonicsRewardSelectedVehicleIndex = null;
     }
   }
@@ -4135,9 +4156,15 @@
     const discovered = state.rewardProgress.findIndex((progress) => progress?.discovered);
     return discovered >= 0 ? discovered : 0;
   }
+  function phonicsGrowthAmounts() {
+    return phonicsYoutube.rewardAlmostZero
+      ? { friendship:1, energy:5 }
+      : { friendship:5, energy:25 };
+  }
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
-    return progress.friendly ? "エネルギー +25" : "♥ +5";
+    const amounts = phonicsGrowthAmounts();
+    return progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`;
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -4176,17 +4203,20 @@
     $("phonics-grow-confirm").hidden = true;
     state.phonicsRewardSelectedVehicleIndex = null;
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
+    const amounts = phonicsGrowthAmounts();
     let reward = null;
     if (!progress.friendly) {
-      progress.friendship = Math.min(5, progress.friendship + 5);
-      reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1, source: "phonics" });
+      progress.friendship = Math.min(5, progress.friendship + amounts.friendship);
+      if (progress.friendship === 5) {
+        reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1, source: "phonics" });
+      }
       if (!reward) saveCollectionProgress();
     } else if (progress.masterMedal) {
       const required = requiredEnergyForStage(progress.stage);
-      progress.energy = Math.min(required, progress.energy + 25);
+      progress.energy = Math.min(required, progress.energy + amounts.energy);
       saveCollectionProgress();
     } else {
-      const gain = applyEnergyGain(progress, vehicleIndex, 25);
+      const gain = applyEnergyGain(progress, vehicleIndex, amounts.energy);
       reward = gain.reward;
       if (!reward) saveCollectionProgress();
     }
@@ -4197,6 +4227,19 @@
     }
     openNormalCollectionAfterPhonicsReward();
   }
+  function startPhonicsRewardVehicleSelection() {
+    $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
+    state.collectionDeadline = Date.now() + 60000;
+    updateCollectionClock();
+    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+  }
+  function cancelPhonicsRewardSelection() {
+    $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
+    setCollectionPresentationMode("browse");
+    endToModeSelect();
+  }
   async function openPhonicsRewardSelection() {
     stopCollectionTimer();
     state.collectionClosing = false;
@@ -4206,14 +4249,17 @@
     state.resultStartProgress = state.rewardProgress.map((progress) => ({ ...progress }));
     await preloadCollectionVehicleArtwork();
     setCollectionPresentationMode("phonics-reward-select");
-    state.collectionDeadline = Date.now() + 60000;
+    state.collectionDeadline = 0;
     state.collectionShowSessionMarkers = false;
     setCollectionCategory("summary");
     renderCollectionGrid({ showSessionMarkers: false });
     sizeCollectionStage();
+    $("collection-seconds").textContent = "60";
+    $("detail-seconds").textContent = "60";
     showScreen("collection-screen");
-    updateCollectionClock();
-    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+    $("collection-screen").classList.add("is-phonics-reward-intro-open");
+    $("phonics-reward-intro").hidden = false;
+    $("phonics-reward-intro-continue").focus();
   }
 
   async function openCollection({ showSessionMarkers = true } = {}) {
@@ -5052,22 +5098,22 @@
     oscillator.connect(gain).connect(ctx.destination); oscillator.start(ctx.currentTime + start); oscillator.stop(ctx.currentTime + start + duration);
   }
   function decodeAudio(ctx, arrayBuffer) { return new Promise((resolve, reject) => ctx.decodeAudioData(arrayBuffer, resolve, reject)); }
-  function preloadCorrectSounds() {
-    if (state.correctSoundsLoading) return state.correctSoundsLoading;
+  function preloadFanfareSounds() {
+    if (state.fanfareSoundsLoading) return state.fanfareSoundsLoading;
     const ctx = audioContext();
-    state.correctSoundsLoading = Promise.all(correctSoundPaths.map(async (path) => {
+    state.fanfareSoundsLoading = Promise.all(fanfareSoundPaths.map(async (path) => {
       const response = await fetch(path); if (!response.ok) throw new Error(path); return decodeAudio(ctx, await response.arrayBuffer());
-    })).then((buffers) => { state.correctSoundBuffers = buffers; return buffers; }).catch(() => []);
-    return state.correctSoundsLoading;
+    })).then((buffers) => { state.fanfareSoundBuffers = buffers; return buffers; }).catch(() => []);
+    return state.fanfareSoundsLoading;
   }
   function preloadStartSound() { state.startSound = new Audio(startSoundPath); state.startSound.preload = "auto"; state.startSound.load(); }
   function playStartSound() { if (!state.startSound) preloadStartSound(); state.startSound.currentTime = 0; state.startSound.play().catch(() => {}); }
-  function playCorrectSound() {
-    const buffers = state.correctSoundBuffers;
-    if (buffers.length !== correctSoundPaths.length) { preloadCorrectSounds(); tone(660, 0, .15, "sine", .18); tone(880, .16, .3, "sine", .18); return; }
+  function playFanfareSound() {
+    const buffers = state.fanfareSoundBuffers;
+    if (buffers.length !== fanfareSoundPaths.length) { preloadFanfareSounds(); tone(660, 0, .15, "sine", .18); tone(880, .16, .3, "sine", .18); return; }
     let index = Math.floor(Math.random() * buffers.length);
-    if (buffers.length > 1 && index === state.lastCorrectSoundIndex) index = (index + 1) % buffers.length;
-    state.lastCorrectSoundIndex = index;
+    if (buffers.length > 1 && index === state.lastFanfareSoundIndex) index = (index + 1) % buffers.length;
+    state.lastFanfareSoundIndex = index;
     const ctx = audioContext(), source = ctx.createBufferSource(), gain = ctx.createGain(), compressor = ctx.createDynamicsCompressor();
     source.buffer = buffers[index]; gain.gain.value = 0.75; compressor.threshold.value = -10; compressor.ratio.value = 4;
     source.connect(gain).connect(compressor).connect(ctx.destination); source.start();
@@ -5600,6 +5646,8 @@
       setProfileError($("profile-manager-error"), "プロフィールを作れませんでした。なまえを確認してください。");
     }
   });
+  $("phonics-reward-intro-cancel").addEventListener("click", cancelPhonicsRewardSelection);
+  $("phonics-reward-intro-continue").addEventListener("click", startPhonicsRewardVehicleSelection);
   $("phonics-grow-cancel").addEventListener("click", closePhonicsGrowConfirm);
   $("phonics-grow-accept").addEventListener("click", () => applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex));
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
