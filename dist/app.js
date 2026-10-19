@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.30";
+  const appVersion = "0.3.31";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4094,6 +4094,11 @@
     });
   }
 
+  function collectionBaseTitle() {
+    const profile = profileStore.getActiveProfile();
+    const playerName = profile?.displayName || "プレイヤー";
+    return `${playerName}ののりものひみつきち`;
+  }
   function setCollectionPresentationMode(mode = "browse") {
     state.collectionMode = mode;
     const selectionMode = mode === "phonics-reward-select";
@@ -4102,7 +4107,7 @@
       selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
     );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    $("collection-header-title").innerHTML = selectionMode ? "どののりものを育てる？" : "COLLECTION <span>GARAGE</span>";
+    $("collection-header-title").textContent = selectionMode ? "どののりものを育てる？" : collectionBaseTitle();
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
       $("phonics-reward-intro").hidden = true;
