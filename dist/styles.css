@@ -2745,6 +2745,13 @@ button, input { font: inherit; }
   transform:translateY(3px);
 }
 .phonics-grow-confirm { z-index:45; }
+.phonics-reward-intro { z-index:46; }
+.phonics-reward-intro .quit-confirm-actions button {
+  min-height:96px;
+  line-height:1.25;
+  white-space:normal;
+}
+
 .phonics-grow-confirm-card {
   width:min(620px,78vw);
   padding:34px 40px 32px;
