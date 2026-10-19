@@ -14,8 +14,8 @@ test("migration is idempotent, earned delta is not doubled, and energy overflow 
   assert.equal(store.commitRewardProgressWithPoints([vehicle(3,0)]).total, 85);
   assert.equal(store.commitRewardProgressWithPoints([vehicle(3,0)]).total, 85);
   assert.equal(store.commitRewardProgressWithPoints([vehicle(4,0)]).total, 185);
-  assert.equal(store.commitRewardProgressWithPoints([vehicle(5,0)]).total, 325);
-  assert.equal(store.commitRewardProgressWithPoints([vehicle(5,0,true)]).total, 525);
+  assert.equal(store.commitRewardProgressWithPoints([vehicle(5,0)]).total, 385);
+  assert.equal(store.commitRewardProgressWithPoints([vehicle(5,0,true)]).total, 785);
 });
 test("friendship and profile separation; reset clears only the active profile ledger", () => {
   const store = createProfileStorage(memory());
@@ -32,4 +32,12 @@ test("friendship and profile separation; reset clears only the active profile le
   assert.equal(store.getPointLedger(),null);
   store.setActiveProfile(b);
   assert.equal(store.getPointLedger().total,0);
+});
+
+test("medal energy continues to 500, capped and never double-counted", () => {
+ const store=createProfileStorage(memory()); store.createProfile("A"); store.initializePointLedger([vehicle(5,0,true)]);
+ assert.equal(store.getPointLedger().total,785);
+ assert.equal(store.commitRewardProgressWithPoints([vehicle(5,27,true)]).total,812);
+ assert.equal(store.commitRewardProgressWithPoints([vehicle(5,800,true)]).total,1285);
+ assert.equal(store.commitRewardProgressWithPoints([vehicle(5,800,true)]).total,1285);
 });
