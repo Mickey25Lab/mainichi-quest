@@ -86,6 +86,7 @@
       // inferred from collection/progress, because those states do not retain
       // the real acquisition order needed by a future opening movie.
       acquisitionHistory: [],
+      pointLedger: null,
       enabledModes: {},
       energyMultipliers: {},
       dailyTargetCounts: {},
@@ -154,6 +155,8 @@
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
+    profile.pointLedger = value.pointLedger && Number.isSafeInteger(value.pointLedger.total) && value.pointLedger.total >= 0 && Array.isArray(value.pointLedger.observedProgress)
+      ? clone(value.pointLedger) : null;
     const best = Number(value.bestRecords?.bestTimeMs);
     profile.bestRecords.bestTimeMs = Number.isFinite(best) && best > 0 ? best : null;
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
@@ -307,6 +310,63 @@
 
     function getCollectionStages() { return clone(getActiveProfile()?.collection.stages ?? null); }
     function setCollectionStages(value) { return mutateActiveProfile((profile) => { profile.collection.stages = Array.isArray(value) ? clone(value) : null; }); }
+
+    // Points are a permanent, profile-owned record. The first snapshot is valued
+    // once at migration; later changes credit only the positive difference between
+    // the previous and current vehicle state under the CURRENT ruleset.
+    // Repricing past progress therefore never changes the stored total.
+    function vehiclePointValue(raw) {
+      if (!raw?.discovered) return 0;
+      const stage = Math.max(2, Math.min(5, Math.floor(Number(raw.stage) || 2)));
+      const medal = raw.masterMedal === true;
+      const friendly = raw.friendly === true || stage > 2 || medal;
+      const hearts = friendly ? 5 : Math.max(0, Math.min(5, Math.floor(Number(raw.friendship) || 0)));
+      let points = 5 + hearts * 2 + (friendly ? 10 : 0);
+      const thresholds = [30, 50, 70, 100];
+      const bonuses = [30, 50, 70, 100];
+      const completed = medal ? 4 : stage - 2;
+      for (let i = 0; i < completed; i += 1) points += thresholds[i] + bonuses[i];
+      if (friendly && !medal) points += Math.max(0, Math.min(thresholds[completed], Math.floor(Number(raw.energy) || 0)));
+      return points;
+    }
+    function getPointLedger() { return clone(getActiveProfile()?.pointLedger ?? null); }
+    function initializePointLedger(progress) {
+      if (!Array.isArray(progress)) throw new Error("point migration requires collection progress");
+      return mutateActiveProfile((profile) => {
+        if (profile.pointLedger) return;
+        const observedProgress = clone(progress);
+        const total = observedProgress.reduce((sum, item) => sum + vehiclePointValue(item), 0);
+        profile.pointLedger = { schemaVersion: 1, total, initialPoints: total, observedProgress, nextSequence: 1,
+          recentEvents: [{ id: "migration-v1", type: "initial-migration", points: total }] };
+      }).pointLedger;
+    }
+    function commitRewardProgressWithPoints(progress) {
+      if (!Array.isArray(progress)) throw new Error("reward progress array required");
+      return mutateActiveProfile((profile) => {
+        if (!profile.pointLedger) {
+          // Never silently create a zero-point ledger if initialization was skipped.
+          // Recover the previous saved state as the migration baseline.
+          const baseline = Array.isArray(profile.progress.rewardProgressPhase1) ? profile.progress.rewardProgressPhase1 : [];
+          const total = baseline.reduce((sum, item) => sum + vehiclePointValue(item), 0);
+          profile.pointLedger = { schemaVersion: 1, total, initialPoints: total,
+            observedProgress: clone(baseline), nextSequence: 1,
+            recentEvents: [{ id: "migration-v1", type: "initial-migration", points: total }] };
+        }
+        const ledger = profile.pointLedger;
+        const old = ledger.observedProgress;
+        for (let i = 0; i < progress.length; i += 1) {
+          const delta = Math.max(0, vehiclePointValue(progress[i]) - vehiclePointValue(old[i]));
+          if (!delta) continue;
+          ledger.total += delta;
+          ledger.recentEvents.push({ id: "earned-" + ledger.nextSequence++, type: "progress", vehicleIndex: i, points: delta });
+        }
+        // Events are an inspection log; lifetime totals never depend on truncation.
+        if (ledger.recentEvents.length > 500) ledger.recentEvents = ledger.recentEvents.slice(-500);
+        ledger.observedProgress = clone(progress);
+        profile.progress.rewardProgressPhase1 = clone(progress);
+      }).pointLedger;
+    }
+
     function getRewardProgress() { return clone(getActiveProfile()?.progress.rewardProgressPhase1 ?? null); }
     function setRewardProgress(value) { return mutateActiveProfile((profile) => { profile.progress.rewardProgressPhase1 = Array.isArray(value) ? clone(value) : null; }); }
     function getProgressSnapshot() {
@@ -432,6 +492,7 @@
         profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
+        profile.pointLedger = null;
       });
     }
 
@@ -458,6 +519,7 @@
       listProfiles, getActiveProfileId, ensureActiveProfile, getActiveProfile, setActiveProfile,
       hasLegacyChildData, legacySnapshot, createProfile, migrateLegacyProfile, getMigrationState,
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
+      getPointLedger, initializePointLedger, commitRewardProgressWithPoints,
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
