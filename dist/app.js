@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.29";
+  const appVersion = "0.3.30";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4102,10 +4102,11 @@
       selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
     );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    $("collection-header-title").innerHTML = selectionMode ? "どの乗り物を育てる？" : "COLLECTION <span>GARAGE</span>";
+    $("collection-header-title").innerHTML = selectionMode ? "どののりものを育てる？" : "COLLECTION <span>GARAGE</span>";
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
       $("phonics-reward-intro").hidden = true;
+      $("collection-screen").classList.remove("is-phonics-reward-intro-open");
       state.phonicsRewardSelectedVehicleIndex = null;
     }
   }
@@ -4213,12 +4214,14 @@
   }
   function startPhonicsRewardVehicleSelection() {
     $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
     state.collectionDeadline = Date.now() + 60000;
     updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
   function cancelPhonicsRewardSelection() {
     $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
     setCollectionPresentationMode("browse");
     endToModeSelect();
   }
@@ -4239,6 +4242,7 @@
     $("collection-seconds").textContent = "60";
     $("detail-seconds").textContent = "60";
     showScreen("collection-screen");
+    $("collection-screen").classList.add("is-phonics-reward-intro-open");
     $("phonics-reward-intro").hidden = false;
     $("phonics-reward-intro-continue").focus();
   }
