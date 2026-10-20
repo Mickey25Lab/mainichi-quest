@@ -2,8 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <style>:root{color-scheme:dark;background:#000}html,body{margin:0;min-height:100%;background:#000}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#39aef0">
+  <meta name="theme-color" content="#000000">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./assets/ui/branding/favicon-mique-logo.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/ui/branding/apple-touch-icon.png">
@@ -17,8 +19,38 @@
   <link rel="preload" as="image" href="./assets/ui/top/mode_select_background.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;800;900&display=block" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
+  <style>
+    /* Critical startup paint for the fast-loading experiment. */
+    html, body { margin:0; min-height:100%; background:#000; }
+    #startup-loader { position:fixed; inset:0; z-index:2147483000; background:#000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(20px,5vh,55px); overflow:hidden; touch-action:none; }
+    #startup-loader[hidden] { display:none!important; }
+    #startup-loader-car-zone { height:min(47vh,380px); width:100%; display:grid; place-items:center; overflow:visible; position:relative; z-index:2; }
+    #startup-loader-car { display:block; max-width:min(40.6vw,350px); max-height:100%; width:auto; height:auto; object-fit:contain; will-change:transform; transform:translate3d(-100vw,0,0) scaleX(-1); }
+    #startup-loader-label { position:relative; z-index:1; font-size:clamp(25px,4.4vw,48px); font-weight:900; color:#fff; letter-spacing:.08em; text-align:center; font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif; }
+  </style>
+  <script>
+  // Load noncritical styles after the first black loading frame.
+  window.__startupStylesReady = new Promise((resolve) => {
+    document.addEventListener("DOMContentLoaded", () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "./styles.css";
+        let completed = false;
+        const finish = () => { if (completed) return; completed = true; resolve(); };
+        css.addEventListener("load", finish, {once:true});
+        css.addEventListener("error", finish, {once:true});
+        setTimeout(finish, 8000);
+        document.head.append(css);
+        const font = document.createElement("link");
+        font.rel = "stylesheet";
+        font.href = "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;800;900&display=block";
+        document.head.append(font);
+      }));
+    }, {once:true});
+  });
+  </script>
+
 </head>
 <body>
   <div id="startup-loader" role="status" aria-live="polite" aria-label="じゅんびしているよ">
@@ -660,7 +692,7 @@
     });
     const minimumReady = new Promise((resolve) => setTimeout(resolve, Math.max(0, 3000 - (performance.now() - start))));
     // Never reveal the top while the vehicle is still on screen.
-    Promise.all([assetsReady, minimumReady, motionReady])
+    Promise.all([assetsReady, minimumReady, motionReady, window.__startupStylesReady])
       .then(() => { finished = true; if (animation) animation.cancel(); loader.hidden = true; })
       .catch(() => { finished = true; car.style.transform = pos(window.innerWidth); if (animation) animation.cancel(); loader.hidden = true; });
   })();
