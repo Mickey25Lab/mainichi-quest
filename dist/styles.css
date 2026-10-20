@@ -4249,3 +4249,12 @@ button, input { font: inherit; }
 #startup-loader-car{display:block;max-width:min(40.6vw,350px);max-height:100%;width:auto;height:auto;object-fit:contain;will-change:transform;transform:translate3d(-100vw,0,0) scaleX(-1)}
 #startup-loader-label{position:relative;z-index:1;font-size:clamp(25px,4.4vw,48px);font-weight:900;color:white;letter-spacing:.08em;text-align:center;font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif}
 @media (prefers-reduced-motion:reduce){#startup-loader-car{will-change:auto}}
+
+/* Read-only points diagnostics in the PIN-gated admin area. */
+.admin-points-card { max-height: min(86vh, 850px); overflow-y: auto; }
+.admin-points-total { font-size: 1.45rem; font-weight: 800; }
+.admin-points-table-scroll { max-height: 42vh; overflow-y: auto; border: 1px solid rgba(120,160,190,.45); border-radius: 8px; }
+.admin-points-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.admin-points-table th, .admin-points-table td { padding: .45rem; border-bottom: 1px solid rgba(120,160,190,.3); text-align: left; }
+.admin-points-table td:last-child, .admin-points-table th:last-child { text-align: right; }
+#admin-points-reference-note { font-size: .78rem; line-height: 1.45; }

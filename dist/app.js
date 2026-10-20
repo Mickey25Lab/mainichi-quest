@@ -5453,6 +5453,41 @@
     $("admin-panel-overlay").hidden = false;
     $("admin-qa-toggle").focus();
   }
+  function openPointsDiagnostics() {
+    const active = profileStore.getActiveProfile();
+    const ledger = profileStore.getPointLedger();
+    $("admin-points-profile").textContent = active ? `プレイヤー：${active.displayName}` : "プレイヤーが見つかりません";
+    const isQaPreview = qaProgressModeEnabled();
+    const snapshot = Array.isArray(active?.progress?.rewardProgressPhase1) ? active.progress.rewardProgressPhase1 : [];
+    const referenceTotal = snapshot.reduce((sum, progress) => sum + profileStore.calculateVehiclePointValue(progress), 0);
+    $("admin-points-total").textContent = isQaPreview
+      ? `QAテスト参考合計：${referenceTotal.toLocaleString("ja-JP")} pt（仮データ・未加算）`
+      : ledger ? `確定済み累計：${ledger.total.toLocaleString("ja-JP")} pt` : "ポイント台帳未作成";
+    $("admin-points-qa-note").hidden = !isQaPreview;
+    $("admin-points-migration").textContent = ledger
+      ? `初回移行：${ledger.initialPoints.toLocaleString("ja-JP")} pt ／ 記録イベント数（保持分）：${ledger.recentEvents?.length || 0}`
+      : "このプレイヤーにはまだ累計ポイント記録がありません";
+    const rows = $("admin-points-rows");
+    rows.replaceChildren();
+    vehicles.forEach((vehicle, index) => {
+      const state = snapshot[index] || emptyVehicleProgress();
+      const tr = document.createElement("tr");
+      const cells = [vehicle.nameJa,
+        !state.discovered ? "未発見" : state.masterMedal ? `メダル・エネルギー${state.energy}/500`
+          : !state.friendly ? `ハート${state.friendship}/5` : `段階${state.stage}・エネルギー${state.energy}/${requiredEnergyForStage(state.stage)}`,
+        String(profileStore.calculateVehiclePointValue(state))];
+      cells.forEach((value) => { const td = document.createElement("td"); td.textContent = value; tr.appendChild(td); });
+      rows.appendChild(tr);
+    });
+    $("admin-panel-overlay").hidden = true;
+    $("admin-points-overlay").hidden = false;
+    $("admin-points-close").focus();
+  }
+  function closePointsDiagnostics() {
+    $("admin-points-overlay").hidden = true;
+    $("admin-panel-overlay").hidden = false;
+    $("admin-points-open").focus();
+  }
   function closeAdminPanel() {
     $("admin-panel-overlay").hidden = true;
     setAdminActionStatus("");
@@ -5604,6 +5639,8 @@
   });
   $("admin-pin-cancel").addEventListener("click", closeAdminPin);
   $("admin-panel-close").addEventListener("click", closeAdminPanel);
+  $("admin-points-open").addEventListener("click", openPointsDiagnostics);
+  $("admin-points-close").addEventListener("click", closePointsDiagnostics);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
   $("parent-free-play-toggle").addEventListener("click", () => {
     const settings = parentDraftForProfile(parentSettingsProfileId);

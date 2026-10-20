@@ -601,6 +601,7 @@
         <span>BGM消失診断</span>
         <button class="admin-qa-toggle" id="admin-bgm-diagnostics-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
+      <button class="admin-action-button" id="admin-points-open" type="button">累計ポイント診断を見る</button>
       <div class="admin-action-list">
         <button class="admin-action-button" id="admin-reenable-collection" type="button">コレクションを今日もう一度見られるようにする</button>
         <button class="admin-action-button" id="admin-reenable-opening-movie" type="button">開始時ムービーを今日もう一度再生できるようにする</button>
@@ -608,6 +609,21 @@
       <p class="admin-action-status" id="admin-action-status" role="status" hidden></p>
       <button class="admin-reset-button" id="admin-reset-button" type="button">このプレイヤーのデータを消す</button>
       <button class="profile-close-button" id="admin-panel-close" type="button">もどる</button>
+    </section>
+  </div>
+  <div class="profile-overlay" id="admin-points-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-points-title" hidden>
+    <section class="profile-card admin-card admin-points-card">
+      <h2 id="admin-points-title">累計ポイント診断</h2>
+      <p id="admin-points-profile"></p>
+      <p id="admin-points-total" class="admin-points-total"></p>
+      <p id="admin-points-migration"></p>
+      <p id="admin-points-qa-note">QAモード中は仮の育成データを表示します。参考合計は実際の累計ポイントに加算されません。</p>
+      <p id="admin-points-reference-note">車種別の数字は現在の育成状態を現行配点で評価した参考値です。過去に確定した累計ポイントは再計算されないため、合計が一致しない場合があります。</p>
+      <div class="admin-points-table-scroll"><table class="admin-points-table">
+        <thead><tr><th>車種</th><th>状態</th><th>参考pt</th></tr></thead>
+        <tbody id="admin-points-rows"></tbody>
+      </table></div>
+      <button class="profile-close-button" id="admin-points-close" type="button">管理設定にもどる</button>
     </section>
   </div>
   <div class="profile-overlay" id="admin-reset-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-reset-question" hidden>
