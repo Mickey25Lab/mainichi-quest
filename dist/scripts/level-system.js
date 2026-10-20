@@ -5,6 +5,6 @@ function requiredPoints(level){if(!Number.isInteger(level)||level<1||level>50)th
 function levelAt(points){const total=Math.max(0,Math.floor(Number(points)||0));for(let level=50;level>=1;level--)if(total>=requiredPoints(level))return level;return 1;}
 function formatPoints(points){const n=Math.max(0,Math.floor(Number(points)||0));return n>=10000?`${Math.floor(n/10000)}万${n%10000?String(n%10000):""}`:`${n}`;}
 function title(level){return titles[level-1].replace(/（[^）]*）/g,"");}
-function titleHtml(level){return titles[level-1].replace(/([一-龯々ヶ]+)（([^）]+)）/g,"<ruby>$1<rt>$2</rt></ruby>");}
+function titleHtml(level){return titles[level-1].replace(/([一-龯々ヶ]+[ぁ-ん]*)（([^）]+)）/g,"<ruby>$1<rt>$2</rt></ruby>");}
 return Object.freeze({thresholds,titles,requiredPoints,levelAt,formatPoints,title,titleHtml});
 });
