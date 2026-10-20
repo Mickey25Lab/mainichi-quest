@@ -4511,3 +4511,30 @@ button, input { font: inherit; }
   .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
   .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after{animation:none!important;opacity:0}
 }
+
+/* TOP only: compact action buttons and panel, with a lower visual center. */
+.start-screen .top-image-buttons {
+  left:15.35%;
+  right:15.35%;
+  top:74.3%;
+}
+.start-screen .top-image-buttons::before {
+  inset:-16px -20px;
+  border-radius:29px;
+}
+/* Align the player's bottom edge with the left footer's parent button. */
+.start-screen .profile-switch-button {
+  top:auto;
+  left:auto;
+  right:24px;
+  bottom:7px;
+  height:34px;
+  min-height:34px;
+  z-index:9;
+}
+@media (max-width:650px) {
+  .start-screen .profile-switch-button {
+    right:12px;
+    bottom:5px;
+  }
+}
