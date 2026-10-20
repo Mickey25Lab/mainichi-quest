@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.42";
+  const appVersion = "0.3.43";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -5700,7 +5700,7 @@
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
   });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
   $("parent-settings-button").addEventListener("click", openParentPin);
