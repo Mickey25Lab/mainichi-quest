@@ -37,7 +37,26 @@ await page.locator("#profile-setup-name").fill("UI監査");
 await page.locator("#profile-setup-form button[type=submit]").click();
 await page.locator("#profile-setup-overlay").waitFor({state:"hidden",timeout:10000});
 }
-const item={viewport:{width,height},errors,measurements:{}};
+// Exercise the real entry path to initialize collection data and dynamic category controls.
+const collectionFlow={status:"not-started"};
+try {
+  await page.locator("#top-collection-button").click({timeout:10000});
+  await page.locator("#collection-screen.active").waitFor({timeout:15000});
+  const category=page.locator('.category-button[data-category="vehicle"]');
+  if(await category.count()){
+    await category.click({timeout:10000});
+    await page.waitForTimeout(150);
+    collectionFlow.status="vehicle-category-opened";
+  } else {
+    collectionFlow.status="collection-opened-category-unavailable";
+  }
+  collectionFlow.prevVisible=await page.locator("#collection-series-prev").isVisible();
+  collectionFlow.nextVisible=await page.locator("#collection-series-next").isVisible();
+} catch(e) {
+  collectionFlow.status="failed";
+  collectionFlow.error=String(e.message).slice(0,300);
+}
+const item={viewport:{width,height},errors,collectionFlow,measurements:{}};
 for(const [id,selectors] of Object.entries(targets)){
 item.measurements[id]=await page.evaluate(({id,selectors})=>{
 const screens=[...document.querySelectorAll(".screen")],was=screens.map(x=>x.classList.contains("active"));
@@ -74,6 +93,8 @@ for(const x of audit.screens){report+="\n### "+x.viewport.width+"x"+x.viewport.h
 const unavailable=Object.entries(x.measurements).flatMap(([name,m])=>Object.entries(m.controls).filter(([,v])=>v.status!=="measured").map(([selector,v])=>"- "+name+" "+selector+": "+v.status));
 report+=unavailable.length?unavailable.join("\n")+"\n":"All listed controls measured.\n";
 }
+report+="\n## Dynamic collection flow\n";
+for(const x of audit.screens) report+="- "+x.viewport.width+"x"+x.viewport.height+": "+x.collectionFlow.status+", previous visible="+x.collectionFlow.prevVisible+", next visible="+x.collectionFlow.nextVisible+(x.collectionFlow.error?", error="+x.collectionFlow.error:"")+"\n";
 report+="\n## Limitations\n"+audit.notes.map(x=>"- "+x).join("\n")+"\n";
 fs.writeFileSync(path.join(output,"summary.md"),report);
 console.log(report);
