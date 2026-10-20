@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.32";
+  const appVersion = "0.3.33";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -298,7 +298,9 @@
     syncCollectionFromRewardProgress();
   }
   function saveRewardProgress() {
-    try { profileStore.setRewardProgress(state.rewardProgress); } catch (_) {}
+    // QA presets must never become permanent player points.
+    if (qaProgressModeEnabled()) { profileStore.setRewardProgress(state.rewardProgress); return; }
+    profileStore.commitRewardProgressWithPoints(state.rewardProgress);
   }
   function syncCollectionFromRewardProgress() {
     state.collection = state.rewardProgress.map(collectionStageForProgress);
@@ -309,8 +311,8 @@
     const progress = vehicleProgress(vehicleIndex);
     return progress.discovered ? progress.stage : 1;
   }
-  function requiredEnergyForStage(stage) { return ({ 2: 30, 3: 50, 4: 70, 5: 100 })[stage] || 0; }
-  function energyStageForRequired(required) { return ({ 30: 2, 50: 3, 70: 4, 100: 5 })[required] || 0; }
+  function requiredEnergyForStage(stage) { return ({ 2: 30, 3: 50, 4: 100, 5: 200 })[stage] || 0; }
+  function energyStageForRequired(required) { return ({ 30: 2, 50: 3, 100: 4, 200: 5 })[required] || 0; }
   function progressSpeechBubbleSpec(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     if (!progress.discovered || !progress.friendly || progress.masterMedal) return null;
@@ -3179,10 +3181,10 @@
     });
     if (!progress.friendly) return;
     const visualEnergy = state.energyDisplayOverride?.vehicleIndex === vehicleIndex ? state.energyDisplayOverride : null;
-    const needed = visualEnergy?.required ?? requiredEnergyForStage(progress.stage);
+    const needed = visualEnergy?.required ?? (progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage));
     const currentEnergy = visualEnergy?.energy ?? progress.energy;
     const capsule = $("energy-capsule");
-    capsule.style.setProperty("--capsule-height", `${({ 30: 194, 50: 254, 70: 314, 100: 374 })[needed] || 194}px`);
+    capsule.style.setProperty("--capsule-height", `${({ 30: 194, 50: 254, 100: 314, 200: 374, 500: 374 })[needed] || 194}px`);
     $("energy-fill").style.height = `${Math.max(0, Math.min(100, (currentEnergy / needed) * 100))}%`;
     $("energy-current").textContent = String(currentEnergy);
     $("energy-required").textContent = String(needed);
@@ -3336,7 +3338,7 @@
     if (!timeBonusConfig.enabled || state.phase !== "initial" || !question || question.isReview) return null;
     if (!timeBonusConfig.modes.includes(state.mode) || question.hintUsed || question.hadWrong || question.answerRevealed || question.progressPenalty) return null;
     const progress = vehicleProgress(question.vehicleIndex ?? state.currentVehicleIndex);
-    if (!progress.friendly || progress.masterMedal) return null;
+    if (!progress.friendly || (progress.masterMedal && progress.energy >= 500)) return null;
     const answerDigits = timeBonusAnswerDigits(question);
     const inputCellCount = twoDigitMultiplicationInputCellCount(question);
     const limitMs = question.kind === "multiplication2x2"
@@ -3415,17 +3417,17 @@
     return acquisitionType ? commitAcquisition({ vehicleIndex, acquisitionType, stage, source }) : null;
   }
   function applyEnergyGain(progress, vehicleIndex, amount, { completeStage = true } = {}) {
-    const required = requiredEnergyForStage(progress.stage);
+    const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
     progress.energy = Math.min(required, progress.energy + amount);
     const appliedEnergy = progress.energy;
-    const reward = completeStage && progress.energy >= required ? completeEnergyStage(progress, vehicleIndex) : null;
+    const reward = completeStage && !progress.masterMedal && progress.energy >= required ? completeEnergyStage(progress, vehicleIndex) : null;
     return { reward, required, appliedEnergy };
   }
   function finishDeferredTimeBonusProgress(deferred) {
     const progress = vehicleProgress(deferred.vehicleIndex);
     const gain = applyEnergyGain(progress, deferred.vehicleIndex, deferred.timeBonus.amount, { completeStage: false });
     const { required, appliedEnergy } = gain;
-    const reward = progress.energy >= required ? completeEnergyStage(progress, deferred.vehicleIndex, "time_bonus") : null;
+    const reward = !progress.masterMedal && progress.energy >= required ? completeEnergyStage(progress, deferred.vehicleIndex, "time_bonus") : null;
     if (!reward) saveCollectionProgress();
     return { reward, energyVisual: { vehicleIndex: deferred.vehicleIndex, energy: appliedEnergy, required } };
   }
@@ -3474,7 +3476,7 @@
         // encounter, never on this fifth-heart answer.
         reward = commitAcquisition({ vehicleIndex, acquisitionType: "friendship_complete", stage: 1 });
       }
-    } else if (!progress.masterMedal) {
+    } else if (!progress.masterMedal || progress.energy < 500) {
       const assistedOrPenalized = question.hintUsed || question.hadWrong || question.progressPenalty;
       const baseEnergyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
       energyGain = scaledEnergyGain(baseEnergyGain, state.mode);
@@ -4150,7 +4152,7 @@
     const recent = state.phonicsLastRewardVehicleIndex;
     if (Number.isInteger(recent)) {
       const progress = vehicleProgress(recent);
-      if (progress.discovered && !progress.masterMedal) return recent;
+      if (progress.discovered && (!progress.masterMedal || progress.energy < 500)) return recent;
     }
     if (vehicleProgress(0).discovered) return 0;
     const discovered = state.rewardProgress.findIndex((progress) => progress?.discovered);
@@ -4212,7 +4214,7 @@
       }
       if (!reward) saveCollectionProgress();
     } else if (progress.masterMedal) {
-      const required = requiredEnergyForStage(progress.stage);
+      const required = 500;
       progress.energy = Math.min(required, progress.energy + amounts.energy);
       saveCollectionProgress();
     } else {
@@ -4451,7 +4453,8 @@
     const shadowY = layout.contactY + (layout.shadowOffsetY ?? (kind === "vehicle" ? 0 : -7));
     const top = layout.contactY - layout.size * anchorY;
     const rowDepth = Math.round(layout.contactY);
-    const isNew = state.collectionShowSessionMarkers && state.collectionNewVehicleIndexes.has(vehicleIndex);
+    const newKinds = { vehicle: ["vehicle_discovered", "friendship_complete"], robot: ["robot"], "super-robot": ["super_robot", "super_robot_equipped"], equipment: ["super_robot_equipped"], medal: ["master_medal"] };
+    const isNew = state.collectionShowSessionMarkers && state.sessionResultGets.some((item) => item.vehicleIndex === vehicleIndex && newKinds[kind].includes((item.stage === 1 ? item.kind === "discovery" ? "vehicle_discovered" : "friendship_complete" : ({ 2:"robot", 3:"super_robot", 4:"super_robot_equipped", 5:"master_medal" })[item.stage])));
     const shadow = kind === "medal" ? "" : '<span class="collection-scene-shadow"></span>';
     const artClasses = `collection-scene-art${grayscale ? " is-pre-friendship" : ""}${layout.flip ? " is-flipped" : ""}`;
     const shadowClass = layout.shadowVariant ? ` is-${layout.shadowVariant}` : "";
@@ -4570,7 +4573,7 @@
       const formStage = complete ? 5 : Math.max(2, Math.min(5, progress.stage));
       const status = !discovered ? "" : !progress.friendly
         ? `<span class="collection-card-status collection-card-hearts" aria-label="なかよし ${progress.friendship} / 5">${[5,4,3,2,1].map((level) => `<i class="${level <= progress.friendship ? "is-earned" : ""}">♥</i>`).join("")}</span>`
-        : `<span class="collection-card-status collection-card-energy" aria-label="エネルギー ${progress.energy} / ${requiredEnergyForStage(progress.stage)}"><i style="height:${Math.min(100, progress.energy / requiredEnergyForStage(progress.stage) * 100)}%"></i></span>`;
+        : `<span class="collection-card-status collection-card-energy" aria-label="エネルギー ${progress.energy} / ${progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage)}"><i style="height:${Math.min(100, progress.energy / (progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage)) * 100)}%"></i></span>`;
       const artPath = discovered ? answerArtworkPath(vehicle.index, formStage) : vehicleArtworkPath(0);
       const formClass = formStage === 2 ? "is-vehicle-form" : formStage === 3 ? "is-evolved-form is-robot-form" : formStage === 5 ? "is-evolved-form is-equipped-super-robot" : "is-evolved-form";
       const grayscaleClass = formStage === 2 && !progress.friendly ? " is-pre-friendship" : "";
@@ -5481,6 +5484,7 @@
     updateActiveProfileUi();
     const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset();
     loadRewardProgress();
+    if (!qaProgressModeEnabled()) profileStore.initializePointLedger(state.rewardProgress);
     loadRecentVehicles();
     state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex;
     setNeutralBackground();
