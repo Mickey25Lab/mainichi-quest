@@ -21,3 +21,12 @@ test("current-state reference points do not mutate saved ledger", () => {
   assert.equal(store.calculateVehiclePointValue(p[0]), 95);
   assert.deepEqual(store.getPointLedger(), before);
 });
+
+test("QA points display clearly separates simulated sum from permanent ledger", () => {
+  const diagnostics = app.split("function openPointsDiagnostics()")[1].split("function closePointsDiagnostics()")[0];
+  assert.match(diagnostics, /qaProgressModeEnabled\(\)/);
+  assert.match(diagnostics, /referenceTotal = snapshot\.reduce/);
+  assert.match(diagnostics, /QAテスト参考合計/);
+  assert.match(diagnostics, /仮データ・未加算/);
+  assert.ok(html.includes('id="admin-points-qa-note"'));
+});
