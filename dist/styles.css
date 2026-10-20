@@ -4378,3 +4378,11 @@ button, input { font: inherit; }
 @media (prefers-reduced-motion:reduce) {
   .collection-category-scene .collection-scene-item .collection-scene-art { animation:none !important; }
 }
+
+/* Per-character phase offsets; faster NEW animations draw attention without
+   changing the stable element positions or the current equipment float. */
+.collection-category-scene .collection-scene-item:nth-child(4n+1) { --mq-idle-duration:7.1s; --mq-idle-delay:-1.4s; }
+.collection-category-scene .collection-scene-item:nth-child(4n+2) { --mq-idle-duration:8.3s; --mq-idle-delay:-4.2s; }
+.collection-category-scene .collection-scene-item:nth-child(4n+3) { --mq-idle-duration:9.1s; --mq-idle-delay:-6.3s; }
+.collection-category-scene .collection-scene-item:nth-child(4n) { --mq-idle-duration:10.2s; --mq-idle-delay:-2.7s; }
+.collection-category-scene .collection-scene-item.is-new { --mq-idle-duration:4.4s; }
