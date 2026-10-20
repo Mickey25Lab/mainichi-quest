@@ -25,26 +25,17 @@ export function extractAppVersion(appJs, label = "dist/app.js") {
 
 export function checkVersionBump({ changedFiles, baseAppJs, headAppJs }) {
   const userFacingFiles = changedFiles.filter(isUserFacingPath);
-  if (userFacingFiles.length === 0) {
-    return { required: false, message: "No production files changed; appVersion bump is not required." };
-  }
-
+  // PRs must not edit the shared version: concurrent PRs would conflict.
+  // Read the version even for docs-only PRs so accidental bumps fail.
   const base = extractAppVersion(baseAppJs, "base dist/app.js");
   const head = extractAppVersion(headAppJs, "head dist/app.js");
-  const expected = `${base.major}.${base.minor}.${base.patch + 1}`;
-  if (head.major !== base.major || head.minor !== base.minor || head.patch !== base.patch + 1) {
-    throw new Error(
-      `Production files changed, so appVersion must be bumped exactly one patch: ${base.raw} -> ${expected}. Found ${head.raw}.\n`
-      + `Changed production files:\n${userFacingFiles.map((file) => `- ${file}`).join("\n")}`
-    );
+  if (base.raw !== head.raw) {
+    throw new Error(`Do not bump appVersion in a PR (${base.raw} -> ${head.raw}). main deployment handles this automatically.`);
   }
-  return {
-    required: true,
-    baseVersion: base.raw,
-    headVersion: head.raw,
-    userFacingFiles,
-    message: `appVersion patch bump verified: ${base.raw} -> ${head.raw}`
-  };
+  return { required: false, baseVersion: base.raw, headVersion: head.raw,
+    userFacingFiles, message: userFacingFiles.length
+      ? `PR version unchanged (${head.raw}); automatic patch bump on main.`
+      : `Non-production PR; version unchanged (${head.raw}).` };
 }
 
 function git(args) {
@@ -64,7 +55,6 @@ export function runForCommits(baseSha, headSha) {
     .map((file) => file.trim())
     .filter(Boolean);
   const userFacingFiles = changedFiles.filter(isUserFacingPath);
-  if (userFacingFiles.length === 0) return checkVersionBump({ changedFiles, baseAppJs: "", headAppJs: "" });
   const baseAppJs = git(["show", `${base}:dist/app.js`]);
   const headAppJs = git(["show", `${head}:dist/app.js`]);
   return checkVersionBump({ changedFiles, baseAppJs, headAppJs });
