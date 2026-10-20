@@ -5457,11 +5457,16 @@
     const active = profileStore.getActiveProfile();
     const ledger = profileStore.getPointLedger();
     $("admin-points-profile").textContent = active ? `プレイヤー：${active.displayName}` : "プレイヤーが見つかりません";
-    $("admin-points-total").textContent = ledger ? `確定済み累計：${ledger.total.toLocaleString("ja-JP")} pt` : "ポイント台帳未作成";
+    const isQaPreview = qaProgressModeEnabled();
+    const snapshot = Array.isArray(active?.progress?.rewardProgressPhase1) ? active.progress.rewardProgressPhase1 : [];
+    const referenceTotal = snapshot.reduce((sum, progress) => sum + profileStore.calculateVehiclePointValue(progress), 0);
+    $("admin-points-total").textContent = isQaPreview
+      ? `QAテスト参考合計：${referenceTotal.toLocaleString("ja-JP")} pt（仮データ・未加算）`
+      : ledger ? `確定済み累計：${ledger.total.toLocaleString("ja-JP")} pt` : "ポイント台帳未作成";
+    $("admin-points-qa-note").hidden = !isQaPreview;
     $("admin-points-migration").textContent = ledger
       ? `初回移行：${ledger.initialPoints.toLocaleString("ja-JP")} pt ／ 記録イベント数（保持分）：${ledger.recentEvents?.length || 0}`
       : "このプレイヤーにはまだ累計ポイント記録がありません";
-    const snapshot = Array.isArray(active?.progress?.rewardProgressPhase1) ? active.progress.rewardProgressPhase1 : [];
     const rows = $("admin-points-rows");
     rows.replaceChildren();
     vehicles.forEach((vehicle, index) => {
