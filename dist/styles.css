@@ -4332,3 +4332,49 @@ button, input { font: inherit; }
 @media (prefers-reduced-motion:reduce) {
   .collection-category-scene[data-category="equipment"] .collection-scene-art { animation:none !important; }
 }
+
+/* Collection character animations: only the art moves, never the button hitbox,
+   NEW marker, or ground shadow. Stable per-slot offsets avoid synchronized motion. */
+@keyframes mq-car-idle {
+  0%,83%,100% { translate:0 0; rotate:0deg; }
+  85% { translate:-2px 0; rotate:-1deg; }
+  87% { translate:2px 0; rotate:1deg; }
+  89% { translate:-2px 0; rotate:-.7deg; }
+  91% { translate:1px 0; rotate:.4deg; }
+  93% { translate:0 0; rotate:0deg; }
+}
+@keyframes mq-robot-hop {
+  0%,78%,100% { translate:0 0; scale:1 1; }
+  81% { translate:0 2px; scale:1.025 .975; }
+  86% { translate:0 -10px; scale:.99 1.01; }
+  91% { translate:0 0; scale:1.01 .99; }
+  94% { translate:0 -2px; scale:1 1; }
+}
+@keyframes mq-super-power {
+  0%,78%,100% { scale:1; opacity:1; }
+  84% { scale:1.018; opacity:1; }
+  90% { scale:1.01; opacity:.92; }
+  94% { scale:1; opacity:1; }
+}
+@keyframes mq-medal-gleam {
+  0%,78%,100% { filter:drop-shadow(3px 12px 9px rgba(0,7,24,.65)) brightness(1); rotate:0deg; }
+  86% { filter:drop-shadow(3px 12px 9px rgba(0,7,24,.65)) brightness(1.45); rotate:-4deg; }
+  92% { filter:drop-shadow(3px 12px 9px rgba(0,7,24,.65)) brightness(1.12); rotate:2deg; }
+}
+/* The image is the only animated child. CSS custom durations/delays create
+   reproducible variety without JS timers, extra images or layout work. */
+.collection-category-scene[data-category="vehicle"] .collection-scene-item .collection-scene-art {
+  animation:mq-car-idle var(--mq-idle-duration,6.5s) ease-in-out var(--mq-idle-delay,0s) infinite;
+}
+.collection-category-scene[data-category="robot"] .collection-scene-item .collection-scene-art {
+  animation:mq-robot-hop var(--mq-idle-duration,8s) ease-in-out var(--mq-idle-delay,0s) infinite;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item .collection-scene-art {
+  animation:mq-super-power var(--mq-idle-duration,9.5s) ease-in-out var(--mq-idle-delay,0s) infinite;
+}
+.collection-category-scene[data-category="medal"] .collection-scene-item .collection-scene-art {
+  animation:mq-medal-gleam var(--mq-idle-duration,9s) ease-in-out var(--mq-idle-delay,0s) infinite;
+}
+@media (prefers-reduced-motion:reduce) {
+  .collection-category-scene .collection-scene-item .collection-scene-art { animation:none !important; }
+}
