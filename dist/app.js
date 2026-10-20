@@ -1319,7 +1319,7 @@
   }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
-    versionLabel.textContent = `バージョン${appVersion}`;
+    versionLabel.textContent = `Version ${appVersion}`;
     versionLabel.classList.remove("is-preview");
     try {
       const response = await fetch("./preview-meta.json", { cache: "no-store" });
@@ -1327,10 +1327,10 @@
       const metadata = await response.json();
       if (metadata?.environment !== "preview") return;
       const identity = metadata.prNumber
-        ? `プレビューPR${metadata.prNumber}`
-        : `プレビュー_${metadata.branch || "branch"}`;
+        ? `Preview PR #${metadata.prNumber}`
+        : `Preview_${metadata.branch || "branch"}`;
       const commit = metadata.shortCommit ? `_${metadata.shortCommit}` : "";
-      versionLabel.textContent = `バージョン${appVersion}_${identity}${commit}`;
+      versionLabel.textContent = `Version ${appVersion}_${identity}${commit}`;
       versionLabel.classList.add("is-preview");
     } catch (_) {
       // GitHub Pages / local builds do not generate preview metadata.
