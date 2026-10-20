@@ -4282,3 +4282,53 @@ button, input { font: inherit; }
 .top-level-title ruby{ruby-position:over}.top-level-title rt{font-size:.48em}
 /* Version is unobtrusive developer metadata: single baseline and transparent. */
 .start-screen .start-version,.start-screen .start-version.is-preview{position:absolute;left:1.4%;bottom:1px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:block;white-space:nowrap;color:rgba(255,255,255,.77);font-size:clamp(13.5px,1.425vw,19.5px);font-weight:400;line-height:1.15;letter-spacing:0;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+
+/* Collection polish: completed modes use a neutral translucent white treatment. */
+.mode-select-choice.is-complete {
+  border-color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.30);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 5px 12px rgba(0,9,32,.3);
+}
+.mode-select-choice.is-complete .mode-select-remaining { color:#fff; }
+.mode-select-mission-complete {
+  padding:8px 20px;
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:12px;
+  background:rgba(6,21,45,.58);
+  box-shadow:none;
+  color:#f3f8ff;
+  text-shadow:0 1px 3px rgba(0,0,0,.45);
+  pointer-events:none;
+}
+.mode-select-mission-complete strong { font-size:clamp(18px,1.9vw,25px); }
+.mode-select-mission-complete span { font-weight:700; }
+
+/* Soft grounded shadows across collection scenes and the detail illustration. */
+.collection-scene-item-super-robot .collection-scene-art {
+  filter:drop-shadow(3px 16px 10px rgba(1,7,20,.65));
+}
+.collection-scene-item-medal .collection-scene-art {
+  filter:drop-shadow(3px 12px 9px rgba(0,7,24,.65));
+}
+#collection-detail-screen .detail-evolution-slot .detail-character {
+  filter:drop-shadow(6px 17px 12px rgba(0,5,19,.72));
+}
+#collection-detail-screen .detail-evolution-slot .detail-character.is-grayscale {
+  filter:grayscale(1) drop-shadow(6px 17px 12px rgba(0,5,19,.72));
+}
+#collection-detail-screen .detail-evolution-slot .detail-character.is-silhouette {
+  filter:brightness(0) drop-shadow(6px 17px 12px rgba(0,5,19,.72));
+}
+
+/* Independent, slow, phase-shifted zero-layout floating for four equipment slots. */
+@keyframes mq-equipment-float {
+  0%,100% { translate:0 0; }
+  50% { translate:0 calc(-1 * var(--float-height)); }
+}
+.collection-category-scene[data-category="equipment"] .collection-scene-item:nth-child(1) .collection-scene-art { --float-height:12px; animation:mq-equipment-float 2.933s ease-in-out -0.7s infinite; }
+.collection-category-scene[data-category="equipment"] .collection-scene-item:nth-child(2) .collection-scene-art { --float-height:17px; animation:mq-equipment-float 3.533s ease-in-out -2.8s infinite; }
+.collection-category-scene[data-category="equipment"] .collection-scene-item:nth-child(3) .collection-scene-art { --float-height:14px; animation:mq-equipment-float 3.2s ease-in-out -1.9s infinite; }
+.collection-category-scene[data-category="equipment"] .collection-scene-item:nth-child(4) .collection-scene-art { --float-height:19px; animation:mq-equipment-float 3.933s ease-in-out -4.1s infinite; }
+@media (prefers-reduced-motion:reduce) {
+  .collection-category-scene[data-category="equipment"] .collection-scene-art { animation:none !important; }
+}

@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.35";
+  const appVersion = "0.3.36";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -4406,7 +4406,27 @@
       } catch (_) {}
     }
     const visible = current.filter((index) => collectionSceneQualifies(index, kind));
-    if (kind !== "vehicle") return visible;
+    if (kind !== "vehicle") {
+      // Keep persisted acquisition order intact; sort the rendered scene by the
+      // newest relevant event. Equipping a super robot makes it newest again.
+      let recentHistory = [];
+      try { recentHistory = profileStore.getAcquisitionHistory(); } catch (_) {}
+      const eligibleTypes = kind === "super-robot"
+        ? new Set(["super_robot", "super_robot_equipped"])
+        : new Set([collectionSceneAcquisitionType(kind)]);
+      const latestSequence = new Map();
+      recentHistory.forEach((entry) => {
+        if (!eligibleTypes.has(entry?.acquisitionType)) return;
+        const index = vehicles.findIndex((vehicle) => vehicle.stem === entry.vehicleId);
+        const sequence = Number(entry.sequence);
+        if (index < 0 || !Number.isFinite(sequence)) return;
+        latestSequence.set(index, Math.max(latestSequence.get(index) ?? -1, sequence));
+      });
+      const originalPosition = new Map(visible.map((index, position) => [index, position]));
+      return visible.sort((a, b) =>
+        (latestSequence.get(b) ?? -1) - (latestSequence.get(a) ?? -1)
+        || originalPosition.get(b) - originalPosition.get(a));
+    }
     let history = [];
     try { history = profileStore.getAcquisitionHistory(); } catch (_) {}
     const friendshipOrder = new Map();
@@ -4420,9 +4440,9 @@
       const aFriendly = vehicleProgress(a).friendly;
       const bFriendly = vehicleProgress(b).friendly;
       if (aFriendly !== bFriendly) return aFriendly ? -1 : 1;
-      if (!aFriendly) return discoveryOrder.get(a) - discoveryOrder.get(b);
-      return (friendshipOrder.get(a) ?? Number.MAX_SAFE_INTEGER) - (friendshipOrder.get(b) ?? Number.MAX_SAFE_INTEGER)
-        || discoveryOrder.get(a) - discoveryOrder.get(b);
+      if (!aFriendly) return discoveryOrder.get(b) - discoveryOrder.get(a);
+      return (friendshipOrder.get(b) ?? -1) - (friendshipOrder.get(a) ?? -1)
+        || discoveryOrder.get(b) - discoveryOrder.get(a);
     });
   }
   function collectionCategoryPageSize(category) {
