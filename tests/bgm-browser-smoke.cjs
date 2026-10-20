@@ -70,10 +70,7 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await page.waitForTimeout(50);
   assert.equal(await bgmStarts(page), heroicStartCount);
   assert.equal(await page.locator(".start-developer").count(), 0);
-  const speakerBox = await page.locator("#top-bgm-toggle-button").boundingBox();
-  assert.ok(speakerBox);
-  assert.ok(1400 - (speakerBox.x + speakerBox.width) <= 20);
-  assert.ok(1050 - (speakerBox.y + speakerBox.height) <= 20);
+  assert.equal(await page.locator("#top-bgm-toggle-button").count(), 0);
   const reloadBox = await page.locator("#top-reload-button").boundingBox();
   const settingsBox = await page.locator("#admin-settings-button").boundingBox();
   assert.ok(reloadBox && settingsBox);
@@ -102,16 +99,15 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await waitForBgmGroup(page, "game");
   const gameSpeakerBox = await page.locator("#bgm-toggle-button").boundingBox();
   assert.ok(gameSpeakerBox);
-  assert.ok(Math.abs(speakerBox.width - gameSpeakerBox.width) < 0.5);
-  assert.ok(Math.abs(speakerBox.height - gameSpeakerBox.height) < 0.5);
+
   assert.equal(await bgmStarts(page), reloadedHeroicStartCount + 1);
   assert.equal(await page.locator("#bgm-toggle-button").getAttribute("aria-pressed"), "true");
-  assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");
+
 
   await page.locator("#bgm-toggle-button").click();
   await waitForBgmGroup(page, "");
   assert.equal(await page.evaluate(() => localStorage.getItem("warizan-robot:bgm-enabled-v1")), "false");
-  assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "false");
+
   await page.locator("#bgm-toggle-button").click();
   await waitForBgmGroup(page, "game");
   assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");
@@ -149,11 +145,11 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   await waitForBgmGroup(page, "heroic");
   await page.locator("#mode-select-back").click();
   await page.locator("#start-screen.active").waitFor();
-  await page.locator("#top-bgm-toggle-button").click();
-  await waitForBgmGroup(page, "");
   await page.locator("#start-button").click();
   await page.locator("#mode-select-normal").click();
   await page.locator("#play-screen.active").waitFor();
+  await page.locator("#bgm-toggle-button").click();
+  await waitForBgmGroup(page, "");
   assert.equal(await page.evaluate(() => document.documentElement.dataset.bgmGroup || ""), "");
   assert.equal(await page.locator("#bgm-toggle-button").getAttribute("aria-pressed"), "false");
   assert.deepEqual(pageErrors, []);
