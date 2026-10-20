@@ -4433,3 +4433,82 @@ button, input { font: inherit; }
 
 /* Remaining points to next level in the existing TOP HUD. */
 .start-screen .top-next-level{display:block;width:100%;font-size:clamp(11px,1.15vw,16px);font-weight:900;line-height:1.35;white-space:nowrap;color:#ffec9d;text-shadow:0 2px 4px #07163b}
+
+/* Each of the four collection slots fires one fast summon per 20s cycle.
+   Shared timing and fixed 5s offsets prevent simultaneous beams. */
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot {
+  --power-duration:20s;
+  --power-delay:0s;
+  isolation:isolate;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot:nth-child(2) { --power-delay:-5s; }
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot:nth-child(3) { --power-delay:-10s; }
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot:nth-child(4) { --power-delay:-15s; }
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot .collection-scene-art {
+  animation:mq-super-summon-charge var(--power-duration) linear var(--power-delay) infinite;
+  transform-origin:center 82%;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
+  content:"";position:absolute;z-index:2;pointer-events:none;
+  left:50%;bottom:6%;height:calc(var(--item-y) + var(--item-size) * .94);border-radius:0 0 12px 12px;
+  transform-origin:50% 100%;opacity:0;
+  animation:mq-super-summon-beam var(--power-duration) linear var(--power-delay) infinite;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before {
+  width:33%;transform:translateX(-50%);
+  background:linear-gradient(to top,rgba(74,215,255,.08),rgba(139,235,255,.78) 22%,rgba(236,252,255,.92) 74%,rgba(255,255,255,.16));
+  box-shadow:0 0 24px 12px rgba(58,202,255,.6),0 0 52px 24px rgba(48,157,255,.3);
+  filter:blur(7px);
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
+  width:9%;background:linear-gradient(to top,rgba(255,238,157,.08),#fff7c7 22%,#fff 54%,rgba(181,244,255,.9) 90%,rgba(255,255,255,.2));
+  box-shadow:0 0 12px 5px rgba(255,255,255,.98),0 0 30px 13px rgba(94,225,255,.72);
+  filter:blur(1px);
+}
+/* Only the first 5% (1 second) of each 20s cycle animates:
+   rapid ignition, brief power-up, and crisp release. */
+@keyframes mq-super-summon-charge {
+  0%,.4%,5%,100% {scale:1;filter:brightness(1);}
+  1.2% {scale:1.04;filter:brightness(1.24);}
+  2.2%,3.3% {scale:1.085;filter:brightness(1.36) drop-shadow(0 0 9px rgba(149,234,255,.7));}
+  4.2% {scale:1.015;filter:brightness(1.07);}
+}
+@keyframes mq-super-summon-beam {
+  0%,.4%,5%,100% {opacity:0;scale:.45 1;}
+  1.2% {opacity:1;scale:1 1;}
+  3.3% {opacity:1;scale:1 1;}
+  4.5% {opacity:0;scale:.85 1;}
+}
+/* Completed daily missions: dark translucent neutral color preserves white-text contrast. */
+.mode-select-choice.is-complete:not(.is-free-play) {
+  background:linear-gradient(180deg,rgba(44,49,65,.91),rgba(26,29,43,.93));
+  border-color:rgba(193,201,218,.86);color:#fff;
+  text-shadow:0 2px 3px rgba(0,0,0,.75);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 5px 12px rgba(0,9,32,.3);
+}
+/* All-done free play: distinct purple + muted gold, including completed entries. */
+.mode-select-choice.is-free-play,
+.mode-select-choice.is-complete.is-free-play,
+.mode-select-choice.is-free-play:hover:not(:disabled),
+.mode-select-choice.is-free-play:active:not(:disabled) {
+  opacity:1;filter:none;
+  background:linear-gradient(180deg,rgba(91,51,148,.95),rgba(49,23,92,.96));
+  border-color:#bd9ade;color:#ead78e;
+  text-shadow:0 2px 3px rgba(29,10,53,.75);
+  box-shadow:inset 0 0 19px rgba(174,111,222,.3),0 6px 14px rgba(21,8,44,.42);
+}
+.mode-select-choice.is-free-play .mode-select-name,
+.mode-select-choice.is-free-play .mode-select-name *,
+.mode-select-choice.is-free-play .mode-select-remaining,
+.mode-select-choice.is-free-play .mode-select-remaining *,
+.mode-select-choice.is-free-play .mode-select-energy,
+.mode-select-choice.is-free-play .mode-select-energy * {color:#ead78e;}
+/* Corner controls keep their dimensions; only text shrinks to 70%. */
+.play-screen #quit-button {font-size:21.7px;}
+.play-screen #assist-button {font-size:calc(var(--keypad-remainder-label-size) * .7);}
+@media(prefers-reduced-motion:reduce){
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot .collection-scene-art{animation:none!important}
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after{animation:none!important;opacity:0}
+}
