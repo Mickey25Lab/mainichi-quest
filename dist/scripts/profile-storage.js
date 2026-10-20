@@ -520,6 +520,7 @@
       hasLegacyChildData, legacySnapshot, createProfile, migrateLegacyProfile, getMigrationState,
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
       getPointLedger, initializePointLedger, commitRewardProgressWithPoints,
+      calculateVehiclePointValue: vehiclePointValue,
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
