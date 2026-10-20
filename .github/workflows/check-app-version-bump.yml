@@ -1,4 +1,4 @@
-name: Check app version bump
+name: Check unchanged PR version
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   check-app-version-bump:
-    name: Check app version bump
+    name: Check unchanged PR version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout pull request
@@ -20,5 +20,5 @@ jobs:
       - name: Test version checker
         run: node --test .github/scripts/check-app-version-bump.test.mjs
 
-      - name: Check production changes and appVersion
+      - name: Ensure PR does not manually bump appVersion
         run: node .github/scripts/check-app-version-bump.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
