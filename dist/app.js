@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.38";
+  const appVersion = "0.3.39";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -5162,6 +5162,9 @@
     $("top-level-value").textContent = `レベル${currentLevel}`;
     $("top-level-title").innerHTML = levelSystem.titleHtml(currentLevel);
     $("top-points-value").textContent = levelSystem.formatPoints(ledger.total);
+    $("top-next-level").textContent = currentLevel >= 50
+      ? "さいこうレベル！"
+      : `つぎのレベルまで あと${(levelSystem.requiredPoints(currentLevel + 1) - ledger.total).toLocaleString("ja-JP")}ポイント`;
   }
   function prepareLevelCelebration() {
     refreshTopLevel();
