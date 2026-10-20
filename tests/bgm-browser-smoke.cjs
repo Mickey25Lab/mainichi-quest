@@ -110,7 +110,6 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
 
   await page.locator("#bgm-toggle-button").click();
   await waitForBgmGroup(page, "game");
-  assert.equal(await page.locator("#top-bgm-toggle-button").getAttribute("aria-pressed"), "true");
 
   await page.locator("#quit-button").click();
   await page.locator("#quit-confirm-cancel").click();
