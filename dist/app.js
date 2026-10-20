@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.34";
+  const appVersion = "0.3.35";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -5136,6 +5136,72 @@
     element.textContent = message || "";
     element.hidden = !message;
   }
+  const levelSystem = window.MiqueLevelSystem;
+  let pendingLevelCelebration = null;
+  let levelFanfareDeferred = false;
+  function refreshTopLevel() {
+    const ledger = profileStore.getPointLedger();
+    const panel = $("top-level-panel");
+    panel.hidden = !ledger;
+    if (!ledger) return;
+    $("top-level-value").textContent = `レベル${levelSystem.levelAt(ledger.total)}`;
+    $("top-points-value").textContent = levelSystem.formatPoints(ledger.total);
+  }
+  function prepareLevelCelebration() {
+    refreshTopLevel();
+    if (qaProgressModeEnabled()) return;
+    const ledger = profileStore.getPointLedger();
+    if (!ledger) return;
+    const current = levelSystem.levelAt(ledger.total);
+    const previous = profileStore.getLevelAcknowledged();
+    if (previous === null) {
+      profileStore.setLevelAcknowledged(current); // First install: existing points are baseline, not a new level-up.
+      return;
+    }
+    if (current <= previous) return;
+    pendingLevelCelebration = { previous, current, points: ledger.total };
+    $("level-up-from").textContent = `レベル${previous}`;
+    $("level-up-to").textContent = `レベル${current}`;
+    $("level-up-old-title").innerHTML = levelSystem.titleHtml(previous);
+    $("level-up-new-title").innerHTML = levelSystem.titleHtml(current);
+    $("level-up-points-value").textContent = levelSystem.formatPoints(ledger.total);
+    preloadFanfareSounds();
+  }
+  function openPendingLevelCelebration() {
+    if (!pendingLevelCelebration || qaProgressModeEnabled()) return;
+    $("level-up-overlay").hidden = false;
+    $("level-up-close").focus();
+    // Safari may require a gesture before audio; retry on the dismissal gesture.
+    levelFanfareDeferred = true;
+    preloadFanfareSounds().then(() => {
+      if (!pendingLevelCelebration || $("level-up-overlay").hidden) return;
+      try {
+        const context = audioContext();
+        if (context.state === "running") {
+          playFanfareSound();
+          levelFanfareDeferred = false;
+        } else {
+          context.resume().then(() => {
+            if (context.state === "running" && pendingLevelCelebration && !$("level-up-overlay").hidden && levelFanfareDeferred) {
+              playFanfareSound();
+              levelFanfareDeferred = false;
+            }
+          }).catch(() => {});
+        }
+      } catch (_) {}
+    });
+  }
+  function closeLevelCelebration() {
+    if (!pendingLevelCelebration) return;
+    if (levelFanfareDeferred) { try { playFanfareSound(); } catch (_) {} }
+    try {
+      profileStore.setLevelAcknowledged(pendingLevelCelebration.current);
+      pendingLevelCelebration = null;
+      levelFanfareDeferred = false;
+      $("level-up-overlay").hidden = true;
+    } catch (error) { console.error("Level notice save failed",error); }
+  }
+  window.addEventListener("mique-startup-finished", openPendingLevelCelebration);
   function updateActiveProfileUi() {
     const profile = profileStore.getActiveProfile();
     const button = $("profile-switch-button");
@@ -5520,6 +5586,7 @@
     const previewQaInitialVehicleIndex = seedPreviewQaProgressPreset();
     loadRewardProgress();
     if (!qaProgressModeEnabled()) profileStore.initializePointLedger(state.rewardProgress);
+    prepareLevelCelebration();
     loadRecentVehicles();
     state.previewQaInitialVehicleIndex = previewQaInitialVehicleIndex;
     setNeutralBackground();
@@ -5661,6 +5728,7 @@
   $("admin-reset-button").addEventListener("click", () => { $("admin-reset-confirm-overlay").hidden = false; $("admin-reset-cancel").focus(); });
   $("admin-reset-cancel").addEventListener("click", closeAdminResetConfirm);
   $("admin-reset-confirm").addEventListener("click", resetActiveProfileFromAdmin);
+  $("level-up-close").addEventListener("click", closeLevelCelebration);
   $("profile-switch-button").addEventListener("click", openProfileManager);
   $("profile-manager-close").addEventListener("click", () => { $("profile-manager-overlay").hidden = true; });
   $("profile-setup-form").addEventListener("submit", (event) => {
