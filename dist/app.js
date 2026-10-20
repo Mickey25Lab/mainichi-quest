@@ -1319,7 +1319,7 @@
   }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
-    versionLabel.textContent = `Version ${appVersion}`;
+    versionLabel.textContent = `バージョン${appVersion}`;
     versionLabel.classList.remove("is-preview");
     try {
       const response = await fetch("./preview-meta.json", { cache: "no-store" });
@@ -1327,17 +1327,10 @@
       const metadata = await response.json();
       if (metadata?.environment !== "preview") return;
       const identity = metadata.prNumber
-        ? `Preview PR #${metadata.prNumber}`
-        : `Preview ${metadata.branch || "branch"}`;
-      const commit = metadata.shortCommit ? ` · ${metadata.shortCommit}` : "";
-      versionLabel.replaceChildren();
-      const releaseLine = document.createElement("span");
-      releaseLine.className = "version-release-line";
-      releaseLine.textContent = `Version ${appVersion}`;
-      const previewLine = document.createElement("span");
-      previewLine.className = "version-preview-line";
-      previewLine.textContent = `${identity}${commit}`;
-      versionLabel.append(releaseLine, previewLine);
+        ? `プレビューPR${metadata.prNumber}`
+        : `プレビュー_${metadata.branch || "branch"}`;
+      const commit = metadata.shortCommit ? `_${metadata.shortCommit}` : "";
+      versionLabel.textContent = `バージョン${appVersion}_${identity}${commit}`;
       versionLabel.classList.add("is-preview");
     } catch (_) {
       // GitHub Pages / local builds do not generate preview metadata.
@@ -5145,7 +5138,9 @@
     const panel = $("top-level-panel");
     panel.hidden = !ledger;
     if (!ledger) return;
-    $("top-level-value").textContent = `レベル${levelSystem.levelAt(ledger.total)}`;
+    const currentLevel = levelSystem.levelAt(ledger.total);
+    $("top-level-value").textContent = `レベル${currentLevel}`;
+    $("top-level-title").innerHTML = levelSystem.titleHtml(currentLevel);
     $("top-points-value").textContent = levelSystem.formatPoints(ledger.total);
   }
   function prepareLevelCelebration() {
