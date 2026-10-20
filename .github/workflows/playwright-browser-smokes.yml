@@ -28,7 +28,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run point ledger unit tests
-        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs
+        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
 
       - name: Run two browser smoke suites
         run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
