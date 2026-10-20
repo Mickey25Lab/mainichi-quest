@@ -442,6 +442,7 @@
   function showScreen(id) {
     recordBgmDiagnostic("screen-change-request", { screenId: id });
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
+    if (id === "start-screen" && gameInitialized) refreshTopLevel();
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
   }
