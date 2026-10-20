@@ -14,7 +14,7 @@ const path = "dist/app.js";
 const original = readFileSync(path,"utf8");
 const current = extractAppVersion(original);
 const next = `${current.major}.${current.minor}.${current.patch+1}`;
-const updated = original.replace(/(const\s+appVersion\s*=\s*["'])\d+\.\d+\.\d+(["']\s*;)/, `$1${next}$2`);
+const updated = original.replace(/(const\s+appVersion\s*=\s*["'])\d+\.\d+\.\d+(["']\s*;)/, (_whole, start, end) => `${start}${next}${end}`);
 if (updated === original) throw new Error("Failed to replace appVersion");
 writeFileSync(path,updated);
 console.log(`Automatic main patch: ${current.raw} → ${next}`);
