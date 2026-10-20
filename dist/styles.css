@@ -4386,3 +4386,47 @@ button, input { font: inherit; }
 .collection-category-scene .collection-scene-item:nth-child(4n+3) { --mq-idle-duration:9.1s; --mq-idle-delay:-6.3s; }
 .collection-category-scene .collection-scene-item:nth-child(4n) { --mq-idle-duration:10.2s; --mq-idle-delay:-2.7s; }
 .collection-category-scene .collection-scene-item.is-new { --mq-idle-duration:4.4s; }
+
+/* PR #165: bottom-left tool row, aligned with the player button's left edge. */
+.start-screen .top-footer-tools{
+  position:absolute;z-index:9;left:24px;bottom:7px;
+  display:flex;align-items:center;gap:9px;max-width:calc(100% - 130px);
+  min-width:0;white-space:nowrap;
+}
+.start-screen .top-footer-tools .parent-settings-button,
+.start-screen .top-footer-tools .top-reload-button,
+.start-screen .top-footer-tools .admin-settings-button,
+.start-screen .top-footer-tools .start-version{
+  position:relative;inset:auto;top:auto;right:auto;bottom:auto;left:auto;
+  margin:0;flex-shrink:0;
+}
+.start-screen .top-footer-tools .parent-settings-button{
+  height:34px;min-height:34px;padding:4px 14px;border-radius:999px;
+}
+.start-screen .top-footer-tools .top-reload-button,
+.start-screen .top-footer-tools .admin-settings-button{
+  width:34px;height:34px;min-width:34px;line-height:32px;
+  display:grid;place-items:center;opacity:.78;
+}
+.start-screen .top-footer-tools .start-version,
+.start-screen .top-footer-tools .start-version.is-preview{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  color:rgba(255,255,255,.9);font-size:clamp(12px,1.4vw,19px);
+  align-self:center;
+}
+@media (max-width:650px){
+  .start-screen .top-footer-tools{left:12px;gap:5px;bottom:5px;max-width:calc(100% - 90px)}
+  .start-screen .top-footer-tools .parent-settings-button{font-size:11px;padding-inline:7px}
+  .start-screen .top-footer-tools .top-reload-button,
+  .start-screen .top-footer-tools .admin-settings-button{width:29px;min-width:29px;height:29px;font-size:14px}
+  .start-screen .top-footer-tools .start-version{font-size:11px}
+}
+/* Level panel: settle below the subtitle area; make the title legible without wrapping. */
+.start-screen .top-level-panel{top:34%;width:25.5%;gap:8px}
+.start-screen .top-level-title{
+  font-size:clamp(17px,1.95vw,27px);line-height:1.45;
+  white-space:nowrap;word-break:keep-all;overflow-wrap:normal;
+  letter-spacing:-.025em;
+}
+.start-screen .top-level-title ruby{white-space:nowrap}
+.start-screen .top-level-title rt{font-size:.45em}
