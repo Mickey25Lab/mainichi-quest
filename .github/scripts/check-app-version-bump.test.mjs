@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkVersionBump, extractAppVersion, isUserFacingPath } from "./check-app-version-bump.mjs";
-const appJs = (v) => `(() => { const appVersion = "${v}"; })();`;
+const appJs = (v) => `(() => {\n  const appVersion = "${v}";\n})();`;
 function check(paths, old="0.3.38", current=old){return checkVersionBump({changedFiles:paths,baseAppJs:appJs(old),headAppJs:appJs(current)});}
 test("production PR requires unchanged version",()=>{assert.equal(check(["dist/index.html"]).headVersion,"0.3.38");assert.equal(check(["dist/styles.css"]).headVersion,"0.3.38");assert.equal(check(["dist/app.js"]).headVersion,"0.3.38");});
 test("nonproduction PR also must not change version",()=>{assert.equal(check(["docs/a.md"]).headVersion,"0.3.38");});
