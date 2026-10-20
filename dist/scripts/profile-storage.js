@@ -87,6 +87,7 @@
       // the real acquisition order needed by a future opening movie.
       acquisitionHistory: [],
       pointLedger: null,
+      levelAcknowledged: null,
       enabledModes: {},
       energyMultipliers: {},
       dailyTargetCounts: {},
@@ -155,6 +156,7 @@
     profile.progress.legacyHistory = value.progress?.legacyHistory ?? null;
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
+    profile.levelAcknowledged = Number.isInteger(value.levelAcknowledged) && value.levelAcknowledged >= 1 && value.levelAcknowledged <= 50 ? value.levelAcknowledged : null;
     profile.pointLedger = value.pointLedger && Number.isSafeInteger(value.pointLedger.total) && value.pointLedger.total >= 0 && Array.isArray(value.pointLedger.observedProgress)
       ? clone(value.pointLedger) : null;
     const best = Number(value.bestRecords?.bestTimeMs);
@@ -329,6 +331,8 @@
       if (friendly) points += Math.max(0, Math.min(medal ? 500 : thresholds[completed], Math.floor(Number(raw.energy) || 0)));
       return points;
     }
+    function getLevelAcknowledged() { return getActiveProfile()?.levelAcknowledged ?? null; }
+    function setLevelAcknowledged(level) { if (!Number.isInteger(level) || level < 1 || level > 50) throw new RangeError("invalid level"); return mutateActiveProfile((profile) => { profile.levelAcknowledged = level; }); }
     function getPointLedger() { return clone(getActiveProfile()?.pointLedger ?? null); }
     function initializePointLedger(progress) {
       if (!Array.isArray(progress)) throw new Error("point migration requires collection progress");
@@ -493,6 +497,7 @@
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
         profile.pointLedger = null;
+        profile.levelAcknowledged = null;
       });
     }
 
@@ -520,6 +525,7 @@
       hasLegacyChildData, legacySnapshot, createProfile, migrateLegacyProfile, getMigrationState,
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
       getPointLedger, initializePointLedger, commitRewardProgressWithPoints,
+      getLevelAcknowledged, setLevelAcknowledged,
       calculateVehiclePointValue: vehiclePointValue,
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
