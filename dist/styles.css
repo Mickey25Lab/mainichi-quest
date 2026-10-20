@@ -4430,3 +4430,78 @@ button, input { font: inherit; }
 }
 .start-screen .top-level-title ruby{white-space:nowrap}
 .start-screen .top-level-title rt{font-size:.45em}
+
+
+/* Collection super-robot: staggered summon-light surges instead of an idle pulse. */
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot {
+  --power-duration:var(--mq-idle-duration,9s);
+  --power-delay:var(--mq-idle-delay,0s);
+  isolation:isolate;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot .collection-scene-art {
+  animation:mq-super-summon-charge var(--power-duration) ease-in-out var(--power-delay) infinite;
+  transform-origin:center 82%;
+  position:absolute;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
+  content:"";position:absolute;z-index:2;pointer-events:none;
+  left:50%;bottom:6%;height:112%;border-radius:60% 60% 12px 12px;
+  transform-origin:50% 100%;opacity:0;
+  animation:mq-super-summon-beam var(--power-duration) ease-in-out var(--power-delay) infinite;
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before {
+  width:33%;transform:translateX(-50%) scaleX(.3);
+  background:linear-gradient(to top,rgba(74,215,255,.08),rgba(139,235,255,.56) 22%,rgba(236,252,255,.78) 74%,rgba(255,255,255,0));
+  box-shadow:0 0 18px 7px rgba(58,202,255,.4),0 0 36px 15px rgba(48,157,255,.18);
+  filter:blur(7px);
+}
+.collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
+  width:9%;background:linear-gradient(to top,rgba(255,238,157,.08),#fff7c7 22%,#fff 54%,rgba(181,244,255,.65) 90%,transparent);
+  box-shadow:0 0 8px 3px rgba(255,255,255,.83),0 0 20px 8px rgba(94,225,255,.5);
+  filter:blur(1px);
+}
+@keyframes mq-super-summon-charge {
+  0%,72%,100% {scale:1;filter:brightness(1);}
+  77% {scale:1.025;filter:brightness(1.2);}
+  82%,86% {scale:1.085;filter:brightness(1.36) drop-shadow(0 0 9px rgba(149,234,255,.7));}
+  94% {scale:1;filter:brightness(1);}
+}
+@keyframes mq-super-summon-beam {
+  0%,72%,94%,100% {opacity:0;scale:.4 0.06;}
+  78% {opacity:.7;scale:.75 .8;}
+  83%,87% {opacity:1;scale:1 1;}
+  91% {opacity:.55;scale:.82 1;}
+}
+/* Completed daily missions: dark translucent neutral color preserves white-text contrast. */
+.mode-select-choice.is-complete:not(.is-free-play) {
+  background:linear-gradient(180deg,rgba(44,49,65,.91),rgba(26,29,43,.93));
+  border-color:rgba(193,201,218,.86);color:#fff;
+  text-shadow:0 2px 3px rgba(0,0,0,.75);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 5px 12px rgba(0,9,32,.3);
+}
+/* All-done free play: distinct purple + muted gold, including completed entries. */
+.mode-select-choice.is-free-play,
+.mode-select-choice.is-complete.is-free-play,
+.mode-select-choice.is-free-play:hover:not(:disabled),
+.mode-select-choice.is-free-play:active:not(:disabled) {
+  opacity:1;filter:none;
+  background:linear-gradient(180deg,rgba(91,51,148,.95),rgba(49,23,92,.96));
+  border-color:#bd9ade;color:#ead78e;
+  text-shadow:0 2px 3px rgba(29,10,53,.75);
+  box-shadow:inset 0 0 19px rgba(174,111,222,.3),0 6px 14px rgba(21,8,44,.42);
+}
+.mode-select-choice.is-free-play .mode-select-name,
+.mode-select-choice.is-free-play .mode-select-name *,
+.mode-select-choice.is-free-play .mode-select-remaining,
+.mode-select-choice.is-free-play .mode-select-remaining *,
+.mode-select-choice.is-free-play .mode-select-energy,
+.mode-select-choice.is-free-play .mode-select-energy * {color:#ead78e;}
+/* Corner controls keep their dimensions; only text shrinks to 70%. */
+.play-screen #quit-button {font-size:21.7px;}
+.play-screen #assist-button {font-size:calc(var(--keypad-remainder-label-size) * .7);}
+@media(prefers-reduced-motion:reduce){
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot .collection-scene-art{animation:none!important}
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
+  .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after{animation:none!important;opacity:0}
+}
