@@ -4434,7 +4434,7 @@ button, input { font: inherit; }
 
 /* Collection super-robot: staggered summon-light surges instead of an idle pulse. */
 .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot {
-  --power-duration:var(--mq-idle-duration,9s);
+  --power-duration:calc(var(--mq-idle-duration,9s) * 2);
   --power-delay:var(--mq-idle-delay,0s);
   isolation:isolate;
 }
