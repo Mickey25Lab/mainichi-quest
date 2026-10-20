@@ -4277,8 +4277,8 @@ button, input { font: inherit; }
 @media(prefers-reduced-motion:reduce){.level-up-rays{animation:none}}
 
 /* PR #164 review: title belongs inside the HUD, not cropped or omitted. */
-.top-level-panel{top:36%;gap:5px;overflow:visible}
-.top-level-title{display:block;width:100%;font-size:clamp(12px,1.45vw,21px);line-height:1.6;font-weight:900;color:#fff9d6;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 5px #061437}
+.top-level-panel{top:29%;gap:5px;overflow:visible}
+.top-level-title{display:block;width:100%;font-size:clamp(12px,1.45vw,21px);line-height:1.6;font-weight:900;color:#fff9d6;white-space:nowrap;overflow-wrap:normal;font-size:clamp(10px,1.15vw,16px);text-shadow:0 2px 5px #061437}
 .top-level-title ruby{ruby-position:over}.top-level-title rt{font-size:.48em}
 /* Version is unobtrusive developer metadata: single baseline and transparent. */
-.start-screen .start-version,.start-screen .start-version.is-preview{position:absolute;left:1.4%;bottom:1px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:block;white-space:nowrap;color:rgba(255,255,255,.77);font-size:clamp(9px,.95vw,13px);font-weight:400;line-height:1.15;letter-spacing:0;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.start-screen .start-version,.start-screen .start-version.is-preview{position:absolute;left:1.4%;bottom:1px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:block;white-space:nowrap;color:rgba(255,255,255,.77);font-size:clamp(13.5px,1.425vw,19.5px);font-weight:400;line-height:1.15;letter-spacing:0;text-shadow:0 1px 2px rgba(0,0,0,.8)}
