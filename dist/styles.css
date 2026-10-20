@@ -4446,19 +4446,19 @@ button, input { font: inherit; }
 .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before,
 .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
   content:"";position:absolute;z-index:2;pointer-events:none;
-  left:50%;bottom:6%;height:112%;border-radius:60% 60% 12px 12px;
+  left:50%;bottom:6%;height:calc(var(--item-y) + var(--item-size) * .94);border-radius:0 0 12px 12px;
   transform-origin:50% 100%;opacity:0;
   animation:mq-super-summon-beam var(--power-duration) ease-in-out var(--power-delay) infinite;
 }
 .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::before {
-  width:33%;transform:translateX(-50%) scaleX(.3);
-  background:linear-gradient(to top,rgba(74,215,255,.08),rgba(139,235,255,.56) 22%,rgba(236,252,255,.78) 74%,rgba(255,255,255,0));
-  box-shadow:0 0 18px 7px rgba(58,202,255,.4),0 0 36px 15px rgba(48,157,255,.18);
+  width:33%;transform:translateX(-50%);
+  background:linear-gradient(to top,rgba(74,215,255,.08),rgba(139,235,255,.78) 22%,rgba(236,252,255,.92) 74%,rgba(255,255,255,.16));
+  box-shadow:0 0 24px 12px rgba(58,202,255,.6),0 0 52px 24px rgba(48,157,255,.3);
   filter:blur(7px);
 }
 .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot::after {
-  width:9%;background:linear-gradient(to top,rgba(255,238,157,.08),#fff7c7 22%,#fff 54%,rgba(181,244,255,.65) 90%,transparent);
-  box-shadow:0 0 8px 3px rgba(255,255,255,.83),0 0 20px 8px rgba(94,225,255,.5);
+  width:9%;background:linear-gradient(to top,rgba(255,238,157,.08),#fff7c7 22%,#fff 54%,rgba(181,244,255,.9) 90%,rgba(255,255,255,.2));
+  box-shadow:0 0 12px 5px rgba(255,255,255,.98),0 0 30px 13px rgba(94,225,255,.72);
   filter:blur(1px);
 }
 @keyframes mq-super-summon-charge {
@@ -4468,10 +4468,10 @@ button, input { font: inherit; }
   94% {scale:1;filter:brightness(1);}
 }
 @keyframes mq-super-summon-beam {
-  0%,72%,94%,100% {opacity:0;scale:.4 0.06;}
-  78% {opacity:.7;scale:.75 .8;}
-  83%,87% {opacity:1;scale:1 1;}
-  91% {opacity:.55;scale:.82 1;}
+  0%,72%,96%,100% {opacity:0;scale:.32 1;}
+  77% {opacity:.7;scale:.58 1;}
+  82%,89% {opacity:1;scale:1 1;}
+  93% {opacity:.55;scale:.82 1;}
 }
 /* Completed daily missions: dark translucent neutral color preserves white-text contrast. */
 .mode-select-choice.is-complete:not(.is-free-play) {
