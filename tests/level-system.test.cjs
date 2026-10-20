@@ -3,3 +3,15 @@ function storage(){const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(
 test("thresholds, profiles and exact display units",()=>{assert.deepEqual(levels.thresholds,[0,100,400,900,1600,2800,4200,5800,7500,9300]);assert.equal(levels.requiredPoints(11),11300);assert.equal(levels.requiredPoints(50),89300);assert.equal(levels.levelAt(2772),5);assert.equal(levels.levelAt(1528),4);assert.equal(levels.levelAt(99),1);assert.equal(levels.levelAt(100),2);assert.equal(levels.formatPoints(2772),"2772");assert.equal(levels.formatPoints(12700),"1万2700");assert.equal(levels.formatPoints(10000),"1万");assert.equal(levels.titles.length,50);assert.match(levels.titleHtml(5),/旅人<rt>たびびと<\/rt>/);});
 test("level acknowledgment persists per profile and is cleared on reset",()=>{const p=createProfileStorage(storage());p.createProfile("A");assert.equal(p.getLevelAcknowledged(),null);p.setLevelAcknowledged(5);assert.equal(p.getLevelAcknowledged(),5);p.createProfile("B");assert.equal(p.getLevelAcknowledged(),null);p.setLevelAcknowledged(4);let first=p.listProfiles().find(x=>x.displayName==="A");p.setActiveProfile(first.profileId);assert.equal(p.getLevelAcknowledged(),5);p.resetActiveProfileData();assert.equal(p.getLevelAcknowledged(),null);});
 test("startup celebration uses existing fanfare and waits until next launch",()=>{const app=fs.readFileSync("dist/app.js","utf8"),html=fs.readFileSync("dist/index.html","utf8");assert.match(app,/mique-startup-finished/);assert.match(app,/playFanfareSound\(\)/);assert.match(app,/getLevelAcknowledged/);assert.match(app,/setLevelAcknowledged/);assert.match(html,/id="level-up-overlay"/);assert.match(html,/id="top-level-panel"/);});
+
+test("all 50 titles use ruby for every kanji and never display reading parentheses",()=>{
+  for(let level=1;level<=50;level++){
+    const html=levels.titleHtml(level);
+    assert.doesNotMatch(html,/[（）]/,`level ${level}: parenthesized reading`);
+    assert.equal(html.replace(/<ruby>(.*?)<rt>.*?<\/rt><\/ruby>/g,"$1"),levels.title(level),`level ${level}: visible title must match`);
+    assert.doesNotMatch(html.replace(/<ruby>.*?<\/ruby>/g,""),/[一-龯々ヶ]/,`level ${level}: unannotated kanji`);
+  }
+  assert.match(levels.titleHtml(1),/<ruby>見習い<rt>みならい<\/rt><\/ruby>/);
+  assert.match(levels.titleHtml(3),/<ruby>友だち<rt>ともだち<\/rt><\/ruby>/);
+  assert.match(levels.titleHtml(22),/<ruby>使い<rt>つかい<\/rt><\/ruby>/);
+});
