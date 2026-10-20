@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.41";
+  const appVersion = "0.3.42";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -442,7 +442,13 @@
   function showScreen(id) {
     recordBgmDiagnostic("screen-change-request", { screenId: id });
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
-    if (id === "start-screen" && gameInitialized) refreshTopLevel();
+    if (id === "start-screen" && gameInitialized) {
+      prepareLevelCelebration();
+      // The next TOP visit, including navigation back from another screen,
+      // acknowledges a newly reached level without requiring an app restart.
+      // Initial loading still waits for the startup-finished event.
+      if ($("startup-loader")?.hidden) openPendingLevelCelebration();
+    }
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
   }
@@ -5187,7 +5193,7 @@
     preloadFanfareSounds();
   }
   function openPendingLevelCelebration() {
-    if (!pendingLevelCelebration || qaProgressModeEnabled()) return;
+    if (!pendingLevelCelebration || qaProgressModeEnabled() || !$("level-up-overlay").hidden) return;
     $("level-up-overlay").hidden = false;
     $("level-up-close").focus();
     // Safari may require a gesture before audio; retry on the dismissal gesture.
@@ -5694,7 +5700,7 @@
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
   });
   $("top-collection-button").addEventListener("click", openTopCollection);
-  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic); $("top-bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
+  $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
   $("parent-settings-button").addEventListener("click", openParentPin);
