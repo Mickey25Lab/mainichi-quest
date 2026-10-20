@@ -442,7 +442,13 @@
   function showScreen(id) {
     recordBgmDiagnostic("screen-change-request", { screenId: id });
     screens.forEach((screenId) => $(screenId).classList.toggle("active", screenId === id));
-    if (id === "start-screen" && gameInitialized) refreshTopLevel();
+    if (id === "start-screen" && gameInitialized) {
+      prepareLevelCelebration();
+      // The next TOP visit, including navigation back from another screen,
+      // acknowledges a newly reached level without requiring an app restart.
+      // Initial loading still waits for the startup-finished event.
+      if ($("startup-loader")?.hidden) openPendingLevelCelebration();
+    }
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
     recordVisualDiagnostic("show-screen", { screenId: id });
   }
@@ -5187,7 +5193,7 @@
     preloadFanfareSounds();
   }
   function openPendingLevelCelebration() {
-    if (!pendingLevelCelebration || qaProgressModeEnabled()) return;
+    if (!pendingLevelCelebration || qaProgressModeEnabled() || !$("level-up-overlay").hidden) return;
     $("level-up-overlay").hidden = false;
     $("level-up-close").focus();
     // Safari may require a gesture before audio; retry on the dismissal gesture.
