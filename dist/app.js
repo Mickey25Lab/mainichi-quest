@@ -303,7 +303,11 @@
   }
   function saveRewardProgress() {
     // QA presets must never become permanent player points.
-    if (qaProgressModeEnabled()) { profileStore.setRewardProgress(state.rewardProgress); return; }
+    if (qaProgressModeEnabled()) {
+      profileStore.setRewardProgress(state.rewardProgress);
+      capsuleSpendPending = false; // QA capsules are virtual and never deducted.
+      return;
+    }
     profileStore.commitRewardProgressWithPoints(state.rewardProgress, { consumeEnergyCapsule: capsuleSpendPending });
     capsuleSpendPending = false;
   }
@@ -340,6 +344,9 @@
   }
   function qaProgressModeEnabled() {
     return profileStore.getActiveQaState().qaEnabled === true;
+  }
+  function availableEnergyCapsuleCount() {
+    return qaProgressModeEnabled() ? 10 : profileStore.getEnergyCapsuleCount();
   }
   function updateAdminQaToggle() {
     const toggle = $("admin-qa-toggle");
@@ -4203,7 +4210,7 @@
     setCollectionPresentationMode("browse");
     resetCapsuleDialog();
     state.collectionDeadline = Date.now() + 60000;
-    $("collection-item-count").textContent = String(profileStore.getEnergyCapsuleCount());
+    $("collection-item-count").textContent = String(availableEnergyCapsuleCount());
     state.collectionShowSessionMarkers = true;
     prepareCollectionCategoryTabs();
     setCollectionCategory("summary");
@@ -4295,9 +4302,9 @@
     });
   }
   function updateCapsuleHeader() {
-    $("collection-item-count").textContent = String(profileStore.getEnergyCapsuleCount());
-    $("collection-item-owned").textContent = "× " + profileStore.getEnergyCapsuleCount();
-    $("collection-item-use").disabled = !profileStore.getEnergyCapsuleCount() || !capsuleEligibleIndexes().length;
+    $("collection-item-count").textContent = String(availableEnergyCapsuleCount());
+    $("collection-item-owned").textContent = "× " + availableEnergyCapsuleCount();
+    $("collection-item-use").disabled = !availableEnergyCapsuleCount() || !capsuleEligibleIndexes().length;
   }
   function clearCapsuleChoiceTimer() {
     if (capsuleChoiceTimer !== null) window.clearInterval(capsuleChoiceTimer);
@@ -4319,7 +4326,7 @@
   }
   function openCapsuleInventory() {
     if (state.collectionMode !== "browse" || state.collectionClosing
-      || qaProgressModeEnabled() || !$("collection-screen").classList.contains("active")) return;
+      || !$("collection-screen").classList.contains("active")) return;
     $("collection-item-dialog").hidden = false;
     $("collection-item-panel").hidden = false;
     $("collection-item-target-panel").hidden = true;
@@ -4357,12 +4364,12 @@
     const eligible = capsuleEligibleIndexes();
     if (!eligible.length) { cancelCapsuleSelection(); return; }
     const chosen = index === null ? eligible[Math.floor(Math.random() * eligible.length)] : index;
-    if (!eligible.includes(chosen) || !profileStore.getEnergyCapsuleCount()) return;
+    if (!eligible.includes(chosen) || !availableEnergyCapsuleCount()) return;
     // Lock input before storage and progression updates, including timer callbacks.
     capsuleSelecting = false;
     clearCapsuleChoiceTimer();
     try {
-      if (!profileStore.getEnergyCapsuleCount()) throw new Error("capsule inventory empty");
+      if (!availableEnergyCapsuleCount()) throw new Error("capsule inventory empty");
       capsuleSpendPending = true;
       const progress = vehicleProgress(chosen);
       const result = applyEnergyGain(progress, chosen, 20, { source: "energy_capsule" });
@@ -4398,8 +4405,8 @@
   }
   function startCapsuleSelection() {
     if (capsuleSelecting || !state.collectionUsed || state.collectionClosing
-      || state.collectionMode !== "browse" || qaProgressModeEnabled()
-      || !profileStore.getEnergyCapsuleCount()) return;
+      || state.collectionMode !== "browse"
+      || !availableEnergyCapsuleCount()) return;
     if (!capsuleEligibleIndexes().length) {
       $("collection-item-status").textContent = "つかえるのりものがまだいないよ";
       return;
