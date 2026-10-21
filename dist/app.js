@@ -838,8 +838,12 @@
     if (includeCollection) {
       const stage = $("collection-stage");
       stage.style.setProperty("--stage-scale", String(scale));
+      // Temporary aliases keep an older cached stylesheet at the same scale.
+      stage.style.setProperty("--collection-scale", String(scale));
       // The collection timer intentionally keeps its existing on-screen size.
-      stage.style.setProperty("--stage-scale-inverse", String(scale > 0 ? 1 / scale : 1));
+      const inverse = String(scale > 0 ? 1 / scale : 1);
+      stage.style.setProperty("--stage-scale-inverse", inverse);
+      stage.style.setProperty("--collection-scale-inverse", inverse);
     }
     return scale;
   }
