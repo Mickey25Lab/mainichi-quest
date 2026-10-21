@@ -545,12 +545,13 @@ button, input { font: inherit; }
 }
 .mode-select-choice {
   position:relative;
+  flex-shrink:0;
   display:grid;
   grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:center;
   width:100%;
-  min-height:72px;
-  padding:7px 20px 7px 26px;
+  min-height:86.4px;
+  padding:8.4px 20px 8.4px 26px;
   border:3px solid rgba(214,246,255,.92);
   border-radius:24px;
   color:#fff;
@@ -686,6 +687,9 @@ button, input { font: inherit; }
 .mode-select-energy.energy-level-4 span { font-size:36px; font-weight:1000; }
 
 .mode-select-energy-guide {
+  position:relative;
+  top:-26px;
+  flex-shrink:0;
   display:grid;
   grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:end;
