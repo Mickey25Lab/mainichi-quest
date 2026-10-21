@@ -4558,14 +4558,14 @@ button, input { font: inherit; }
   5.1% { translate:0 0; rotate:0deg; }
 }
 @keyframes mq-robot-heavy-jump-2026 {
-  0%,200% { translate:0 0; }
+  0%,100% { translate:0 0; }
   2.1% { translate:0 -17px; }
   6.9% { translate:0 -21px; }
   9.6% { translate:0 0; }
   11.1% { translate:0 0; }
 }
 @keyframes mq-robot-dust-2026 {
-  0%,8.4%,200% { opacity:0; transform:translateX(-100%) scale(.25); }
+  0%,8.4%,100% { opacity:0; transform:translateX(-100%) scale(.25); }
   9.9% { opacity:.65; transform:translateX(-100%) scale(.9); }
   15% { opacity:0; transform:translateX(-100%) scale(1.45); }
 }
