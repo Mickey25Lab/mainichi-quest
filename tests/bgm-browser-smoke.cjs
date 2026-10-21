@@ -75,7 +75,7 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   const settingsBox = await page.locator("#admin-settings-button").boundingBox();
   assert.ok(reloadBox && settingsBox);
   assert.ok(reloadBox.x + reloadBox.width < settingsBox.x);
-  assert.ok(settingsBox.x - (reloadBox.x + reloadBox.width) <= 12);
+  assert.ok(settingsBox.x - (reloadBox.x + reloadBox.width) <= 12, `reload/settings gap=${settingsBox.x - (reloadBox.x + reloadBox.width)}, reload=${JSON.stringify(reloadBox)}, settings=${JSON.stringify(settingsBox)}`);
   assert.equal(reloadBox.y, settingsBox.y);
 
   await Promise.all([
