@@ -830,6 +830,7 @@
     if (includePlay) {
       document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".mode-select-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale", String(scale));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
