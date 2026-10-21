@@ -4730,3 +4730,11 @@ button, input { font: inherit; }
 .collection-item-dialog .collection-capsule-intro h2{font-size:34px}
 .collection-item-dialog .collection-capsule-intro p{font-size:26px}
 .collection-item-dialog .collection-capsule-intro .quit-confirm-actions{display:flex;gap:20px}
+
+/* Use the supplied transparent artwork rather than a CSS placeholder capsule. */
+.collection-item-panel img.collection-item-capsule{
+  display:block;width:190px;height:190px;max-width:40%;object-fit:contain;
+  border:0;border-radius:0;padding:0;background:none;
+  box-shadow:none;text-shadow:none;filter:drop-shadow(0 0 18px rgba(71,208,255,.45));
+}
+.collection-item-symbol img{width:34px;height:34px;display:block;object-fit:contain}
