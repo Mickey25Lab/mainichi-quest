@@ -4558,16 +4558,16 @@ button, input { font: inherit; }
   5.1% { translate:0 0; rotate:0deg; }
 }
 @keyframes mq-robot-heavy-jump-2026 {
-  0%,100% { translate:0 0; }
-  1.05% { translate:0 -17px; }
-  3.45% { translate:0 -21px; }
-  4.8% { translate:0 0; }
-  5.55% { translate:0 0; }
+  0%,200% { translate:0 0; }
+  2.1% { translate:0 -17px; }
+  6.9% { translate:0 -21px; }
+  9.6% { translate:0 0; }
+  11.1% { translate:0 0; }
 }
 @keyframes mq-robot-dust-2026 {
-  0%,4.2%,100% { opacity:0; transform:translateX(-50%) scale(.25); }
-  4.95% { opacity:.65; transform:translateX(-50%) scale(.9); }
-  7.5% { opacity:0; transform:translateX(-50%) scale(1.45); }
+  0%,8.4%,200% { opacity:0; transform:translateX(-100%) scale(.25); }
+  9.9% { opacity:.65; transform:translateX(-100%) scale(.9); }
+  15% { opacity:0; transform:translateX(-100%) scale(1.45); }
 }
 /* Each medal floats independently like the four special equipment items.
    Translate is separate from the 3D spin transform, so both play together. */
@@ -4584,7 +4584,7 @@ button, input { font: inherit; }
   animation:mq-vehicle-sway-2026 20s linear 0s infinite;
 }
 .collection-category-scene[data-category="robot"] .collection-scene-item .collection-scene-art {
-  animation:mq-robot-heavy-jump-2026 20s linear 0s infinite;
+  animation:mq-robot-heavy-jump-2026 10s linear 0s infinite;
 }
 /* Dust is an inexpensive CSS-only radial gradient, not a particle system. */
 .collection-category-scene[data-category="robot"] .collection-scene-item::after {
@@ -4592,7 +4592,7 @@ button, input { font: inherit; }
   left:50%; bottom:2%; width:75%; height:22%;
   background:radial-gradient(ellipse at center,rgba(193,171,127,.88) 0%,rgba(195,172,135,.58) 38%,transparent 78%);
   opacity:0; transform:translateX(-50%) scale(.25);
-  animation:mq-robot-dust-2026 20s linear 0s infinite;
+  animation:mq-robot-dust-2026 10s linear 0s infinite;
 }
 .collection-category-scene[data-category="medal"] .collection-scene-item .collection-scene-art {
   animation:mq-medal-y-spin-2026 20s linear 0s infinite,
