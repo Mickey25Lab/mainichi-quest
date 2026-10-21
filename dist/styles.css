@@ -4547,7 +4547,7 @@ button, input { font: inherit; }
 #collection-grid.is-art-loading .card-master-medal-bg,
 #collection-grid.is-art-loading .card-silhouette-image { visibility:hidden; }
 
-/* Each slot has a distinct start phase in a denser 20s repeating performance.
+/* Each slot has a fixed seeded-shuffle order and irregular 0.1–1.5s start gaps, in a 20s loop.
    The pseudorandom permutation is intentional and deterministic across visits.
    CSS composition only; no timers or new image assets. */
 @keyframes mq-vehicle-sway-2026 {
@@ -4569,6 +4569,12 @@ button, input { font: inherit; }
   4.95% { opacity:.65; transform:translateX(-50%) scale(.9); }
   7.5% { opacity:0; transform:translateX(-50%) scale(1.45); }
 }
+/* Each medal floats independently like the four special equipment items.
+   Translate is separate from the 3D spin transform, so both play together. */
+@keyframes mq-medal-hover-2026 {
+  0%,100% { translate:0 0; }
+  50% { translate:0 calc(-1 * var(--medal-float-height, 10px)); }
+}
 @keyframes mq-medal-y-spin-2026 {
   0% { transform:perspective(800px) rotateY(0deg); }
   5.4% { transform:perspective(800px) rotateY(360deg); }
@@ -4583,75 +4589,76 @@ button, input { font: inherit; }
 /* Dust is an inexpensive CSS-only radial gradient, not a particle system. */
 .collection-category-scene[data-category="robot"] .collection-scene-item::after {
   content:""; position:absolute; z-index:2; pointer-events:none;
-  left:50%; bottom:2%; width:45%; height:14%;
-  background:radial-gradient(ellipse at center,rgba(193,171,127,.62) 0%,rgba(195,172,135,.3) 38%,transparent 74%);
+  left:50%; bottom:2%; width:75%; height:22%;
+  background:radial-gradient(ellipse at center,rgba(193,171,127,.88) 0%,rgba(195,172,135,.58) 38%,transparent 78%);
   opacity:0; transform:translateX(-50%) scale(.25);
   animation:mq-robot-dust-2026 20s linear 0s infinite;
 }
 .collection-category-scene[data-category="medal"] .collection-scene-item .collection-scene-art {
-  animation:mq-medal-y-spin-2026 20s linear 0s infinite;
+  animation:mq-medal-y-spin-2026 20s linear 0s infinite,
+    mq-medal-hover-2026 var(--medal-float-duration,3.5s) ease-in-out var(--medal-float-delay,-1s) infinite;
   backface-visibility:visible;
 }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:10.68s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:2.31s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:16.26s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:5.1s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:12.54s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:0.45s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:18.12s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:7.89s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:4.17s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:14.4s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(11) .collection-scene-art { animation-delay:1.38s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(12) .collection-scene-art { animation-delay:11.61s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(13) .collection-scene-art { animation-delay:6.03s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(14) .collection-scene-art { animation-delay:17.19s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(15) .collection-scene-art { animation-delay:8.82s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(16) .collection-scene-art { animation-delay:3.24s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(17) .collection-scene-art { animation-delay:15.33s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(18) .collection-scene-art { animation-delay:6.96s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(19) .collection-scene-art { animation-delay:13.47s; }
-.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(20) .collection-scene-art { animation-delay:9.75s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:12.15s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:2.25s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:15.45s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:5.55s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:8.85s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:0.6s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:13.8s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:3.9s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:10.5s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:7.2s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1)::after { animation-delay:12.15s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2)::after { animation-delay:2.25s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3)::after { animation-delay:15.45s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4)::after { animation-delay:5.55s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5)::after { animation-delay:8.85s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6)::after { animation-delay:0.6s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7)::after { animation-delay:13.8s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8)::after { animation-delay:3.9s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9)::after { animation-delay:10.5s; }
-.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10)::after { animation-delay:7.2s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:11.61s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:3.24s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:17.19s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:6.03s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:0.45s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:13.47s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:8.82s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:2.31s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:16.26s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:5.1s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(11) .collection-scene-art { animation-delay:10.68s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(12) .collection-scene-art { animation-delay:18.12s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(13) .collection-scene-art { animation-delay:1.38s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(14) .collection-scene-art { animation-delay:14.4s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(15) .collection-scene-art { animation-delay:7.89s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(16) .collection-scene-art { animation-delay:4.17s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(17) .collection-scene-art { animation-delay:15.33s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(18) .collection-scene-art { animation-delay:9.75s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(19) .collection-scene-art { animation-delay:6.96s; }
-.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(20) .collection-scene-art { animation-delay:12.54s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:17.49s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:10.07s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:0.25s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:3.81s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:11.51s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:12.54s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:14.19s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:13.87s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:16.29s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:2.24s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(11) .collection-scene-art { animation-delay:1.11s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(12) .collection-scene-art { animation-delay:8.32s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(13) .collection-scene-art { animation-delay:2.47s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(14) .collection-scene-art { animation-delay:8.62s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(15) .collection-scene-art { animation-delay:5s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(16) .collection-scene-art { animation-delay:5.8s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(17) .collection-scene-art { animation-delay:7.65s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(18) .collection-scene-art { animation-delay:14.81s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(19) .collection-scene-art { animation-delay:6.69s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(20) .collection-scene-art { animation-delay:12.37s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:6.35s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:2.11s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:0.25s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:4.99s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:5.55s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:5.25s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:0.52s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:3.39s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:1.51s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:4.67s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1)::after { animation-delay:6.35s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2)::after { animation-delay:2.11s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3)::after { animation-delay:0.25s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4)::after { animation-delay:4.99s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5)::after { animation-delay:5.55s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6)::after { animation-delay:5.25s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7)::after { animation-delay:0.52s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8)::after { animation-delay:3.39s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9)::after { animation-delay:1.51s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10)::after { animation-delay:4.67s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(1) .collection-scene-art { --medal-float-height:11px; --medal-float-duration:4.597s; --medal-float-delay:-1.14s; animation-delay:16.22s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(2) .collection-scene-art { --medal-float-height:13px; --medal-float-duration:2.828s; --medal-float-delay:-2.17s; animation-delay:9.33s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(3) .collection-scene-art { --medal-float-height:7px; --medal-float-duration:2.959s; --medal-float-delay:-3.19s; animation-delay:9.62s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(4) .collection-scene-art { --medal-float-height:10px; --medal-float-duration:3.090s; --medal-float-delay:-4.22s; animation-delay:1.06s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(5) .collection-scene-art { --medal-float-height:12px; --medal-float-duration:3.222s; --medal-float-delay:-0.24s; animation-delay:0.79s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(6) .collection-scene-art { --medal-float-height:15px; --medal-float-duration:3.353s; --medal-float-delay:-1.26s; animation-delay:4.4s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(7) .collection-scene-art { --medal-float-height:8px; --medal-float-duration:3.484s; --medal-float-delay:-2.29s; animation-delay:14.44s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(8) .collection-scene-art { --medal-float-height:11px; --medal-float-duration:3.615s; --medal-float-delay:-3.31s; animation-delay:1.88s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(9) .collection-scene-art { --medal-float-height:13px; --medal-float-duration:3.746s; --medal-float-delay:-4.34s; animation-delay:14.03s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(10) .collection-scene-art { --medal-float-height:7px; --medal-float-duration:3.877s; --medal-float-delay:-0.36s; animation-delay:6.37s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(11) .collection-scene-art { --medal-float-height:9px; --medal-float-duration:4.009s; --medal-float-delay:-1.39s; animation-delay:1.46s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(12) .collection-scene-art { --medal-float-height:12px; --medal-float-duration:4.140s; --medal-float-delay:-2.41s; animation-delay:15.52s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(13) .collection-scene-art { --medal-float-height:14px; --medal-float-duration:4.271s; --medal-float-delay:-3.43s; animation-delay:12.38s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(14) .collection-scene-art { --medal-float-height:8px; --medal-float-duration:4.402s; --medal-float-delay:-4.46s; animation-delay:12.6s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(15) .collection-scene-art { --medal-float-height:11px; --medal-float-duration:4.533s; --medal-float-delay:-0.48s; animation-delay:10.91s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(16) .collection-scene-art { --medal-float-height:13px; --medal-float-duration:4.664s; --medal-float-delay:-1.51s; animation-delay:3.27s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(17) .collection-scene-art { --medal-float-height:7px; --medal-float-duration:2.895s; --medal-float-delay:-2.53s; animation-delay:0.25s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(18) .collection-scene-art { --medal-float-height:9px; --medal-float-duration:3.027s; --medal-float-delay:-3.55s; animation-delay:5.13s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(19) .collection-scene-art { --medal-float-height:12px; --medal-float-duration:3.158s; --medal-float-delay:-4.58s; animation-delay:8.95s,var(--medal-float-delay); }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(20) .collection-scene-art { --medal-float-height:14px; --medal-float-duration:3.289s; --medal-float-delay:-0.60s; animation-delay:7.78s,var(--medal-float-delay); }
 .multiplication-2x2-row.is-step-wrong::before {
   color:#d92d2d;
   text-shadow:0 1px 0 #fff,0 0 5px rgba(217,45,45,.28);
