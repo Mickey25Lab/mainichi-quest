@@ -4483,7 +4483,7 @@ button, input { font: inherit; }
 /* Only the first 10% (1 second) of each 10s cycle animates:
    rapid ignition, brief power-up, and crisp release. */
 @keyframes mq-super-summon-charge {
-  0%,.8%,10%,100% {scale:1;filter:brightness(1);}
+  0%,.8%,10%,100% {scale:1;}
   2.4% {scale:1.04;filter:brightness(1.24);}
   4.4%,6.6% {scale:1.085;filter:brightness(1.36) drop-shadow(0 0 9px rgba(149,234,255,.7));}
   8.4% {scale:1.015;filter:brightness(1.07);}
@@ -4681,6 +4681,128 @@ button, input { font: inherit; }
 @media(prefers-reduced-motion:reduce){
   .collection-category-scene[data-category="robot"] .collection-scene-item::after { animation:none!important;opacity:0!important; }
 }
+
+
+/* Energy capsule MVP: CSS placeholders, replaceable with approved artwork. */
+.collection-screen:not(.is-phonics-reward-select) .collection-header{grid-template-columns:minmax(0,1fr) auto auto}
+.collection-item-button{display:flex;align-items:center;gap:9px;padding:9px 16px;border:3px solid #d9ebff;border-radius:17px;background:linear-gradient(#2862a9,#152d64);color:#fff;font-weight:900;font-size:22px;white-space:nowrap;cursor:pointer}
+.collection-item-button #collection-item-count{color:#ffe69a}
+.collection-item-symbol{font-size:29px;color:#fff;text-shadow:0 0 9px #8beeff}
+.collection-screen.is-phonics-reward-select .collection-item-button{display:none}
+.collection-item-dialog{position:absolute;z-index:80;inset:0;display:grid;place-items:center;background:rgba(2,9,32,.82);color:#fff}
+.collection-item-dialog[hidden],.collection-item-panel[hidden]{display:none!important}
+.collection-item-panel{position:relative;display:flex;flex-direction:column;align-items:center;gap:15px;width:min(88%,960px);max-height:90%;overflow:auto;box-sizing:border-box;padding:34px 42px;border:4px solid #56dcff;border-radius:28px;background:linear-gradient(155deg,#123979,#091a4a);box-shadow:0 0 38px #27bbff77;text-align:center}
+.collection-item-panel h3{margin:0;font-size:42px;color:#fff0ac}
+.collection-item-panel h4{margin:0;font-size:30px}
+.collection-item-panel p{margin:0;font-size:24px;font-weight:900}
+.collection-item-panel button{padding:13px 36px;border:3px solid #d5eaff;border-radius:17px;background:linear-gradient(#247bd2,#134484);color:#fff;font-size:26px;font-weight:900;cursor:pointer}
+.collection-item-panel button:disabled{opacity:.5;cursor:default}
+.collection-item-panel .collection-item-close{position:absolute;right:15px;top:10px;border:none;background:none;padding:5px 14px;font-size:34px}
+.collection-item-capsule{display:grid;place-items:center;width:110px;height:150px;border:9px ridge #d0f5ff;border-radius:60px;background:radial-gradient(circle,#f4feff 0%,#4de5ff 34%,#0e56af 80%);box-shadow:0 0 32px #46dfff;color:#fff;font-size:65px;text-shadow:0 0 15px #fff}
+.collection-item-target-seconds strong{color:#ffe76d;font-size:1.35em}
+.collection-item-targets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:100%}
+.collection-item-panel .collection-item-targets button{display:flex;flex-direction:column;justify-content:center;min-height:82px;padding:8px 5px;font-size:18px;line-height:1.3}
+.collection-item-targets button[disabled]{background:linear-gradient(#5b626e,#363943);color:#b4bac3;filter:grayscale(1)}
+.collection-item-targets button small{font-size:13px;color:#c8e9ff}
+.collection-item-targets button[disabled] small{color:#afb5c0}
+@media(prefers-reduced-motion:reduce){.collection-item-capsule{box-shadow:none}}
+
+.level-up-capsule-award{margin:4px 0 16px;color:#fff1a1;font-size:clamp(21px,2.4vw,31px);font-weight:900;text-shadow:0 2px 8px #134277}
+.level-up-capsule-award[hidden]{display:none!important}
+
+
+.collection-item-toast{position:absolute;z-index:81;top:41%;left:50%;transform:translateX(-50%);margin:0;padding:22px 36px;max-width:78%;border:3px solid #fff0a5;border-radius:22px;background:rgba(7,43,99,.95);color:#fff0a5;text-align:center;font-weight:900;font-size:clamp(23px,3vw,38px);text-shadow:0 2px 8px #061c4e;box-shadow:0 0 24px #5fe9ff}
+.collection-item-toast{white-space:pre-line}
+.collection-item-toast[hidden]{display:none!important}
+
+/* Capsule controls share the garage close-button geometry and frame. */
+.collection-header .collection-item-button {
+  position:absolute;right:97px;top:28px;z-index:8;
+  height:65px;min-height:65px;box-sizing:border-box;padding:6px 17px;
+  border:3px solid #c8d0d9;border-radius:18px;
+  background:linear-gradient(#77818d,#424b57);
+  box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 5px 0 #252c35;
+  display:flex;align-items:center;gap:9px;color:#fff;font-weight:900;font-size:23px;
+}
+.collection-header .collection-item-symbol{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0;line-height:0;text-shadow:none}
+.collection-header .collection-item-symbol svg {width:34px;height:34px;display:block}
+.collection-screen.is-capsule-select .collection-item-button,
+.collection-screen.is-capsule-select .collection-categories,
+.collection-screen.is-capsule-select .collection-header .medal-count,
+.collection-screen.is-capsule-select .collection-header .collection-end,
+.collection-screen.is-capsule-select .collection-time-panel:not(.collection-capsule-time) {display:flex!important}
+.collection-screen.is-capsule-select .collection-header h2{display:block!important}
+.collection-screen.is-capsule-select .collection-header h2{width:max-content;max-width:94%;margin:0 auto;white-space:nowrap}
+.collection-screen.is-capsule-select .collection-card.is-capsule-disabled {
+  background:linear-gradient(#656c76,#353942)!important;
+  border-color:#747b83!important;
+  filter:grayscale(1);opacity:.56;cursor:not-allowed;
+}
+.collection-screen.is-capsule-select .collection-card.is-capsule-disabled .card-vehicle,
+.collection-screen.is-capsule-select .collection-card.is-capsule-disabled .card-master-medal-bg{filter:grayscale(1)!important}
+.collection-capsule-time {display:none!important} /* Reuse the normal collection timer in both modes. */
+.collection-capsule-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.collection-capsule-intro[hidden]{display:none!important}
+.collection-item-dialog .collection-capsule-intro h2{font-size:34px}
+.collection-item-dialog .collection-capsule-intro p{font-size:26px}
+.collection-item-dialog .collection-capsule-intro .quit-confirm-actions{display:flex;gap:20px}
+
+/* Use the supplied transparent artwork rather than a CSS placeholder capsule. */
+.collection-item-panel img.collection-item-capsule{
+  display:block;width:190px;height:190px;max-width:40%;object-fit:contain;
+  border:0;border-radius:0;padding:0;background:none;
+  box-shadow:none;text-shadow:none;filter:drop-shadow(0 0 18px rgba(71,208,255,.45));
+}
+.collection-item-symbol img{width:34px;height:34px;display:block;object-fit:contain}
+
+/* Capsule inventory appears only on the collection summary, never category scenes. */
+.collection-stage.is-category-view .collection-item-button { display:none!important; }
+/* The real modal's visibility controls stacking automatically, with no JS tab lock. */
+.collection-screen:has(#collection-item-dialog:not([hidden]))::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:15;
+  background:rgba(2,9,32,.65);
+  pointer-events:auto;
+}
+.collection-screen:has(#collection-item-dialog:not([hidden])) .collection-stage {
+  z-index:16;
+}
+
+/* Charge feedback: make the actual destination unmistakable for one second. */
+.collection-grid .collection-card.is-capsule-charged {
+  z-index:12;
+  isolation:isolate;
+  border-color:#fff9a3!important;
+  animation:capsule-charge-glow 1s ease-out both;
+}
+.collection-grid .collection-card.is-capsule-charged::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  border-radius:inherit;
+  animation:capsule-charge-flash 1s ease-out both;
+}
+@keyframes capsule-charge-glow {
+  0% { box-shadow:0 0 0 6px #fff,0 0 40px 20px #ffeb3b,0 0 85px 32px #00eaff; }
+  35% { box-shadow:0 0 0 7px #fff6a0,0 0 35px 23px #ffc629,0 0 95px 38px #20eaff; }
+  70% { box-shadow:0 0 0 4px #fff,0 0 32px 13px #fffa9e,0 0 65px 25px #00cfff; }
+  100% { box-shadow:0 0 0 0 transparent,0 0 0 0 transparent; }
+}
+@keyframes capsule-charge-flash {
+  0% { background:rgba(255,255,255,.75); }
+  28% { background:rgba(255,245,115,.15); }
+  48% { background:rgba(255,255,255,.43); }
+  100% { background:transparent; }
+}
+
+/* While choosing a charge target, the collection navigation is not part of the interaction. */
+.collection-screen.is-capsule-select .collection-categories { display:none!important; }
+/* Keep the toast text rasterization stable during the one-second card animation. */
+.collection-item-toast { font-synthesis:none; }
 
 
 /* Collection-owned dialogs live inside 1400x1050 scaled stages. Avoid shrinking

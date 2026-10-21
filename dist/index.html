@@ -81,7 +81,7 @@
     </section>
 
     <div class="level-up-overlay" id="level-up-overlay" role="dialog" aria-modal="true" aria-labelledby="level-up-heading" hidden>
-      <div class="level-up-card"><div class="level-up-rays" aria-hidden="true"></div><p class="level-up-kicker" id="level-up-heading">LEVEL UP!</p><div class="level-up-numbers"><span id="level-up-from">レベル1</span><span class="level-up-arrow">➜</span><strong id="level-up-to">レベル2</strong></div><div class="level-up-titles"><span id="level-up-old-title"></span><span class="level-up-title-arrow">▼</span><strong id="level-up-new-title"></strong></div><p class="level-up-points"><b id="level-up-points-value">0</b><small>ポイント</small></p><button id="level-up-close" type="button">ぼうけんをつづける！</button></div>
+      <div class="level-up-card"><div class="level-up-rays" aria-hidden="true"></div><p class="level-up-kicker" id="level-up-heading">LEVEL UP!</p><div class="level-up-numbers"><span id="level-up-from">レベル1</span><span class="level-up-arrow">➜</span><strong id="level-up-to">レベル2</strong></div><div class="level-up-titles"><span id="level-up-old-title"></span><span class="level-up-title-arrow">▼</span><strong id="level-up-new-title"></strong></div><p class="level-up-points"><b id="level-up-points-value">0</b><small>ポイント</small></p><p id="level-up-capsule-award" class="level-up-capsule-award" hidden></p><button id="level-up-close" type="button">ぼうけんをつづける！</button></div>
     </div>
     <section class="screen mode-select-screen" id="mode-select-screen" aria-label="学習モードを選ぶ">
       <div class="mode-select-stage">
@@ -384,9 +384,30 @@
       <div class="collection-stage" id="collection-stage">
         <header class="collection-header">
           <h2 id="collection-header-title">ロボット<ruby>秘密基地<rt>ひみつきち</rt></ruby></h2>
+          <button class="collection-item-button" id="collection-item-button" type="button" aria-haspopup="dialog" aria-controls="collection-item-dialog"><span class="collection-item-symbol" aria-hidden="true"><img src="./assets/ui/items/item-icon-white.webp" width="34" height="34" alt=""></span> アイテム <span id="collection-item-count">0</span></button>
           <div class="medal-count" id="collection-medal-count-block"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
           <button class="collection-end collection-close-icon" id="collection-exit" type="button" aria-label="コレクションを閉じる"><span aria-hidden="true"></span></button>
         </header>
+        <div class="collection-item-dialog" id="collection-item-dialog" role="dialog" aria-modal="true" aria-label="アイテム" hidden>
+          <div class="collection-item-panel" id="collection-item-panel">
+            <button type="button" class="collection-item-close" id="collection-item-close" aria-label="アイテム一覧を閉じる">×</button>
+            <h3>アイテム</h3>
+            <img class="collection-item-capsule" src="./assets/ui/items/energy-capsule.webp" width="160" height="160" decoding="async" alt="">
+            <h4>エネルギーカプセル <span id="collection-item-owned"></span></h4>
+            <p>好きなのりものにエネルギーを20チャージ！</p>
+            <p id="collection-item-status" aria-live="polite"></p>
+            <button type="button" id="collection-item-use">つかう</button>
+          </div>
+          <div class="answer-confirm-card quit-confirm-card collection-capsule-intro" id="collection-item-target-panel" hidden>
+            <h2>どののりものにチャージする？</h2>
+            <p>エネルギーを20チャージ！</p>
+            <div class="answer-confirm-actions quit-confirm-actions">
+              <button type="button" class="quit-confirm-cancel" id="collection-item-cancel">やめる</button>
+              <button type="button" class="quit-confirm-continue" id="collection-item-select-start">のりものを<br>えらぶ</button>
+            </div>
+          </div>
+        </div>
+        <p class="collection-item-toast" id="collection-item-toast" role="status" hidden></p>
         <div class="collection-grid" id="collection-grid"></div>
         <div class="collection-category-scene" id="collection-category-scene" hidden>
           <button class="collection-nav-chevron collection-nav-chevron-left" id="collection-series-prev" type="button" aria-label="前のページ" hidden><span aria-hidden="true"></span></button>
@@ -396,6 +417,7 @@
         </div>
         
         <div class="collection-time collection-time-panel">あと<strong id="collection-seconds">60</strong>秒</div>
+        <div class="collection-time collection-time-panel collection-capsule-time" id="collection-capsule-time" hidden>あと<strong id="collection-item-target-seconds">30</strong>秒</div>
         <div class="answer-confirm quit-confirm phonics-reward-intro" id="phonics-reward-intro" role="dialog" aria-modal="true" aria-labelledby="phonics-reward-intro-title" hidden>
           <div class="answer-confirm-card quit-confirm-card">
             <h2 id="phonics-reward-intro-title">よくがんばったね！</h2>

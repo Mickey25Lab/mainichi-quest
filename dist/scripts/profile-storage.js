@@ -88,6 +88,8 @@
       acquisitionHistory: [],
       pointLedger: null,
       levelAcknowledged: null,
+      energyCapsuleCount: 0,
+      energyCapsuleAwardedLevel: null,
       enabledModes: {},
       energyMultipliers: {},
       dailyTargetCounts: {},
@@ -157,6 +159,8 @@
     profile.progress.legacyRanking = value.progress?.legacyRanking ?? null;
     profile.acquisitionHistory = normalizeAcquisitionHistory(value.acquisitionHistory);
     profile.levelAcknowledged = Number.isInteger(value.levelAcknowledged) && value.levelAcknowledged >= 1 && value.levelAcknowledged <= 50 ? value.levelAcknowledged : null;
+    profile.energyCapsuleCount = Number.isInteger(value.energyCapsuleCount) ? Math.max(0, Math.min(99, value.energyCapsuleCount)) : 0;
+    profile.energyCapsuleAwardedLevel = Number.isInteger(value.energyCapsuleAwardedLevel) && value.energyCapsuleAwardedLevel >= 1 && value.energyCapsuleAwardedLevel <= 50 ? value.energyCapsuleAwardedLevel : null;
     profile.pointLedger = value.pointLedger && Number.isSafeInteger(value.pointLedger.total) && value.pointLedger.total >= 0 && Array.isArray(value.pointLedger.observedProgress)
       ? clone(value.pointLedger) : null;
     const best = Number(value.bestRecords?.bestTimeMs);
@@ -333,6 +337,29 @@
     }
     function getLevelAcknowledged() { return getActiveProfile()?.levelAcknowledged ?? null; }
     function setLevelAcknowledged(level) { if (!Number.isInteger(level) || level < 1 || level > 50) throw new RangeError("invalid level"); return mutateActiveProfile((profile) => { profile.levelAcknowledged = level; }); }
+    function getEnergyCapsuleCount() { return getActiveProfile()?.energyCapsuleCount ?? 0; }
+    // Existing players begin at their last acknowledged level; pending level-ups
+    // are granted once, and an existing inventory is never retroactively inflated.
+    function awardEnergyCapsulesThroughLevel(level) {
+      if (!Number.isInteger(level) || level < 1 || level > 50) throw new RangeError("invalid level");
+      let added = 0;
+      mutateActiveProfile((profile) => {
+        const previous = profile.energyCapsuleAwardedLevel ?? (profile.levelAcknowledged ?? level);
+        if (level <= previous) { profile.energyCapsuleAwardedLevel = previous; return; }
+        added = Math.min(99 - profile.energyCapsuleCount, level - previous);
+        profile.energyCapsuleCount += added;
+        profile.energyCapsuleAwardedLevel = level;
+      });
+      return added;
+    }
+    function consumeEnergyCapsule() {
+      if (!getEnergyCapsuleCount()) return false;
+      mutateActiveProfile((profile) => {
+        if (profile.energyCapsuleCount < 1) throw new Error("no energy capsule");
+        profile.energyCapsuleCount -= 1;
+      });
+      return true;
+    }
     function getPointLedger() { return clone(getActiveProfile()?.pointLedger ?? null); }
     function initializePointLedger(progress) {
       if (!Array.isArray(progress)) throw new Error("point migration requires collection progress");
@@ -344,9 +371,13 @@
           recentEvents: [{ id: "migration-v1", type: "initial-migration", points: total }] };
       }).pointLedger;
     }
-    function commitRewardProgressWithPoints(progress) {
+    function commitRewardProgressWithPoints(progress, { consumeEnergyCapsule = false } = {}) {
       if (!Array.isArray(progress)) throw new Error("reward progress array required");
       return mutateActiveProfile((profile) => {
+        if (consumeEnergyCapsule) {
+          if (profile.energyCapsuleCount < 1) throw new Error("no energy capsule to use");
+          profile.energyCapsuleCount -= 1;
+        }
         if (!profile.pointLedger) {
           // Never silently create a zero-point ledger if initialization was skipped.
           // Recover the previous saved state as the migration baseline.
@@ -498,6 +529,8 @@
         profile.acquisitionHistory = [];
         profile.pointLedger = null;
         profile.levelAcknowledged = null;
+        profile.energyCapsuleCount = 0;
+        profile.energyCapsuleAwardedLevel = null;
       });
     }
 
@@ -526,6 +559,7 @@
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
       getPointLedger, initializePointLedger, commitRewardProgressWithPoints,
       getLevelAcknowledged, setLevelAcknowledged,
+      getEnergyCapsuleCount, awardEnergyCapsulesThroughLevel, consumeEnergyCapsule,
       calculateVehiclePointValue: vehiclePointValue,
       getProgressSnapshot, restoreProgressSnapshot,
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
