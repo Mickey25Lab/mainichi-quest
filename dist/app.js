@@ -3425,11 +3425,11 @@
     const acquisitionType = ({ 2: "robot", 3: "super_robot", 4: "super_robot_equipped", 5: "master_medal" })[stage];
     return acquisitionType ? commitAcquisition({ vehicleIndex, acquisitionType, stage, source }) : null;
   }
-  function applyEnergyGain(progress, vehicleIndex, amount, { completeStage = true } = {}) {
+  function applyEnergyGain(progress, vehicleIndex, amount, { completeStage = true, source = "normal" } = {}) {
     const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
     progress.energy = Math.min(required, progress.energy + amount);
     const appliedEnergy = progress.energy;
-    const reward = completeStage && !progress.masterMedal && progress.energy >= required ? completeEnergyStage(progress, vehicleIndex) : null;
+    const reward = completeStage && !progress.masterMedal && progress.energy >= required ? completeEnergyStage(progress, vehicleIndex, source) : null;
     return { reward, required, appliedEnergy };
   }
   function finishDeferredTimeBonusProgress(deferred) {
@@ -4078,6 +4078,7 @@
     showFixedScreenWhenReady("start-screen");
   }
   function endToStart({ keepTimeUp = false } = {}) {
+    resetCapsuleDialog();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
@@ -4095,6 +4096,7 @@
   }
 
   function endToModeSelect() {
+    resetCapsuleDialog();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
@@ -4197,7 +4199,9 @@
     state.collectionClosing = false;
     setBackgroundMusicDucked(false);
     setCollectionPresentationMode("browse");
+    resetCapsuleDialog();
     state.collectionDeadline = Date.now() + 60000;
+    $("collection-item-count").textContent = String(profileStore.getEnergyCapsuleCount());
     state.collectionShowSessionMarkers = true;
     prepareCollectionCategoryTabs();
     setCollectionCategory("summary");
@@ -4275,6 +4279,135 @@
     $("phonics-reward-intro-continue").focus();
   }
 
+  // Inventory opens within the 60-second collection session. Only choosing a
+  // capsule target pauses that session and starts a separate 30-second clock.
+  let capsuleSelecting = false;
+  let capsuleChoiceTimer = null;
+  let capsuleChoiceDeadline = 0;
+  let capsuleCollectionRemainingMs = 0;
+  function capsuleEligibleIndexes() {
+    return collectionDisplayOrder.filter((index) => {
+      const progress = vehicleProgress(index);
+      return progress.discovered && progress.friendly;
+    });
+  }
+  function updateCapsuleHeader() {
+    $("collection-item-count").textContent = String(profileStore.getEnergyCapsuleCount());
+    $("collection-item-owned").textContent = "× " + profileStore.getEnergyCapsuleCount();
+    $("collection-item-use").disabled = !profileStore.getEnergyCapsuleCount() || !capsuleEligibleIndexes().length;
+  }
+  function clearCapsuleChoiceTimer() {
+    if (capsuleChoiceTimer !== null) window.clearInterval(capsuleChoiceTimer);
+    capsuleChoiceTimer = null;
+  }
+  function resetCapsuleDialog() {
+    clearCapsuleChoiceTimer();
+    capsuleSelecting = false;
+    capsuleChoiceDeadline = 0;
+    capsuleCollectionRemainingMs = 0;
+    $("collection-item-dialog").hidden = true;
+    $("collection-item-panel").hidden = false;
+    $("collection-item-target-panel").hidden = true;
+  }
+  function openCapsuleInventory() {
+    if (state.collectionMode !== "browse" || state.collectionClosing
+      || qaProgressModeEnabled() || !$("collection-screen").classList.contains("active")) return;
+    $("collection-item-dialog").hidden = false;
+    $("collection-item-panel").hidden = false;
+    $("collection-item-target-panel").hidden = true;
+    $("collection-item-status").textContent = capsuleEligibleIndexes().length
+      ? "" : "つかえるのりものがまだいないよ";
+    updateCapsuleHeader();
+    $("collection-item-close").focus();
+  }
+  function closeCapsuleInventory() {
+    if (capsuleSelecting) return; // Selection is explicitly canceled with the back button.
+    $("collection-item-dialog").hidden = true;
+    $("collection-item-button").focus();
+  }
+  function resumeCapsuleCollectionClock() {
+    if (!capsuleCollectionRemainingMs) return;
+    if (!state.collectionClosing && state.collectionUsed) {
+      state.collectionDeadline = Date.now() + capsuleCollectionRemainingMs;
+      updateCollectionClock();
+      if (state.collectionTimerId === null) state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+    }
+    capsuleCollectionRemainingMs = 0;
+  }
+  function cancelCapsuleSelection() {
+    if (!capsuleSelecting) return;
+    capsuleSelecting = false;
+    clearCapsuleChoiceTimer();
+    $("collection-item-panel").hidden = false;
+    $("collection-item-target-panel").hidden = true;
+    $("collection-item-status").textContent = "つかうのをやめたよ";
+    updateCapsuleHeader();
+    resumeCapsuleCollectionClock();
+  }
+  function useCapsuleOnVehicle(index) {
+    if (!capsuleSelecting) return;
+    const eligible = capsuleEligibleIndexes();
+    if (!eligible.length) { cancelCapsuleSelection(); return; }
+    const chosen = index === null ? eligible[Math.floor(Math.random() * eligible.length)] : index;
+    if (!eligible.includes(chosen) || !profileStore.getEnergyCapsuleCount()) return;
+    // Lock input before storage and progression updates, including timer callbacks.
+    capsuleSelecting = false;
+    clearCapsuleChoiceTimer();
+    try {
+      if (!profileStore.consumeEnergyCapsule()) throw new Error("capsule inventory empty");
+      const progress = vehicleProgress(chosen);
+      const result = applyEnergyGain(progress, chosen, 20, { source: "energy_capsule" });
+      if (!result.reward) saveCollectionProgress();
+      renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
+      if (state.collectionCategory !== "summary") renderCollectionCategoryScene(state.collectionCategory);
+      $("collection-item-status").textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " 進化したよ！" : "");
+    } catch (error) {
+      console.error("Energy capsule use failed", error);
+      $("collection-item-status").textContent = "うまくつかえなかったよ。もういちどためしてね";
+    } finally {
+      $("collection-item-panel").hidden = false;
+      $("collection-item-target-panel").hidden = true;
+      updateCapsuleHeader();
+      resumeCapsuleCollectionClock();
+    }
+  }
+  function startCapsuleSelection() {
+    if (capsuleSelecting || !state.collectionUsed || state.collectionClosing
+      || state.collectionMode !== "browse" || qaProgressModeEnabled()
+      || !profileStore.getEnergyCapsuleCount()) return;
+    const eligible = capsuleEligibleIndexes();
+    if (!eligible.length) { $("collection-item-status").textContent = "つかえるのりものがまだいないよ"; return; }
+    capsuleSelecting = true;
+    capsuleCollectionRemainingMs = Math.max(1, state.collectionDeadline - Date.now());
+    stopCollectionTimer();
+    const targets = $("collection-item-targets");
+    targets.replaceChildren();
+    collectionDisplayOrder.forEach((index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      const canUse = eligible.includes(index);
+      const progress = vehicleProgress(index);
+      button.textContent = vehicles[index].nameJa;
+      const status = document.createElement("small");
+      status.textContent = canUse ? "エネルギー " + Math.floor(progress.energy) : "つかえない";
+      button.append(status);
+      button.disabled = !canUse;
+      button.addEventListener("click", () => useCapsuleOnVehicle(index));
+      targets.append(button);
+    });
+    $("collection-item-panel").hidden = true;
+    $("collection-item-target-panel").hidden = false;
+    capsuleChoiceDeadline = Date.now() + 30000;
+    $("collection-item-target-seconds").textContent = "30";
+    capsuleChoiceTimer = window.setInterval(() => {
+      if (!capsuleSelecting) return;
+      const remaining = Math.max(0, Math.ceil((capsuleChoiceDeadline - Date.now()) / 1000));
+      $("collection-item-target-seconds").textContent = String(remaining);
+      if (remaining === 0) useCapsuleOnVehicle(null);
+    }, 100);
+    $("collection-item-cancel").focus();
+  }
+
   async function openCollection({ showSessionMarkers = true } = {}) {
     if (state.collectionUsed || state.collectionClosing) return;
     setCollectionPresentationMode("browse");
@@ -4303,6 +4436,7 @@
       return;
     }
     state.collectionClosing = true;
+    resetCapsuleDialog();
     acknowledgeCollectionCategoryTabs();
     stopCollectionTimer(); playCollectionEndSound(); $("time-up").hidden = false;
     window.setTimeout(() => endToModeSelect(), collectionEndTransitionDurationMs);
@@ -5214,6 +5348,10 @@
     if (!ledger) return;
     const current = levelSystem.levelAt(ledger.total);
     const previous = profileStore.getLevelAcknowledged();
+    const capsulesAdded = profileStore.awardEnergyCapsulesThroughLevel(current);
+    const awardLabel = $("level-up-capsule-award");
+    awardLabel.hidden = capsulesAdded === 0;
+    awardLabel.textContent = capsulesAdded ? "エネルギーカプセル +" + capsulesAdded + " ゲット！" : "";
     if (previous === null) {
       profileStore.setLevelAcknowledged(current); // First install: existing points are baseline, not a new level-up.
       return;
@@ -5737,6 +5875,10 @@
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
+  $("collection-item-button").addEventListener("click", openCapsuleInventory);
+  $("collection-item-close").addEventListener("click", closeCapsuleInventory);
+  $("collection-item-use").addEventListener("click", startCapsuleSelection);
+  $("collection-item-cancel").addEventListener("click", cancelCapsuleSelection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
   $("parent-settings-button").addEventListener("click", openParentPin);
   $("top-reload-button").addEventListener("click", reloadApplication);
