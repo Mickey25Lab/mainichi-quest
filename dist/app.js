@@ -4309,6 +4309,8 @@
     capsuleToastTimer = null;
     $("collection-item-toast").hidden = true;
     capsuleSelecting = false;
+    $("collection-screen").classList.remove("is-capsule-select");
+    $("collection-capsule-time").hidden = true;
     capsuleChoiceDeadline = 0;
     capsuleCollectionRemainingMs = 0;
     $("collection-item-dialog").hidden = true;
@@ -4344,8 +4346,8 @@
     if (!capsuleSelecting) return;
     capsuleSelecting = false;
     clearCapsuleChoiceTimer();
+    finishCapsuleSelectionUi();
     $("collection-item-panel").hidden = false;
-    $("collection-item-target-panel").hidden = true;
     $("collection-item-status").textContent = "つかうのをやめたよ";
     updateCapsuleHeader();
     resumeCapsuleCollectionClock();
@@ -4366,8 +4368,7 @@
       const result = applyEnergyGain(progress, chosen, 20, { source: "energy_capsule" });
       if (!result.reward) saveCollectionProgress();
       if (capsuleSpendPending) throw new Error("capsule change was not saved");
-      renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
-      if (state.collectionCategory !== "summary") renderCollectionCategoryScene(state.collectionCategory);
+      finishCapsuleSelectionUi();
       const toast = $("collection-item-toast");
       toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
       toast.hidden = false;
@@ -4381,38 +4382,45 @@
       console.error("Energy capsule use failed", error);
       $("collection-item-status").textContent = "うまくつかえなかったよ。おうちの人にみせてね";
     } finally {
+      finishCapsuleSelectionUi();
       $("collection-item-panel").hidden = false;
-      $("collection-item-target-panel").hidden = true;
       updateCapsuleHeader();
       resumeCapsuleCollectionClock();
     }
+  }
+  let capsulePreviousCategory = "summary";
+  function finishCapsuleSelectionUi() {
+    $("collection-screen").classList.remove("is-capsule-select");
+    $("collection-capsule-time").hidden = true;
+    $("collection-item-target-panel").hidden = true;
+    renderCollectionBaseTitle();
+    setCollectionCategory(capsulePreviousCategory);
+    renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
   }
   function startCapsuleSelection() {
     if (capsuleSelecting || !state.collectionUsed || state.collectionClosing
       || state.collectionMode !== "browse" || qaProgressModeEnabled()
       || !profileStore.getEnergyCapsuleCount()) return;
-    const eligible = capsuleEligibleIndexes();
-    if (!eligible.length) { $("collection-item-status").textContent = "つかえるのりものがまだいないよ"; return; }
+    if (!capsuleEligibleIndexes().length) {
+      $("collection-item-status").textContent = "つかえるのりものがまだいないよ";
+      return;
+    }
     capsuleSelecting = true;
+    capsulePreviousCategory = state.collectionCategory;
     capsuleCollectionRemainingMs = Math.max(1, state.collectionDeadline - Date.now());
     stopCollectionTimer();
-    const targets = $("collection-item-targets");
-    targets.replaceChildren();
-    collectionDisplayOrder.forEach((index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      const canUse = eligible.includes(index);
-      const progress = vehicleProgress(index);
-      button.textContent = vehicles[index].nameJa;
-      const status = document.createElement("small");
-      status.textContent = canUse ? "エネルギー " + Math.floor(progress.energy) : "つかえない";
-      button.append(status);
-      button.disabled = !canUse;
-      button.addEventListener("click", () => useCapsuleOnVehicle(index));
-      targets.append(button);
-    });
     $("collection-item-panel").hidden = true;
     $("collection-item-target-panel").hidden = false;
+    $("collection-item-cancel").focus();
+  }
+  function beginCapsuleVehicleChoice() {
+    if (!capsuleSelecting) return;
+    $("collection-item-dialog").hidden = true;
+    $("collection-screen").classList.add("is-capsule-select");
+    $("collection-header-title").textContent = "どののりものにチャージする？";
+    setCollectionCategory("summary");
+    renderCollectionGrid({ showSessionMarkers: false });
+    $("collection-capsule-time").hidden = false;
     capsuleChoiceDeadline = Date.now() + 30000;
     $("collection-item-target-seconds").textContent = "30";
     capsuleChoiceTimer = window.setInterval(() => {
@@ -4421,7 +4429,6 @@
       $("collection-item-target-seconds").textContent = String(remaining);
       if (remaining === 0) useCapsuleOnVehicle(null);
     }, 100);
-    $("collection-item-cancel").focus();
   }
 
   async function openCollection({ showSessionMarkers = true } = {}) {
@@ -4789,8 +4796,9 @@
       const friendshipGrew = progress.friendship > before.friendship;
       const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
       const isUp = showSessionMarkers && !isNew && (friendshipGrew || energyGrew);
-      const selectionDisabled = state.collectionMode === "phonics-reward-select" && !discovered;
-      return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
+      const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
+      const selectionDisabled = (state.collectionMode === "phonics-reward-select" && !discovered) || capsuleDisabled;
+      return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
         ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
@@ -4798,7 +4806,8 @@
     revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
-      if (state.collectionMode === "phonics-reward-select") openPhonicsGrowConfirm(vehicleIndex);
+      if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }
+      else if (state.collectionMode === "phonics-reward-select") openPhonicsGrowConfirm(vehicleIndex);
       else openVehicleDetail(vehicleIndex);
     }));
   }
@@ -5899,6 +5908,7 @@
   $("collection-item-button").addEventListener("click", openCapsuleInventory);
   $("collection-item-close").addEventListener("click", closeCapsuleInventory);
   $("collection-item-use").addEventListener("click", startCapsuleSelection);
+  $("collection-item-select-start").addEventListener("click", beginCapsuleVehicleChoice);
   $("collection-item-cancel").addEventListener("click", cancelCapsuleSelection);
   $("admin-settings-button").addEventListener("click", openAdminPin);
   $("parent-settings-button").addEventListener("click", openParentPin);
