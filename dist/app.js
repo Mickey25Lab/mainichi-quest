@@ -4355,6 +4355,7 @@
   function cancelCapsuleSelection() {
     if (!capsuleSelecting) return;
     capsuleSelecting = false;
+    $("collection-screen").classList.remove("is-capsule-dialog-open");
     clearCapsuleChoiceTimer();
     finishCapsuleSelectionUi();
     $("collection-item-panel").hidden = false;
@@ -4421,7 +4422,7 @@
   }
   let capsulePreviousCategory = "summary";
   function finishCapsuleSelectionUi() {
-    $("collection-screen").classList.remove("is-capsule-select");
+    $("collection-screen").classList.remove("is-capsule-select", "is-capsule-dialog-open");
     $("collection-capsule-time").hidden = true;
     $("collection-item-target-panel").hidden = true;
     renderCollectionBaseTitle();
@@ -4448,6 +4449,7 @@
   function beginCapsuleVehicleChoice() {
     if (!capsuleSelecting) return;
     $("collection-item-dialog").hidden = true;
+    $("collection-screen").classList.remove("is-capsule-dialog-open");
     $("collection-screen").classList.add("is-capsule-select");
     $("collection-header-title").textContent = "どののりものにチャージする？";
     setCollectionCategory("summary");
