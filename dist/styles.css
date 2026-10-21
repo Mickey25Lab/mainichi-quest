@@ -4792,3 +4792,47 @@ button, input { font: inherit; }
 .start-screen .top-level-panel .top-level-points b { font-size:54px; }
 .start-screen .top-level-panel .top-level-points small { font-size:24px; }
 .start-screen .top-level-panel .top-next-level { font-size:21.6px; }
+
+/* Fixed vector strokes avoid late web-font replacement changing the × glyph.
+   Reuse one close-control appearance across collection list and detail. */
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon {
+  width:56px;
+  min-width:56px;
+  height:65px;
+  min-height:65px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:2px solid #a5eaff;
+  border-radius:12px;
+  background:linear-gradient(#214e80,#0c294f);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.16),0 5px 0 #06152c,0 0 13px rgba(67,196,255,.35);
+  color:#fff;
+  line-height:1;
+}
+.collection-detail-stage #detail-back.collection-close-icon {
+  top:28px;
+  right:24px;
+  z-index:7;
+}
+.collection-close-icon > span {
+  position:relative;
+  display:block;
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+}
+.collection-close-icon > span::before,
+.collection-close-icon > span::after {
+  content:"";
+  position:absolute;
+  top:13px;
+  left:0;
+  width:29px;
+  height:3px;
+  border-radius:2px;
+  background:currentColor;
+  transform:rotate(45deg);
+}
+.collection-close-icon > span::after { transform:rotate(-45deg); }
