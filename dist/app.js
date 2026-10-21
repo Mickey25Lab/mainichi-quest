@@ -837,8 +837,9 @@
     }
     if (includeCollection) {
       const stage = $("collection-stage");
-      stage.style.setProperty("--collection-scale", String(scale));
-      stage.style.setProperty("--collection-scale-inverse", String(scale > 0 ? 1 / scale : 1));
+      stage.style.setProperty("--stage-scale", String(scale));
+      // The collection timer intentionally keeps its existing on-screen size.
+      stage.style.setProperty("--stage-scale-inverse", String(scale > 0 ? 1 / scale : 1));
     }
     return scale;
   }
