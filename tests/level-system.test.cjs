@@ -58,7 +58,23 @@ test("capsule UI is connected without introducing image dependencies",()=>{
   assert.match(app,/function startCapsuleSelection/);
   assert.match(app,/capsuleChoiceDeadline = Date.now\(\) \+ 30000/);
   assert.match(app,/profileStore\.awardEnergyCapsulesThroughLevel\(current\)/);
-  assert.match(app,/profileStore\.consumeEnergyCapsule\(\)/);
+  assert.match(app,/consumeEnergyCapsule: capsuleSpendPending/);
   assert.match(html,/id="collection-item-button"/);
   assert.match(html,/好きなのりものにエネルギーを20チャージ！/);
+});
+
+test("capsule spending is atomic with reward progress persistence",()=>{
+  const store=createProfileStorage(storage());
+  store.createProfile("A");
+  const initial=[{discovered:true,friendly:true,friendship:5,stage:2,energy:0,masterMedal:false}];
+  store.setRewardProgress(initial);
+  store.initializePointLedger(initial);
+  store.setLevelAcknowledged(1);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(2),1);
+  const improved=[{...initial[0],energy:20}];
+  store.commitRewardProgressWithPoints(improved,{consumeEnergyCapsule:true});
+  assert.equal(store.getEnergyCapsuleCount(),0);
+  assert.equal(store.getRewardProgress()[0].energy,20);
+  assert.throws(()=>store.commitRewardProgressWithPoints([{...initial[0],energy:30}],{consumeEnergyCapsule:true}),/no energy capsule/);
+  assert.equal(store.getRewardProgress()[0].energy,20);
 });
