@@ -4321,6 +4321,7 @@
     capsuleChoiceDeadline = 0;
     capsuleCollectionRemainingMs = 0;
     $("collection-item-dialog").hidden = true;
+    $("collection-screen").classList.remove("is-capsule-dialog-open");
     $("collection-item-panel").hidden = false;
     $("collection-item-target-panel").hidden = true;
   }
@@ -4328,6 +4329,7 @@
     if (state.collectionMode !== "browse" || state.collectionClosing
       || !$("collection-screen").classList.contains("active")) return;
     $("collection-item-dialog").hidden = false;
+    $("collection-screen").classList.add("is-capsule-dialog-open");
     $("collection-item-panel").hidden = false;
     $("collection-item-target-panel").hidden = true;
     $("collection-item-status").textContent = capsuleEligibleIndexes().length
@@ -4338,6 +4340,7 @@
   function closeCapsuleInventory() {
     if (capsuleSelecting) return; // Selection is explicitly canceled with the back button.
     $("collection-item-dialog").hidden = true;
+    $("collection-screen").classList.remove("is-capsule-dialog-open");
     $("collection-item-button").focus();
   }
   function resumeCapsuleCollectionClock() {
@@ -4488,6 +4491,7 @@
     if (state.collectionTimerId !== null) { window.clearInterval(state.collectionTimerId); state.collectionTimerId = null; }
   }
   function setCollectionCategory(category) {
+    if (!$("collection-item-dialog").hidden) return; // Modal must not change its underlying category.
     const requestedCategory = category || "summary";
     const normalizedCategory = requestedCategory === "summary" || collectionCategoryAvailable(requestedCategory) ? requestedCategory : "summary";
     if (normalizedCategory !== state.collectionCategory) state.collectionCategoryPage = 0;
