@@ -4666,3 +4666,63 @@ button, input { font: inherit; }
 @media(prefers-reduced-motion:reduce){
   .collection-category-scene[data-category="robot"] .collection-scene-item::after { animation:none!important;opacity:0!important; }
 }
+
+
+/* Collection-owned dialogs live inside 1400x1050 scaled stages. Avoid shrinking
+   the viewport-sized overlay and its card a second time. */
+:is(#collection-exit-confirm, #phonics-reward-intro, #phonics-grow-confirm) {
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  transform:none;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro, #phonics-grow-confirm) .answer-confirm-card {
+  width:680px;
+  padding:54px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro, #phonics-grow-confirm) .quit-confirm-card h2 {
+  font-size:50px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro, #phonics-grow-confirm) .quit-confirm-card p {
+  font-size:34px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card {
+  width:620px;
+  padding:34px 40px 32px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:42px; }
+#phonics-grow-confirm .phonics-grow-vehicle-name { font-size:34px; }
+
+/* Match the visually larger viewport-level question quit dialog on iPad.
+   These dialog cards are inside the scaled 1400x1050 collection canvas:
+   logical values must be larger to produce the same displayed size. */
+:is(#collection-exit-confirm, #phonics-reward-intro) .answer-confirm-card {
+  width:1000px;
+  padding:76px 70px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-card h2 {
+  font-size:70px;
+  margin-bottom:24px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-card p {
+  font-size:46px;
+  margin-bottom:36px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-actions {
+  gap:26px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-actions button {
+  width:380px;
+  min-width:380px;
+  min-height:112px;
+  font-size:38px;
+  border-radius:30px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card {
+  width:920px;
+  padding:50px 60px 46px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:62px; }
+#phonics-grow-confirm .phonics-grow-vehicle-name { font-size:48px; }
+#phonics-grow-confirm .phonics-grow-confirm-actions button { min-height:105px; font-size:34px; }
