@@ -91,10 +91,10 @@
           <strong>ぜんぶできた！</strong>
           <span>すきなのやっていいよ！</span>
         </div>
+        <div class="mode-select-energy-guide" aria-hidden="true">
+          <span>エネルギーの<br>たまりやすさ</span>
+        </div>
         <div class="mode-select-list" id="mode-select-list">
-          <div class="mode-select-energy-guide" aria-hidden="true">
-            <span>エネルギーの<br>たまりやすさ</span>
-          </div>
           <button class="mode-select-choice mode-select-number-cards" id="mode-select-number-cards" type="button" data-mode="numbercards">
             <span class="mode-select-name">すうじあつめ</span><span class="mode-select-remaining"></span><span class="mode-select-energy"></span>
           </button>
@@ -386,7 +386,7 @@
           <h2 id="collection-header-title">ロボット<ruby>秘密基地<rt>ひみつきち</rt></ruby></h2>
           <button class="collection-item-button" id="collection-item-button" type="button" aria-haspopup="dialog" aria-controls="collection-item-dialog"><span class="collection-item-symbol" aria-hidden="true"><img src="./assets/ui/items/item-icon-white.webp" width="34" height="34" alt=""></span> アイテム <span id="collection-item-count">0</span></button>
           <div class="medal-count" id="collection-medal-count-block"><svg class="ui-icon master-medal-icon" aria-hidden="true"><use href="./assets/ui/icons/ui-icons.svg#master-medal"></use></svg><span>マスターメダル<br><strong id="medal-count">0 / 20</strong></span></div>
-          <button class="collection-end" id="collection-exit" aria-label="コレクションを閉じる">×</button>
+          <button class="collection-end collection-close-icon" id="collection-exit" type="button" aria-label="コレクションを閉じる"><span aria-hidden="true"></span></button>
         </header>
         <div class="collection-item-dialog" id="collection-item-dialog" role="dialog" aria-modal="true" aria-label="アイテム" hidden>
           <div class="collection-item-panel" id="collection-item-panel">
@@ -465,7 +465,7 @@
     <section class="screen collection-detail-screen" id="collection-detail-screen" aria-label="コレクション詳細">
       <div class="collection-detail-stage">
         <header class="detail-header">
-          <button id="detail-back"><span class="detail-back-icon" aria-hidden="true"></span><span>もどる</span></button>
+          <button class="collection-close-icon" id="detail-back" type="button" aria-label="コレクションを閉じる"><span aria-hidden="true"></span></button>
           <div class="collection-time collection-time-panel">あと<strong id="detail-seconds">60</strong>秒</div>
         </header>
         <div class="detail-view">

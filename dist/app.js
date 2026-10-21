@@ -2,7 +2,7 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const appVersion = "0.3.46";
+  const appVersion = "0.3.51";
   const adminPin = "3710";
   // Separate parent and admin PIN settings intentionally. They happen to share
   // the same digits today, but can diverge later without changing either flow.
@@ -837,14 +837,22 @@
   function sizeStages({ width, height, includePlay = false, includeCollection = false }) {
     const scale = stageScaleFor(width, height);
     if (includePlay) {
+      document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".mode-select-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale", String(scale));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     }
     if (includeCollection) {
       const stage = $("collection-stage");
+      stage.style.setProperty("--stage-scale", String(scale));
+      // Temporary aliases keep an older cached stylesheet at the same scale.
       stage.style.setProperty("--collection-scale", String(scale));
-      stage.style.setProperty("--collection-scale-inverse", String(scale > 0 ? 1 / scale : 1));
+      // The collection timer intentionally keeps its existing on-screen size.
+      const inverse = String(scale > 0 ? 1 / scale : 1);
+      stage.style.setProperty("--stage-scale-inverse", inverse);
+      stage.style.setProperty("--collection-scale-inverse", inverse);
     }
     return scale;
   }
@@ -6077,7 +6085,7 @@
   attachDetailCategoryLink($("detail-master-medal-display"), "medal");
   $("detail-prev").addEventListener("click", () => moveVehicleDetail(-1));
   $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
-  $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
+  $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); exitCollection(); });
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
