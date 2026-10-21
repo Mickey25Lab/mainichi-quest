@@ -187,6 +187,7 @@
     "super-rare": { label: "スーパーレア", stars: "★★★★", weight: 1 }
   });
   const profileStore = window.MQProfileStorage.createProfileStorage(window.localStorage);
+  let capsuleSpendPending = false;
   const vehicles = [
     ["Patrol Car", "パトカー", "01_Patrol_Car.webp", "01_patrol_car.webp", "#28aaff", "normal", 10],
     ["Fire Engine", "消防車", "02_Fire_Engine.webp", "02_fire_engine.webp", "#ff453a", "normal", 10],
@@ -303,7 +304,8 @@
   function saveRewardProgress() {
     // QA presets must never become permanent player points.
     if (qaProgressModeEnabled()) { profileStore.setRewardProgress(state.rewardProgress); return; }
-    profileStore.commitRewardProgressWithPoints(state.rewardProgress);
+    profileStore.commitRewardProgressWithPoints(state.rewardProgress, { consumeEnergyCapsule: capsuleSpendPending });
+    capsuleSpendPending = false;
   }
   function syncCollectionFromRewardProgress() {
     state.collection = state.rewardProgress.map(collectionStageForProgress);
@@ -4358,10 +4360,12 @@
     capsuleSelecting = false;
     clearCapsuleChoiceTimer();
     try {
-      if (!profileStore.consumeEnergyCapsule()) throw new Error("capsule inventory empty");
+      if (!profileStore.getEnergyCapsuleCount()) throw new Error("capsule inventory empty");
+      capsuleSpendPending = true;
       const progress = vehicleProgress(chosen);
       const result = applyEnergyGain(progress, chosen, 20, { source: "energy_capsule" });
       if (!result.reward) saveCollectionProgress();
+      if (capsuleSpendPending) throw new Error("capsule change was not saved");
       renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
       if (state.collectionCategory !== "summary") renderCollectionCategoryScene(state.collectionCategory);
       const toast = $("collection-item-toast");
@@ -4371,6 +4375,9 @@
       if (capsuleToastTimer !== null) window.clearTimeout(capsuleToastTimer);
       capsuleToastTimer = window.setTimeout(() => { toast.hidden = true; capsuleToastTimer = null; }, 2200);
     } catch (error) {
+      capsuleSpendPending = false;
+      // Reload persistent progress if a write failed before it committed.
+      loadRewardProgress();
       console.error("Energy capsule use failed", error);
       $("collection-item-status").textContent = "うまくつかえなかったよ。おうちの人にみせてね";
     } finally {
