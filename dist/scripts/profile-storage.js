@@ -371,9 +371,13 @@
           recentEvents: [{ id: "migration-v1", type: "initial-migration", points: total }] };
       }).pointLedger;
     }
-    function commitRewardProgressWithPoints(progress) {
+    function commitRewardProgressWithPoints(progress, { consumeEnergyCapsule = false } = {}) {
       if (!Array.isArray(progress)) throw new Error("reward progress array required");
       return mutateActiveProfile((profile) => {
+        if (consumeEnergyCapsule) {
+          if (profile.energyCapsuleCount < 1) throw new Error("no energy capsule to use");
+          profile.energyCapsuleCount -= 1;
+        }
         if (!profile.pointLedger) {
           // Never silently create a zero-point ledger if initialization was skipped.
           // Recover the previous saved state as the migration baseline.
