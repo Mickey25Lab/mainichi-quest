@@ -4368,7 +4368,6 @@
       const result = applyEnergyGain(progress, chosen, 20, { source: "energy_capsule" });
       if (!result.reward) saveCollectionProgress();
       if (capsuleSpendPending) throw new Error("capsule change was not saved");
-      finishCapsuleSelectionUi();
       const toast = $("collection-item-toast");
       toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
       toast.hidden = false;
