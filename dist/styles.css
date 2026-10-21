@@ -129,10 +129,13 @@ button, input { font: inherit; }
 .profile-add-form > div { display:grid; grid-template-columns:1fr auto; gap:9px; }
 .profile-close-button { width:100%; margin-top:18px; background:#60768a!important; }
 .start-layer {
-  position: relative;
-  width:var(--content-stage-width);
-  height:var(--content-stage-height);
-  aspect-ratio:4 / 3;
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:1400px;
+  height:1050px;
+  transform:translate(-50%,-50%) scale(var(--stage-scale, 1));
+  transform-origin:center;
   overflow:hidden;
 }
 .start-layer > #start-title { display:block; width:100%; height:100%; object-fit:contain; }
@@ -204,7 +207,7 @@ button, input { font: inherit; }
   color:#173e5e;
   background:rgba(255,255,255,.94);
   box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);
-  font-size:calc(var(--content-stage-width) * .026243094);
+  font-size:36.740332px;
   line-height:1;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
@@ -4726,3 +4729,56 @@ button, input { font: inherit; }
 #phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:62px; }
 #phonics-grow-confirm .phonics-grow-vehicle-name { font-size:48px; }
 #phonics-grow-confirm .phonics-grow-confirm-actions button { min-height:105px; font-size:34px; }
+
+
+/* Top chrome uses the shared 1400x1050 logical canvas.
+   Review pass: size footer, player and level HUD to ~120% of original PR #181 preview.
+   Keep shared parent stage scaling; sizes below are logical pixels. */
+.start-screen .top-footer-tools {
+  left:30px;
+  bottom:10px;
+  gap:14.4px;
+  max-width:calc(100% - 250px);
+}
+.start-screen .top-footer-tools .parent-settings-button {
+  height:55.2px;
+  min-height:55.2px;
+  padding:7.2px 23.2px;
+  font-size:22.8px;
+}
+.start-screen .top-footer-tools .top-reload-button,
+.start-screen .top-footer-tools .admin-settings-button {
+  width:55.2px;
+  height:55.2px;
+  min-width:55.2px;
+  font-size:31.2px;
+  line-height:52.8px;
+}
+.start-screen .top-footer-tools .start-version,
+.start-screen .top-footer-tools .start-version.is-preview {
+  font-size:22.8px;
+  line-height:1.2;
+  max-width:none;
+}
+.start-screen .profile-switch-button {
+  right:30px;
+  bottom:10px;
+  height:55.2px;
+  min-height:55.2px;
+  padding:7.2px 23.2px;
+  font-size:22.8px;
+  gap:14.4px;
+}
+.start-screen .profile-switch-button span { font-size:19.2px; }
+.start-screen .profile-switch-button strong { font-size:22.8px; }
+.start-screen .top-level-panel {
+  width:30.6%;
+  padding:20.8px 25.6px;
+  gap:4.8px;
+  border-radius:31.2px;
+}
+.start-screen .top-level-panel > strong { font-size:43.2px; }
+.start-screen .top-level-panel .top-level-title { font-size:30px; }
+.start-screen .top-level-panel .top-level-points b { font-size:54px; }
+.start-screen .top-level-panel .top-level-points small { font-size:24px; }
+.start-screen .top-level-panel .top-next-level { font-size:21.6px; }

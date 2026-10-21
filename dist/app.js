@@ -828,6 +828,7 @@
   function sizeStages({ width, height, includePlay = false, includeCollection = false }) {
     const scale = stageScaleFor(width, height);
     if (includePlay) {
+      document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
