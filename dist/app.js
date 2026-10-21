@@ -4387,11 +4387,13 @@
         toast.hidden = true;
         capsuleToastTimer = null;
         if (result.reward) {
-          showReward(result.reward, false, () => {
+          // ShowReward already invokes playFanfareSound() for newly earned evolutions.
+          // Await the actual MP3 decoding so it cannot fall back to the short tone.
+          preloadFanfareSounds().then(() => showReward(result.reward, false, () => {
             showScreen("collection-screen");
             updateCapsuleHeader();
             resumeCapsuleCollectionClock();
-          });
+          }));
         } else {
           resumeCapsuleCollectionClock();
         }
@@ -4407,6 +4409,13 @@
       $("collection-item-panel").hidden = false;
       updateCapsuleHeader();
       // The normal clock resumes after the acquisition popup, not behind it.
+      const chargedCard = document.querySelector(`#collection-grid .collection-card[data-vehicle="${chosen}"]`);
+      if (chargedCard) {
+        chargedCard.classList.remove("is-capsule-charged");
+        void chargedCard.offsetWidth;
+        chargedCard.classList.add("is-capsule-charged");
+        window.setTimeout(() => chargedCard.classList.remove("is-capsule-charged"), 1050);
+      }
       if (!capsuleToastTimer) resumeCapsuleCollectionClock();
     }
   }
@@ -4428,6 +4437,7 @@
       return;
     }
     capsuleSelecting = true;
+    preloadFanfareSounds(); // Prepare one of the three acquisition fanfares before a capsule can trigger evolution.
     capsulePreviousCategory = state.collectionCategory;
     capsuleCollectionRemainingMs = Math.max(1, state.collectionDeadline - Date.now());
     stopCollectionTimer();
