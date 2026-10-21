@@ -4376,11 +4376,23 @@
       if (!result.reward) saveCollectionProgress();
       if (capsuleSpendPending) throw new Error("capsule change was not saved");
       const toast = $("collection-item-toast");
-      toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
+      toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！";
       toast.hidden = false;
       $("collection-item-dialog").hidden = true;
       if (capsuleToastTimer !== null) window.clearTimeout(capsuleToastTimer);
-      capsuleToastTimer = window.setTimeout(() => { toast.hidden = true; capsuleToastTimer = null; }, 2200);
+      capsuleToastTimer = window.setTimeout(() => {
+        toast.hidden = true;
+        capsuleToastTimer = null;
+        if (result.reward) {
+          showReward(result.reward, false, () => {
+            showScreen("collection-screen");
+            updateCapsuleHeader();
+            resumeCapsuleCollectionClock();
+          });
+        } else {
+          resumeCapsuleCollectionClock();
+        }
+      }, result.reward ? 1100 : 2200);
     } catch (error) {
       capsuleSpendPending = false;
       // Reload persistent progress if a write failed before it committed.
@@ -4391,7 +4403,8 @@
       finishCapsuleSelectionUi();
       $("collection-item-panel").hidden = false;
       updateCapsuleHeader();
-      resumeCapsuleCollectionClock();
+      // The normal clock resumes after the acquisition popup, not behind it.
+      if (!capsuleToastTimer) resumeCapsuleCollectionClock();
     }
   }
   let capsulePreviousCategory = "summary";
@@ -4426,13 +4439,14 @@
     $("collection-header-title").textContent = "どののりものにチャージする？";
     setCollectionCategory("summary");
     renderCollectionGrid({ showSessionMarkers: false });
-    $("collection-capsule-time").hidden = false;
+    $("collection-capsule-time").hidden = true;
+    $("collection-seconds").textContent = "30";
     capsuleChoiceDeadline = Date.now() + 30000;
     $("collection-item-target-seconds").textContent = "30";
     capsuleChoiceTimer = window.setInterval(() => {
       if (!capsuleSelecting) return;
       const remaining = Math.max(0, Math.ceil((capsuleChoiceDeadline - Date.now()) / 1000));
-      $("collection-item-target-seconds").textContent = String(remaining);
+      $("collection-seconds").textContent = String(remaining);
       if (remaining === 0) useCapsuleOnVehicle(null);
     }, 100);
   }
