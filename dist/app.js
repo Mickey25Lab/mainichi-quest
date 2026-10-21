@@ -4360,7 +4360,7 @@
       if (!result.reward) saveCollectionProgress();
       renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
       if (state.collectionCategory !== "summary") renderCollectionCategoryScene(state.collectionCategory);
-      $("collection-item-status").textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " 進化したよ！" : "");
+      $("collection-item-status").textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
     } catch (error) {
       console.error("Energy capsule use failed", error);
       $("collection-item-status").textContent = "うまくつかえなかったよ。もういちどためしてね";
