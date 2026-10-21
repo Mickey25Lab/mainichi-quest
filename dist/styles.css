@@ -3533,9 +3533,13 @@ button, input { font: inherit; }
 .collection-detail-screen::before { content:none; }
 .collection-detail-screen.active { display:grid; place-items:center; }
 .collection-detail-stage {
-  position:relative;
-  width:var(--content-stage-width);
-  height:var(--content-stage-height);
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:1400px;
+  height:1050px;
+  transform:translate(-50%,-50%) scale(var(--stage-scale, 1));
+  transform-origin:center;
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -3844,9 +3848,10 @@ button, input { font: inherit; }
   background:rgba(20,34,48,.412);
   filter:blur(7px);
 }
+/* Diagnostic: hide only the robot category's separate ground shadow to
+   identify whether the thin line after the first jump comes from this layer. */
 .collection-scene-item-robot .collection-scene-shadow {
-  background:rgba(3,14,18,.439);
-  filter:blur(13px);
+  display:none;
 }
 .collection-scene-item-super-robot .collection-scene-shadow {
   background:rgba(3,14,18,.439);
@@ -4788,3 +4793,47 @@ button, input { font: inherit; }
 .start-screen .top-level-panel .top-level-points b { font-size:54px; }
 .start-screen .top-level-panel .top-level-points small { font-size:24px; }
 .start-screen .top-level-panel .top-next-level { font-size:21.6px; }
+
+/* Fixed vector strokes avoid late web-font replacement changing the × glyph.
+   Reuse one close-control appearance across collection list and detail. */
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon {
+  width:56px;
+  min-width:56px;
+  height:65px;
+  min-height:65px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:2px solid #a5eaff;
+  border-radius:12px;
+  background:linear-gradient(#214e80,#0c294f);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.16),0 5px 0 #06152c,0 0 13px rgba(67,196,255,.35);
+  color:#fff;
+  line-height:1;
+}
+.collection-detail-stage #detail-back.collection-close-icon {
+  top:28px;
+  right:24px;
+  z-index:7;
+}
+.collection-close-icon > span {
+  position:relative;
+  display:block;
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+}
+.collection-close-icon > span::before,
+.collection-close-icon > span::after {
+  content:"";
+  position:absolute;
+  top:13px;
+  left:0;
+  width:29px;
+  height:3px;
+  border-radius:2px;
+  background:currentColor;
+  transform:rotate(45deg);
+}
+.collection-close-icon > span::after { transform:rotate(-45deg); }

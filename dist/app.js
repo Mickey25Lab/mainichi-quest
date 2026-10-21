@@ -830,6 +830,7 @@
     if (includePlay) {
       document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".mode-select-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale", String(scale));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
@@ -5851,7 +5852,7 @@
   attachDetailCategoryLink($("detail-master-medal-display"), "medal");
   $("detail-prev").addEventListener("click", () => moveVehicleDetail(-1));
   $("detail-next").addEventListener("click", () => moveVehicleDetail(1));
-  $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); });
+  $("detail-back").addEventListener("click", () => { setCollectionCategory("summary"); sizeCollectionStage(); showScreen("collection-screen"); exitCollection(); });
   document.querySelectorAll(".number-key").forEach((button) => button.addEventListener("click", () => inputNumber(button.dataset.number)));
   document.querySelectorAll(".counting-key").forEach((button) => button.addEventListener("click", () => inputCountingAnswer(Number(button.dataset.countingNumber))));
   $("clear-key").addEventListener("click", clearInput); $("long-division-skip-key").addEventListener("click", skipLongDivisionSlot); $("remainder-key").addEventListener("click", chooseRemainder); $("no-remainder-key").addEventListener("click", chooseNoRemainder);
