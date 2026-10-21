@@ -3848,9 +3848,10 @@ button, input { font: inherit; }
   background:rgba(20,34,48,.412);
   filter:blur(7px);
 }
+/* Diagnostic: hide only the robot category's separate ground shadow to
+   identify whether the thin line after the first jump comes from this layer. */
 .collection-scene-item-robot .collection-scene-shadow {
-  background:rgba(3,14,18,.439);
-  filter:blur(13px);
+  display:none;
 }
 .collection-scene-item-super-robot .collection-scene-shadow {
   background:rgba(3,14,18,.439);
