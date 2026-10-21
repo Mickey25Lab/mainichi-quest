@@ -133,6 +133,8 @@ test("BGM follows screens, persists OFF, and does not restart inside a group", a
   assert.equal(await bgmStarts(page), collectionStartCount);
   await page.locator("#detail-back").click();
   await page.locator("#collection-screen.active").waitFor();
+  await page.locator("#collection-exit-confirm").waitFor({ state: "visible" });
+  await page.locator("#collection-exit-no").click();
   assert.equal(await bgmStarts(page), collectionStartCount);
 
   await page.locator("#collection-exit").click();
