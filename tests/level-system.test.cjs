@@ -18,3 +18,47 @@ test("all 50 titles use ruby for every kanji and never display reading parenthes
 
 test("only level 6 starts at 2900 points; all other thresholds stay fixed",()=>{assert.equal(levels.requiredPoints(5),1600);assert.equal(levels.requiredPoints(6),2900);assert.equal(levels.requiredPoints(7),4200);assert.equal(levels.levelAt(2899),5);assert.equal(levels.levelAt(2900),6);});
 test("returning to TOP prepares and opens level-up after initial loader",()=>{const app=fs.readFileSync("dist/app.js","utf8");assert.match(app,/if \(id === "start-screen" && gameInitialized\) \{\s*prepareLevelCelebration\(\)/);assert.match(app,/startup-loader"\)\?\.hidden\) openPendingLevelCelebration\(\)/);});
+
+
+test("capsules: one per new level, no duplicates, separate profiles, and reset",()=>{
+  const store=createProfileStorage(storage());
+  store.createProfile("A");
+  // Existing installations first baseline their already-acknowledged level.
+  store.setLevelAcknowledged(4);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(5),1);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(5),0);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(7),2);
+  assert.equal(store.getEnergyCapsuleCount(),3);
+  assert.equal(store.consumeEnergyCapsule(),true);
+  assert.equal(store.getEnergyCapsuleCount(),2);
+  const a=store.getActiveProfileId();
+  store.createProfile("B");
+  assert.equal(store.getEnergyCapsuleCount(),0);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(10),0);
+  assert.equal(store.getEnergyCapsuleCount(),0);
+  store.setActiveProfile(a);
+  assert.equal(store.getEnergyCapsuleCount(),2);
+  store.resetActiveProfileData();
+  assert.equal(store.getEnergyCapsuleCount(),0);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(1),0);
+});
+test("capsules: pending levels count and no inventory underflow",()=>{
+  const store=createProfileStorage(storage());
+  store.createProfile("A");
+  store.setLevelAcknowledged(2);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(4),2);
+  assert.equal(store.awardEnergyCapsulesThroughLevel(4),0);
+  assert.equal(store.consumeEnergyCapsule(),true);
+  assert.equal(store.consumeEnergyCapsule(),true);
+  assert.equal(store.consumeEnergyCapsule(),false);
+  assert.equal(store.getEnergyCapsuleCount(),0);
+});
+test("capsule UI is connected without introducing image dependencies",()=>{
+  const app=fs.readFileSync("dist/app.js","utf8"),html=fs.readFileSync("dist/index.html","utf8");
+  assert.match(app,/function startCapsuleSelection/);
+  assert.match(app,/capsuleChoiceDeadline = Date.now\(\) \+ 30000/);
+  assert.match(app,/profileStore\.awardEnergyCapsulesThroughLevel\(current\)/);
+  assert.match(app,/profileStore\.consumeEnergyCapsule\(\)/);
+  assert.match(html,/id="collection-item-button"/);
+  assert.match(html,/好きなのりものにエネルギーを20チャージ！/);
+});
