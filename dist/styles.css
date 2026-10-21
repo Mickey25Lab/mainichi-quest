@@ -4742,9 +4742,18 @@ button, input { font: inherit; }
 
 /* Capsule inventory appears only on the collection summary, never category scenes. */
 .collection-stage.is-category-view .collection-item-button { display:none!important; }
-/* Category tabs can be outside the dialog overlay's hit-test layer. */
-.collection-screen.is-capsule-dialog-open .collection-categories,
-.collection-screen.is-capsule-dialog-open .category-button { pointer-events:none!important; }
+/* The real modal's visibility controls stacking automatically, with no JS tab lock. */
+.collection-screen:has(#collection-item-dialog:not([hidden]))::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:15;
+  background:rgba(2,9,32,.65);
+  pointer-events:auto;
+}
+.collection-screen:has(#collection-item-dialog:not([hidden])) .collection-stage {
+  z-index:16;
+}
 
 /* Charge feedback: make the actual destination unmistakable for one second. */
 .collection-grid .collection-card.is-capsule-charged {
