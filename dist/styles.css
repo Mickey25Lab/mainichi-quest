@@ -4538,3 +4538,124 @@ button, input { font: inherit; }
     bottom:5px;
   }
 }
+
+
+/* The artwork stays invisible until ALL images in the current page have decoded.
+   Backgrounds, frames, ground shadows, NEW indicators and hitboxes stay visible. */
+#collection-category-items.is-art-loading .collection-scene-art,
+#collection-grid.is-art-loading .card-vehicle,
+#collection-grid.is-art-loading .card-master-medal-bg,
+#collection-grid.is-art-loading .card-silhouette-image { visibility:hidden; }
+
+/* Each slot has a unique phase in a 60s repeating performance.
+   The pseudorandom permutation is intentional and deterministic across visits.
+   CSS composition only; no timers or new image assets. */
+@keyframes mq-vehicle-sway-2026 {
+  0%,100% { translate:0 0; rotate:0deg; }
+  .35% { translate:-5px 0; rotate:0deg; }
+  .8% { translate:5px 0; rotate:0deg; }
+  1.25% { translate:-3px 0; rotate:0deg; }
+  1.7% { translate:0 0; rotate:0deg; }
+}
+@keyframes mq-robot-heavy-jump-2026 {
+  0%,100% { translate:0 0; }
+  .35% { translate:0 -17px; }
+  1.15% { translate:0 -21px; }
+  1.6% { translate:0 0; }
+  1.85% { translate:0 0; }
+}
+@keyframes mq-robot-dust-2026 {
+  0%,1.4%,100% { opacity:0; transform:translateX(-50%) scale(.25); }
+  1.65% { opacity:.65; transform:translateX(-50%) scale(.9); }
+  2.5% { opacity:0; transform:translateX(-50%) scale(1.45); }
+}
+@keyframes mq-medal-y-spin-2026 {
+  0% { transform:perspective(800px) rotateY(0deg); }
+  1.8% { transform:perspective(800px) rotateY(360deg); }
+  1.81%,100% { transform:perspective(800px) rotateY(0deg); }
+}
+.collection-category-scene[data-category="vehicle"] .collection-scene-item .collection-scene-art {
+  animation:mq-vehicle-sway-2026 60s linear 0s infinite;
+}
+.collection-category-scene[data-category="robot"] .collection-scene-item .collection-scene-art {
+  animation:mq-robot-heavy-jump-2026 60s linear 0s infinite;
+}
+/* Dust is an inexpensive CSS-only radial gradient, not a particle system. */
+.collection-category-scene[data-category="robot"] .collection-scene-item::after {
+  content:""; position:absolute; z-index:2; pointer-events:none;
+  left:50%; bottom:2%; width:45%; height:14%;
+  background:radial-gradient(ellipse at center,rgba(193,171,127,.62) 0%,rgba(195,172,135,.3) 38%,transparent 74%);
+  opacity:0; transform:translateX(-50%) scale(.25);
+  animation:mq-robot-dust-2026 60s linear 0s infinite;
+}
+.collection-category-scene[data-category="medal"] .collection-scene-item .collection-scene-art {
+  animation:mq-medal-y-spin-2026 60s linear 0s infinite;
+  backface-visibility:visible;
+}
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:33.8s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:6.6s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:51.2s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:15.4s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:39.9s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:1s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:57.3s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:24.8s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:12.7s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:45.1s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(11) .collection-scene-art { animation-delay:3.4s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(12) .collection-scene-art { animation-delay:36.2s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(13) .collection-scene-art { animation-delay:18.6s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(14) .collection-scene-art { animation-delay:54.5s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(15) .collection-scene-art { animation-delay:27.2s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(16) .collection-scene-art { animation-delay:9.2s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(17) .collection-scene-art { animation-delay:48.7s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(18) .collection-scene-art { animation-delay:21.1s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(19) .collection-scene-art { animation-delay:42.2s; }
+.collection-category-scene[data-category="vehicle"] .collection-scene-item:nth-child(20) .collection-scene-art { animation-delay:30.4s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:42.7s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:6.1s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:55.4s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:18.2s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:30.3s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:1.2s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:49.1s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:12.4s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:36.9s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:24.6s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(1)::after { animation-delay:42.7s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(2)::after { animation-delay:6.1s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(3)::after { animation-delay:55.4s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(4)::after { animation-delay:18.2s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(5)::after { animation-delay:30.3s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(6)::after { animation-delay:1.2s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(7)::after { animation-delay:49.1s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(8)::after { animation-delay:12.4s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(9)::after { animation-delay:36.9s; }
+.collection-category-scene[data-category="robot"] .collection-scene-item:nth-child(10)::after { animation-delay:24.6s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(1) .collection-scene-art { animation-delay:35.6s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(2) .collection-scene-art { animation-delay:9.5s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(3) .collection-scene-art { animation-delay:53s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(4) .collection-scene-art { animation-delay:18.2s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(5) .collection-scene-art { animation-delay:0.8s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(6) .collection-scene-art { animation-delay:41.4s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(7) .collection-scene-art { animation-delay:26.9s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(8) .collection-scene-art { animation-delay:6.6s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(9) .collection-scene-art { animation-delay:50.1s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(10) .collection-scene-art { animation-delay:15.3s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(11) .collection-scene-art { animation-delay:32.7s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(12) .collection-scene-art { animation-delay:55.9s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(13) .collection-scene-art { animation-delay:3.7s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(14) .collection-scene-art { animation-delay:44.3s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(15) .collection-scene-art { animation-delay:24s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(16) .collection-scene-art { animation-delay:12.4s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(17) .collection-scene-art { animation-delay:47.2s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(18) .collection-scene-art { animation-delay:29.8s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(19) .collection-scene-art { animation-delay:21.1s; }
+.collection-category-scene[data-category="medal"] .collection-scene-item:nth-child(20) .collection-scene-art { animation-delay:38.5s; }
+.multiplication-2x2-row.is-step-wrong::before {
+  color:#d92d2d;
+  text-shadow:0 1px 0 #fff,0 0 5px rgba(217,45,45,.28);
+}
+@media(prefers-reduced-motion:reduce){
+  .collection-category-scene[data-category="robot"] .collection-scene-item::after { animation:none!important;opacity:0!important; }
+}
