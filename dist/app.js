@@ -4285,6 +4285,7 @@
   let capsuleChoiceTimer = null;
   let capsuleChoiceDeadline = 0;
   let capsuleCollectionRemainingMs = 0;
+  let capsuleToastTimer = null;
   function capsuleEligibleIndexes() {
     return collectionDisplayOrder.filter((index) => {
       const progress = vehicleProgress(index);
@@ -4302,6 +4303,9 @@
   }
   function resetCapsuleDialog() {
     clearCapsuleChoiceTimer();
+    if (capsuleToastTimer !== null) window.clearTimeout(capsuleToastTimer);
+    capsuleToastTimer = null;
+    $("collection-item-toast").hidden = true;
     capsuleSelecting = false;
     capsuleChoiceDeadline = 0;
     capsuleCollectionRemainingMs = 0;
@@ -4360,10 +4364,15 @@
       if (!result.reward) saveCollectionProgress();
       renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
       if (state.collectionCategory !== "summary") renderCollectionCategoryScene(state.collectionCategory);
-      $("collection-item-status").textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
+      const toast = $("collection-item-toast");
+      toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！" + (result.reward ? " しんかしたよ！" : "");
+      toast.hidden = false;
+      $("collection-item-dialog").hidden = true;
+      if (capsuleToastTimer !== null) window.clearTimeout(capsuleToastTimer);
+      capsuleToastTimer = window.setTimeout(() => { toast.hidden = true; capsuleToastTimer = null; }, 2200);
     } catch (error) {
       console.error("Energy capsule use failed", error);
-      $("collection-item-status").textContent = "うまくつかえなかったよ。もういちどためしてね";
+      $("collection-item-status").textContent = "うまくつかえなかったよ。おうちの人にみせてね";
     } finally {
       $("collection-item-panel").hidden = false;
       $("collection-item-target-panel").hidden = true;
