@@ -168,10 +168,10 @@
     Object.freeze({ x:1180, contactY:545, size:351, anchorY:.9338, shadowWidth:228, shadowHeight:32, shadowOffsetY:-7, shadowVariant:"rear", flip:true })
   ]);
   const equipmentCollectionSlots = Object.freeze([
-    Object.freeze({ x:350, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
-    Object.freeze({ x:1050, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
-    Object.freeze({ x:350, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
-    Object.freeze({ x:1050, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 })
+    Object.freeze({ x:385, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:1015, contactY:700, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:385, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 }),
+    Object.freeze({ x:1015, contactY:330, size:430, anchorY:.5, shadowWidth:330, shadowHeight:120, shadowOffsetY:0 })
   ]);
   const medalCollectionSlots = Object.freeze([805,615,420,230].flatMap((centerY) =>
     [230,465,700,935,1170].map((x) => Object.freeze({ x, contactY:centerY, size:140, anchorY:.5 }))
