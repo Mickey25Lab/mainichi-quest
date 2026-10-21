@@ -74,7 +74,7 @@ results.controls[selector]={status:c.display==="none"||c.visibility==="hidden"||
 }
 
 // Geometry check only: reveal a dialog without invoking game state transitions.
-const dialogs=id==="play-screen"?["#quit-confirm"]:id==="collection-screen"?["#collection-exit-confirm","#phonics-reward-intro","#phonics-grow-confirm"]:[];
+const dialogs=id==="collection-screen"?["#collection-exit-confirm","#phonics-reward-intro","#phonics-grow-confirm"]:[];
 results.dialogs={};
 for(const selector of dialogs){
   const el=(id==="play-screen"?document:target).querySelector(selector);
