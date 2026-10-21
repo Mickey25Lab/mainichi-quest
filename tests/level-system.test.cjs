@@ -78,3 +78,16 @@ test("capsule spending is atomic with reward progress persistence",()=>{
   assert.throws(()=>store.commitRewardProgressWithPoints([{...initial[0],energy:30}],{consumeEnergyCapsule:true}),/no energy capsule/);
   assert.equal(store.getRewardProgress()[0].energy,20);
 });
+
+test("capsule selection reuses garage cards and phonics-style confirmation",()=>{
+  const app=fs.readFileSync("dist/app.js","utf8"),html=fs.readFileSync("dist/index.html","utf8"),css=fs.readFileSync("dist/styles.css","utf8");
+  assert.match(html,/id="collection-item-select-start"/);
+  assert.match(html,/class="answer-confirm-card quit-confirm-card collection-capsule-intro"/);
+  assert.match(html,/id="collection-capsule-time"/);
+  assert.doesNotMatch(html,/id="collection-item-targets"/);
+  assert.match(app,/function beginCapsuleVehicleChoice/);
+  assert.match(app,/setCollectionCategory\("summary"\)/);
+  assert.match(app,/capsuleDisabled = capsuleSelecting/);
+  assert.match(app,/if \(capsuleSelecting\) \{ if \(capsuleEligibleIndexes\(\)\.includes\(vehicleIndex\)\) useCapsuleOnVehicle\(vehicleIndex\); \}/);
+  assert.match(css,/\.collection-card\.is-capsule-disabled/);
+});
