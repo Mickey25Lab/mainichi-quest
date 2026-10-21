@@ -2139,12 +2139,12 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${(state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided") ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
     const number = isRetry ? state.retrySetPosition : state.initialIndex + 1;
-    const total = isRetry ? state.retrySetTotal : (state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided") ? state.questions.length : 10;
+    const total = isRetry ? state.retrySetTotal : ((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) ? state.questions.length : 10;
     $("progress-mode").hidden = !isRetry;
     $("progress-badge").classList.toggle("is-retry", isRetry);
     $("progress-count").textContent = `${Math.min(number, total)} / ${total}`;
@@ -2216,7 +2216,7 @@
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
-      if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) setupTwoDigitMultiplication(question);
+      if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) setupTwoDigitMultiplication(question);
       if ((state.mode === "counting1" || state.mode === "counting2")) setupCounting(question);
       commitQuestionVisuals(prepared);
       recordVisualDiagnostic("display-question-character-ready", { vehicleIndex: question.vehicleIndex, characterStage: prepared.characterStage || null, durationMs: Math.round(performance.now() - displayStartedAt) });
@@ -2255,7 +2255,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) ? makeTwoDigitMultiplicationQuestions(state.mode === "multiplication2x2-unguided") : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
+    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) ? makeTwoDigitMultiplicationQuestions(state.mode === "multiplication2x2-unguided") : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
     state.initialIndex = 0; state.initialCorrect = 0; state.missed = []; state.retrySetPosition = 0; state.retrySetTotal = 0; state.vehicleChallengeQuestionCount = 0;
     state.finalElapsedMs = 0; state.confirmingAnswer = false;
     state.sessionUnlocks = [0, 0, 0, 0, 0, 0];
@@ -2422,7 +2422,7 @@
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
       return;
     }
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) {
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) {
       const model = state.multiplication2x2;
       const showAnswer = Boolean(model && model.inputStep >= model.inputOrder.length);
       $("assist-button").textContent = showAnswer ? "答えを見る" : "ヒントを見る";
@@ -2447,7 +2447,7 @@
     if ((state.mode === "counting1" || state.mode === "counting2")) return;
     if (state.mode === "numbercards") { renderNumberCards(); return; }
     if (state.mode === "multiplication") { renderMultiplication(); return; }
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) { renderTwoDigitMultiplication(); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { renderTwoDigitMultiplication(); return; }
     if (state.mode === "longdivision") { renderLongDivision(); return; }
     if (!state.quotientInput) { $("answer-text").textContent = ""; return; }
     $("answer-text").textContent = state.inputMode === "remainder" ? `${state.quotientInput}…${state.remainderInput || "_"}` : state.quotientInput;
@@ -2975,7 +2975,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { inputMultiplicationNumber(number); return; }
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) { inputTwoDigitMultiplicationNumber(number); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { inputTwoDigitMultiplicationNumber(number); return; }
     if (state.mode === "longdivision") { inputLongDivisionNumber(number); return; }
     if (state.current.hintUsed && state.inputMode === "quotient") {
       state.inputMode = "remainder"; state.remainderInput = number;
@@ -3008,7 +3008,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { clearMultiplicationInput(); return; }
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) { clearTwoDigitMultiplicationInput(); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { clearTwoDigitMultiplicationInput(); return; }
     if (state.mode === "longdivision") { clearLongDivisionInput(); return; }
     state.inputMode = "quotient"; state.quotientInput = state.current.hintUsed ? String(state.current.quotient) : ""; state.remainderInput = "";
     renderInput();
@@ -3046,7 +3046,7 @@
       renderNumberCards();
       return;
     }
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) {
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) {
       const model = state.multiplication2x2;
       const step = model?.inputOrder[model.inputStep];
       if (model?.sumTransitionPending && step?.rowIndex === 2) return;
@@ -3126,7 +3126,7 @@
     return question.remainder === 0 ? `${question.quotient}（あまりなし）` : `${question.quotient}…${question.remainder}`;
   }
   function renderRevealedAnswer(question) {
-    if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) { fillTwoDigitMultiplicationAnswer(question); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { fillTwoDigitMultiplicationAnswer(question); return; }
     if (state.mode === "multiplication") {
       const model = state.multiplication;
       if (model) {
@@ -3172,7 +3172,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication" || (state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided")) { useHint(); return; }
+    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication" || ((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -3573,7 +3573,7 @@
           addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
         }
       });
-    } else if ((state.(mode === "multiplication2x2" || mode === "multiplication2x2-unguided") || state.mode === "multiplication2x2-unguided") && state.multiplication2x2) {
+    } else if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) && state.multiplication2x2) {
       state.multiplication2x2.rows.forEach((row) => {
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
           if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
