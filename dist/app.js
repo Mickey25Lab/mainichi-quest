@@ -4376,7 +4376,7 @@
       if (!result.reward) saveCollectionProgress();
       if (capsuleSpendPending) throw new Error("capsule change was not saved");
       const toast = $("collection-item-toast");
-      toast.textContent = vehicles[chosen].nameJa + " にエネルギーを20チャージ！";
+      toast.textContent = vehicles[chosen].nameJa + " に\nエネルギーを20チャージ！";
       toast.hidden = false;
       $("collection-item-dialog").hidden = true;
       if (capsuleToastTimer !== null) window.clearTimeout(capsuleToastTimer);
