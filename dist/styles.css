@@ -4468,7 +4468,7 @@ button, input { font: inherit; }
 /* Only the first 10% (1 second) of each 10s cycle animates:
    rapid ignition, brief power-up, and crisp release. */
 @keyframes mq-super-summon-charge {
-  0%,.8%,10%,100% {scale:1;filter:brightness(1);}
+  0%,.8%,10%,100% {scale:1;}
   2.4% {scale:1.04;filter:brightness(1.24);}
   4.4%,6.6% {scale:1.085;filter:brightness(1.36) drop-shadow(0 0 9px rgba(149,234,255,.7));}
   8.4% {scale:1.015;filter:brightness(1.07);}
@@ -4772,10 +4772,10 @@ button, input { font: inherit; }
   animation:capsule-charge-flash 1s ease-out both;
 }
 @keyframes capsule-charge-glow {
-  0% { box-shadow:0 0 0 6px #fff,0 0 40px 20px #ffeb3b,0 0 85px 32px #00eaff;filter:brightness(2); }
-  35% { box-shadow:0 0 0 7px #fff6a0,0 0 35px 23px #ffc629,0 0 95px 38px #20eaff;filter:brightness(1.65); }
-  70% { box-shadow:0 0 0 4px #fff,0 0 32px 13px #fffa9e,0 0 65px 25px #00cfff;filter:brightness(1.4); }
-  100% { box-shadow:0 0 0 0 transparent,0 0 0 0 transparent;filter:brightness(1); }
+  0% { box-shadow:0 0 0 6px #fff,0 0 40px 20px #ffeb3b,0 0 85px 32px #00eaff; }
+  35% { box-shadow:0 0 0 7px #fff6a0,0 0 35px 23px #ffc629,0 0 95px 38px #20eaff; }
+  70% { box-shadow:0 0 0 4px #fff,0 0 32px 13px #fffa9e,0 0 65px 25px #00cfff; }
+  100% { box-shadow:0 0 0 0 transparent,0 0 0 0 transparent; }
 }
 @keyframes capsule-charge-flash {
   0% { background:rgba(255,255,255,.75); }
@@ -4783,3 +4783,8 @@ button, input { font: inherit; }
   48% { background:rgba(255,255,255,.43); }
   100% { background:transparent; }
 }
+
+/* While choosing a charge target, the collection navigation is not part of the interaction. */
+.collection-screen.is-capsule-select .collection-categories { display:none!important; }
+/* Keep the toast text rasterization stable during the one-second card animation. */
+.collection-item-toast { font-synthesis:none; }
