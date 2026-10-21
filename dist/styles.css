@@ -4405,7 +4405,7 @@ button, input { font: inherit; }
 /* PR #165: bottom-left tool row, aligned with the player button's left edge. */
 .start-screen .top-footer-tools{
   position:absolute;z-index:9;left:24px;bottom:7px;
-  display:flex;align-items:center;gap:6px;max-width:calc(100% - 130px);
+  display:flex;align-items:center;gap:9px;max-width:calc(100% - 130px);
   min-width:0;white-space:nowrap;
 }
 .start-screen .top-footer-tools .parent-settings-button,
