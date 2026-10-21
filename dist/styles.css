@@ -4693,3 +4693,36 @@ button, input { font: inherit; }
 }
 #phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:42px; }
 #phonics-grow-confirm .phonics-grow-vehicle-name { font-size:34px; }
+
+/* Match the visually larger viewport-level question quit dialog on iPad.
+   These dialog cards are inside the scaled 1400x1050 collection canvas:
+   logical values must be larger to produce the same displayed size. */
+:is(#collection-exit-confirm, #phonics-reward-intro) .answer-confirm-card {
+  width:1000px;
+  padding:76px 70px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-card h2 {
+  font-size:70px;
+  margin-bottom:24px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-card p {
+  font-size:46px;
+  margin-bottom:36px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-actions {
+  gap:26px;
+}
+:is(#collection-exit-confirm, #phonics-reward-intro) .quit-confirm-actions button {
+  width:380px;
+  min-width:380px;
+  min-height:112px;
+  font-size:38px;
+  border-radius:30px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card {
+  width:920px;
+  padding:50px 60px 46px;
+}
+#phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:62px; }
+#phonics-grow-confirm .phonics-grow-vehicle-name { font-size:48px; }
+#phonics-grow-confirm .phonics-grow-confirm-actions button { min-height:105px; font-size:34px; }
