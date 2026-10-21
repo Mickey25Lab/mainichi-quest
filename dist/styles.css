@@ -4729,3 +4729,54 @@ button, input { font: inherit; }
 #phonics-grow-confirm .phonics-grow-confirm-card h2 { font-size:62px; }
 #phonics-grow-confirm .phonics-grow-vehicle-name { font-size:48px; }
 #phonics-grow-confirm .phonics-grow-confirm-actions button { min-height:105px; font-size:34px; }
+
+
+/* Top chrome uses the shared 1400x1050 canvas. Enlarge its logical
+   dimensions to preserve the pre-migration iPad *rendered* size. */
+.start-screen .top-footer-tools {
+  left:30px;
+  bottom:10px;
+  gap:12px;
+  max-width:calc(100% - 220px);
+}
+.start-screen .top-footer-tools .parent-settings-button {
+  height:46px;
+  min-height:46px;
+  padding:6px 19px;
+  font-size:19px;
+}
+.start-screen .top-footer-tools .top-reload-button,
+.start-screen .top-footer-tools .admin-settings-button {
+  width:46px;
+  height:46px;
+  min-width:46px;
+  font-size:26px;
+  line-height:44px;
+}
+.start-screen .top-footer-tools .start-version,
+.start-screen .top-footer-tools .start-version.is-preview {
+  font-size:19px;
+  line-height:1.2;
+  max-width:none;
+}
+.start-screen .profile-switch-button {
+  right:30px;
+  bottom:10px;
+  height:46px;
+  min-height:46px;
+  padding:6px 19px;
+  font-size:19px;
+  gap:12px;
+}
+.start-screen .profile-switch-button span { font-size:16px; }
+.start-screen .profile-switch-button strong { font-size:19px; }
+.start-screen .top-level-panel {
+  padding:17px 21px;
+  gap:4px;
+  border-radius:26px;
+}
+.start-screen .top-level-panel > strong { font-size:36px; }
+.start-screen .top-level-panel .top-level-title { font-size:25px; }
+.start-screen .top-level-panel .top-level-points b { font-size:45px; }
+.start-screen .top-level-panel .top-level-points small { font-size:20px; }
+.start-screen .top-level-panel .top-next-level { font-size:18px; }
