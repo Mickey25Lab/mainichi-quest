@@ -4732,53 +4732,53 @@ button, input { font: inherit; }
 
 
 /* Top chrome uses the shared 1400x1050 logical canvas.
-   Review pass: make footer, player and level HUD ~150% of PR #181 preview.
+   Review pass: size footer, player and level HUD to ~120% of original PR #181 preview.
    Keep shared parent stage scaling; sizes below are logical pixels. */
 .start-screen .top-footer-tools {
   left:30px;
   bottom:10px;
-  gap:18px;
-  max-width:calc(100% - 290px);
+  gap:14.4px;
+  max-width:calc(100% - 250px);
 }
 .start-screen .top-footer-tools .parent-settings-button {
-  height:69px;
-  min-height:69px;
-  padding:9px 29px;
-  font-size:28.5px;
+  height:55.2px;
+  min-height:55.2px;
+  padding:7.2px 23.2px;
+  font-size:22.8px;
 }
 .start-screen .top-footer-tools .top-reload-button,
 .start-screen .top-footer-tools .admin-settings-button {
-  width:69px;
-  height:69px;
-  min-width:69px;
-  font-size:39px;
-  line-height:66px;
+  width:55.2px;
+  height:55.2px;
+  min-width:55.2px;
+  font-size:31.2px;
+  line-height:52.8px;
 }
 .start-screen .top-footer-tools .start-version,
 .start-screen .top-footer-tools .start-version.is-preview {
-  font-size:28.5px;
+  font-size:22.8px;
   line-height:1.2;
   max-width:none;
 }
 .start-screen .profile-switch-button {
   right:30px;
   bottom:10px;
-  height:69px;
-  min-height:69px;
-  padding:9px 29px;
-  font-size:28.5px;
-  gap:18px;
+  height:55.2px;
+  min-height:55.2px;
+  padding:7.2px 23.2px;
+  font-size:22.8px;
+  gap:14.4px;
 }
-.start-screen .profile-switch-button span { font-size:24px; }
-.start-screen .profile-switch-button strong { font-size:28.5px; }
+.start-screen .profile-switch-button span { font-size:19.2px; }
+.start-screen .profile-switch-button strong { font-size:22.8px; }
 .start-screen .top-level-panel {
-  width:38.25%;
-  padding:26px 32px;
-  gap:6px;
-  border-radius:39px;
+  width:30.6%;
+  padding:20.8px 25.6px;
+  gap:4.8px;
+  border-radius:31.2px;
 }
-.start-screen .top-level-panel > strong { font-size:54px; }
-.start-screen .top-level-panel .top-level-title { font-size:37.5px; }
-.start-screen .top-level-panel .top-level-points b { font-size:67.5px; }
-.start-screen .top-level-panel .top-level-points small { font-size:30px; }
-.start-screen .top-level-panel .top-next-level { font-size:27px; }
+.start-screen .top-level-panel > strong { font-size:43.2px; }
+.start-screen .top-level-panel .top-level-title { font-size:30px; }
+.start-screen .top-level-panel .top-level-points b { font-size:54px; }
+.start-screen .top-level-panel .top-level-points small { font-size:24px; }
+.start-screen .top-level-panel .top-next-level { font-size:21.6px; }
