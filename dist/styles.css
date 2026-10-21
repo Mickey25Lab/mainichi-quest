@@ -4701,8 +4701,8 @@ button, input { font: inherit; }
 
 /* Capsule controls share the garage close-button geometry and frame. */
 .collection-header .collection-item-button {
-  position:absolute;right:142px;top:33px;z-index:8;
-  height:64px;min-height:64px;padding:6px 17px;
+  position:absolute;right:142px;top:28px;z-index:8;
+  height:65px;min-height:65px;box-sizing:border-box;padding:6px 17px;
   border:3px solid #c8d0d9;border-radius:18px;
   background:linear-gradient(#77818d,#424b57);
   box-shadow:inset 0 0 14px rgba(255,255,255,.18),0 5px 0 #252c35;
@@ -4714,7 +4714,7 @@ button, input { font: inherit; }
 .collection-screen.is-capsule-select .collection-categories,
 .collection-screen.is-capsule-select .collection-header .medal-count,
 .collection-screen.is-capsule-select .collection-header .collection-end,
-.collection-screen.is-capsule-select .collection-time-panel:not(.collection-capsule-time) {display:none!important}
+.collection-screen.is-capsule-select .collection-time-panel:not(.collection-capsule-time) {display:flex!important}
 .collection-screen.is-capsule-select .collection-header h2{display:block!important}
 .collection-screen.is-capsule-select .collection-header h2{width:max-content;max-width:94%;margin:0 auto;white-space:nowrap}
 .collection-screen.is-capsule-select .collection-card.is-capsule-disabled {
@@ -4724,7 +4724,7 @@ button, input { font: inherit; }
 }
 .collection-screen.is-capsule-select .collection-card.is-capsule-disabled .card-vehicle,
 .collection-screen.is-capsule-select .collection-card.is-capsule-disabled .card-master-medal-bg{filter:grayscale(1)!important}
-.collection-capsule-time {position:absolute!important;right:20px!important;bottom:16px!important;z-index:20!important}
+.collection-capsule-time {display:none!important} /* Reuse the normal collection timer in both modes. */
 .collection-capsule-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
 .collection-capsule-intro[hidden]{display:none!important}
 .collection-item-dialog .collection-capsule-intro h2{font-size:34px}
