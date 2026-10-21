@@ -4406,7 +4406,18 @@
       $("collection-item-panel").hidden = false;
       updateCapsuleHeader();
       // The normal clock resumes after the acquisition popup, not behind it.
+      // Refresh only the target's visible energy meter; other names never remount.
       const chargedCard = document.querySelector(`#collection-grid .collection-card[data-vehicle="${chosen}"]`);
+      if (chargedCard) {
+        const current = vehicleProgress(chosen);
+        const meter = chargedCard.querySelector(".collection-card-energy");
+        if (meter) {
+          const maxEnergy = current.masterMedal ? 500 : requiredEnergyForStage(current.stage);
+          const fill = meter.querySelector("i");
+          meter.setAttribute("aria-label", `エネルギー ${current.energy} / ${maxEnergy}`);
+          if (fill) fill.style.height = `${Math.min(100, current.energy / maxEnergy * 100)}%`;
+        }
+      }
       if (chargedCard) {
         chargedCard.classList.remove("is-capsule-charged");
         void chargedCard.offsetWidth;
@@ -4423,7 +4434,13 @@
     $("collection-item-target-panel").hidden = true;
     renderCollectionBaseTitle();
     setCollectionCategory(capsulePreviousCategory);
-    renderCollectionGrid({ showSessionMarkers: state.collectionShowSessionMarkers });
+    // Preserve the existing card nodes and their labels; only the charged
+    // card needs a fresh render, avoiding a 20-card typography relayout.
+    document.querySelectorAll("#collection-grid .collection-card").forEach((card) => {
+      card.classList.remove("is-capsule-disabled");
+      card.disabled = false;
+      card.removeAttribute("aria-disabled");
+    });
   }
   function startCapsuleSelection() {
     if (capsuleSelecting || !state.collectionUsed || state.collectionClosing
