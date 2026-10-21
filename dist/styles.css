@@ -4731,52 +4731,54 @@ button, input { font: inherit; }
 #phonics-grow-confirm .phonics-grow-confirm-actions button { min-height:105px; font-size:34px; }
 
 
-/* Top chrome uses the shared 1400x1050 canvas. Enlarge its logical
-   dimensions to preserve the pre-migration iPad *rendered* size. */
+/* Top chrome uses the shared 1400x1050 logical canvas.
+   Review pass: make footer, player and level HUD ~150% of PR #181 preview.
+   Keep shared parent stage scaling; sizes below are logical pixels. */
 .start-screen .top-footer-tools {
   left:30px;
   bottom:10px;
-  gap:12px;
-  max-width:calc(100% - 220px);
+  gap:18px;
+  max-width:calc(100% - 290px);
 }
 .start-screen .top-footer-tools .parent-settings-button {
-  height:46px;
-  min-height:46px;
-  padding:6px 19px;
-  font-size:19px;
+  height:69px;
+  min-height:69px;
+  padding:9px 29px;
+  font-size:28.5px;
 }
 .start-screen .top-footer-tools .top-reload-button,
 .start-screen .top-footer-tools .admin-settings-button {
-  width:46px;
-  height:46px;
-  min-width:46px;
-  font-size:26px;
-  line-height:44px;
+  width:69px;
+  height:69px;
+  min-width:69px;
+  font-size:39px;
+  line-height:66px;
 }
 .start-screen .top-footer-tools .start-version,
 .start-screen .top-footer-tools .start-version.is-preview {
-  font-size:19px;
+  font-size:28.5px;
   line-height:1.2;
   max-width:none;
 }
 .start-screen .profile-switch-button {
   right:30px;
   bottom:10px;
-  height:46px;
-  min-height:46px;
-  padding:6px 19px;
-  font-size:19px;
-  gap:12px;
+  height:69px;
+  min-height:69px;
+  padding:9px 29px;
+  font-size:28.5px;
+  gap:18px;
 }
-.start-screen .profile-switch-button span { font-size:16px; }
-.start-screen .profile-switch-button strong { font-size:19px; }
+.start-screen .profile-switch-button span { font-size:24px; }
+.start-screen .profile-switch-button strong { font-size:28.5px; }
 .start-screen .top-level-panel {
-  padding:17px 21px;
-  gap:4px;
-  border-radius:26px;
+  width:38.25%;
+  padding:26px 32px;
+  gap:6px;
+  border-radius:39px;
 }
-.start-screen .top-level-panel > strong { font-size:36px; }
-.start-screen .top-level-panel .top-level-title { font-size:25px; }
-.start-screen .top-level-panel .top-level-points b { font-size:45px; }
-.start-screen .top-level-panel .top-level-points small { font-size:20px; }
-.start-screen .top-level-panel .top-next-level { font-size:18px; }
+.start-screen .top-level-panel > strong { font-size:54px; }
+.start-screen .top-level-panel .top-level-title { font-size:37.5px; }
+.start-screen .top-level-panel .top-level-points b { font-size:67.5px; }
+.start-screen .top-level-panel .top-level-points small { font-size:30px; }
+.start-screen .top-level-panel .top-next-level { font-size:27px; }
