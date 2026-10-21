@@ -12,14 +12,16 @@
     Object.freeze({ id:"counting1", label:"かずかぞえ1", detail:"" }),
     Object.freeze({ id:"counting2", label:"かずかぞえ2", detail:"" }),
     Object.freeze({ id:"multiplication", label:"かけ算ひっ算", detail:"2けた×1けた" }),
-    Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた" }),
+    Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた その1（ヒントつき）" }),
+    Object.freeze({ id:"multiplication2x2-unguided", label:"かけ算ひっ算", detail:"2けた×2けた その2" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
     Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F" }),
     Object.freeze({ id:"phonics-part-2", label:"フォニックス", detail:"パート2　G〜K" }),
     Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P" }),
     Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
-    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" })
+    Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
+    Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -79,7 +81,8 @@
     "part-2": Object.freeze({ id:"part-2", title:"フォニックス パート2（G〜K）", letters:"G〜K", frames:phonicsFramesForLetters(["G", "H", "I", "J", "K"], 12) }),
     "part-3": Object.freeze({ id:"part-3", title:"フォニックス パート3（L〜P）", letters:"L〜P", frames:phonicsFramesForLetters(["L", "M", "N", "O", "P"], 22) }),
     "part-4": Object.freeze({ id:"part-4", title:"フォニックス パート4（Q〜U）", letters:"Q〜U", frames:phonicsFramesForLetters(["Q", "R", "S", "T", "U"], 32) }),
-    "part-5": Object.freeze({ id:"part-5", title:"フォニックス パート5（V〜Z）", letters:"V〜Z", frames:phonicsFramesForLetters(["V", "W", "X", "Y", "Z"], 42) })
+    "part-5": Object.freeze({ id:"part-5", title:"フォニックス パート5（V〜Z）", letters:"V〜Z", frames:phonicsFramesForLetters(["V", "W", "X", "Y", "Z"], 42) }),
+    "review": Object.freeze({ id:"review", title:"フォニックス まとめ（A〜Z）", letters:"A〜Z", uninterrupted:true, frames:Object.freeze([...phonicsPart1Frames, ...phonicsFramesForLetters("GHIJKLMNOPQRSTUVWXYZ".split(""), 12)]) })
   });
   let activePhonicsYoutubeLesson = phonicsYoutubeLessons["part-2"];
   const phonicsYoutubeConfig = Object.freeze({
@@ -109,7 +112,7 @@
     enabled: true,
     amount: 1,
     label: "タイムボーナス +1",
-    modes: Object.freeze(["normal", "longdivision", "multiplication", "multiplication2x2"]),
+    modes: Object.freeze(["normal", "longdivision", "multiplication", "multiplication2x2", "multiplication2x2-unguided"]),
     limitMsByAnswerDigits: Object.freeze({ 1: 4000, 2: 5000, 3: 10000, 4: 15000, 5: 20000 })
   });
   // All screens share one preference and one Web Audio controller. Screens only
@@ -483,6 +486,7 @@
   function youtubePlayerState(name) { return window.YT?.PlayerState?.[name]; }
   function currentPhonicsYoutubeFrame() { return activePhonicsYoutubeLesson.frames[phonicsYoutube.frameIndex] || null; }
   function phonicsYoutubeFrameMessage(frame, pass = phonicsYoutube.pass) {
+    if (activePhonicsYoutubeLesson.uninterrupted) return "A〜Zをつづけて再生しています。";
     if (!frame) return "";
     return pass === "first"
       ? `${frame.id} を再生しています。`
@@ -500,6 +504,7 @@
   }
   function runPhonicsYoutubeCheckpointPoll() {
     stopPhonicsYoutubePolling();
+    if (activePhonicsYoutubeLesson.uninterrupted) return; // Full A-Z: no seek, pause or repeat.
     phonicsYoutube.checkpointPollId = window.setInterval(() => {
       const player = phonicsYoutube.player;
       if (!player || !phonicsYoutubeActive() || !phonicsYoutube.started) return;
@@ -657,7 +662,8 @@
   }
   function renderPhonicsIntroLetters() {
     const container = $("phonics-intro-letters");
-    const letters = phonicsLessonLetters();
+    // The full A-Z review needs a compact heading instead of 26 oversized chips.
+    const letters = activePhonicsYoutubeLesson.uninterrupted ? ["A〜Z"] : phonicsLessonLetters();
     container.replaceChildren();
     letters.forEach((letter, index) => {
       const value = document.createElement("span");
@@ -2035,15 +2041,16 @@
     });
   }
 
-  function makeTwoDigitMultiplicationQuestions() {
+  function makeTwoDigitMultiplicationQuestions(unguided = false) {
+    const maxDigit = unguided ? 6 : 5;
     const values = [];
     const multiplierValues = [];
-    for (let tens = 1; tens <= 5; tens += 1) {
-      for (let ones = 0; ones <= 5; ones += 1) values.push(tens * 10 + ones);
+    for (let tens = 1; tens <= maxDigit; tens += 1) {
+      for (let ones = 0; ones <= maxDigit; ones += 1) values.push(tens * 10 + ones);
       // A repeated lower digit makes the two partial products indistinguishable
       // to a child who swaps the ones and tens places.  Keep every existing
       // range rule, and only remove those ambiguous multipliers for this mode.
-      for (let ones = 1; ones <= 5; ones += 1) {
+      for (let ones = 1; ones <= maxDigit; ones += 1) {
         if (tens !== ones) multiplierValues.push(tens * 10 + ones);
       }
     }
@@ -2073,9 +2080,9 @@
     const isLongDivision = mode === "longdivision";
     const isNumberCards = mode === "numbercards";
     const isMultiplication = mode === "multiplication";
-    const isMultiplication2x2 = mode === "multiplication2x2";
+    const isMultiplication2x2 = (mode === "multiplication2x2" || mode === "multiplication2x2-unguided");
     const isCounting = mode === "counting1" || mode === "counting2";
-    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isMultiplication2x2 ? "multiplication2x2" : isCounting ? mode : "normal";
+    state.mode = isLongDivision ? "longdivision" : isNumberCards ? "numbercards" : isMultiplication ? "multiplication" : isMultiplication2x2 ? mode : isCounting ? mode : "normal";
     state.longDivision = null;
     state.numberCards = null;
     state.counting = null;
@@ -2133,12 +2140,12 @@
     updateAssistButton();
   }
   function setQuestionCardState(kind = "") {
-    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${state.mode === "multiplication2x2" ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
+    $("question-answer-card").className = `question-answer-card${kind ? ` ${kind}` : ""}${state.mode === "longdivision" ? " long-division-mode" : ""}${state.mode === "numbercards" ? " number-card-mode" : ""}${state.mode === "multiplication" ? " multiplication-mode" : ""}${((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) ? " multiplication-2x2-mode" : ""}${(state.mode === "counting1" || state.mode === "counting2") ? " counting-mode" : ""}${state.mode === "counting1" ? " counting1-mode" : ""}`;
   }
   function setProgress() {
     const isRetry = state.phase === "retry";
     const number = isRetry ? state.retrySetPosition : state.initialIndex + 1;
-    const total = isRetry ? state.retrySetTotal : state.mode === "multiplication2x2" ? state.questions.length : 10;
+    const total = isRetry ? state.retrySetTotal : ((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) ? state.questions.length : 10;
     $("progress-mode").hidden = !isRetry;
     $("progress-badge").classList.toggle("is-retry", isRetry);
     $("progress-count").textContent = `${Math.min(number, total)} / ${total}`;
@@ -2210,7 +2217,7 @@
       if (state.mode === "longdivision") setupLongDivision(question);
       if (state.mode === "numbercards") setupNumberCards(question);
       if (state.mode === "multiplication") setupMultiplication(question);
-      if (state.mode === "multiplication2x2") setupTwoDigitMultiplication(question);
+      if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) setupTwoDigitMultiplication(question);
       if ((state.mode === "counting1" || state.mode === "counting2")) setupCounting(question);
       commitQuestionVisuals(prepared);
       recordVisualDiagnostic("display-question-character-ready", { vehicleIndex: question.vehicleIndex, characterStage: prepared.characterStage || null, durationMs: Math.round(performance.now() - displayStartedAt) });
@@ -2249,7 +2256,7 @@
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
-    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : state.mode === "multiplication2x2" ? makeTwoDigitMultiplicationQuestions() : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
+    setGameMode(mode); state.runId += 1; state.questions = state.mode === "longdivision" ? makeLongDivisionQuestions() : state.mode === "numbercards" ? makeNumberCardQuestions() : state.mode === "multiplication" ? makeMultiplicationQuestions() : (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) ? makeTwoDigitMultiplicationQuestions(state.mode === "multiplication2x2-unguided") : state.mode === "counting1" ? makeCountingQuestions(5) : state.mode === "counting2" ? makeCountingQuestions(10) : makeQuestions(); state.queue = []; state.phase = "initial";
     state.initialIndex = 0; state.initialCorrect = 0; state.missed = []; state.retrySetPosition = 0; state.retrySetTotal = 0; state.vehicleChallengeQuestionCount = 0;
     state.finalElapsedMs = 0; state.confirmingAnswer = false;
     state.sessionUnlocks = [0, 0, 0, 0, 0, 0];
@@ -2404,6 +2411,7 @@
   function startNumberCardApp() { startGameFromGesture("numbercards"); }
   function startMultiplicationApp() { startGameFromGesture("multiplication"); }
   function startTwoDigitMultiplicationApp() { startGameFromGesture("multiplication2x2"); }
+  function startTwoDigitMultiplicationUnguidedApp() { startGameFromGesture("multiplication2x2-unguided"); }
   function startCounting1App() { startGameFromGesture("counting1"); }
   function startCounting2App() { startGameFromGesture("counting2"); }
   function formatAnswer(answer) { return answer.usedRemainder ? `${answer.quotient}…${answer.remainder}` : String(answer.quotient); }
@@ -2415,7 +2423,7 @@
       $("assist-button").disabled = state.transitioning || state.confirmingAnswer;
       return;
     }
-    if (state.mode === "multiplication2x2") {
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) {
       const model = state.multiplication2x2;
       const showAnswer = Boolean(model && model.inputStep >= model.inputOrder.length);
       $("assist-button").textContent = showAnswer ? "答えを見る" : "ヒントを見る";
@@ -2440,7 +2448,7 @@
     if ((state.mode === "counting1" || state.mode === "counting2")) return;
     if (state.mode === "numbercards") { renderNumberCards(); return; }
     if (state.mode === "multiplication") { renderMultiplication(); return; }
-    if (state.mode === "multiplication2x2") { renderTwoDigitMultiplication(); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { renderTwoDigitMultiplication(); return; }
     if (state.mode === "longdivision") { renderLongDivision(); return; }
     if (!state.quotientInput) { $("answer-text").textContent = ""; return; }
     $("answer-text").textContent = state.inputMode === "remainder" ? `${state.quotientInput}…${state.remainderInput || "_"}` : state.quotientInput;
@@ -2777,13 +2785,14 @@
       });
     });
     const operationGuide = $("multiplication-2x2-operation-guide");
-    const isGuidedMultiplicationRow = model.guideStage === 1 || model.guideStage === 2;
+    const unguided = state.mode === "multiplication2x2-unguided";
+    const isGuidedMultiplicationRow = !unguided && (model.guideStage === 1 || model.guideStage === 2);
     operationGuide.hidden = !isGuidedMultiplicationRow;
     operationGuide.dataset.stage = model.guideStage === 1 ? "ones" : "tens";
-    $("multiplication-2x2-shift-guide").hidden = !model.shiftGuideVisible;
+    $("multiplication-2x2-shift-guide").hidden = unguided || !model.shiftGuideVisible;
     const sumOperator = $("multiplication-2x2-sum-operator");
-    sumOperator.hidden = !model.sumOperatorVisible;
-    if (model.sumOperatorVisible) positionTwoDigitSumOperator();
+    sumOperator.hidden = unguided || !model.sumOperatorVisible;
+    if (!unguided && model.sumOperatorVisible) positionTwoDigitSumOperator();
   }
   function positionTwoDigitSumOperator() {
     const panel = $("multiplication-2x2-panel");
@@ -2967,7 +2976,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { inputMultiplicationNumber(number); return; }
-    if (state.mode === "multiplication2x2") { inputTwoDigitMultiplicationNumber(number); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { inputTwoDigitMultiplicationNumber(number); return; }
     if (state.mode === "longdivision") { inputLongDivisionNumber(number); return; }
     if (state.current.hintUsed && state.inputMode === "quotient") {
       state.inputMode = "remainder"; state.remainderInput = number;
@@ -3000,7 +3009,7 @@
     if (state.transitioning) return;
     noteQuestionActivity();
     if (state.mode === "multiplication") { clearMultiplicationInput(); return; }
-    if (state.mode === "multiplication2x2") { clearTwoDigitMultiplicationInput(); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { clearTwoDigitMultiplicationInput(); return; }
     if (state.mode === "longdivision") { clearLongDivisionInput(); return; }
     state.inputMode = "quotient"; state.quotientInput = state.current.hintUsed ? String(state.current.quotient) : ""; state.remainderInput = "";
     renderInput();
@@ -3038,7 +3047,7 @@
       renderNumberCards();
       return;
     }
-    if (state.mode === "multiplication2x2") {
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) {
       const model = state.multiplication2x2;
       const step = model?.inputOrder[model.inputStep];
       if (model?.sumTransitionPending && step?.rowIndex === 2) return;
@@ -3118,7 +3127,7 @@
     return question.remainder === 0 ? `${question.quotient}（あまりなし）` : `${question.quotient}…${question.remainder}`;
   }
   function renderRevealedAnswer(question) {
-    if (state.mode === "multiplication2x2") { fillTwoDigitMultiplicationAnswer(question); return; }
+    if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { fillTwoDigitMultiplicationAnswer(question); return; }
     if (state.mode === "multiplication") {
       const model = state.multiplication;
       if (model) {
@@ -3164,7 +3173,7 @@
   function useAssist() {
     if (state.transitioning || state.confirmingAnswer || !state.current) return;
     noteQuestionActivity();
-    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication" || state.mode === "multiplication2x2") { useHint(); return; }
+    if (state.mode === "numbercards" || (state.mode === "counting1" || state.mode === "counting2") || state.mode === "multiplication" || ((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided"))) { useHint(); return; }
     if (!state.current.hintUsed) { useHint(); return; }
     if (state.current.isReview || state.phase === "retry") revealAnswer(); else openAnswerConfirmation();
   }
@@ -3565,7 +3574,7 @@
           addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
         }
       });
-    } else if (state.mode === "multiplication2x2" && state.multiplication2x2) {
+    } else if (((state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided")) && state.multiplication2x2) {
       state.multiplication2x2.rows.forEach((row) => {
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
           if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
@@ -5720,7 +5729,7 @@
     recordViewportDiagnostic("visualViewport.resize");
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
