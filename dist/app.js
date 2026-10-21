@@ -5349,15 +5349,20 @@
     const current = levelSystem.levelAt(ledger.total);
     const previous = profileStore.getLevelAcknowledged();
     const capsulesAdded = profileStore.awardEnergyCapsulesThroughLevel(current);
+    // prepareLevelCelebration can run again before a pending popup is opened.
+    // Preserve the award notice without granting the item a second time.
+    const previousAward = pendingLevelCelebration?.previous === previous && pendingLevelCelebration?.current === current
+      ? pendingLevelCelebration.awardedCapsules : 0;
+    const awardNoticeCount = capsulesAdded || previousAward;
     const awardLabel = $("level-up-capsule-award");
-    awardLabel.hidden = capsulesAdded === 0;
-    awardLabel.textContent = capsulesAdded ? "エネルギーカプセル +" + capsulesAdded + " ゲット！" : "";
+    awardLabel.hidden = !awardNoticeCount;
+    awardLabel.textContent = awardNoticeCount ? "エネルギーカプセル +" + awardNoticeCount + " ゲット！" : "";
     if (previous === null) {
       profileStore.setLevelAcknowledged(current); // First install: existing points are baseline, not a new level-up.
       return;
     }
     if (current <= previous) return;
-    pendingLevelCelebration = { previous, current, points: ledger.total };
+    pendingLevelCelebration = { previous, current, points: ledger.total, awardedCapsules: awardNoticeCount };
     $("level-up-from").textContent = `レベル${previous}`;
     $("level-up-to").textContent = `レベル${current}`;
     $("level-up-old-title").innerHTML = levelSystem.titleHtml(previous);
