@@ -72,6 +72,22 @@ const c=getComputedStyle(el),r=rect(el),ancestors=[];let p=el.parentElement;
 while(p&&p!==document.body){const t=getComputedStyle(p).transform;if(t!=="none")ancestors.push({element:p.id||p.className.toString(),transform:t});p=p.parentElement;}
 results.controls[selector]={status:c.display==="none"||c.visibility==="hidden"||r.width===0||r.height===0?"hidden":"measured",count:matches.length,rect:r,computed:{width:c.width,height:c.height,fontSize:c.fontSize,transform:c.transform,border:c.borderWidth,padding:c.padding},ancestorTransforms:ancestors};
 }
+
+// Geometry check only: reveal a dialog without invoking game state transitions.
+const dialogs=id==="play-screen"?["#quit-confirm"]:id==="collection-screen"?["#collection-exit-confirm","#phonics-reward-intro","#phonics-grow-confirm"]:[];
+results.dialogs={};
+for(const selector of dialogs){
+  const el=target.querySelector(selector);
+  if(!el){results.dialogs[selector]={status:"missing"};continue;}
+  const previouslyHidden=el.hidden;
+  el.hidden=false;
+  const d=rect(el),st=stage?rect(stage):null,card=el.querySelector(".answer-confirm-card");
+  const delta=st?{left:Math.abs(d.x-st.x),top:Math.abs(d.y-st.y),width:Math.abs(d.width-st.width),height:Math.abs(d.height-st.height)}:null;
+  const cardRect=card?rect(card):null;
+  results.dialogs[selector]={status:"measured",rect:d,delta,cardRect,
+    cardFits:!!(cardRect&&st&&cardRect.x>=st.x-0.5&&cardRect.y>=st.y-0.5&&cardRect.x+cardRect.width<=st.x+st.width+0.5&&cardRect.y+cardRect.height<=st.y+st.height+0.5)};
+  el.hidden=previouslyHidden;
+}
 screens.forEach((x,i)=>x.classList.toggle("active",was[i]));
 return results;
 },{id,selectors});
@@ -84,6 +100,13 @@ audit.comparisons=[];
 for(const x of audit.screens)for(const [type,a,sa,b,sb] of pairs){
 const l=x.measurements[a].controls[sa],r=x.measurements[b].controls[sb],ok=l.status==="measured"&&r.status==="measured";
 audit.comparisons.push({viewport:x.viewport,type,status:ok?"measured":"unmeasured",widthDelta:ok?+(l.rect.width-r.rect.width).toFixed(3):null,heightDelta:ok?+(l.rect.height-r.rect.height).toFixed(3):null});
+}
+
+// Fail the UI geometry audit on mismatched game-owned modal bounds.
+for(const x of audit.screens)for(const [screenName,m] of Object.entries(x.measurements))
+for(const [selector,d] of Object.entries(m.dialogs||{})){
+  if(d.status!=="measured"||!d.delta||!d.cardFits||Object.values(d.delta).some(v=>v>0.5))
+    throw Error("Dialog geometry mismatch at "+x.viewport.width+"x"+x.viewport.height+" "+screenName+" "+selector+": "+JSON.stringify(d));
 }
 fs.writeFileSync(path.join(output,"geometry.json"),JSON.stringify(audit,null,2)+"\n");
 let report="# Multi-viewport UI geometry audit\n\n"+"Synthetic inactive-screen activation; not interaction or Safari validation.\n\n| Viewport | Component | Width delta | Height delta | Status |\n|---|---|---:|---:|---|\n";
