@@ -4697,6 +4697,7 @@ button, input { font: inherit; }
 
 
 .collection-item-toast{position:absolute;z-index:81;top:41%;left:50%;transform:translateX(-50%);margin:0;padding:22px 36px;max-width:78%;border:3px solid #fff0a5;border-radius:22px;background:rgba(7,43,99,.95);color:#fff0a5;text-align:center;font-weight:900;font-size:clamp(23px,3vw,38px);text-shadow:0 2px 8px #061c4e;box-shadow:0 0 24px #5fe9ff}
+.collection-item-toast{white-space:pre-line}
 .collection-item-toast[hidden]{display:none!important}
 
 /* Capsule controls share the garage close-button geometry and frame. */
