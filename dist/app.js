@@ -662,7 +662,8 @@
   }
   function renderPhonicsIntroLetters() {
     const container = $("phonics-intro-letters");
-    const letters = phonicsLessonLetters();
+    // The full A-Z review needs a compact heading instead of 26 oversized chips.
+    const letters = activePhonicsYoutubeLesson.uninterrupted ? ["A〜Z"] : phonicsLessonLetters();
     container.replaceChildren();
     letters.forEach((letter, index) => {
       const value = document.createElement("span");
