@@ -3673,7 +3673,7 @@
     }, correct ? Math.max(
       correctFeedbackDurationMs,
       progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
-    ) : (state.phase === "initial" && isFinalInitialQuestion() && !["numbercards", "counting1", "counting2"].includes(state.mode)
+    ) : (!["numbercards", "counting1", "counting2"].includes(state.mode) && ((state.phase === "initial" && (isFinalInitialQuestion() || state.current.vehicleChallengePosition >= 5)) || (state.phase === "retry" && state.retrySetPosition >= state.retrySetTotal))
       ? Math.max(wrongFeedbackDurationMs, 2000)
       : wrongFeedbackDurationMs));
     } catch (error) { state.transitioning = false; throw error; }
