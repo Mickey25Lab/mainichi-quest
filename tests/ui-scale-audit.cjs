@@ -77,7 +77,7 @@ results.controls[selector]={status:c.display==="none"||c.visibility==="hidden"||
 const dialogs=id==="play-screen"?["#quit-confirm"]:id==="collection-screen"?["#collection-exit-confirm","#phonics-reward-intro","#phonics-grow-confirm"]:[];
 results.dialogs={};
 for(const selector of dialogs){
-  const el=target.querySelector(selector);
+  const el=(id==="play-screen"?document:target).querySelector(selector);
   if(!el){results.dialogs[selector]={status:"missing"};continue;}
   const previouslyHidden=el.hidden;
   el.hidden=false;
