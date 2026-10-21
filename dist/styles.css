@@ -3533,9 +3533,13 @@ button, input { font: inherit; }
 .collection-detail-screen::before { content:none; }
 .collection-detail-screen.active { display:grid; place-items:center; }
 .collection-detail-stage {
-  position:relative;
-  width:var(--content-stage-width);
-  height:var(--content-stage-height);
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:1400px;
+  height:1050px;
+  transform:translate(-50%,-50%) scale(var(--stage-scale, 1));
+  transform-origin:center;
   display:flex;
   flex-direction:column;
   overflow:hidden;
