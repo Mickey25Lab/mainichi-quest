@@ -3673,7 +3673,9 @@
     }, correct ? Math.max(
       correctFeedbackDurationMs,
       progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
-    ) : wrongFeedbackDurationMs);
+    ) : (state.phase === "initial" && isFinalInitialQuestion() && !["numbercards", "counting1", "counting2"].includes(state.mode)
+      ? Math.max(wrongFeedbackDurationMs, 2000)
+      : wrongFeedbackDurationMs));
     } catch (error) { state.transitioning = false; throw error; }
   }
   function showReward({ stage, vehicleIndex, isNew, replay = false, kind = "evolution" }, drawAfterReward = false, onDone = null) {
@@ -4509,6 +4511,26 @@
     ).join("");
     indicator.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setCollectionCategoryPage(button.dataset.collectionPage)));
   }
+  // Only reveal image art after all images for this view have decoded.
+  // Frames/backgrounds and controls stay visible; each rerender cancels stale reveals.
+  function revealCollectionArtworkTogether(container, imagesSelector) {
+    const serial = String((Number(container.dataset.artRevealSerial) || 0) + 1);
+    container.dataset.artRevealSerial = serial;
+    container.classList.add("is-art-loading");
+    const images = [...container.querySelectorAll(imagesSelector)];
+    if (!images.length) { container.classList.remove("is-art-loading"); return; }
+    Promise.allSettled(images.map((img) => {
+      if (typeof img.decode === "function") return img.decode();
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once:true });
+        img.addEventListener("error", resolve, { once:true });
+      });
+    })).then(() => {
+      if (container.dataset.artRevealSerial !== serial || !container.isConnected) return;
+      container.classList.remove("is-art-loading");
+    });
+  }
   function renderCollectionCategoryScene(category) {
     const scene = $("collection-category-scene");
     const items = $("collection-category-items");
@@ -4517,6 +4539,7 @@
     scene.style.backgroundImage = `url("${collectionCategoryBackgroundPaths[category]}")`;
     const pageCount = collectionCategoryPageCount(category);
     if (state.collectionCategoryPage >= pageCount) state.collectionCategoryPage = 0;
+    items.classList.add("is-art-loading");
     items.innerHTML = category === "vehicle" ? renderVehicleCollectionScene()
       : category === "robot" ? renderRobotCollectionScene()
       : category === "super-robot" ? renderFourUpCollectionScene(category, superRobotCollectionSlots)
@@ -4530,6 +4553,7 @@
     $("collection-series-prev").hidden = !paged;
     $("collection-series-next").hidden = !paged;
     items.querySelectorAll(".collection-scene-item").forEach((item) => item.addEventListener("click", () => openVehicleDetail(Number(item.dataset.vehicle))));
+    revealCollectionArtworkTogether(items, ".collection-scene-art");
   }
   function setCollectionCategoryPage(page) {
     const pageCount = collectionCategoryPageCount(state.collectionCategory);
@@ -4585,6 +4609,7 @@
   }
   function closeCollectionExit() { $("collection-exit-confirm").hidden = true; $("collection-exit").focus(); }
   function renderCollectionGrid({ showSessionMarkers = true } = {}) {
+    $("collection-grid").classList.add("is-art-loading");
     $("medal-count").textContent = `${state.collection.filter((stage) => stage === 5).length} / 20`;
     $("collection-grid").innerHTML = collectionDisplayOrder.map((vehicleIndex) => {
       const vehicle = vehicles[vehicleIndex];
@@ -4611,6 +4636,7 @@
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
         ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
     }).join("");
+    revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
       if (state.collectionMode === "phonics-reward-select") openPhonicsGrowConfirm(vehicleIndex);
