@@ -4702,7 +4702,7 @@ button, input { font: inherit; }
 
 /* Capsule controls share the garage close-button geometry and frame. */
 .collection-header .collection-item-button {
-  position:absolute;right:142px;top:28px;z-index:8;
+  position:absolute;right:97px;top:28px;z-index:8;
   height:65px;min-height:65px;box-sizing:border-box;padding:6px 17px;
   border:3px solid #c8d0d9;border-radius:18px;
   background:linear-gradient(#77818d,#424b57);
@@ -4745,3 +4745,32 @@ button, input { font: inherit; }
 /* Category tabs can be outside the dialog overlay's hit-test layer. */
 .collection-screen.is-capsule-dialog-open .collection-categories,
 .collection-screen.is-capsule-dialog-open .category-button { pointer-events:none!important; }
+
+/* Charge feedback: make the actual destination unmistakable for one second. */
+.collection-grid .collection-card.is-capsule-charged {
+  z-index:12;
+  isolation:isolate;
+  border-color:#fff9a3!important;
+  animation:capsule-charge-glow 1s ease-out both;
+}
+.collection-grid .collection-card.is-capsule-charged::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  border-radius:inherit;
+  animation:capsule-charge-flash 1s ease-out both;
+}
+@keyframes capsule-charge-glow {
+  0% { box-shadow:0 0 0 6px #fff,0 0 40px 20px #ffeb3b,0 0 85px 32px #00eaff;filter:brightness(2); }
+  35% { box-shadow:0 0 0 7px #fff6a0,0 0 35px 23px #ffc629,0 0 95px 38px #20eaff;filter:brightness(1.65); }
+  70% { box-shadow:0 0 0 4px #fff,0 0 32px 13px #fffa9e,0 0 65px 25px #00cfff;filter:brightness(1.4); }
+  100% { box-shadow:0 0 0 0 transparent,0 0 0 0 transparent;filter:brightness(1); }
+}
+@keyframes capsule-charge-flash {
+  0% { background:rgba(255,255,255,.75); }
+  28% { background:rgba(255,245,115,.15); }
+  48% { background:rgba(255,255,255,.43); }
+  100% { background:transparent; }
+}
