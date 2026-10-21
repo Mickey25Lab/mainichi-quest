@@ -3156,8 +3156,9 @@ button, input { font: inherit; }
 .collection-screen.active { display:block; }
 .collection-screen::before { content:none; }
 .collection-stage {
-  --stage-scale:1;
-  --stage-scale-inverse:1;
+  /* Backward compatible with cached older JS during a staged asset update. */
+  --stage-scale:var(--collection-scale, 1);
+  --stage-scale-inverse:var(--collection-scale-inverse, 1);
   position:absolute;
   left:50%;
   top:50%;
