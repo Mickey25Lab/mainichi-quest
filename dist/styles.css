@@ -4739,3 +4739,9 @@ button, input { font: inherit; }
   box-shadow:none;text-shadow:none;filter:drop-shadow(0 0 18px rgba(71,208,255,.45));
 }
 .collection-item-symbol img{width:34px;height:34px;display:block;object-fit:contain}
+
+/* Capsule inventory appears only on the collection summary, never category scenes. */
+.collection-stage.is-category-view .collection-item-button { display:none!important; }
+/* Category tabs can be outside the dialog overlay's hit-test layer. */
+.collection-screen.is-capsule-dialog-open .collection-categories,
+.collection-screen.is-capsule-dialog-open .category-button { pointer-events:none!important; }
