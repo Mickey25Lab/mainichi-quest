@@ -4410,6 +4410,14 @@
       const chargedCard = document.querySelector(`#collection-grid .collection-card[data-vehicle="${chosen}"]`);
       if (chargedCard) {
         const current = vehicleProgress(chosen);
+        const formStage = current.masterMedal ? 5 : Math.max(2, Math.min(5, current.stage));
+        chargedCard.dataset.stage = String(formStage);
+        const image = chargedCard.querySelector(".card-vehicle");
+        if (image) {
+          image.src = answerArtworkPath(chosen, formStage);
+          image.classList.remove("is-vehicle-form", "is-evolved-form", "is-robot-form", "is-equipped-super-robot");
+          image.classList.add(...(formStage === 2 ? ["is-vehicle-form"] : formStage === 3 ? ["is-evolved-form", "is-robot-form"] : formStage === 5 ? ["is-evolved-form", "is-equipped-super-robot"] : ["is-evolved-form"]));
+        }
         const meter = chargedCard.querySelector(".collection-card-energy");
         if (meter) {
           const maxEnergy = current.masterMedal ? 500 : requiredEnergyForStage(current.stage);
