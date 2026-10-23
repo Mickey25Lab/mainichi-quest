@@ -69,7 +69,7 @@ export function runForCommits(baseSha, headSha, allowBotPatch = false) {
       throw new Error("Automated patch PR must increment patch by exactly one");
     }
     const expected = baseAppJs.replace(
-      /(const\\s+appVersion\\s*=\\s*["'])\\d+\\.\\d+\\.\\d+(["']\\s*;)/,
+      /(const\s+appVersion\s*=\s*["'])\d+\.\d+\.\d+(["']\s*;)/,
       (_all, begin, end) => begin + afterVersion.raw + end
     );
     if (expected !== headAppJs) {
