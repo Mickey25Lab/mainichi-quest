@@ -28,7 +28,7 @@
 
 - ユーザーに見えるファイル（`dist/` 配下）を変更する PR では `appVersion` を手動変更しない。`main` 反映時に GitHub Actions が patch を自動加算する。
 - 変更内容に応じた単体テスト、ブラウザスモークテスト、UI geometry audit を実行し、結果を PR に記載する。保存データに関係する変更では profile テストを必須にする。
-- PR では Preview URL を確認可能にし、Kimi の実機確認を待つ。Kimi が **`OK`** と明示するまで、`main` へ merge しない。
+- PR では Preview URL と、そのURLを指す**読み取り可能なQRコード画像**を報告へ必ず添え、Kimi がiPadですぐ開ける状態にする。Kimi の実機確認を待ち、**`OK`** と明示するまで、`main` へ merge しない。
 - `main` 反映後は本番反映・自動version bump・主要スモークの結果を確認し、問題があればロールバック方針を報告する。
 - 作業完了報告には、PR、Preview、実施テスト、仕様更新、既知の残課題、ロールバック手順を含める。
 

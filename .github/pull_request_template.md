@@ -20,6 +20,7 @@
 - [ ] ブラウザスモークを実行した（UI・保存データ・導線に影響する場合）
 - [ ] UI geometry auditを実行した（レイアウトに影響する場合）
 - [ ] Preview URL：
+- [ ] Preview用QRコード画像：
 - [ ] Kimi の実機確認と **OK** を待っている（OK前にmergeしない）
 
 ## version・公開・ロールバック
