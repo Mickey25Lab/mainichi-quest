@@ -19,6 +19,8 @@ jobs:
   version:
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore: bump production app version')
     runs-on: ubuntu-latest
+    env:
+      VERSION_PR_TOKEN: ${{ secrets.VERSION_PR_TOKEN }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
@@ -32,10 +34,15 @@ jobs:
         run: |
           set -euo pipefail
           node .github/scripts/bump-main-version.mjs "$BEFORE_SHA" "$AFTER_SHA"
+      - name: Explain missing automation token
+        if: env.VERSION_PR_TOKEN == ''
+        run: echo 'VERSION_PR_TOKEN is not configured; skipped auto-version PR. Publishing still proceeds.'
       - name: Open patch version PR (never push to protected main)
+        if: env.VERSION_PR_TOKEN != ''
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # A dedicated token is needed because GITHUB_TOKEN-created PRs do not trigger CI.
+          token: ${{ secrets.VERSION_PR_TOKEN }}
           commit-message: "chore: bump production app version"
           branch: automation/production-app-version
           delete-branch: true
