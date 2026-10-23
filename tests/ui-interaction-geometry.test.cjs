@@ -63,7 +63,7 @@ function checkControl(name, rect) {
       checkStage("collection", viewport, collection);
       const exit = rectangle(await page.locator("#collection-exit").boundingBox());
       checkControl("collection exit", exit);
-      const vehicle = page.locator('.category-button[data-category="vehicle"]');
+      const vehicle = page.locator('#collection-screen.active .category-button[data-category="vehicle"]:visible').first();
       await vehicle.click({ timeout: 10000 });
       assert.equal(await page.locator("#collection-screen.active").count(), 1, "category click exited collection");
       measurements.push({ viewport, screen: "collection vehicle", stage: collection, control: exit, source: "real navigation" });
