@@ -5021,16 +5021,18 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-three-up .detail-evolution-label {
   bottom:48px; /* raise 28px; less than the 38px label height */
 }
+/* Both two-form labels share one fixed slot-centered coordinate.
+   The artwork and its label are centered in the same grid column for every vehicle. */
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label {
-  width:78.4%;
+  width:62.72%; /* 80% of the previous 78.4% */
   height:56px;
   font-size:36px;
   border-radius:25px;
-  margin-bottom:38px;
+  margin:0 auto 38px;
+  justify-self:center;
+  transform:none;
 }
-#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-vehicle .detail-evolution-label {
-  transform:translateX(-14%);
-}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-vehicle .detail-evolution-label,
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-robot .detail-evolution-label {
-  transform:translateX(-9%);
+  transform:none;
 }
