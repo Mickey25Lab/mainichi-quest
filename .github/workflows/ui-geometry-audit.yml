@@ -16,7 +16,8 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout PR
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Detect documentation-only PR
@@ -31,11 +32,20 @@ jobs:
             exit 0
           fi
           changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-          if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Ev '^(docs/.*|.*\.md)
-      - uses: actions/setup-node@v4
+          if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Ev '^(docs/.*|.*\.md)$'; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Skip browser tests (documentation only)
+        if: steps.changes.outputs.docs_only == 'true'
+        run: echo "Documentation-only change; browser checks not required."
+      - name: Setup Node.js
+        if: steps.changes.outputs.docs_only != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install Playwright package (browsers preinstalled in container)
+      - name: Install Playwright package
         if: steps.changes.outputs.docs_only != 'true'
         run: npm install --no-save --no-package-lock playwright@1.58.2
       - name: Measure UI at four viewport sizes
@@ -46,38 +56,6 @@ jobs:
         run: node tests/ui-interaction-geometry.test.cjs
       - name: Upload geometry report
         if: always() && steps.changes.outputs.docs_only != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-scale-audit
-          path: audit-results/ui-scale/
-          if-no-files-found: error
-; then
-            echo "docs_only=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Skip browser tests (documentation only)
-        if: steps.changes.outputs.docs_only == 'true'
-        run: echo "No app or workflow changes; required check passes without browsers."
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install browser tools
-        timeout-minutes: 10
-        run: |
-          echo "Browser installation started: $(date -u +%FT%TZ)"
-          node --version
-          npm --version
-          npm install --no-save --no-package-lock --loglevel=info playwright@1.58.2
-          echo "Playwright package installed: $(date -u +%FT%TZ)"
-          npx playwright install --with-deps chromium
-          echo "Chromium installed: $(date -u +%FT%TZ)"
-      - name: Measure UI at four viewport sizes
-        run: node tests/ui-scale-audit.cjs
-      - name: Check active UI geometry via navigation
-        run: node tests/ui-interaction-geometry.test.cjs
-      - name: Upload geometry report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ui-scale-audit
