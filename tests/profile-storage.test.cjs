@@ -252,12 +252,16 @@ test("parent learning settings are saved per profile without switching the activ
   assert.deepEqual(store.getProfileLearningSettings(profileA.profileId), {
     enabledModes: { normal: true, counting1: false },
     energyMultipliers: { normal: "large", counting1: "off" },
-    dailyTargetCounts: { normal: 3, counting1: 1 }
+    dailyTargetCounts: { normal: 3, counting1: 1 },
+    freePlayEnabled: true,
+    freePlayEnergyMode: "normal"
   });
   assert.deepEqual(store.getProfileLearningSettings(profileB.profileId), {
     enabledModes: { normal: true },
     energyMultipliers: { normal: "small" },
-    dailyTargetCounts: { normal: 2 }
+    dailyTargetCounts: { normal: 2 },
+    freePlayEnabled: true,
+    freePlayEnergyMode: "normal"
   });
 });
 
@@ -276,7 +280,9 @@ test("admin reset preserves parent learning settings", () => {
   assert.deepEqual(store.getProfileLearningSettings(profile.profileId), {
     enabledModes: { normal: true },
     energyMultipliers: { normal: "medium" },
-    dailyTargetCounts: { normal: 4 }
+    dailyTargetCounts: { normal: 4 },
+    freePlayEnabled: true,
+    freePlayEnergyMode: "normal"
   });
 });
 
