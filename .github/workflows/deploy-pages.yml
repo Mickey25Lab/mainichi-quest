@@ -1,4 +1,4 @@
-name: Bump production version and deploy GitHub Pages
+name: Deploy GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -16,42 +16,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  version:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout latest main
-        uses: actions/checkout@v6
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: true
-      - name: Increment patch on main for user-facing changes
-        if: github.event_name == 'push'
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.event.after }}
-        run: |
-          set -euo pipefail
-          # A merge can arrive during checkout: use the exact push range, but
-          # never overwrite a new head; retry by failing rather than force pushing.
-          node .github/scripts/bump-main-version.mjs "$BEFORE_SHA" "$AFTER_SHA"
-          if git diff --quiet -- dist/app.js; then
-            echo "No version bump required"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/app.js
-          git commit -m "chore: auto-bump app version [skip ci]"
-          git push origin HEAD:main
   deploy:
-    needs: version
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout released main
+      - name: Checkout main
         uses: actions/checkout@v6
         with:
           ref: main
