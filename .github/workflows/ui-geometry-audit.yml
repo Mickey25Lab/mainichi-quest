@@ -25,6 +25,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Measure UI at four viewport sizes
         run: node tests/ui-scale-audit.cjs
+      - name: Check active UI geometry via navigation
+        run: node tests/ui-interaction-geometry.test.cjs
       - name: Upload geometry report
         if: always()
         uses: actions/upload-artifact@v4
