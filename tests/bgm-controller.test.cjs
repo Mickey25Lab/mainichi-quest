@@ -38,9 +38,9 @@ test("same-group transitions keep the active source and track changes crossfade 
   assert.match(app, /source\.loop = true/);
 });
 
-test("one saved preference drives both speaker buttons", () => {
+test("one saved preference drives the collection speaker button", () => {
   assert.match(app, /storageKey: "warizan-robot:bgm-enabled-v1"/);
-  assert.equal((html.match(/data-bgm-toggle/g) || []).length, 2);
+  assert.equal((html.match(/data-bgm-toggle/g) || []).length, 1);
   assert.match(app, /querySelectorAll\("\[data-bgm-toggle\]"\)/);
   assert.match(app, /localStorage\.setItem\(bgmConfig\.storageKey/);
 });
@@ -89,18 +89,15 @@ test("pagehide fades and suspends audio instead of abruptly stopping the BGM sou
   assert.doesNotMatch(lifecycle, /pagehide[^\n]*stopBackgroundMusic/);
 });
 
-test("top speaker is scoped and developer credit is removed", () => {
-  assert.match(html, /id="top-bgm-toggle-button"/);
-  assert.match(css, /\.start-screen \.top-bgm-toggle-button/);
-  assert.match(css, /width:calc\(var\(--content-stage-width\) \* \.052486188\)/);
-  assert.match(css, /height:calc\(var\(--content-stage-width\) \* \.052486188\)/);
+test("top screen has no BGM toggle and developer credit remains removed", () => {
+  assert.doesNotMatch(html, /id="top-bgm-toggle-button"/);
   assert.doesNotMatch(html, /開発者: Papa, Chuppy and Minato/);
   assert.doesNotMatch(css, /(^|\n)button\s*\{/);
 });
 
 test("audio balance keeps gameplay BGM stronger and reward celebration controlled", () => {
   assert.match(app, /game: Object\.freeze\(\{ filePath: "\.\/assets\/audio\/bgm_pynchon\.mp3", normalVolume: 0\.38 \}\)/);
-  const correct = app.slice(app.indexOf("function playCorrectSound"), app.indexOf("function playSimpleCorrectSound"));
+  const correct = app.slice(app.indexOf("function playFanfareSound"), app.indexOf("function playSimpleCorrectSound"));
   assert.match(correct, /gain\.gain\.value = 0\.75/);
   assert.match(correct, /tone\(660, 0, \.15, "sine", \.18\)/);
   assert.match(correct, /tone\(880, \.16, \.3, "sine", \.18\)/);
