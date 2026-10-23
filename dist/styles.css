@@ -549,10 +549,11 @@ button, input { font: inherit; }
   display:grid;
   grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:center;
-  width:100%;
+  /* Shorten the entire blue card, keeping its left edge and inner column positions. */
+  box-sizing:border-box;
+  width:calc(100% - 80px);
   min-height:86.4px;
-  /* Pull remaining count and energy closer to the mode name by ~one remaining-count width. */
-  padding:8.4px 100px 8.4px 26px;
+  padding:8.4px 20px 8.4px 26px;
   border:3px solid rgba(214,246,255,.92);
   border-radius:24px;
   color:#fff;
@@ -691,14 +692,14 @@ button, input { font: inherit; }
   position:absolute;
   z-index:4;
   left:17%;
-  right:13%;
+  right:calc(13% + 80px);
   top:calc(14.5% - 13px);
   display:grid;
   grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:end;
   min-height:42px;
-  /* Keep the legend aligned with the shifted energy column. */
-  padding:0 100px 2px 26px;
+  /* Match the narrower cards so the guide stays aligned with the energy column. */
+  padding:0 20px 2px 26px;
   border:0;
   border-radius:0;
   color:#fff;
