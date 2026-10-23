@@ -3,6 +3,7 @@ name: Browser smoke tests (Playwright)
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -31,47 +32,25 @@ jobs:
             exit 0
           fi
           changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-          if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Ev '^(docs/.*|.*\.md)
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Playwright
-        if: steps.changes.outputs.docs_only != 'true'
-        run: npm install --no-save --no-package-lock playwright@1.58.2
-
-      - name: Run point ledger unit tests
-        if: steps.changes.outputs.docs_only != 'true'
-        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
-
-      - name: Run two browser smoke suites
-        if: steps.changes.outputs.docs_only != 'true'
-        run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
-; then
+          if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Ev '^(docs/.*|.*\.md)$'; then
             echo "docs_only=true" >> "$GITHUB_OUTPUT"
           else
             echo "docs_only=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Skip browser tests (documentation only)
         if: steps.changes.outputs.docs_only == 'true'
-        run: echo "No app or workflow changes; required check passes without browsers."
-
-
+        run: echo "Documentation-only change; browser checks not required."
       - name: Setup Node.js
+        if: steps.changes.outputs.docs_only != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Install Playwright
+      - name: Install Playwright package
+        if: steps.changes.outputs.docs_only != 'true'
         run: npm install --no-save --no-package-lock playwright@1.58.2
-
-      - name: Install Chromium and system libraries
-        run: npx playwright install --with-deps chromium
-
       - name: Run point ledger unit tests
+        if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
-
       - name: Run two browser smoke suites
+        if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
