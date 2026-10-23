@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 
-const CRITICAL_EXACT = new Set(["dist/app.js", "dist/index.html"]);
+const CRITICAL_EXACT = new Set(["dist/app.js", "dist/index.html", ".github/workflows/playwright-browser-smokes.yml", ".github/scripts/classify-critical-pr.mjs"]);
 const CRITICAL_PREFIXES = ["dist/scripts/"];
 const TEST_PREFIX = "tests/";
 
