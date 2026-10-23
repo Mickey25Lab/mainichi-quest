@@ -16,7 +16,7 @@ test("super robots fill front-left, front-right, rear-left, rear-right with fina
 });
 
 test("equipment fills lower row before upper row and uses standalone equipment artwork", () => {
-  assert.match(app, /const equipmentCollectionSlots = Object\.freeze\(\[[\s\S]*x:350, contactY:700[\s\S]*x:1050, contactY:700[\s\S]*x:350, contactY:330[\s\S]*x:1050, contactY:330/);
+  assert.match(app, /const equipmentCollectionSlots = Object\.freeze\(\[[\s\S]*x:385, contactY:700[\s\S]*x:1015, contactY:700[\s\S]*x:385, contactY:330[\s\S]*x:1015, contactY:330/);
   assert.equal((app.match(/shadowOffsetY:0/g) || []).length, 4);
   assert.match(app, /function equipmentArtworkPath[\s\S]*\/05_equipment\/\$\{stem\}_equipment\.webp/);
   assert.doesNotMatch(app, /function equipmentArtworkPath[\s\S]{0,200}04_super_robot_equipped/);
