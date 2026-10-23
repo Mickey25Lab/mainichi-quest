@@ -840,6 +840,7 @@
       document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".mode-select-stage")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale-inverse", String(scale > 0 ? 1 / scale : 1));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
@@ -4402,7 +4403,7 @@
         } else {
           resumeCapsuleCollectionClock();
         }
-      }, result.reward ? 1100 : 2200);
+      }, 2000);
     } catch (error) {
       capsuleSpendPending = false;
       // Reload persistent progress if a write failed before it committed.
@@ -4438,7 +4439,7 @@
         chargedCard.classList.remove("is-capsule-charged");
         void chargedCard.offsetWidth;
         chargedCard.classList.add("is-capsule-charged");
-        window.setTimeout(() => chargedCard.classList.remove("is-capsule-charged"), 1050);
+        window.setTimeout(() => chargedCard.classList.remove("is-capsule-charged"), 2000);
       }
       if (!capsuleToastTimer) resumeCapsuleCollectionClock();
     }

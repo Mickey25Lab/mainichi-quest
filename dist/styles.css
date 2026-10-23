@@ -4960,3 +4960,103 @@ button, input { font: inherit; }
   transform:rotate(45deg);
 }
 .collection-close-icon > span::after { transform:rotate(-45deg); }
+
+/* Collection detail chrome: use the same viewport-sized timer rule as garage. */
+.collection-detail-stage .detail-header .collection-time {
+  right:calc(4px * var(--stage-scale-inverse, 1));
+  bottom:calc(4px * var(--stage-scale-inverse, 1));
+  transform:scale(var(--stage-scale-inverse, 1));
+  transform-origin:right bottom;
+}
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-evolution-label {
+  height:38px;
+  font-size:22px;
+  border-radius:16px;
+}
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-slot-super .detail-evolution-label {
+  font-size:20px;
+}
+/* Evolution direction must sit behind characters and remain non-interactive. */
+#collection-detail-screen .detail-evolution-chevron,
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-evolution-chevron {
+  z-index:0;
+  pointer-events:none;
+}
+/* Distinct, brighter charge-selection environment; keep the garage grid/chrome. */
+.collection-screen.is-capsule-select .collection-stage {
+  background:linear-gradient(165deg,#f5f6f8 0%,#dce2ea 52%,#bdc9d7 100%);
+}
+.collection-screen.is-capsule-select .collection-stage::before,
+.collection-screen.is-capsule-select .collection-stage::after {
+  opacity:.13;
+}
+/* Capsule target: 2s high-contrast halo and an unmistakable pulsing charge ring. */
+.collection-grid .collection-card.is-capsule-charged {
+  border-color:#fff!important;
+  outline:7px solid #fff18c;
+  outline-offset:2px;
+  animation:capsule-charge-glow-strong 2s ease-out both;
+}
+.collection-grid .collection-card.is-capsule-charged::after {
+  inset:-10px;
+  border:7px solid #fff;
+  border-radius:inherit;
+  animation:capsule-charge-flash-strong 2s ease-out both;
+}
+@keyframes capsule-charge-glow-strong {
+  0%,35% { box-shadow:0 0 0 14px #fff,0 0 65px 36px #ffea00,0 0 140px 70px #00eaff; }
+  18%,55% { box-shadow:0 0 0 19px #fffac0,0 0 95px 53px #ffba00,0 0 190px 95px #19ecff; }
+  75% { box-shadow:0 0 0 12px #fff,0 0 70px 38px #fff34a,0 0 125px 60px #00dfff; }
+  100% { box-shadow:0 0 0 0 transparent,0 0 0 0 transparent; }
+}
+@keyframes capsule-charge-flash-strong {
+  0%,35% { background:rgba(255,255,255,.82); opacity:1; }
+  18%,55% { background:rgba(255,232,35,.48); opacity:1; }
+  75% { background:rgba(255,255,255,.24); opacity:1; }
+  100% { background:transparent; opacity:0; }
+}
+
+/* PR #189 follow-up: lift evolution labels clear of bottom navigation.
+   Keep artwork transforms, tab bar geometry and chevrons unchanged. */
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-evolution-label {
+  bottom:48px; /* raise 28px; less than the 38px label height */
+}
+/* Both two-form labels share one fixed slot-centered coordinate.
+   The artwork and its label are centered in the same grid column for every vehicle. */
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label {
+  width:62.72%; /* 80% of the previous 78.4% */
+  height:56px;
+  font-size:36px;
+  border-radius:25px;
+  margin:0 auto 10px; /* lower the entire 56px label and attached end caps by 28px */
+  justify-self:center;
+  transform:none;
+}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-vehicle .detail-evolution-label,
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-robot .detail-evolution-label {
+  transform:none;
+}
+
+/* Detail caption end caps: keep the side brackets attached to the pill edge.
+   Shared across all vehicles; dimensions follow the two-/three-form label height. */
+#collection-detail-screen .detail-evolution-label::before,
+#collection-detail-screen .detail-evolution-label::after {
+  z-index:0;
+  top:50%;
+  width:9px;
+  height:56%;
+  border-radius:4px;
+  transform:translateY(-50%);
+  background:linear-gradient(90deg,#77818b 0%,#f9fcff 42%,#8b969f 100%);
+  box-shadow:inset 0 0 0 1px #4a5761,0 1px 2px rgba(8,19,31,.4);
+}
+#collection-detail-screen .detail-evolution-label::before { left:-5px; }
+#collection-detail-screen .detail-evolution-label::after { right:-5px; }
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before,
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after {
+  width:14px;
+  height:60%;
+  border-radius:6px;
+}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
