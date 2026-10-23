@@ -10,12 +10,54 @@ permissions:
 jobs:
   browser-smokes:
     name: Playwright browser smoke tests
-    # Playwright 1.58.2 cannot install Chromium on Ubuntu 26.04 yet.
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     timeout-minutes: 20
     steps:
       - name: Checkout PR
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Detect documentation-only PR
+        id: changes
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ -z "$HEAD_SHA" ]; then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          if [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Ev '^(docs/.*|.*\.md)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        if: steps.changes.outputs.docs_only != 'true'
+        run: npm install --no-save --no-package-lock playwright@1.58.2
+
+      - name: Run point ledger unit tests
+        if: steps.changes.outputs.docs_only != 'true'
+        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
+
+      - name: Run two browser smoke suites
+        if: steps.changes.outputs.docs_only != 'true'
+        run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
+; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Skip browser tests (documentation only)
+        if: steps.changes.outputs.docs_only == 'true'
+        run: echo "No app or workflow changes; required check passes without browsers."
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
