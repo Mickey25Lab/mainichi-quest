@@ -1,13 +1,13 @@
-name: Deploy GitHub Pages and propose patch version
+name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   pages: write
   id-token: write
 
@@ -16,47 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  version:
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore: bump production app version')
-    runs-on: ubuntu-latest
-    env:
-      VERSION_PR_TOKEN: ${{ secrets.VERSION_PR_TOKEN }}
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v6
-        with:
-          ref: main
-          fetch-depth: 0
-      - name: Generate patch version proposal
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.event.after }}
-        run: |
-          set -euo pipefail
-          node .github/scripts/bump-main-version.mjs "$BEFORE_SHA" "$AFTER_SHA"
-      - name: Explain missing automation token
-        if: env.VERSION_PR_TOKEN == ''
-        run: echo 'VERSION_PR_TOKEN is not configured; skipped auto-version PR. Publishing still proceeds.'
-      - name: Open patch version PR (never push to protected main)
-        if: env.VERSION_PR_TOKEN != ''
-        uses: peter-evans/create-pull-request@v7
-        with:
-          # A dedicated token is needed because GITHUB_TOKEN-created PRs do not trigger CI.
-          token: ${{ secrets.VERSION_PR_TOKEN }}
-          commit-message: "chore: bump production app version"
-          branch: automation/production-app-version
-          delete-branch: true
-          title: "chore: bump production app version"
-          body: |
-            Automatic patch version proposal generated from a main merge.
-            This PR changes only the appVersion declaration in dist/app.js.
-            It must pass the normal required checks and receive explicit approval before merge.
-          add-paths: dist/app.js
   deploy:
-    # Publishing must not be blocked by an auto-version PR needing approval
-    # or by GitHub repository settings that prevent Actions from opening PRs.
-    if: always()
-    needs: [version]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
