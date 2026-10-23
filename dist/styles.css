@@ -5015,3 +5015,22 @@ button, input { font: inherit; }
   75% { background:rgba(255,255,255,.24); opacity:1; }
   100% { background:transparent; opacity:0; }
 }
+
+/* PR #189 follow-up: lift evolution labels clear of bottom navigation.
+   Keep artwork transforms, tab bar geometry and chevrons unchanged. */
+#collection-detail-screen .detail-evolution-layout.is-three-up .detail-evolution-label {
+  bottom:48px; /* raise 28px; less than the 38px label height */
+}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label {
+  width:78.4%;
+  height:56px;
+  font-size:36px;
+  border-radius:25px;
+  margin-bottom:38px;
+}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-vehicle .detail-evolution-label {
+  transform:translateX(-14%);
+}
+#collection-detail-screen .detail-evolution-layout.is-two-up .detail-slot-robot .detail-evolution-label {
+  transform:translateX(-9%);
+}
