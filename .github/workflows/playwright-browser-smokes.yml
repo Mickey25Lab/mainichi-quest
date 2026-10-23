@@ -53,6 +53,26 @@ jobs:
       - name: Run point ledger unit tests
         if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
+      - name: Test critical-PR classifier
+        if: steps.changes.outputs.docs_only != 'true'
+        run: node --test .github/scripts/classify-critical-pr.test.mjs
+      - name: Classify critical application changes
+        id: critical
+        if: steps.changes.outputs.docs_only != 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .github/scripts/classify-critical-pr.mjs "$BASE_SHA" "$HEAD_SHA"
+      - name: Run extra regression tests for critical changes
+        if: steps.changes.outputs.docs_only != 'true' && steps.critical.outputs.critical == 'true'
+        run: |
+          node --test \
+            tests/profile-storage.test.cjs \
+            tests/acquisition-commit-flow.test.cjs \
+            tests/collection-earned-layouts.test.cjs \
+            tests/level-system.test.cjs \
+            tests/bgm-controller.test.cjs \
+            tests/two-digit-multiplication-guides.test.cjs
       - name: Run two browser smoke suites
         if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
