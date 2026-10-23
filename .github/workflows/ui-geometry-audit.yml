@@ -20,11 +20,19 @@ jobs:
         with:
           node-version: '22'
       - name: Install browser tools
+        timeout-minutes: 10
         run: |
-          npm install --no-save --no-package-lock playwright@1.58.2
+          echo "Browser installation started: $(date -u +%FT%TZ)"
+          node --version
+          npm --version
+          npm install --no-save --no-package-lock --loglevel=info playwright@1.58.2
+          echo "Playwright package installed: $(date -u +%FT%TZ)"
           npx playwright install --with-deps chromium
+          echo "Chromium installed: $(date -u +%FT%TZ)"
       - name: Measure UI at four viewport sizes
         run: node tests/ui-scale-audit.cjs
+      - name: Check active UI geometry via navigation
+        run: node tests/ui-interaction-geometry.test.cjs
       - name: Upload geometry report
         if: always()
         uses: actions/upload-artifact@v4
