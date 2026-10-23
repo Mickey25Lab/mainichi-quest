@@ -551,7 +551,8 @@ button, input { font: inherit; }
   align-items:center;
   width:100%;
   min-height:86.4px;
-  padding:8.4px 20px 8.4px 26px;
+  /* Pull remaining count and energy closer to the mode name by ~one remaining-count width. */
+  padding:8.4px 100px 8.4px 26px;
   border:3px solid rgba(214,246,255,.92);
   border-radius:24px;
   color:#fff;
@@ -696,17 +697,18 @@ button, input { font: inherit; }
   grid-template-columns:minmax(0,1fr) 120px 230px;
   align-items:end;
   min-height:42px;
-  padding:0 20px 2px 26px;
+  /* Keep the legend aligned with the shifted energy column. */
+  padding:0 100px 2px 26px;
   border:0;
   border-radius:0;
-  color:#fff7a8;
+  color:#fff;
   background:transparent;
   box-shadow:none;
   font:1000 26px/1.08 "Noto Sans JP",sans-serif;
   text-align:left;
-  -webkit-text-stroke:3px #0a3f78;
+  -webkit-text-stroke:3px #163a70;
   paint-order:stroke fill;
-  text-shadow:none;
+  text-shadow:0 2px 4px rgba(11,31,58,.5);
   pointer-events:none;
 }
 .mode-select-energy-guide span {
