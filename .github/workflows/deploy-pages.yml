@@ -1,13 +1,13 @@
-name: Bump production version and deploy GitHub Pages
+name: Deploy GitHub Pages and propose patch version
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
   pages: write
   id-token: write
 
@@ -17,41 +17,52 @@ concurrency:
 
 jobs:
   version:
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore: bump production app version')
     runs-on: ubuntu-latest
+    env:
+      VERSION_PR_TOKEN: ${{ secrets.VERSION_PR_TOKEN }}
     steps:
-      - name: Checkout latest main
+      - name: Checkout main
         uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: true
-      - name: Increment patch on main for user-facing changes
-        if: github.event_name == 'push'
+      - name: Generate patch version proposal
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.event.after }}
         run: |
           set -euo pipefail
-          # A merge can arrive during checkout: use the exact push range, but
-          # never overwrite a new head; retry by failing rather than force pushing.
           node .github/scripts/bump-main-version.mjs "$BEFORE_SHA" "$AFTER_SHA"
-          if git diff --quiet -- dist/app.js; then
-            echo "No version bump required"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/app.js
-          git commit -m "chore: auto-bump app version [skip ci]"
-          git push origin HEAD:main
+      - name: Explain missing automation token
+        if: env.VERSION_PR_TOKEN == ''
+        run: echo 'VERSION_PR_TOKEN is not configured; skipped auto-version PR. Publishing still proceeds.'
+      - name: Open patch version PR (never push to protected main)
+        if: env.VERSION_PR_TOKEN != ''
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # A dedicated token is needed because GITHUB_TOKEN-created PRs do not trigger CI.
+          token: ${{ secrets.VERSION_PR_TOKEN }}
+          commit-message: "chore: bump production app version"
+          branch: automation/production-app-version
+          delete-branch: true
+          title: "chore: bump production app version"
+          body: |
+            Automatic patch version proposal generated from a main merge.
+            This PR changes only the appVersion declaration in dist/app.js.
+            It must pass the normal required checks and receive explicit approval before merge.
+          add-paths: dist/app.js
   deploy:
-    needs: version
+    # Publishing must not be blocked by an auto-version PR needing approval
+    # or by GitHub repository settings that prevent Actions from opening PRs.
+    if: always()
+    needs: [version]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout released main
+      - name: Checkout main
         uses: actions/checkout@v6
         with:
           ref: main

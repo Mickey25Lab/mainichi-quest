@@ -47,7 +47,7 @@ function validateSha(value, label) {
   return value;
 }
 
-export function runForCommits(baseSha, headSha) {
+export function runForCommits(baseSha, headSha, allowBotPatch = false) {
   const base = validateSha(baseSha, "base SHA");
   const head = validateSha(headSha, "head SHA");
   const changedFiles = git(["diff", "--name-only", "--no-renames", `${base}...${head}`, "--"])
@@ -57,13 +57,33 @@ export function runForCommits(baseSha, headSha) {
   const userFacingFiles = changedFiles.filter(isUserFacingPath);
   const baseAppJs = git(["show", `${base}:dist/app.js`]);
   const headAppJs = git(["show", `${head}:dist/app.js`]);
+  if (allowBotPatch) {
+    // Only the protected, bot-created release proposal can change this field.
+    if (changedFiles.length !== 1 || changedFiles[0] !== "dist/app.js") {
+      throw new Error("Automated patch PR must only change dist/app.js");
+    }
+    const before = extractAppVersion(baseAppJs);
+    const afterVersion = extractAppVersion(headAppJs);
+    if (before.major !== afterVersion.major || before.minor !== afterVersion.minor ||
+        afterVersion.patch !== before.patch + 1) {
+      throw new Error("Automated patch PR must increment patch by exactly one");
+    }
+    const expected = baseAppJs.replace(
+      /(const\s+appVersion\s*=\s*["'])\d+\.\d+\.\d+(["']\s*;)/,
+      (_all, begin, end) => begin + afterVersion.raw + end
+    );
+    if (expected !== headAppJs) {
+      throw new Error("Automated patch PR modified more than the version declaration");
+    }
+    return { message: "Verified bot-only, one-line patch version proposal", userFacingFiles };
+  }
   return checkVersionBump({ changedFiles, baseAppJs, headAppJs });
 }
 
 const invokedDirectly = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (invokedDirectly) {
   try {
-    const result = runForCommits(process.argv[2], process.argv[3]);
+    const result = runForCommits(process.argv[2], process.argv[3], process.argv[4] === "--automated-patch");
     console.log(result.message);
     if (result.userFacingFiles) console.log(result.userFacingFiles.map((file) => `- ${file}`).join("\n"));
   } catch (error) {
