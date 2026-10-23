@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { classifyCriticalFiles } from "./classify-critical-pr.mjs";
 
 test("shared app changes are critical", () => {
-  for (const name of ["dist/app.js", "dist/index.html", "dist/scripts/profile-storage.js"]) {
+  for (const name of ["dist/app.js", "dist/index.html", "dist/scripts/profile-storage.js", ".github/workflows/playwright-browser-smokes.yml", ".github/scripts/classify-critical-pr.mjs"]) {
     assert.equal(classifyCriticalFiles([name]).critical, true, name);
   }
 });
