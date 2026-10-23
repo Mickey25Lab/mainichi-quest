@@ -15,7 +15,7 @@ function rectangle(r) {
 }
 function checkStage(name, viewport, rect) {
   assert.ok(rect.width > 0 && rect.height > 0, name + ": empty stage");
-  assert.ok(Math.abs(rect.width / rect.height - 4 / 3) < 0.012, name + ": lost 4:3 stage");
+  assert.ok(Math.abs(rect.width / rect.height - 4 / 3) < 0.012, name + ": lost 4:3 stage: " + JSON.stringify({ viewport, rect }));
   assert.ok(rect.x >= -1 && rect.y >= -1, name + ": stage outside viewport (start)");
   assert.ok(rect.x + rect.width <= viewport[0] + 1, name + ": stage outside viewport (right)");
   assert.ok(rect.y + rect.height <= viewport[1] + 1, name + ": stage outside viewport (bottom)");
