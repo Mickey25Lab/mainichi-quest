@@ -1,0 +1,84 @@
+name: Propose automatic production patch version
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-version-proposal
+  cancel-in-progress: false
+
+jobs:
+  version-proposal:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main history
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Determine if app version needs a patch
+        id: bump
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.after }}
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" != "push" ]]; then
+            echo "required=false" >> "$GITHUB_OUTPUT"
+            echo "Manual dispatch does not change the production version." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$COMMIT_MESSAGE" == *"chore: bump production app version"* ]]; then
+            echo "required=false" >> "$GITHUB_OUTPUT"
+            echo "Automated version-only merge: no additional bump." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Work against the exact push range; ignore documentation-only merges.
+          node .github/scripts/bump-main-version.mjs "$BEFORE_SHA" "$AFTER_SHA"
+          if git diff --quiet -- dist/app.js; then
+            echo "required=false" >> "$GITHUB_OUTPUT"
+            echo "No user-facing changes; no version bump." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check credentials for CI-triggering version PR
+        id: credentials
+        if: steps.bump.outputs.required == 'true'
+        env:
+          VERSION_PR_TOKEN: ${{ secrets.VERSION_PR_TOKEN }}
+        shell: bash
+        run: |
+          if [[ -z "$VERSION_PR_TOKEN" ]]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VERSION_PR_TOKEN is not configured. The app version is not updated."
+            echo "Version bump needed, but VERSION_PR_TOKEN is missing. Configure a dedicated minimal-permission token." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update version-only pull request
+        if: steps.bump.outputs.required == 'true' && steps.credentials.outputs.available == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.VERSION_PR_TOKEN }}
+          base: main
+          branch: automation/production-app-version
+          delete-branch: true
+          commit-message: 'chore: bump production app version'
+          title: 'chore: bump production app version'
+          body: |
+            Automated version-only pull request. No game logic or saved data changes.
+            This change increments appVersion by one patch.
+            All required checks and explicit user approval are required before merging.
+          add-paths: dist/app.js
