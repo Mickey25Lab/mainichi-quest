@@ -2920,7 +2920,7 @@ button, input { font: inherit; }
 @media (max-aspect-ratio: 4/5) {
   body { overflow:auto; }
   .result-screen.active { display:grid; place-items:center; overflow:hidden; padding:0; }
-  .start-layer { width:var(--content-stage-width); }
+  /* start-layer stays at the fixed 1400px logical width; --stage-scale handles portrait. */
   .result-card { width:94vw; max-height:none; margin:auto 0; }
   .result-heading h2 { font-size:clamp(44px,9vw,72px); }
   .result-time-panel { grid-template-columns:auto 1fr; }
@@ -2947,7 +2947,7 @@ button, input { font: inherit; }
   .answer-card { height: 92px; }
   .keypad { width: min(92vw, 560px); height: 420px; transform: none; }
   .best-stamp { right: -8px; top: -12px; transform: rotate(8deg); width: 110px; }
-  .start-layer { width:var(--content-stage-width); }
+  /* start-layer stays at the fixed 1400px logical width; --stage-scale handles portrait. */
   .start-version { left:max(16px,env(safe-area-inset-left)); }
   .result-card { width:94vw; max-height:none; }
   .result-heading h2 { font-size:clamp(37px,10vw,58px); }
