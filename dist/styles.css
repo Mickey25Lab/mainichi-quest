@@ -3273,7 +3273,7 @@ button, input { font: inherit; }
   left:28px;
   top:135px;
   width:1344px;
-  height:748px;
+  height:796px; /* +48px total: +12px per row, only reduce space below row 4 */
   display:grid;
   grid-template-columns:repeat(5,1fr);
   grid-template-rows:repeat(4,1fr);
