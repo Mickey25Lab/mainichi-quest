@@ -5155,11 +5155,11 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
@@ -5167,12 +5167,14 @@ button, input { font: inherit; }
   --summary-canvas-bottom-offset:-8px;
 }
 #collection-grid .collection-card[data-stage="5"] {
-  --summary-canvas-scale:1.60;
-  --summary-canvas-bottom-offset:-65px;
+  /* Upper-body portrait: keep the head inside the card and crop the legs. */
+  --summary-canvas-scale:1.30;
+  --summary-canvas-bottom-offset:-95px;
 }
 #collection-grid .collection-card.complete {
-  --summary-canvas-scale:2.40;
-  --summary-canvas-bottom-offset:-165px;
+  /* Left-bottom bust, with the medal independently positioned behind. */
+  --summary-canvas-scale:1.80;
+  --summary-canvas-bottom-offset:-185px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
 #collection-grid .collection-card .card-vehicle.is-vehicle-form,
@@ -5203,16 +5205,17 @@ button, input { font: inherit; }
 /* Master medal: a bust-up equipped robot spills beyond the bottom/left card
    boundary while the smaller medal floats behind it in the upper right. */
 #collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
-  left:-35px;
-  transform-origin:40% bottom;
+  left:-25px;
+  transform-origin:center bottom;
 }
 #collection-grid .collection-card .card-master-medal-bg {
   inset:auto;
-  top:-5px;
-  right:-10px;
-  width:80%;
-  height:81%;
-  opacity:.75;
+  z-index:0;
+  top:2px;
+  right:0;
+  width:70%;
+  height:70%;
+  opacity:.95;
   object-fit:contain;
 }
 /* Equipment and master artwork are intentionally clipped by the card frame. */
