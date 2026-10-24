@@ -1111,7 +1111,8 @@ button, input { font: inherit; }
 .start-version {
   left:max(22px,env(safe-area-inset-left));
   padding:8px 14px;
-  font-size:clamp(15px,1.5vw,21px);
+  font-size:clamp(12px,1.2vw,17px);
+  white-space:nowrap;
 }
 .start-version.is-preview {
   display:flex;
