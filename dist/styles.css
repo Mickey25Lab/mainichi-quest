@@ -5259,3 +5259,10 @@ button, input { font: inherit; }
 #collection-grid .collection-card[data-stage="4"] .collection-card-energy { height:65px; width:26px; }
 #collection-grid .collection-card[data-stage="5"] .collection-card-energy { height:83px; width:29px; }
 #collection-grid .collection-card.complete .collection-card-energy { height:100px; width:31px; }
+
+/* Developer and parent dialogs: explicit light inputs, quiet secondary actions. */
+.profile-card input,
+.profile-card input:read-only { background:#e8f5ff; color:#153954; -webkit-text-fill-color:#153954; color-scheme:light; }
+.profile-card .admin-pin-keypad .admin-pin-keypad-action { background:#fff; color:#42576b; border:2px solid #a8b8c6; }
+.profile-card .admin-reset-button { background:#fff; color:#b9363e; border:2px solid #b9363e; }
+.admin-setting-row[hidden], .profile-card .admin-action-button[hidden] { display:none; }
