@@ -1356,11 +1356,9 @@
       if (!response.ok) return;
       const metadata = await response.json();
       if (metadata?.environment !== "preview") return;
-      const identity = metadata.prNumber
-        ? `Preview PR #${metadata.prNumber}`
-        : `Preview_${metadata.branch || "branch"}`;
-      const commit = metadata.shortCommit ? `_${metadata.shortCommit}` : "";
-      versionLabel.textContent = `Version ${appVersion}_${identity}${commit}`;
+      const branch = String(metadata.branch || "branch").slice(0, 15);
+      const commit = String(metadata.shortCommit || metadata.commit || "").slice(0, 7);
+      versionLabel.textContent = `Version ${appVersion}_P_${branch}${commit ? `_${commit}` : ""}`;
       versionLabel.classList.add("is-preview");
     } catch (_) {
       // GitHub Pages / local builds do not generate preview metadata.
