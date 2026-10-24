@@ -20,6 +20,13 @@
 - 複数案から選んだ重要な技術・運用判断は `docs/decisions/` に短い Markdown で残す。日付、状況、決定、理由、影響、見直し条件を含める。
 - 画像の生成・正規化・WebP化・配備は `docs/asset-pipeline/画像生成パイプライン.md` を必ず守る。WebP を再圧縮しない。
 
+## バージョン表示ルール
+
+- 画面下部のバージョン表示は、本番では `Version <version>`、Cloudflare Branch Previewでは `Version <version>_P_<branch-prefix>_<short-sha>` とする。
+- `branch-prefix` は実際のブランチ名の先頭15文字（半角文字換算）、`short-sha` は実際のhead commit SHAの先頭7文字を使う。例：`Version 0.3.52_P_fix/release-ve_14d0bb7`。例示値を固定しない。
+- `Preview_`・長いブランチ名全文・ビルド日時は画面に表示しない。バージョン表示全体を小さめのフォントで1行表示し、折り返さない。完全SHAや詳細なビルド情報はGitHub・デプロイメタデータなどで確認する。
+- 表示方式の変更時は関連する正式仕様MDとテストも同じPRで必要に応じて更新する。
+
 ## 子どもデータの保護
 
 - 子どもプロファイル、学習履歴、報酬進捗を削除・初期化・上書きする変更は、Kimi の明示承認なしに行わない。
