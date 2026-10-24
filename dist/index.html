@@ -74,7 +74,7 @@
         <div class="top-footer-tools" aria-label="設定とバージョン">
           <button class="parent-settings-button" id="parent-settings-button" type="button">おうちの人へ</button>
           <button class="top-reload-button" id="top-reload-button" type="button" aria-label="アプリを再読み込み" title="再読み込み">↻</button>
-          <button class="admin-settings-button" id="admin-settings-button" type="button" aria-label="管理設定">⚙️</button>
+          <button class="admin-settings-button" id="admin-settings-button" type="button" aria-label="開発者ツール">⚙️</button>
           <p class="start-version" id="app-version" aria-label="アプリのバージョン"></p>
         </div>
       </div>
@@ -534,7 +534,7 @@
   </div>
   <div class="profile-overlay" id="admin-pin-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-pin-title" hidden>
     <form class="profile-card admin-card" id="admin-pin-form">
-      <h2 id="admin-pin-title">管理設定</h2>
+      <h2 id="admin-pin-title">開発者ツール</h2>
       <label for="admin-pin-input">4桁PIN</label>
       <input id="admin-pin-input" name="pin" type="password" maxlength="4" autocomplete="off" readonly aria-label="4桁PIN">
       <div class="admin-pin-keypad" id="admin-pin-keypad" aria-label="PIN入力">
@@ -549,7 +549,7 @@
         <button type="button" data-admin-pin-digit="9">9</button>
         <button class="admin-pin-keypad-action" type="button" id="admin-pin-clear">クリア</button>
         <button type="button" data-admin-pin-digit="0">0</button>
-        <button class="admin-pin-keypad-action" type="button" id="admin-pin-backspace" aria-label="1文字消す">⌫</button>
+        <button class="admin-pin-keypad-action" type="button" id="admin-pin-backspace" aria-label="1文字消す">1文字消す</button>
       </div>
       <p class="profile-error" id="admin-pin-error" role="alert" hidden></p>
       <button class="profile-close-button" id="admin-pin-cancel" type="button">やめる</button>
@@ -572,7 +572,7 @@
         <button type="button" data-parent-pin-digit="9">9</button>
         <button class="admin-pin-keypad-action" type="button" id="parent-pin-clear">クリア</button>
         <button type="button" data-parent-pin-digit="0">0</button>
-        <button class="admin-pin-keypad-action" type="button" id="parent-pin-backspace" aria-label="1文字消す">⌫</button>
+        <button class="admin-pin-keypad-action" type="button" id="parent-pin-backspace" aria-label="1文字消す">1文字消す</button>
       </div>
       <p class="profile-error" id="parent-pin-error" role="alert" hidden></p>
       <button class="profile-close-button" id="parent-pin-cancel" type="button">やめる</button>
@@ -623,20 +623,20 @@
 
   <div class="profile-overlay" id="admin-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-panel-title" hidden>
     <section class="profile-card admin-card">
-      <h2 id="admin-panel-title">管理設定</h2>
+      <h2 id="admin-panel-title">開発者ツール</h2>
       <div class="admin-setting-row">
         <span>QAモード</span>
         <button class="admin-qa-toggle" id="admin-qa-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
-      <div class="admin-setting-row">
+      <div class="admin-setting-row" hidden>
         <span>画面拡大診断</span>
         <button class="admin-qa-toggle" id="admin-viewport-diagnostics-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
-      <div class="admin-setting-row">
+      <div class="admin-setting-row" hidden>
         <span>BGM消失診断</span>
         <button class="admin-qa-toggle" id="admin-bgm-diagnostics-toggle" type="button" role="switch" aria-checked="false"><span>OFF</span></button>
       </div>
-      <button class="admin-action-button" id="admin-points-open" type="button">累計ポイント診断を見る</button>
+      <button class="admin-action-button" id="admin-points-open" type="button" hidden>累計ポイント診断を見る</button>
       <div class="admin-action-list">
         <button class="admin-action-button" id="admin-reenable-collection" type="button">コレクションを今日もう一度見られるようにする</button>
         <button class="admin-action-button" id="admin-reenable-opening-movie" type="button">開始時ムービーを今日もう一度再生できるようにする</button>
@@ -658,7 +658,7 @@
         <thead><tr><th>車種</th><th>状態</th><th>参考pt</th></tr></thead>
         <tbody id="admin-points-rows"></tbody>
       </table></div>
-      <button class="profile-close-button" id="admin-points-close" type="button">管理設定にもどる</button>
+      <button class="profile-close-button" id="admin-points-close" type="button">開発者ツールにもどる</button>
     </section>
   </div>
   <div class="profile-overlay" id="admin-reset-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-reset-question" hidden>

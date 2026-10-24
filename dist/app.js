@@ -6027,6 +6027,25 @@
   $("level-up-close").addEventListener("click", closeLevelCelebration);
   $("profile-switch-button").addEventListener("click", openProfileManager);
   $("profile-manager-close").addEventListener("click", () => { $("profile-manager-overlay").hidden = true; });
+  // Only taps on the backdrop dismiss a dialog; taps within its card never do.
+  // Dismiss every nested dialog so the app returns to the underlying top screen.
+  const dismissibleOverlays = [
+    "profile-manager-overlay", "admin-pin-overlay", "parent-pin-overlay",
+    "admin-panel-overlay", "parent-settings-overlay",
+    "admin-points-overlay", "admin-reset-confirm-overlay"
+  ];
+  dismissibleOverlays.forEach((id) => {
+    $(id).addEventListener("click", (event) => {
+      if (event.target !== event.currentTarget || adminResetInProgress) return;
+      if (!$("parent-settings-overlay").hidden) closeParentSettings();
+      if (!$("parent-pin-overlay").hidden) closeParentPin();
+      if (!$("admin-reset-confirm-overlay").hidden) closeAdminResetConfirm();
+      if (!$("admin-points-overlay").hidden) closePointsDiagnostics();
+      if (!$("admin-panel-overlay").hidden) closeAdminPanel();
+      if (!$("admin-pin-overlay").hidden) closeAdminPin();
+      $("profile-manager-overlay").hidden = true;
+    });
+  });
   $("profile-setup-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const name = $("profile-setup-name").value;
