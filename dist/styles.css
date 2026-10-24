@@ -3273,7 +3273,7 @@ button, input { font: inherit; }
   left:28px;
   top:135px;
   width:1344px;
-  height:748px;
+  height:796px; /* +48px total: +12px per row, only reduce space below row 4 */
   display:grid;
   grid-template-columns:repeat(5,1fr);
   grid-template-rows:repeat(4,1fr);
@@ -5068,38 +5068,143 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
-/* Collection summary: shared stage templates; NEVER per-vehicle adjustments.
-   Calibrated to iPad. Clipping is intentional for the upper stages. */
-#collection-grid .collection-card .vehicle-area { overflow:hidden; }
+/* Rarity stars: fixed 14px glyphs on a single 36x30 stage.
+   Arrange around the SAME visual center for 1, 2, 3 or 4 stars.
+   1=center; 2=middle pair; 3=symmetric triangle; 4=square.
+   This stage sits WITHIN the right end of the full-width name-band background,
+   beneath the energy rail, independently centered from the name text.
+   Every rarity uses precisely the same 14px glyph; no artwork changes. */
+#collection-grid .collection-card .card-rarity {
+  position:absolute;
+  z-index:9;
+  top:auto; left:auto;
+  right:10px;
+  bottom:8px;
+  display:block;
+  width:36px;
+  height:30px;
+  margin:0;
+  padding:0;
+  color:#ffe342;
+  font-size:14px;
+  font-weight:900;
+  line-height:14px;
+  letter-spacing:0;
+  white-space:normal;
+  pointer-events:none;
+  text-align:center;
+  text-shadow:0 1px 2px #704400,0 0 4px #ffb700;
+}
+#collection-grid .collection-card .card-rarity i {
+  position:absolute;
+  display:block;
+  width:14px;
+  height:14px;
+  margin:0;
+  padding:0;
+  font:inherit;
+  font-style:normal;
+  line-height:14px;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+/* Same origin for every rarity. Symmetry is intentional. */
+#collection-grid .collection-card .card-rarity.rarity-2 i:first-child { left:25%; }
+#collection-grid .collection-card .card-rarity.rarity-2 i:nth-child(2) { left:75%; }
+#collection-grid .collection-card .card-rarity.rarity-3 i:first-child { top:25%; }
+#collection-grid .collection-card .card-rarity.rarity-3 i:nth-child(2) { left:25%; top:75%; }
+#collection-grid .collection-card .card-rarity.rarity-3 i:nth-child(3) { left:75%; top:75%; }
+#collection-grid .collection-card .card-rarity.rarity-4 i:first-child { left:25%; top:25%; }
+#collection-grid .collection-card .card-rarity.rarity-4 i:nth-child(2) { left:75%; top:25%; }
+#collection-grid .collection-card .card-rarity.rarity-4 i:nth-child(3) { left:25%; top:75%; }
+#collection-grid .collection-card .card-rarity.rarity-4 i:nth-child(4) { left:75%; top:75%; }
+
+/* Collection summary: canvas-edge positioning only, shared by ALL vehicles.
+   No alpha-bound measurements, per-vehicle offsets, or stage-specific layout
+   engines. The CSS image box represents the entire square asset canvas.
+   bottomOffset = positive means above the name band's upper boundary. */
+#collection-grid .collection-card {
+  --summary-name-top:38px; /* name-band: bottom 8px + height 30px */
+  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:1;
+}
+#collection-grid .collection-card .vehicle-area {
+  position:absolute;
+  left:10px; right:55px; top:9px;
+  bottom:var(--summary-name-top);
+  display:block;
+  overflow:visible; /* clipping is owned by the outer card */
+}
 #collection-grid .collection-card .card-vehicle {
-  width:100%; height:100%; max-width:none; max-height:none;
-  object-fit:contain; object-position:center center;
-  align-self:center; transform-origin:center center;
+  position:absolute; z-index:1;
+  display:block;
+  left:0;
+  bottom:var(--summary-canvas-bottom-offset);
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  object-position:center center;
+  transform:scale(var(--summary-canvas-scale));
+  transform-origin:center bottom;
+  filter:none;
 }
-/* Raise small forms and silhouettes away from the name band. */
-#collection-grid .collection-card[data-stage="2"] .card-vehicle,
-#collection-grid .collection-card.locked .card-vehicle {
-  transform:translateY(-9px) scale(.96);
+/* Keep the locked car identical in geometry to a discovered vehicle.
+   The same shared image-canvas rule applies in every evolution stage. */
+#collection-grid .collection-card[data-stage="2"] {
+  --summary-canvas-scale:.50;
+  --summary-canvas-bottom-offset:10px;
 }
-#collection-grid .collection-card[data-stage="3"] .card-vehicle {
-  transform:translateY(-9px) scale(.884);
+#collection-grid .collection-card[data-stage="3"] {
+  --summary-canvas-scale:.50;
+  --summary-canvas-bottom-offset:10px;
 }
-/* Super robot: -15%; equipped: +15% relative to PR #210. */
-#collection-grid .collection-card[data-stage="4"] .card-vehicle { transform:scale(1.445); }
-#collection-grid .collection-card[data-stage="5"]:not(.complete) .card-vehicle { transform:scale(1.955); }
-/* A medal is a backdrop, while the equipped super robot stays foreground. */
+#collection-grid .collection-card[data-stage="4"] {
+  --summary-canvas-scale:.70;
+  --summary-canvas-bottom-offset:0px;
+}
+#collection-grid .collection-card[data-stage="5"] {
+  --summary-canvas-scale:.85;
+  --summary-canvas-bottom-offset:0px;
+}
+#collection-grid .collection-card.complete {
+  --summary-canvas-scale:.70;
+  --summary-canvas-bottom-offset:0px;
+}
+/* The shared geometry always wins over legacy category-specific transforms. */
+#collection-grid .collection-card .card-vehicle.is-vehicle-form,
+#collection-grid .collection-card .card-vehicle.is-evolved-form,
+#collection-grid .collection-card .card-vehicle.is-robot-form,
+#collection-grid .collection-card .card-vehicle.is-equipped-super-robot {
+  width:100%;
+  height:auto;
+  max-width:none;
+  max-height:none;
+  align-self:auto;
+  transform:scale(var(--summary-canvas-scale));
+  transform-origin:center bottom;
+}
+#collection-grid .collection-card .card-vehicle.is-pre-friendship {
+  filter:grayscale(1);
+}
+#collection-grid .collection-card .card-silhouette-image {
+  filter:grayscale(1) brightness(.075) contrast(1.25);
+  opacity:.94;
+}
 #collection-grid .collection-card.complete .card-vehicle {
-  transform:scale(1.445);
   filter:drop-shadow(2px 0 1px rgba(241,250,255,.98))
          drop-shadow(-2px 0 1px rgba(241,250,255,.98))
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
+/* Medal is deliberately behind the robot, independent from image anchoring. */
 #collection-grid .collection-card .card-master-medal-bg {
   inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
 }
-/* Same crossed-swords art as the equipment tab, above the energy bar.
-   No colored card frame/background is introduced. */
+/* Preserve the currently approved badge and its placement. */
 #collection-grid .collection-card .card-equipment-emblem {
   position:absolute; z-index:6; top:9px; right:11px;
   width:32px; height:32px; box-sizing:border-box;
@@ -5113,14 +5218,39 @@ button, input { font: inherit; }
   display:block; width:88%; height:88%; object-fit:contain;
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
-/* Spread five friendship hearts vertically, with the fifth noticeably higher. */
+/* Name band remains foreground, including where large canvases overlap. */
+/* Extend only the name-band background to the card's right edge.
+   Old name text center was midpoint of left:8px / right:50px.
+   Keep exactly that midpoint by reserving the added 42px on the RIGHT
+   for rarity stars, while the text remains centered in the original span. */
+#collection-grid .collection-card .name-band {
+  z-index:8;
+  right:8px;
+  padding:0;
+  justify-content:flex-start;
+}
+#collection-grid .collection-card .name-band-text {
+  display:block;
+  box-sizing:border-box;
+  width:calc(100% - 42px);
+  min-width:0;
+  padding:0 5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:center;
+}
+/* Five hearts: same 12px clearance from the card top and the name
+   band's top (38px from card bottom). space-between keeps equal intervals.
+   Relative to the prior layout, the bottom heart rises by 12px. */
 #collection-grid .collection-card .collection-card-hearts {
-  top:14px; bottom:38px; flex-direction:column-reverse;
+  top:12px; bottom:50px; flex-direction:column-reverse;
   justify-content:space-between; gap:0;
 }
 #collection-grid .collection-card .collection-card-hearts i {
   font-size:20px; line-height:.9; flex:0 0 auto;
 }
+
 /* Energy bar size follows the target: 30 / 50 / 100 / 200 / 500. */
 #collection-grid .collection-card .collection-card-energy {
   top:auto; bottom:45px; height:36px; width:21px;
