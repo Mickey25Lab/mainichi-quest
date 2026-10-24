@@ -5076,7 +5076,7 @@ button, input { font: inherit; }
    Every rarity uses precisely the same 14px glyph; no artwork changes. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
-  z-index:9;
+  z-index:12;
   top:auto; left:auto;
   right:10px;
   bottom:8px;
@@ -5131,7 +5131,7 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card .vehicle-area {
   position:absolute;
-  left:10px; right:55px; top:9px;
+  left:10px; right:10px; top:9px;
   bottom:var(--summary-name-top);
   display:block;
   overflow:visible; /* clipping is owned by the outer card */
@@ -5155,24 +5155,26 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:.62;
+  --summary-canvas-bottom-offset:-8px;
 }
 #collection-grid .collection-card[data-stage="5"] {
-  --summary-canvas-scale:.85;
-  --summary-canvas-bottom-offset:0px;
+  /* Upper-body portrait: keep the head inside the card and crop the legs. */
+  --summary-canvas-scale:1.30;
+  --summary-canvas-bottom-offset:-95px;
 }
 #collection-grid .collection-card.complete {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  /* Left-bottom bust, with the medal independently positioned behind. */
+  --summary-canvas-scale:1.80;
+  --summary-canvas-bottom-offset:-185px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
 #collection-grid .collection-card .card-vehicle.is-vehicle-form,
@@ -5200,12 +5202,26 @@ button, input { font: inherit; }
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
-/* Medal is deliberately behind the robot, independent from image anchoring. */
-#collection-grid .collection-card .card-master-medal-bg {
-  inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
+/* Master medal: a bust-up equipped robot spills beyond the bottom/left card
+   boundary while the smaller medal floats behind it in the upper right. */
+#collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
+  left:-25px;
+  transform-origin:center bottom;
 }
-/* Preserve the currently approved badge and its placement. */
+#collection-grid .collection-card .card-master-medal-bg {
+  inset:auto;
+  z-index:0;
+  top:2px;
+  right:0;
+  width:70%;
+  height:70%;
+  opacity:.95;
+  object-fit:contain;
+}
+/* Equipment and master artwork are intentionally clipped by the card frame. */
+/* No equipment badge on summary cards: the enlarged artwork is the cue. */
 #collection-grid .collection-card .card-equipment-emblem {
+  display:none;
   position:absolute; z-index:6; top:9px; right:11px;
   width:32px; height:32px; box-sizing:border-box;
   display:grid; place-items:center; pointer-events:none;
@@ -5218,24 +5234,24 @@ button, input { font: inherit; }
   display:block; width:88%; height:88%; object-fit:contain;
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
-/* Name band remains foreground, including where large canvases overlap. */
-/* Extend only the name-band background to the card's right edge.
-   Old name text center was midpoint of left:8px / right:50px.
-   Keep exactly that midpoint by reserving the added 42px on the RIGHT
-   for rarity stars, while the text remains centered in the original span. */
+/* Center card artwork and name text independently of the rarity stars.
+   Keep the name above other overlays so descenders are not obscured. */
 #collection-grid .collection-card .name-band {
-  z-index:8;
+  z-index:10;
   right:8px;
   padding:0;
-  justify-content:flex-start;
+  justify-content:center;
+  overflow:visible;
 }
 #collection-grid .collection-card .name-band-text {
   display:block;
   box-sizing:border-box;
-  width:calc(100% - 42px);
+  width:100%;
   min-width:0;
   padding:0 5px;
-  overflow:hidden;
+  position:relative;
+  z-index:1;
+  overflow:visible;
   text-overflow:ellipsis;
   white-space:nowrap;
   text-align:center;
