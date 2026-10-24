@@ -5076,7 +5076,7 @@ button, input { font: inherit; }
    Every rarity uses precisely the same 14px glyph; no artwork changes. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
-  z-index:9;
+  z-index:12;
   top:auto; left:auto;
   right:10px;
   bottom:8px;
@@ -5155,24 +5155,24 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.55;
+  --summary-canvas-scale:.50;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.55;
+  --summary-canvas-scale:.50;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:.77;
+  --summary-canvas-scale:.62;
   --summary-canvas-bottom-offset:-8px;
 }
 #collection-grid .collection-card[data-stage="5"] {
-  --summary-canvas-scale:.85;
-  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:1.60;
+  --summary-canvas-bottom-offset:-65px;
 }
 #collection-grid .collection-card.complete {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:2.40;
+  --summary-canvas-bottom-offset:-165px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
 #collection-grid .collection-card .card-vehicle.is-vehicle-form,
@@ -5200,12 +5200,25 @@ button, input { font: inherit; }
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
-/* Medal is deliberately behind the robot, independent from image anchoring. */
-#collection-grid .collection-card .card-master-medal-bg {
-  inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
+/* Master medal: a bust-up equipped robot spills beyond the bottom/left card
+   boundary while the smaller medal floats behind it in the upper right. */
+#collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
+  left:-35px;
+  transform-origin:40% bottom;
 }
-/* Preserve the currently approved badge and its placement. */
+#collection-grid .collection-card .card-master-medal-bg {
+  inset:auto;
+  top:-5px;
+  right:-10px;
+  width:80%;
+  height:81%;
+  opacity:.75;
+  object-fit:contain;
+}
+/* Equipment and master artwork are intentionally clipped by the card frame. */
+/* No equipment badge on summary cards: the enlarged artwork is the cue. */
 #collection-grid .collection-card .card-equipment-emblem {
+  display:none;
   position:absolute; z-index:6; top:9px; right:11px;
   width:32px; height:32px; box-sizing:border-box;
   display:grid; place-items:center; pointer-events:none;
