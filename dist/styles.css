@@ -5068,12 +5068,12 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
-/* Rarity stars: fixed 16px glyphs on a single 36x30 stage.
+/* Rarity stars: fixed 14px glyphs on a single 36x30 stage.
    Arrange around the SAME visual center for 1, 2, 3 or 4 stars.
    1=center; 2=middle pair; 3=symmetric triangle; 4=square.
    This stage sits WITHIN the right end of the full-width name-band background,
    beneath the energy rail, independently centered from the name text.
-   No change in individual glyph size or card artwork geometry. */
+   Every rarity uses precisely the same 14px glyph; no artwork changes. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
   z-index:9;
@@ -5086,9 +5086,9 @@ button, input { font: inherit; }
   margin:0;
   padding:0;
   color:#ffe342;
-  font-size:16px;
+  font-size:14px;
   font-weight:900;
-  line-height:16px;
+  line-height:14px;
   letter-spacing:0;
   white-space:normal;
   pointer-events:none;
@@ -5098,13 +5098,13 @@ button, input { font: inherit; }
 #collection-grid .collection-card .card-rarity i {
   position:absolute;
   display:block;
-  width:16px;
-  height:16px;
+  width:14px;
+  height:14px;
   margin:0;
   padding:0;
   font:inherit;
   font-style:normal;
-  line-height:16px;
+  line-height:14px;
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
@@ -5240,9 +5240,11 @@ button, input { font: inherit; }
   white-space:nowrap;
   text-align:center;
 }
-/* Retain heart spacing from the approved release. */
+/* Five hearts: same 12px clearance from the card top and the name
+   band's top (38px from card bottom). space-between keeps equal intervals.
+   Relative to the prior layout, the bottom heart rises by 12px. */
 #collection-grid .collection-card .collection-card-hearts {
-  top:14px; bottom:38px; flex-direction:column-reverse;
+  top:12px; bottom:50px; flex-direction:column-reverse;
   justify-content:space-between; gap:0;
 }
 #collection-grid .collection-card .collection-card-hearts i {
