@@ -5068,21 +5068,21 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
-/* Rarity stars: fixed 16px glyphs on a single 36x33 stage.
+/* Rarity stars: fixed 16px glyphs on a single 36x30 stage.
    Arrange around the SAME visual center for 1, 2, 3 or 4 stars.
    1=center; 2=middle pair; 3=symmetric triangle; 4=square.
-   This stage occupies the narrow lower-right corner: BELOW the energy gauge
-   and to the RIGHT of the name label, not within the picture.
+   This stage sits WITHIN the right end of the full-width name-band background,
+   beneath the energy rail, independently centered from the name text.
    No change in individual glyph size or card artwork geometry. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
-  z-index:5;
+  z-index:9;
   top:auto; left:auto;
   right:10px;
-  bottom:6px;
+  bottom:8px;
   display:block;
   width:36px;
-  height:33px;
+  height:30px;
   margin:0;
   padding:0;
   color:#ffe342;
@@ -5219,7 +5219,27 @@ button, input { font: inherit; }
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
 /* Name band remains foreground, including where large canvases overlap. */
-#collection-grid .collection-card .name-band { z-index:8; }
+/* Extend only the name-band background to the card's right edge.
+   Old name text center was midpoint of left:8px / right:50px.
+   Keep exactly that midpoint by reserving the added 42px on the RIGHT
+   for rarity stars, while the text remains centered in the original span. */
+#collection-grid .collection-card .name-band {
+  z-index:8;
+  right:8px;
+  padding:0;
+  justify-content:flex-start;
+}
+#collection-grid .collection-card .name-band-text {
+  display:block;
+  box-sizing:border-box;
+  width:calc(100% - 42px);
+  min-width:0;
+  padding:0 5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:center;
+}
 /* Retain heart spacing from the approved release. */
 #collection-grid .collection-card .collection-card-hearts {
   top:14px; bottom:38px; flex-direction:column-reverse;
