@@ -5131,7 +5131,7 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card .vehicle-area {
   position:absolute;
-  left:10px; right:55px; top:9px;
+  left:10px; right:10px; top:9px;
   bottom:var(--summary-name-top);
   display:block;
   overflow:visible; /* clipping is owned by the outer card */
@@ -5155,16 +5155,16 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.55;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.55;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:.77;
+  --summary-canvas-bottom-offset:-8px;
 }
 #collection-grid .collection-card[data-stage="5"] {
   --summary-canvas-scale:.85;
@@ -5218,24 +5218,24 @@ button, input { font: inherit; }
   display:block; width:88%; height:88%; object-fit:contain;
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
-/* Name band remains foreground, including where large canvases overlap. */
-/* Extend only the name-band background to the card's right edge.
-   Old name text center was midpoint of left:8px / right:50px.
-   Keep exactly that midpoint by reserving the added 42px on the RIGHT
-   for rarity stars, while the text remains centered in the original span. */
+/* Center card artwork and name text independently of the rarity stars.
+   Keep the name above other overlays so descenders are not obscured. */
 #collection-grid .collection-card .name-band {
-  z-index:8;
+  z-index:10;
   right:8px;
   padding:0;
-  justify-content:flex-start;
+  justify-content:center;
+  overflow:visible;
 }
 #collection-grid .collection-card .name-band-text {
   display:block;
   box-sizing:border-box;
-  width:calc(100% - 42px);
+  width:100%;
   min-width:0;
   padding:0 5px;
-  overflow:hidden;
+  position:relative;
+  z-index:1;
+  overflow:visible;
   text-overflow:ellipsis;
   white-space:nowrap;
   text-align:center;
