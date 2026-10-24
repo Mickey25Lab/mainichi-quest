@@ -4855,7 +4855,7 @@
       const artwork = discovered ? `<img class="card-vehicle ${formClass}${grayscaleClass}" src="${artPath}" alt="" decoding="async">`
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
       const medal = complete ? `<img class="card-master-medal-bg" src="${masterMedalArtworkPath(vehicle.index)}" alt="" decoding="async">` : "";
-      const equipmentBadge = !complete && formStage === 5 ? `<img class="card-equipment-badge" src="${equipmentArtworkPath(vehicle.index)}" alt="" decoding="async">` : "";
+      const equipmentBadge = !complete && formStage === 5 ? `<span class="card-equipment-emblem" aria-label="スペシャル装備"><img src="./assets/ui/collection_tabs/collection_tab_special_equipment.png" alt="" aria-hidden="true" decoding="async"></span>` : "";
       const isNew = showSessionMarkers && state.collectionNewVehicleIndexes.has(vehicle.index);
       const before = state.resultStartProgress[vehicle.index] || emptyVehicleProgress();
       const friendshipGrew = progress.friendship > before.friendship;
@@ -4864,11 +4864,11 @@
       const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
       const selectionDisabled = (state.collectionMode === "phonics-reward-select" && !discovered) || capsuleDisabled;
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
-        <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}${equipmentBadge}</span>
+        <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>${equipmentBadge}
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
         ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
     }).join("");
-    revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-equipment-badge, .card-silhouette-image");
+    revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
       if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }
