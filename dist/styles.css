@@ -5068,19 +5068,21 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
-/* Rarity stars: fixed 16px glyphs on a single 38x38 stage.
+/* Rarity stars: fixed 16px glyphs on a single 36x33 stage.
    Arrange around the SAME visual center for 1, 2, 3 or 4 stars.
    1=center; 2=middle pair; 3=symmetric triangle; 4=square.
+   This stage occupies the narrow lower-right corner: BELOW the energy gauge
+   and to the RIGHT of the name label, not within the picture.
    No change in individual glyph size or card artwork geometry. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
   z-index:5;
   top:auto; left:auto;
-  right:48px;
-  bottom:43px;
+  right:10px;
+  bottom:6px;
   display:block;
-  width:38px;
-  height:38px;
+  width:36px;
+  height:33px;
   margin:0;
   padding:0;
   color:#ffe342;
