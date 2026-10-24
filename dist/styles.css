@@ -5076,13 +5076,22 @@ button, input { font: inherit; }
   object-fit:contain; object-position:center center;
   align-self:center; transform-origin:center center;
 }
-/* Raise small forms and silhouettes away from the name band. */
+/* Reserve REAL space above the name band: its height is 30px, so half
+   is 15px. Moving only the image by translateY never guaranteed a gap,
+   because the image box and transform still extended to the band edge.
+   The stage-specific viewport itself now ends 15px higher and clips art. */
+#collection-grid .collection-card[data-stage="2"] .vehicle-area,
+#collection-grid .collection-card[data-stage="3"] .vehicle-area,
+#collection-grid .collection-card.locked .vehicle-area {
+  bottom:calc(38px + 15px);
+  overflow:hidden;
+}
 #collection-grid .collection-card[data-stage="2"] .card-vehicle,
 #collection-grid .collection-card.locked .card-vehicle {
-  transform:translateY(-9px) scale(.96);
+  transform:scale(.96);
 }
 #collection-grid .collection-card[data-stage="3"] .card-vehicle {
-  transform:translateY(-9px) scale(.884);
+  transform:scale(.884);
 }
 /* Super robot: -15%; equipped: +15% relative to PR #210. */
 #collection-grid .collection-card[data-stage="4"] .card-vehicle { transform:scale(1.445); }
@@ -5098,16 +5107,18 @@ button, input { font: inherit; }
 #collection-grid .collection-card .card-master-medal-bg {
   inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
 }
-/* Same crossed-swords art as the equipment tab, above the energy bar.
-   No colored card frame/background is introduced. */
+/* Same crossed-swords art as the equipment tab. Foreground at the
+   bottom-left of the picture, 6px above the name-band boundary.
+   Amber-gold is intentionally distinct from the blue garage; no frame change. */
 #collection-grid .collection-card .card-equipment-emblem {
-  position:absolute; z-index:6; top:9px; right:11px;
+  position:absolute; z-index:6; left:12px; right:auto;
+  top:auto; bottom:calc(38px + 6px);
   width:32px; height:32px; box-sizing:border-box;
   display:grid; place-items:center; pointer-events:none;
-  border:2px solid #c7eaff; border-radius:9px;
-  background:linear-gradient(145deg,#295b91,#112b56 72%);
-  box-shadow:inset 0 0 4px rgba(255,255,255,.45),
-             0 0 6px rgba(63,194,255,.6),0 2px 3px rgba(0,0,0,.65);
+  border:2px solid #fff2a8; border-radius:9px;
+  background:linear-gradient(145deg,#ffdf64 0%,#eaa632 48%,#966019 100%);
+  box-shadow:inset 0 0 4px rgba(255,255,255,.65),
+             0 0 7px rgba(255,198,48,.75),0 2px 3px rgba(0,0,0,.65);
 }
 #collection-grid .collection-card .card-equipment-emblem img {
   display:block; width:88%; height:88%; object-fit:contain;
