@@ -5068,27 +5068,60 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
 
-/* Collection summary: a shared silhouette hierarchy, never per-vehicle offsets. */
+/* Collection summary: shared stage templates; NEVER per-vehicle adjustments.
+   Calibrated to iPad. Clipping is intentional for the upper stages. */
 #collection-grid .collection-card .vehicle-area { overflow:hidden; }
 #collection-grid .collection-card .card-vehicle {
   width:100%; height:100%; max-width:none; max-height:none;
   object-fit:contain; object-position:center center;
   align-self:center; transform-origin:center center;
 }
-#collection-grid .collection-card[data-stage="2"] .card-vehicle { transform:scale(.64); }
-#collection-grid .collection-card[data-stage="3"] .card-vehicle { transform:scale(.68); }
-#collection-grid .collection-card[data-stage="4"] .card-vehicle,
-#collection-grid .collection-card[data-stage="5"] .card-vehicle { transform:scale(1.7); }
-#collection-grid .collection-card.complete .card-vehicle { transform:scale(1.7); }
+/* Raise small forms and silhouettes away from the name band. */
+#collection-grid .collection-card[data-stage="2"] .card-vehicle,
+#collection-grid .collection-card.locked .card-vehicle {
+  transform:translateY(-9px) scale(.96);
+}
+#collection-grid .collection-card[data-stage="3"] .card-vehicle {
+  transform:translateY(-9px) scale(.884);
+}
+/* Super robot: -15%; equipped: +15% relative to PR #210. */
+#collection-grid .collection-card[data-stage="4"] .card-vehicle { transform:scale(1.445); }
+#collection-grid .collection-card[data-stage="5"]:not(.complete) .card-vehicle { transform:scale(1.955); }
+/* A medal is a backdrop, while the equipped super robot stays foreground. */
+#collection-grid .collection-card.complete .card-vehicle {
+  transform:scale(1.445);
+  filter:drop-shadow(2px 0 1px rgba(241,250,255,.98))
+         drop-shadow(-2px 0 1px rgba(241,250,255,.98))
+         drop-shadow(0 2px 1px rgba(241,250,255,.98))
+         drop-shadow(0 -2px 1px rgba(241,250,255,.98));
+}
 #collection-grid .collection-card .card-master-medal-bg {
   inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
 }
-#collection-grid .collection-card .card-equipment-badge {
-  position:absolute; z-index:3; right:1px; bottom:2px;
-  width:29%; height:39%; object-fit:contain; pointer-events:none;
-  filter:drop-shadow(0 1px 4px rgba(0,0,0,.8));
+/* Same crossed-swords art as the equipment tab, above the energy bar.
+   No colored card frame/background is introduced. */
+#collection-grid .collection-card .card-equipment-emblem {
+  position:absolute; z-index:6; top:9px; right:11px;
+  width:32px; height:32px; box-sizing:border-box;
+  display:grid; place-items:center; pointer-events:none;
+  border:2px solid #c7eaff; border-radius:9px;
+  background:linear-gradient(145deg,#295b91,#112b56 72%);
+  box-shadow:inset 0 0 4px rgba(255,255,255,.45),
+             0 0 6px rgba(63,194,255,.6),0 2px 3px rgba(0,0,0,.65);
 }
-/* Energy bar size follows the energy target: 30 / 50 / 100 / 200 / 500. */
+#collection-grid .collection-card .card-equipment-emblem img {
+  display:block; width:88%; height:88%; object-fit:contain;
+  filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
+}
+/* Spread five friendship hearts vertically, with the fifth noticeably higher. */
+#collection-grid .collection-card .collection-card-hearts {
+  top:14px; bottom:38px; flex-direction:column-reverse;
+  justify-content:space-between; gap:0;
+}
+#collection-grid .collection-card .collection-card-hearts i {
+  font-size:20px; line-height:.9; flex:0 0 auto;
+}
+/* Energy bar size follows the target: 30 / 50 / 100 / 200 / 500. */
 #collection-grid .collection-card .collection-card-energy {
   top:auto; bottom:45px; height:36px; width:21px;
 }
