@@ -5068,38 +5068,91 @@ button, input { font: inherit; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::before { left:-7px; }
 #collection-detail-screen .detail-evolution-layout.is-two-up .detail-evolution-label::after { right:-7px; }
 
-/* Collection summary: shared stage templates; NEVER per-vehicle adjustments.
-   Calibrated to iPad. Clipping is intentional for the upper stages. */
-#collection-grid .collection-card .vehicle-area { overflow:hidden; }
+/* Collection summary: canvas-edge positioning only, shared by ALL vehicles.
+   No alpha-bound measurements, per-vehicle offsets, or stage-specific layout
+   engines. The CSS image box represents the entire square asset canvas.
+   bottomOffset = positive means above the name band's upper boundary. */
+#collection-grid .collection-card {
+  --summary-name-top:38px; /* name-band: bottom 8px + height 30px */
+  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:1;
+}
+#collection-grid .collection-card .vehicle-area {
+  position:absolute;
+  left:10px; right:55px; top:9px;
+  bottom:var(--summary-name-top);
+  display:block;
+  overflow:visible; /* clipping is owned by the outer card */
+}
 #collection-grid .collection-card .card-vehicle {
-  width:100%; height:100%; max-width:none; max-height:none;
-  object-fit:contain; object-position:center center;
-  align-self:center; transform-origin:center center;
+  position:absolute; z-index:1;
+  display:block;
+  left:0;
+  bottom:var(--summary-canvas-bottom-offset);
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  object-position:center center;
+  transform:scale(var(--summary-canvas-scale));
+  transform-origin:center bottom;
+  filter:none;
 }
-/* Raise small forms and silhouettes away from the name band. */
-#collection-grid .collection-card[data-stage="2"] .card-vehicle,
-#collection-grid .collection-card.locked .card-vehicle {
-  transform:translateY(-9px) scale(.96);
+/* Keep the locked car identical in geometry to a discovered vehicle.
+   The same shared image-canvas rule applies in every evolution stage. */
+#collection-grid .collection-card[data-stage="2"] {
+  --summary-canvas-scale:.96;
+  --summary-canvas-bottom-offset:12px;
 }
-#collection-grid .collection-card[data-stage="3"] .card-vehicle {
-  transform:translateY(-9px) scale(.884);
+#collection-grid .collection-card[data-stage="3"] {
+  --summary-canvas-scale:.884;
+  --summary-canvas-bottom-offset:12px;
 }
-/* Super robot: -15%; equipped: +15% relative to PR #210. */
-#collection-grid .collection-card[data-stage="4"] .card-vehicle { transform:scale(1.445); }
-#collection-grid .collection-card[data-stage="5"]:not(.complete) .card-vehicle { transform:scale(1.955); }
-/* A medal is a backdrop, while the equipped super robot stays foreground. */
+#collection-grid .collection-card[data-stage="4"] {
+  --summary-canvas-scale:1.445;
+  --summary-canvas-bottom-offset:0px;
+}
+#collection-grid .collection-card[data-stage="5"] {
+  --summary-canvas-scale:1.955;
+  --summary-canvas-bottom-offset:-2px;
+}
+#collection-grid .collection-card.complete {
+  --summary-canvas-scale:1.445;
+  --summary-canvas-bottom-offset:0px;
+}
+/* The shared geometry always wins over legacy category-specific transforms. */
+#collection-grid .collection-card .card-vehicle.is-vehicle-form,
+#collection-grid .collection-card .card-vehicle.is-evolved-form,
+#collection-grid .collection-card .card-vehicle.is-robot-form,
+#collection-grid .collection-card .card-vehicle.is-equipped-super-robot {
+  width:100%;
+  height:auto;
+  max-width:none;
+  max-height:none;
+  align-self:auto;
+  transform:scale(var(--summary-canvas-scale));
+  transform-origin:center bottom;
+}
+#collection-grid .collection-card .card-vehicle.is-pre-friendship {
+  filter:grayscale(1);
+}
+#collection-grid .collection-card .card-silhouette-image {
+  filter:grayscale(1) brightness(.075) contrast(1.25);
+  opacity:.94;
+}
 #collection-grid .collection-card.complete .card-vehicle {
-  transform:scale(1.445);
   filter:drop-shadow(2px 0 1px rgba(241,250,255,.98))
          drop-shadow(-2px 0 1px rgba(241,250,255,.98))
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
+/* Medal is deliberately behind the robot, independent from image anchoring. */
 #collection-grid .collection-card .card-master-medal-bg {
   inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
 }
-/* Same crossed-swords art as the equipment tab, above the energy bar.
-   No colored card frame/background is introduced. */
+/* Preserve the currently approved badge and its placement. */
 #collection-grid .collection-card .card-equipment-emblem {
   position:absolute; z-index:6; top:9px; right:11px;
   width:32px; height:32px; box-sizing:border-box;
@@ -5113,7 +5166,9 @@ button, input { font: inherit; }
   display:block; width:88%; height:88%; object-fit:contain;
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
-/* Spread five friendship hearts vertically, with the fifth noticeably higher. */
+/* Name band remains foreground, including where large canvases overlap. */
+#collection-grid .collection-card .name-band { z-index:8; }
+/* Retain heart spacing from the approved release. */
 #collection-grid .collection-card .collection-card-hearts {
   top:14px; bottom:38px; flex-direction:column-reverse;
   justify-content:space-between; gap:0;
@@ -5121,6 +5176,7 @@ button, input { font: inherit; }
 #collection-grid .collection-card .collection-card-hearts i {
   font-size:20px; line-height:.9; flex:0 0 auto;
 }
+
 /* Energy bar size follows the target: 30 / 50 / 100 / 200 / 500. */
 #collection-grid .collection-card .collection-card-energy {
   top:auto; bottom:45px; height:36px; width:21px;
