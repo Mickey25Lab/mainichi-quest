@@ -23,7 +23,7 @@
 ## バージョン表示ルール
 
 - 画面下部のバージョン表示は、本番では `Version <version>`、Cloudflare Branch Previewでは `Version <version>_P_<branch-prefix>_<short-sha>` とする。
-- `branch-prefix` は実際のブランチ名の先頭15文字（半角文字換算）、`short-sha` は実際のhead commit SHAの先頭7文字を使う。例：`Version 0.3.52_P_fix/release-ve_14d0bb7`。例示値を固定しない。
+- `branch-prefix` は実際のブランチ名の先頭15文字（半角文字換算）、`short-sha` は実際のhead commit SHAの先頭7文字を使う。例：`Version 0.3.52_P_fix/release-ver_14d0bb7`。例示値を固定しない。
 - `Preview_`・長いブランチ名全文・ビルド日時は画面に表示しない。バージョン表示全体を小さめのフォントで1行表示し、折り返さない。完全SHAや詳細なビルド情報はGitHub・デプロイメタデータなどで確認する。
 - 表示方式の変更時は関連する正式仕様MDとテストも同じPRで必要に応じて更新する。
 
