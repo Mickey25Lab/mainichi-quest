@@ -44,6 +44,8 @@ jobs:
               return;
             }
 
+            const { data: pull } = await github.rest.pulls.get({owner, repo, pull_number: prNumber});
+            const commitSha = pull.head.sha;
             // Always read the latest Cloudflare comment: created events can
             // arrive before Cloudflare edits the deployment result in place.
             const comments = await github.paginate(github.rest.issues.listComments, {
@@ -74,12 +76,16 @@ jobs:
               '## 📱 iPad用 Cloudflare Preview',
               '**✅ デプロイ成功**',
               '',
+              '**PR:** #' + prNumber,
+              '**最新コミットID (SHA):** [`' + commitSha + '`](https://github.com/' + owner + '/' + repo + '/commit/' + commitSha + ')',
+              '',
               '**[Previewを開く](' + url + ')**',
               '',
               '![Preview URL QRコード](' + qrUrl + ')',
               '',
               'このQRコードは上記のブランチPreview URLを開きます。',
             ].join('\n');
+            // Existing PR updates get an updated SHA when the next successful preview arrives.
             const previous = comments.find(c => c.user?.login === 'github-actions[bot]' &&
               c.body?.includes(marker));
             if (previous) {
