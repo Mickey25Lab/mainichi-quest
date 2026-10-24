@@ -1,0 +1,94 @@
+name: Report PR CI completion
+
+# Run trusted code on the default branch, not pull request code.
+on:
+  workflow_run:
+    workflows:
+      - Check unchanged PR version
+      - Browser smoke tests (Playwright)
+      - UI geometry audit
+    types: [completed]
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: pr-ci-status-notification
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify PR of aggregate CI state
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const marker = '<!-- mainichi-quest-ci-completion -->';
+            const required = [
+              'Cloudflare Pages',
+              'Check unchanged PR version',
+              'Playwright browser smoke tests',
+              'Multi-viewport UI geometry',
+            ];
+            // Only same-repository PRs; never execute or check out head code.
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+            for (const pr of prs) {
+              if (pr.head.repo?.full_name !== context.repo.owner + '/' + repo) continue;
+              const sha = pr.head.sha;
+              const result = await github.rest.checks.listForRef({
+                owner, repo, ref: sha, per_page: 100,
+              });
+              const checks = result.data.check_runs;
+              const byName = new Map();
+              for (const check of checks) {
+                if (!required.includes(check.name)) continue;
+                const previous = byName.get(check.name);
+                if (!previous || new Date(check.started_at || 0) > new Date(previous.started_at || 0)) {
+                  byName.set(check.name, check);
+                }
+              }
+              // Only report settled sets. Don't mistake missing/in-progress checks for success.
+              if (required.some(name => !byName.has(name) || byName.get(name).status !== 'completed')) continue;
+              const outcome = required.every(name => byName.get(name).conclusion === 'success')
+                ? '✅ 全必須チェック成功'
+                : '❌ CI要確認（失敗・キャンセル等あり）';
+              const lines = required.map(name => {
+                const c = byName.get(name);
+                const icon = c.conclusion === 'success' ? '✅' : '❌';
+                return '- ' + icon + ' ' + name + ': ' + c.conclusion;
+              });
+              const body = [
+                marker,
+                '## PR CI完了通知',
+                '**' + outcome + '**',
+                '',
+                'PR: #' + pr.number,
+                'Head SHA: \`' + sha + '\`',
+                '',
+                ...lines,
+                '',
+                'この通知はCI結果の報告のみです。PRのマージ承認・自動マージ設定は変更しません。',
+              ].join('\n');
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner, repo, issue_number: pr.number, per_page: 100,
+              });
+              const old = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.includes(marker));
+              if (old?.body === body) continue;
+              if (old) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: old.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+              }
+            }

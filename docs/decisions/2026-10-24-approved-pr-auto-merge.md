@@ -32,3 +32,10 @@ GitHubの標準Auto-mergeを、対象PRの**明示的マージ承認後**にGitH
 
 ## 将来拡張
 CI失敗の自動修正と、チャット外での完了通知は、専用の明示承認済み実行環境または予約・イベントタスクを実際に設定して検証するまで対象外。
+
+## CI結果通知の追加設計
+- `workflow_run`（GitHub上の3テスト終了時）と10分ごとの `schedule`（Cloudflareチェック終了時の取りこぼし防止）でPRの最新head SHAを走査する。
+- Cloudflare Pages、バージョンチェック、Playwright、UI倍率の4チェックがすべて completed の時のみ、PRにCI結果コメントを1件作成・更新する。新コミットが出ればSHAに対応した新結果へ更新する。
+- `pull_request_target` やPRのコードcheckoutは使用しない。権限はCI読み取り・PRコメント書き込みに限定する。
+- ChatGPTへの直接即時投稿はGitHub Actionsだけでは実現しない。ChatGPT自動化タスクを別途登録して結果を取得し通知する。タスク登録の実行結果をもってのみ有効と報告する。
+- チャット側の通知周期はGitHub通知とは別で、即時性や失敗自動修正は保証しない。
