@@ -28,6 +28,30 @@ test("guided 2x2 questions never use a repeated tens/ones multiplier digit", () 
   }
 });
 
+function assertGeneratedQuestionSet(questions, { maxDigit }) {
+  assert.equal(questions.length, 5);
+  assert.equal(new Set(questions.map((question) => `${question.multiplicand}*${question.multiplier}`)).size, 5);
+  questions.forEach((question) => {
+    const multiplierTens = Math.floor(question.multiplier / 10);
+    const multiplierOnes = question.multiplier % 10;
+    assert.ok(question.multiplicand >= 10 && question.multiplicand <= maxDigit * 10 + maxDigit);
+    assert.ok(multiplierTens >= 1 && multiplierTens <= maxDigit);
+    assert.ok(multiplierOnes >= 1 && multiplierOnes <= maxDigit);
+    assert.notEqual(multiplierTens, multiplierOnes);
+    assert.equal(question.partial1, question.multiplicand * multiplierOnes);
+    assert.equal(question.partial2, question.multiplicand * multiplierTens);
+    assert.equal(question.product, question.multiplicand * question.multiplier);
+  });
+}
+
+test("guided and unguided 2x2 question sets keep their own ranges and calculation steps", () => {
+  const makeQuestions = loadTwoDigitQuestionGenerator();
+  for (let run = 0; run < 40; run += 1) {
+    assertGeneratedQuestionSet(makeQuestions(), { maxDigit: 5 });
+    assertGeneratedQuestionSet(makeQuestions(true), { maxDigit: 6 });
+  }
+});
+
 test("the cyan operand guide is a rounded connected background in the 2x2 panel", () => {
   assert.match(html, /id="multiplication-2x2-operation-guide"/);
   assert.match(html, /id="multiplication-2x2-sum-operator"/);
