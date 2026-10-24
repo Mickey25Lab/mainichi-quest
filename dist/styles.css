@@ -5103,23 +5103,23 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.96;
-  --summary-canvas-bottom-offset:12px;
+  --summary-canvas-scale:.50;
+  --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.884;
-  --summary-canvas-bottom-offset:12px;
+  --summary-canvas-scale:.50;
+  --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:1.445;
+  --summary-canvas-scale:.70;
   --summary-canvas-bottom-offset:0px;
 }
 #collection-grid .collection-card[data-stage="5"] {
-  --summary-canvas-scale:1.955;
-  --summary-canvas-bottom-offset:-2px;
+  --summary-canvas-scale:.85;
+  --summary-canvas-bottom-offset:0px;
 }
 #collection-grid .collection-card.complete {
-  --summary-canvas-scale:1.445;
+  --summary-canvas-scale:.70;
   --summary-canvas-bottom-offset:0px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
