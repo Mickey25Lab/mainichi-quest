@@ -58,7 +58,7 @@ button, input { font: inherit; }
   position: relative;
   width: 100vw;
   height: 100dvh;
-  min-height: 520px;
+  min-height: 0;
   overflow: hidden;
   background-color: #000;
   background-image: none;
