@@ -4864,7 +4864,7 @@
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>${equipmentBadge}
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
-        ${discovered ? `<span class="card-rarity">${vehicle.rarityStars}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
+        ${discovered ? `<span class="card-rarity rarity-${vehicle.rarityStars.length}" aria-label="レアリティ ${vehicle.rarityStars.length}つ星">${[...vehicle.rarityStars].map(() => `<i aria-hidden="true">★</i>`).join("")}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
     }).join("");
     revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
