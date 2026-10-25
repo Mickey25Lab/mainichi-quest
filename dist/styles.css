@@ -5172,9 +5172,10 @@ button, input { font: inherit; }
   --summary-canvas-bottom-offset:-95px;
 }
 #collection-grid .collection-card.complete {
-  /* Left-bottom bust, with the medal independently positioned behind. */
-  --summary-canvas-scale:1.45;
-  --summary-canvas-bottom-offset:-185px;
+  /* 30% larger than the production composition after centering the canvas. */
+  --summary-canvas-scale:.72;
+  /* Place the robot waist at the name band upper boundary. */
+  --summary-canvas-bottom-offset:-70px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
 #collection-grid .collection-card .card-vehicle.is-vehicle-form,
@@ -5202,20 +5203,20 @@ button, input { font: inherit; }
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
-/* Master medal: a bust-up equipped robot spills beyond the bottom/left card
-   boundary while the smaller medal floats behind it in the upper right. */
+/* Restore the approved production medal composition: large translucent
+   medal behind the glowing equipped robot, centered on the full card canvas.
+   The wider centered canvas needs 91% instead of the old 114% to preserve
+   approximately the same absolute medal image size. */
 #collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
-  left:-60px;
+  left:0;
   transform-origin:center bottom;
 }
 #collection-grid .collection-card .card-master-medal-bg {
-  inset:auto;
   z-index:0;
-  top:2px;
-  right:0;
-  width:70%;
-  height:70%;
-  opacity:.95;
+  inset:-8% 4.5%;
+  width:91%;
+  height:116%;
+  opacity:.63;
   object-fit:contain;
 }
 /* Equipment cards: make the standalone item the star. A shared, translucent,
@@ -5234,9 +5235,10 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card .card-super-robot-ghost {
   z-index:1;
-  left:-65px;
-  bottom:-110px;
-  transform:scale(1.50);
+  left:-55px;
+  /* Match the unequipped super robot display scale (stage 4). */
+  bottom:-75px;
+  transform:scale(.75);
   transform-origin:center bottom;
   opacity:.35;
   filter:grayscale(.30);
@@ -5244,8 +5246,9 @@ button, input { font: inherit; }
 #collection-grid .collection-card .card-equipment-feature {
   z-index:2;
   left:0;
-  bottom:0;
-  transform:scale(.90);
+  /* Halve the old size and center the equipment vertically in the card. */
+  bottom:5px;
+  transform:scale(.45);
   transform-origin:center bottom;
   filter:drop-shadow(0 0 5px rgba(255,238,145,.85));
 }
