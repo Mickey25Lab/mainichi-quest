@@ -4153,7 +4153,7 @@
       selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
     );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    if (selectionMode) $("collection-header-title").textContent = "サーチライトで なかまを みつけよう！";
+    if (selectionMode) $("collection-header-title").innerHTML = "どののりものが<ruby>育<rt>そだ</rt></ruby>つかな？";
     else renderCollectionBaseTitle();
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
@@ -4234,7 +4234,7 @@
       // Two bounces: bottom, top, then selected row.
       await move(row,[top,bottom,top,y],"Y",h);
       row.classList.add("is-locked");
-      await scanPause(180);
+      await scanPause(290);
       // Flash ONLY after the row and column are both fully resolved.
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
