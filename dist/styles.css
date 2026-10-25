@@ -3409,8 +3409,10 @@ button, input { font: inherit; }
 .collection-categories {
   position:absolute;
   z-index:12;
-  left:calc((100vw - var(--content-stage-width)) / 2 + 24px);
-  bottom:calc((100dvh - var(--content-stage-height)) / 2 - 10px);
+  left:calc((100vw - var(--content-stage-width)) / 2 + 24px * var(--collection-nav-scale, 1));
+  bottom:calc((100dvh - var(--content-stage-height)) / 2 - 10px * var(--collection-nav-scale, 1));
+  transform-origin:left bottom;
+  transform:scale(var(--collection-nav-scale, 1));
   height:48px;
   display:flex;
   align-items:flex-start;
@@ -5267,55 +5269,9 @@ button, input { font: inherit; }
 .profile-card .admin-reset-button { background:#fff; color:#b9363e; border:2px solid #b9363e; }
 .admin-setting-row[hidden], .profile-card .admin-action-button[hidden] { display:none; }
 
-
-/* Mobile portrait: keep the collection tab strip entirely in the viewport.
-   The strip is viewport-positioned (outside the scaled 1400x1050 canvas),
-   so it needs its own responsive sizing. iPad/landscape remain unchanged. */
-@media (max-width: 700px) and (orientation: portrait) {
-  .collection-screen .collection-categories {
-    left: max(8px, env(safe-area-inset-left));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    transform-origin: left bottom;
-    transform: scale(.78);
-  }
-  /* Question quit confirmation is viewport-level, not canvas-scaled.
-     Permit the warning to wrap rather than overflow on narrow phones. */
-  #quit-confirm .quit-confirm-card {
-    box-sizing: border-box;
-    width: min(92vw, 420px);
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-    padding: 24px 18px;
-    white-space: normal;
-    border-width: 3px;
-    border-radius: 22px;
-  }
-  #quit-confirm .quit-confirm-card h2 {
-    font-size: clamp(25px, 7vw, 34px);
-    margin-bottom: 16px;
-    white-space: normal;
-  }
-  #quit-confirm .quit-confirm-card p,
-  #quit-confirm .quit-confirm-card p span,
-  #quit-confirm .quit-confirm-card p strong {
-    font-size: clamp(18px, 4.8vw, 24px);
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  #quit-confirm .quit-confirm-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-  #quit-confirm .quit-confirm-actions button {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    min-height: 56px;
-    padding: 10px;
-    font-size: clamp(18px, 5vw, 24px);
-  }
-}
-@media (max-width: 450px) and (orientation: portrait) {
-  .collection-screen .collection-categories { transform: scale(.65); }
-}
+/* Scale the collection navigation with the validated 1400x1050 canvas,
+   not with a separate phone/tablet breakpoint. */
+.quit-confirm-card { white-space:normal; box-sizing:border-box; max-width:calc(100% - 24px); }
+.quit-confirm-card p, .quit-confirm-card p span, .quit-confirm-card p strong { white-space:normal; overflow-wrap:anywhere; }
+.quit-confirm-actions { flex-wrap:wrap; }
+.quit-confirm-actions button { max-width:100%; }
