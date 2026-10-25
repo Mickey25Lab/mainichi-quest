@@ -5275,3 +5275,35 @@ button, input { font: inherit; }
 .quit-confirm-card p, .quit-confirm-card p span, .quit-confirm-card p strong { white-space:normal; overflow-wrap:anywhere; }
 .quit-confirm-actions { flex-wrap:wrap; }
 .quit-confirm-actions button { max-width:100%; }
+
+/* Collection footer controls share the same 1400x1050 canvas coordinates.
+   The viewport-centred stage scale is the only responsive size rule:
+   no fixed-size (inverse-scale) timer and no viewport-bottom anchored tabs. */
+.collection-screen .collection-categories,
+.collection-detail-screen .collection-categories {
+  left:calc((100vw - var(--content-stage-width)) / 2 + 24px * var(--collection-nav-scale, 1));
+  bottom:calc((100dvh - var(--content-stage-height)) / 2 + 4px * var(--collection-nav-scale, 1));
+  height:52px;
+  transform-origin:left bottom;
+  transform:scale(var(--collection-nav-scale, 1));
+}
+.collection-screen .collection-categories .category-button,
+.collection-detail-screen .collection-categories .category-button {
+  height:52px;
+  min-height:52px;
+  max-height:52px;
+}
+/* Timers live *inside* their scaled stages. Keep their geometric size
+   entirely in logical canvas pixels, and do not cancel the stage scale. */
+.collection-stage > .collection-time-panel,
+.collection-detail-stage .detail-header .collection-time {
+  width:180px;
+  min-width:180px;
+  height:52px;
+  right:4px;
+  bottom:4px;
+  padding:4px 10px;
+  font-size:25px;
+  border-radius:14px;
+  transform:none;
+}
