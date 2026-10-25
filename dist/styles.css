@@ -5211,13 +5211,34 @@ button, input { font: inherit; }
   left:0;
   transform-origin:center bottom;
 }
-#collection-grid .collection-card .card-master-medal-bg {
+/* The pale medal artwork is unchanged; only its size and vertical center move.
+   A separate wide halo carries the stronger light without washing out the medal. */
+#collection-grid .collection-card.complete .vehicle-area::before {
+  content:"";
+  position:absolute;
   z-index:0;
-  inset:-8% 4.5%;
-  width:91%;
-  height:116%;
+  pointer-events:none;
+  left:-25%;
+  right:-25%;
+  top:-40%;
+  bottom:-38%;
+  background:
+    radial-gradient(ellipse 44% 45% at 50% 48%,rgba(157,247,255,.98) 0%,rgba(47,201,255,.88) 32%,rgba(15,121,255,.60) 60%,transparent 100%),
+    radial-gradient(ellipse 72% 65% at 50% 48%,rgba(58,214,255,.85),rgba(15,127,255,.48) 55%,transparent 100%);
+  filter:blur(14px);
+}
+#collection-grid .collection-card .card-master-medal-bg {
+  z-index:1;
+  inset:auto;
+  left:13.5%;
+  top:-16%;
+  width:73%;
+  height:93%;
   opacity:.63;
   object-fit:contain;
+}
+#collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
+  z-index:2;
 }
 /* Equipment cards: make the standalone item the star. A shared, translucent,
    unequipped super-robot bust is placed behind it. No vehicle-specific tuning. */
@@ -5237,7 +5258,7 @@ button, input { font: inherit; }
   z-index:1;
   left:-55px;
   /* Match the unequipped super robot display scale (stage 4). */
-  bottom:-75px;
+  bottom:-38px;
   transform:scale(.75);
   transform-origin:center bottom;
   opacity:.35;
@@ -5245,10 +5266,10 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card .card-equipment-feature {
   z-index:2;
-  left:0;
-  /* Halve the old size and center the equipment vertically in the card. */
+  left:15px;
+  /* 30% larger than the previous equipment size; retain its vertical slot. */
   bottom:5px;
-  transform:scale(.45);
+  transform:scale(.59);
   transform-origin:center bottom;
   filter:drop-shadow(0 0 5px rgba(255,238,145,.85));
 }
