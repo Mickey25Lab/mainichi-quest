@@ -4858,8 +4858,13 @@
       const grayscaleClass = formStage === 2 && !progress.friendly ? " is-pre-friendship" : "";
       const artwork = discovered ? `<img class="card-vehicle ${formClass}${grayscaleClass}" src="${artPath}" alt="" decoding="async">`
         : `<img class="card-vehicle card-silhouette-image" src="${vehicleArtworkPath(0)}" alt="" decoding="async">`;
+      // Stage 5 summary: standalone equipment in front, with a transparent bust
+      // of its unequipped super robot behind. Master-medal cards keep their
+      // equipped robot and medal composition instead.
+      const equipmentComposition = discovered && formStage === 5 && !complete
+        ? `<img class="card-super-robot-ghost" src="${superRobotArtworkPath(vehicle.index)}" alt="" decoding="async"><img class="card-equipment-feature" src="${equipmentArtworkPath(vehicle.index)}" alt="" decoding="async">`
+        : "";
       const medal = complete ? `<img class="card-master-medal-bg" src="${masterMedalArtworkPath(vehicle.index)}" alt="" decoding="async">` : "";
-      const equipmentBadge = !complete && formStage === 5 ? `<span class="card-equipment-emblem" aria-label="スペシャル装備"><img src="./assets/ui/collection_tabs/collection_tab_special_equipment.png" alt="" aria-hidden="true" decoding="async"></span>` : "";
       const isNew = showSessionMarkers && state.collectionNewVehicleIndexes.has(vehicle.index);
       const before = state.resultStartProgress[vehicle.index] || emptyVehicleProgress();
       const friendshipGrew = progress.friendship > before.friendship;
@@ -4868,11 +4873,11 @@
       const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
       const selectionDisabled = (state.collectionMode === "phonics-reward-select" && !discovered) || capsuleDisabled;
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
-        <span class="card-garage"></span><span class="vehicle-area">${medal}${artwork}</span>${equipmentBadge}
+        <span class="card-garage"></span><span class="vehicle-area">${medal}${equipmentComposition || artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
         ${discovered ? `<span class="card-rarity rarity-${vehicle.rarityStars.length}" aria-label="レアリティ ${vehicle.rarityStars.length}つ星">${[...vehicle.rarityStars].map(() => `<i aria-hidden="true">★</i>`).join("")}</span>` : ""}${status}${isNew ? '<span class="collection-card-new-ribbon"><i>NEW</i></span>' : isUp ? '<span class="collection-card-up-ribbon"><i>UP</i></span>' : ""}</button>`;
     }).join("");
-    revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image");
+    revealCollectionArtworkTogether($("collection-grid"), ".card-vehicle, .card-master-medal-bg, .card-silhouette-image, .card-super-robot-ghost, .card-equipment-feature");
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
       if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }

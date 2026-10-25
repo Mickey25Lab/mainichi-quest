@@ -5120,7 +5120,7 @@ button, input { font: inherit; }
    Every rarity uses precisely the same 14px glyph; no artwork changes. */
 #collection-grid .collection-card .card-rarity {
   position:absolute;
-  z-index:9;
+  z-index:12;
   top:auto; left:auto;
   right:10px;
   bottom:8px;
@@ -5175,7 +5175,7 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card .vehicle-area {
   position:absolute;
-  left:10px; right:55px; top:9px;
+  left:10px; right:10px; top:9px;
   bottom:var(--summary-name-top);
   display:block;
   overflow:visible; /* clipping is owned by the outer card */
@@ -5199,24 +5199,27 @@ button, input { font: inherit; }
 /* Keep the locked car identical in geometry to a discovered vehicle.
    The same shared image-canvas rule applies in every evolution stage. */
 #collection-grid .collection-card[data-stage="2"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="3"] {
-  --summary-canvas-scale:.50;
+  --summary-canvas-scale:.45;
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  --summary-canvas-scale:.75;
+  --summary-canvas-bottom-offset:-38px;
 }
 #collection-grid .collection-card[data-stage="5"] {
-  --summary-canvas-scale:.85;
-  --summary-canvas-bottom-offset:0px;
+  /* Upper-body portrait: keep the head inside the card and crop the legs. */
+  --summary-canvas-scale:1.30;
+  --summary-canvas-bottom-offset:-95px;
 }
 #collection-grid .collection-card.complete {
-  --summary-canvas-scale:.70;
-  --summary-canvas-bottom-offset:0px;
+  /* 30% larger than the production composition after centering the canvas. */
+  --summary-canvas-scale:.72;
+  /* Place the robot waist at the name band upper boundary. */
+  --summary-canvas-bottom-offset:-70px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
 #collection-grid .collection-card .card-vehicle.is-vehicle-form,
@@ -5244,12 +5247,80 @@ button, input { font: inherit; }
          drop-shadow(0 2px 1px rgba(241,250,255,.98))
          drop-shadow(0 -2px 1px rgba(241,250,255,.98));
 }
-/* Medal is deliberately behind the robot, independent from image anchoring. */
-#collection-grid .collection-card .card-master-medal-bg {
-  inset:-8% -7%; width:114%; height:116%; opacity:.63; object-fit:contain;
+/* Restore the approved production medal composition: large translucent
+   medal behind the glowing equipped robot, centered on the full card canvas.
+   The wider centered canvas needs 91% instead of the old 114% to preserve
+   approximately the same absolute medal image size. */
+#collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
+  left:0;
+  transform-origin:center bottom;
 }
-/* Preserve the currently approved badge and its placement. */
+/* The pale medal artwork is unchanged; only its size and vertical center move.
+   A separate wide halo carries the stronger light without washing out the medal. */
+#collection-grid .collection-card.complete .vehicle-area::before {
+  content:"";
+  position:absolute;
+  z-index:0;
+  pointer-events:none;
+  left:-25%;
+  right:-25%;
+  top:-40%;
+  bottom:-38%;
+  background:
+    radial-gradient(ellipse 44% 45% at 50% 48%,rgba(157,247,255,.98) 0%,rgba(47,201,255,.88) 32%,rgba(15,121,255,.60) 60%,transparent 100%),
+    radial-gradient(ellipse 72% 65% at 50% 48%,rgba(58,214,255,.85),rgba(15,127,255,.48) 55%,transparent 100%);
+  filter:blur(14px);
+}
+#collection-grid .collection-card .card-master-medal-bg {
+  z-index:1;
+  inset:auto;
+  left:13.5%;
+  top:-16%;
+  width:73%;
+  height:93%;
+  opacity:.63;
+  object-fit:contain;
+}
+#collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
+  z-index:2;
+}
+/* Equipment cards: make the standalone item the star. A shared, translucent,
+   unequipped super-robot bust is placed behind it. No vehicle-specific tuning. */
+#collection-grid .collection-card .card-super-robot-ghost,
+#collection-grid .collection-card .card-equipment-feature {
+  position:absolute;
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  pointer-events:none;
+}
+#collection-grid .collection-card .card-super-robot-ghost {
+  z-index:1;
+  left:-55px;
+  /* Match the unequipped super robot display scale (stage 4). */
+  bottom:-38px;
+  transform:scale(.75);
+  transform-origin:center bottom;
+  opacity:.35;
+  filter:grayscale(.30);
+}
+#collection-grid .collection-card .card-equipment-feature {
+  z-index:2;
+  left:15px;
+  /* 30% larger than the previous equipment size; retain its vertical slot. */
+  bottom:5px;
+  transform:scale(.59);
+  transform-origin:center bottom;
+  filter:drop-shadow(0 0 5px rgba(255,238,145,.85));
+}
+/* Equipment and master artwork are intentionally clipped by the card frame. */
+/* No equipment badge on summary cards: the enlarged artwork is the cue. */
 #collection-grid .collection-card .card-equipment-emblem {
+  display:none;
   position:absolute; z-index:6; top:9px; right:11px;
   width:32px; height:32px; box-sizing:border-box;
   display:grid; place-items:center; pointer-events:none;
@@ -5262,27 +5333,36 @@ button, input { font: inherit; }
   display:block; width:88%; height:88%; object-fit:contain;
   filter:drop-shadow(0 0 2px rgba(255,230,127,.8));
 }
-/* Name band remains foreground, including where large canvases overlap. */
-/* Extend only the name-band background to the card's right edge.
-   Old name text center was midpoint of left:8px / right:50px.
-   Keep exactly that midpoint by reserving the added 42px on the RIGHT
-   for rarity stars, while the text remains centered in the original span. */
+/* Center card artwork and name text independently of the rarity stars.
+   Keep the name above other overlays so descenders are not obscured. */
 #collection-grid .collection-card .name-band {
-  z-index:8;
+  z-index:10;
   right:8px;
   padding:0;
-  justify-content:flex-start;
+  justify-content:center;
+  overflow:visible;
 }
 #collection-grid .collection-card .name-band-text {
   display:block;
   box-sizing:border-box;
-  width:calc(100% - 42px);
+  width:100%;
   min-width:0;
   padding:0 5px;
-  overflow:hidden;
+  position:relative;
+  z-index:1;
+  overflow:visible;
   text-overflow:ellipsis;
   white-space:nowrap;
   text-align:center;
+}
+/* A single shared horizontal centerline (28px from the card's right edge)
+   governs the whole rarity-star cluster, all five hearts, and every meter.
+   Their vertical placement and stage-dependent meter widths remain untouched. */
+#collection-grid .collection-card .card-rarity,
+#collection-grid .collection-card .collection-card-hearts,
+#collection-grid .collection-card .collection-card-energy {
+  right:28px;
+  transform:translateX(50%);
 }
 /* Five hearts: same 12px clearance from the card top and the name
    band's top (38px from card bottom). space-between keeps equal intervals.
@@ -5303,6 +5383,18 @@ button, input { font: inherit; }
 #collection-grid .collection-card[data-stage="4"] .collection-card-energy { height:65px; width:26px; }
 #collection-grid .collection-card[data-stage="5"] .collection-card-energy { height:83px; width:29px; }
 #collection-grid .collection-card.complete .collection-card-energy { height:100px; width:31px; }
+
+/* Stage-dependent energy meter widths still differ, but share the same center. */
+#collection-grid .collection-card[data-stage="3"] .collection-card-energy,
+#collection-grid .collection-card[data-stage="4"] .collection-card-energy,
+#collection-grid .collection-card[data-stage="5"] .collection-card-energy,
+#collection-grid .collection-card.complete .collection-card-energy {
+  right:28px;
+  transform:translateX(50%);
+}
+/* Wait for both layers to preload so the equipment composition appears at once. */
+#collection-grid.is-art-loading .card-super-robot-ghost,
+#collection-grid.is-art-loading .card-equipment-feature { visibility:hidden; }
 
 /* Developer and parent dialogs: explicit light inputs, quiet secondary actions. */
 .profile-card input,
