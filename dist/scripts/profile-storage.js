@@ -93,7 +93,7 @@
       enabledModes: {},
       energyMultipliers: {},
       dailyTargetCounts: {},
-      freePlayEnabled: true,
+      freePlayEnabled: false,
       freePlayEnergyMode: "normal"
     };
   }
@@ -168,7 +168,7 @@
     profile.enabledModes = value.enabledModes && typeof value.enabledModes === "object" ? clone(value.enabledModes) : {};
     profile.energyMultipliers = value.energyMultipliers && typeof value.energyMultipliers === "object" ? clone(value.energyMultipliers) : {};
     profile.dailyTargetCounts = value.dailyTargetCounts && typeof value.dailyTargetCounts === "object" ? clone(value.dailyTargetCounts) : {};
-    profile.freePlayEnabled = value.freePlayEnabled !== false;
+    profile.freePlayEnabled = value.freePlayEnabled === true;
     profile.freePlayEnergyMode = value.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
     return profile;
   }
@@ -443,7 +443,7 @@
         enabledModes: profile.enabledModes || {},
         energyMultipliers: profile.energyMultipliers || {},
         dailyTargetCounts: profile.dailyTargetCounts || {},
-        freePlayEnabled: profile.freePlayEnabled !== false,
+        freePlayEnabled: profile.freePlayEnabled === true,
         freePlayEnergyMode: profile.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal"
       });
     }
@@ -453,7 +453,7 @@
         profile.enabledModes = settings.enabledModes && typeof settings.enabledModes === "object" ? clone(settings.enabledModes) : {};
         profile.energyMultipliers = settings.energyMultipliers && typeof settings.energyMultipliers === "object" ? clone(settings.energyMultipliers) : {};
         profile.dailyTargetCounts = settings.dailyTargetCounts && typeof settings.dailyTargetCounts === "object" ? clone(settings.dailyTargetCounts) : {};
-        profile.freePlayEnabled = settings.freePlayEnabled !== false;
+        profile.freePlayEnabled = settings.freePlayEnabled === true;
         profile.freePlayEnergyMode = settings.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
       });
     }

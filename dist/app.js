@@ -2344,7 +2344,7 @@
       mission,
       items,
       allComplete: items.length > 0 && items.every((item) => item.remaining === 0),
-      freePlayEnabled: settings.freePlayEnabled !== false,
+      freePlayEnabled: settings.freePlayEnabled === true,
       freePlayEnergyMode: settings.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal"
     };
   }
@@ -2378,6 +2378,7 @@
     });
     const banner = $("mode-select-mission-complete");
     banner.hidden = !overview.allComplete;
+    banner.classList.toggle("is-final", overview.allComplete && !overview.freePlayEnabled);
   }
 
   function isModeAvailableForMission(mode) {
@@ -5662,7 +5663,7 @@
 
   function renderParentFreePlaySettings() {
     const settings = parentDraftForProfile(parentSettingsProfileId);
-    const enabled = settings?.freePlayEnabled !== false;
+    const enabled = settings?.freePlayEnabled === true;
     const energyMode = settings?.freePlayEnergyMode === "almost-zero" ? "almost-zero" : "normal";
     const toggle = $("parent-free-play-toggle");
     toggle.setAttribute("aria-checked", String(enabled));
