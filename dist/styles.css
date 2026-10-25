@@ -726,7 +726,7 @@ button, input { font: inherit; }
 .mode-select-mission-complete {
   position:absolute;
   z-index:20;
-  inset:8% 7%;
+  inset:12.2% 11.3%;
   width:auto;
   min-height:0;
   transform:none;
@@ -734,10 +734,10 @@ button, input { font: inherit; }
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:32px;
-  padding:70px 58px;
+  gap:36px;
+  padding:66px 54px;
   box-sizing:border-box;
-  border:8px solid #ffe3a0;
+  border:9px solid #ffe09a;
   border-radius:68px;
   color:#fff;
   background:
@@ -770,7 +770,7 @@ button, input { font: inherit; }
   display:block;
   max-width:100%;
   color:#fff7ce;
-  font-size:67px;
+  font-size:76px;
   font-weight:1000;
   line-height:1.55;
   -webkit-text-stroke:1px rgba(35,87,108,.6);
@@ -778,7 +778,7 @@ button, input { font: inherit; }
 }
 .mode-select-mission-complete span {
   display:block;
-  font-size:44px;
+  font-size:48px;
   font-weight:900;
   line-height:1.65;
   text-shadow:0 5px 9px rgba(0,39,78,.6);
@@ -787,7 +787,7 @@ button, input { font: inherit; }
 .mode-select-mission-complete ruby { ruby-align:center; }
 .mode-select-mission-complete rt { font-size:.43em; font-weight:800; text-shadow:none; }
 .mode-select-mission-complete.is-final {
-  top:8%;
+  top:12.2%;
   transform:none;
 }
 /* Fixed logical canvas: viewport-height media rules would now shrink the same
@@ -4358,18 +4358,6 @@ button, input { font: inherit; }
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.20),0 5px 12px rgba(0,9,32,.3);
 }
 .mode-select-choice.is-complete .mode-select-remaining { color:#fff; }
-.mode-select-mission-complete {
-  padding:8px 20px;
-  border:1px solid rgba(255,255,255,.55);
-  border-radius:12px;
-  background:rgba(6,21,45,.58);
-  box-shadow:none;
-  color:#f3f8ff;
-  text-shadow:0 1px 3px rgba(0,0,0,.45);
-  pointer-events:none;
-}
-.mode-select-mission-complete strong { font-size:clamp(18px,1.9vw,25px); }
-.mode-select-mission-complete span { font-weight:700; }
 
 /* Soft grounded shadows across collection scenes and the detail illustration. */
 .collection-scene-item-super-robot .collection-scene-art {
