@@ -5552,3 +5552,24 @@ button, input { font: inherit; }
 .phonics-scan-impact.is-revealed { animation:mq-phonics-impact .8s ease-out both; }
 .collection-card.is-phonics-scan-winner { z-index:2; outline:4px solid #fff2a0; box-shadow:0 0 22px 9px rgba(255,244,164,.9),0 0 55px 22px rgba(78,230,255,.65)!important; }
 @keyframes mq-phonics-impact {0%{opacity:0;transform:scale(.8)}20%{opacity:1;transform:scale(1.06);background:rgba(255,255,255,.88);box-shadow:0 0 40px 24px #fff,0 0 80px 44px rgba(91,229,255,.84)}100%{opacity:0;transform:scale(1.16);background:transparent;box-shadow:0 0 60px 28px transparent}}
+
+/* Cross-scan polish: thin luminous cores, gentle surrounding glow and a clear final lock. */
+.collection-screen.is-phonics-reward-select .collection-stage > .collection-time-panel { display:none !important; }
+.collection-screen.is-phonics-reward-select .collection-header h2 ruby { ruby-position:over; }
+.collection-screen.is-phonics-reward-select .collection-header h2 rt { font-size:.4em; font-weight:700; }
+.phonics-scan-column {
+  background:linear-gradient(90deg,transparent 0%,rgba(31,179,255,.025) 16%,rgba(40,202,255,.11) 32%,rgba(69,227,255,.24) 44%,rgba(207,251,255,.74) 49%,#ffffff 50%,rgba(207,251,255,.74) 51%,rgba(69,227,255,.24) 56%,rgba(40,202,255,.11) 68%,rgba(31,179,255,.025) 84%,transparent 100%);
+  filter:drop-shadow(0 0 10px rgba(115,237,255,.87)) drop-shadow(0 0 23px rgba(51,189,255,.48));
+}
+.phonics-scan-row {
+  background:linear-gradient(180deg,transparent 0%,rgba(255,187,48,.025) 16%,rgba(255,226,90,.10) 32%,rgba(255,231,114,.24) 44%,rgba(255,250,213,.76) 49%,#ffffff 50%,rgba(255,250,213,.76) 51%,rgba(255,231,114,.24) 56%,rgba(255,226,90,.10) 68%,rgba(255,187,48,.025) 84%,transparent 100%);
+  filter:drop-shadow(0 0 10px rgba(255,226,109,.84)) drop-shadow(0 0 23px rgba(255,190,66,.45));
+}
+.phonics-scan-beam.is-locked { opacity:.5; }
+.collection-card.is-phonics-scan-winner { outline:4px solid #fff; box-shadow:0 0 0 6px rgba(255,255,255,.55),0 0 34px 16px rgba(255,253,212,.98),0 0 86px 36px rgba(86,228,255,.85)!important; }
+@keyframes mq-phonics-impact {
+  0% {opacity:0;transform:scale(.82);background:rgba(255,255,255,0)}
+  18% {opacity:1;transform:scale(1.035);background:rgba(255,255,255,.98);box-shadow:0 0 55px 29px #fff,0 0 110px 55px rgba(116,239,255,.96)}
+  54% {opacity:.95;transform:scale(1.08);background:rgba(255,247,177,.45);box-shadow:0 0 43px 26px #fff4ba,0 0 93px 50px rgba(70,218,255,.78)}
+  100% {opacity:0;transform:scale(1.17);background:transparent;box-shadow:0 0 55px 30px transparent}
+}
