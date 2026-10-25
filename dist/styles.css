@@ -5282,12 +5282,12 @@ button, input { font: inherit; }
 .collection-screen .collection-categories,
 .collection-detail-screen .collection-categories {
   left:calc(50% - 700px * var(--collection-nav-scale, 1) + 24px * var(--collection-nav-scale, 1));
-  top:calc(50% + 525px * var(--collection-nav-scale, 1));
-  bottom:auto;
+  top:auto;
+  bottom:calc(50% - 525px * var(--collection-nav-scale, 1));
   width:max-content;
   height:76px;
   transform-origin:left bottom;
-  transform:translateY(-100%) scale(var(--collection-nav-scale, 1));
+  transform:scale(var(--collection-nav-scale, 1));
 }
 .collection-screen .collection-categories .category-button,
 .collection-detail-screen .collection-categories .category-button {
