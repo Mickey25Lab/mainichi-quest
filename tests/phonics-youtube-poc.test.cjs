@@ -133,10 +133,10 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await completionButton.click();
   await page.locator("#collection-screen.active").waitFor();
   assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-select")), true);
-  assert.equal(await page.locator("#collection-header-title").textContent(), "サーチライトで なかまを みつけよう！");
+  assert.match(await page.locator("#collection-header-title").innerHTML(), /どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？/);
   await page.locator("#phonics-reward-intro:not([hidden])").waitFor();
   assert.equal(await page.locator("#phonics-reward-intro-title").textContent(), "よくがんばったね！");
-  assert.match(await page.locator("#phonics-reward-intro").textContent(), /サーチライトが のりものを えらぶよ！/);
+  assert.match(await page.locator("#phonics-reward-intro").innerHTML(), /どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？/);
   assert.equal(await page.locator("#collection-seconds").textContent(), "60");
   assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-intro-open")), true);
   assert.equal(await page.locator('#collection-grid .collection-card[data-vehicle="0"]').evaluate((node) => getComputedStyle(node).pointerEvents), "none");
@@ -235,9 +235,9 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /function judge\(answer\)[\s\S]*playSimpleCorrectSound\(\)/);
   assert.match(app, /function showReward\([\s\S]*showRewardOverCollection\(\)[\s\S]*playFanfareSound\(\)/);
   assert.match(app, /function renderCollectionBaseTitle\(\)[\s\S]*getActiveProfile\(\)[\s\S]*displayName[\s\S]*ロボット[\s\S]*秘密基地[\s\S]*ひみつきち/);
-  assert.match(app, /if \(selectionMode\) \$\("collection-header-title"\)\.textContent = "サーチライトで なかまを みつけよう！";[\s\S]*else renderCollectionBaseTitle\(\)/);
+  assert.match(app, /if \(selectionMode\) \$\("collection-header-title"\)\.innerHTML = "どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？";[\s\S]*else renderCollectionBaseTitle\(\)/);
   assert.match(html, /id="phonics-grow-confirm"[\s\S]*id="phonics-grow-amount"[\s\S]*♥ \+5/);
-  assert.match(html, /id="phonics-reward-intro"[\s\S]*よくがんばったね！[\s\S]*サーチライトが のりものを えらぶよ！[\s\S]*サーチライトを[\s\S]*スタート/);
+  assert.match(html, /id="phonics-reward-intro"[\s\S]*よくがんばったね！[\s\S]*どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？[\s\S]*サーチライトを[\s\S]*スタート/);
   assert.match(html, /id="phonics-reward-intro"[^>]*quit-confirm[\s\S]*answer-confirm-card quit-confirm-card/);
   assert.match(css, /\.phonics-reward-intro \{ z-index:46; pointer-events:auto; \}/);
   assert.match(css, /\.collection-screen\.is-phonics-reward-intro-open \.collection-grid[\s\S]*pointer-events:none/);
