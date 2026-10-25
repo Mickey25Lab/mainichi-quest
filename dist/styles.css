@@ -5296,7 +5296,7 @@ button, input { font: inherit; }
   height:60px;
   min-height:60px;
   max-height:60px;
-  padding:0 10px 8px;
+  padding:0 10px;
   border-radius:16px 16px 0 0;
   overflow:visible;
 }
@@ -5304,10 +5304,10 @@ button, input { font: inherit; }
 .collection-screen .collection-categories .category-button .collection-tab-icon,
 .collection-detail-screen .collection-categories .category-button svg,
 .collection-detail-screen .collection-categories .category-button .collection-tab-icon {
-  width:54px;
-  height:54px;
+  width:62px;
+  height:62px;
   flex-shrink:0;
-  transform:translateY(-4px);
+  transform:none;
 }
 /* Selected tab lifts visually, but its face continues to the stage floor. */
 .collection-screen .collection-categories .category-button.selected::after,
@@ -5320,8 +5320,24 @@ button, input { font: inherit; }
   height:9px;
   border-left:2px solid #eaffff;
   border-right:2px solid #eaffff;
-  background:#0d4a8f;
+  background:linear-gradient(180deg,#2378c9,#0d4a8f);
+  box-shadow:0 0 10px rgba(38,186,255,.45);
   pointer-events:none;
+}
+/* Follow the selected face color all the way to the canvas floor. */
+.collection-screen .collection-categories .category-button-summary.selected::after,
+.collection-detail-screen .collection-categories .category-button-summary.selected::after {
+  background:linear-gradient(180deg,#1676ae,#0b4a7d);
+}
+.collection-screen .collection-categories .category-button.is-new-category.selected::after,
+.collection-detail-screen .collection-categories .category-button.is-new-category.selected::after {
+  background:linear-gradient(180deg,#c92e1a,#a01512);
+}
+/* Summary no longer has a separate cyan line above its tab. */
+.collection-screen .collection-categories .category-button-summary::before,
+.collection-detail-screen .collection-categories .category-button-summary::before {
+  content:none;
+  display:none;
 }
 .collection-stage > .collection-time-panel,
 .collection-detail-stage .detail-header .collection-time {
