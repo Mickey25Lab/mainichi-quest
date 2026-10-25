@@ -5276,25 +5276,37 @@ button, input { font: inherit; }
 .quit-confirm-actions { flex-wrap:wrap; }
 .quit-confirm-actions button { max-width:100%; }
 
-/* Collection footer controls share the same 1400x1050 canvas coordinates.
-   The viewport-centred stage scale is the only responsive size rule:
-   no fixed-size (inverse-scale) timer and no viewport-bottom anchored tabs. */
+/* Collection footer: common 1400x1050 stage geometry on every device.
+   Anchor to the stage centre instead of screen bottom (which can extend
+   into Safari's black letterbox on portrait phones). */
 .collection-screen .collection-categories,
 .collection-detail-screen .collection-categories {
-  left:calc((100vw - var(--content-stage-width)) / 2 + 24px * var(--collection-nav-scale, 1));
-  bottom:calc((100dvh - var(--content-stage-height)) / 2 + 4px * var(--collection-nav-scale, 1));
-  height:52px;
+  left:calc(50% - 700px * var(--collection-nav-scale, 1) + 24px * var(--collection-nav-scale, 1));
+  top:calc(50% + 525px * var(--collection-nav-scale, 1));
+  bottom:auto;
+  width:max-content;
+  height:76px;
   transform-origin:left bottom;
-  transform:scale(var(--collection-nav-scale, 1));
+  transform:translateY(-100%) scale(var(--collection-nav-scale, 1));
 }
 .collection-screen .collection-categories .category-button,
 .collection-detail-screen .collection-categories .category-button {
-  height:52px;
-  min-height:52px;
-  max-height:52px;
+  width:120px;
+  min-width:120px;
+  max-width:120px;
+  height:76px;
+  min-height:76px;
+  max-height:76px;
+  padding:8px 10px;
+  border-radius:16px 16px 0 0;
 }
-/* Timers live *inside* their scaled stages. Keep their geometric size
-   entirely in logical canvas pixels, and do not cancel the stage scale. */
+.collection-screen .collection-categories .category-button svg,
+.collection-screen .collection-categories .category-button .collection-tab-icon,
+.collection-detail-screen .collection-categories .category-button svg,
+.collection-detail-screen .collection-categories .category-button .collection-tab-icon {
+  width:54px;
+  height:54px;
+}
 .collection-stage > .collection-time-panel,
 .collection-detail-stage .detail-header .collection-time {
   width:180px;
@@ -5306,4 +5318,16 @@ button, input { font: inherit; }
   font-size:25px;
   border-radius:14px;
   transform:none;
+  font-synthesis:none;
+  font-kerning:none;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+.collection-stage > .collection-time-panel strong,
+.collection-detail-stage .detail-header .collection-time strong {
+  font-synthesis:none;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
 }
