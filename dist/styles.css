@@ -5368,3 +5368,41 @@ button, input { font: inherit; }
 .collection-detail-stage #detail-back.collection-close-icon {
   right:24px;
 }
+
+/* Final collection chrome: match the 28px edges of the 1344px summary grid. */
+.collection-screen .collection-categories,
+.collection-detail-screen .collection-categories {
+  left:calc(50% - 700px * var(--collection-nav-scale, 1) + 28px * var(--collection-nav-scale, 1));
+}
+.collection-stage > .collection-time-panel,
+.collection-detail-stage .detail-header .collection-time,
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon,
+.collection-header .collection-end {
+  right:28px;
+}
+/* Extend the *selected* tab face beyond its raised bottom edge, not an
+   unselected blue strip. Maintain the same treatment on both collection views. */
+.collection-screen .collection-categories .category-button.selected,
+.collection-detail-screen .collection-categories .category-button.selected {
+  overflow:visible;
+}
+.collection-screen .collection-categories .category-button.selected::after,
+.collection-detail-screen .collection-categories .category-button.selected::after {
+  bottom:-8px;
+  height:10px;
+  z-index:2;
+  border-left:2px solid #eaffff;
+  border-right:2px solid #eaffff;
+  border-bottom:0;
+  background:linear-gradient(180deg,#2378c9 0%,#0d4a8f 100%);
+  box-shadow:inset 0 0 8px rgba(221,251,255,.24),0 0 10px rgba(38,186,255,.35);
+}
+.collection-screen .collection-categories .category-button-summary.selected::after,
+.collection-detail-screen .collection-categories .category-button-summary.selected::after {
+  background:linear-gradient(180deg,#1676ae,#0b4a7d);
+}
+.collection-screen .collection-categories .category-button.is-new-category.selected::after,
+.collection-detail-screen .collection-categories .category-button.is-new-category.selected::after {
+  background:linear-gradient(180deg,#c92e1a,#a01512);
+}
