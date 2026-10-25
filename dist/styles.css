@@ -5163,8 +5163,8 @@ button, input { font: inherit; }
   --summary-canvas-bottom-offset:10px;
 }
 #collection-grid .collection-card[data-stage="4"] {
-  --summary-canvas-scale:.62;
-  --summary-canvas-bottom-offset:-8px;
+  --summary-canvas-scale:.75;
+  --summary-canvas-bottom-offset:-38px;
 }
 #collection-grid .collection-card[data-stage="5"] {
   /* Upper-body portrait: keep the head inside the card and crop the legs. */
@@ -5173,7 +5173,7 @@ button, input { font: inherit; }
 }
 #collection-grid .collection-card.complete {
   /* Left-bottom bust, with the medal independently positioned behind. */
-  --summary-canvas-scale:1.80;
+  --summary-canvas-scale:1.45;
   --summary-canvas-bottom-offset:-185px;
 }
 /* The shared geometry always wins over legacy category-specific transforms. */
@@ -5205,7 +5205,7 @@ button, input { font: inherit; }
 /* Master medal: a bust-up equipped robot spills beyond the bottom/left card
    boundary while the smaller medal floats behind it in the upper right. */
 #collection-grid .collection-card.complete .card-vehicle.is-equipped-super-robot {
-  left:-25px;
+  left:-60px;
   transform-origin:center bottom;
 }
 #collection-grid .collection-card .card-master-medal-bg {
@@ -5217,6 +5217,37 @@ button, input { font: inherit; }
   height:70%;
   opacity:.95;
   object-fit:contain;
+}
+/* Equipment cards: make the standalone item the star. A shared, translucent,
+   unequipped super-robot bust is placed behind it. No vehicle-specific tuning. */
+#collection-grid .collection-card .card-super-robot-ghost,
+#collection-grid .collection-card .card-equipment-feature {
+  position:absolute;
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  pointer-events:none;
+}
+#collection-grid .collection-card .card-super-robot-ghost {
+  z-index:1;
+  left:-65px;
+  bottom:-110px;
+  transform:scale(1.50);
+  transform-origin:center bottom;
+  opacity:.35;
+  filter:grayscale(.30);
+}
+#collection-grid .collection-card .card-equipment-feature {
+  z-index:2;
+  left:0;
+  bottom:0;
+  transform:scale(.90);
+  transform-origin:center bottom;
+  filter:drop-shadow(0 0 5px rgba(255,238,145,.85));
 }
 /* Equipment and master artwork are intentionally clipped by the card frame. */
 /* No equipment badge on summary cards: the enlarged artwork is the cue. */
@@ -5256,6 +5287,15 @@ button, input { font: inherit; }
   white-space:nowrap;
   text-align:center;
 }
+/* A single shared horizontal centerline (28px from the card's right edge)
+   governs the whole rarity-star cluster, all five hearts, and every meter.
+   Their vertical placement and stage-dependent meter widths remain untouched. */
+#collection-grid .collection-card .card-rarity,
+#collection-grid .collection-card .collection-card-hearts,
+#collection-grid .collection-card .collection-card-energy {
+  right:28px;
+  transform:translateX(50%);
+}
 /* Five hearts: same 12px clearance from the card top and the name
    band's top (38px from card bottom). space-between keeps equal intervals.
    Relative to the prior layout, the bottom heart rises by 12px. */
@@ -5275,6 +5315,18 @@ button, input { font: inherit; }
 #collection-grid .collection-card[data-stage="4"] .collection-card-energy { height:65px; width:26px; }
 #collection-grid .collection-card[data-stage="5"] .collection-card-energy { height:83px; width:29px; }
 #collection-grid .collection-card.complete .collection-card-energy { height:100px; width:31px; }
+
+/* Stage-dependent energy meter widths still differ, but share the same center. */
+#collection-grid .collection-card[data-stage="3"] .collection-card-energy,
+#collection-grid .collection-card[data-stage="4"] .collection-card-energy,
+#collection-grid .collection-card[data-stage="5"] .collection-card-energy,
+#collection-grid .collection-card.complete .collection-card-energy {
+  right:28px;
+  transform:translateX(50%);
+}
+/* Wait for both layers to preload so the equipment composition appears at once. */
+#collection-grid.is-art-loading .card-super-robot-ghost,
+#collection-grid.is-art-loading .card-equipment-feature { visibility:hidden; }
 
 /* Developer and parent dialogs: explicit light inputs, quiet secondary actions. */
 .profile-card input,
