@@ -726,24 +726,33 @@ button, input { font: inherit; }
   position:absolute;
   z-index:5;
   left:50%;
-  top:9%;
+  top:7%;
   transform:translateX(-50%);
   display:flex;
-  align-items:baseline;
-  gap:16px;
-  padding:10px 24px;
-  border:3px solid #fff6a7;
-  border-radius:999px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  width:960px;
+  padding:28px 36px 24px;
+  border:4px solid #fff3ba;
+  border-radius:32px;
   color:#fff;
-  background:linear-gradient(180deg,#ff9d2b,#e75914);
-  box-shadow:0 5px 0 #ad3b0d,0 0 18px rgba(255,213,65,.82);
+  background:linear-gradient(150deg,rgba(9,48,104,.97),rgba(18,96,131,.97));
+  box-shadow:0 12px 36px rgba(0,12,39,.45),inset 0 0 22px rgba(255,255,255,.1);
   font-family:"Noto Sans JP",sans-serif;
-  white-space:nowrap;
+  text-align:center;
+  pointer-events:none;
 }
 .mode-select-mission-complete[hidden] { display:none; }
-.mode-select-mission-complete strong { font-size:30px; }
-.mode-select-mission-complete span { font-size:21px; font-weight:900; }
-
+.mode-select-mission-complete strong { font-size:40px; line-height:1.6; }
+.mode-select-mission-complete span { font-size:27px; font-weight:850; line-height:1.5; }
+.mode-select-mission-complete ruby { ruby-align:center; }
+.mode-select-mission-complete rt { font-size:.43em; font-weight:700; }
+.mode-select-mission-complete.is-final {
+  top:50%;
+  transform:translate(-50%,-50%);
+}
 /* Fixed logical canvas: viewport-height media rules would now shrink the same
    stage differently on iPad and desktop, so retain the 1400x1050 geometry. */
 
