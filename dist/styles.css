@@ -5276,16 +5276,15 @@ button, input { font: inherit; }
 .quit-confirm-actions { flex-wrap:wrap; }
 .quit-confirm-actions button { max-width:100%; }
 
-/* Collection footer: common 1400x1050 stage geometry on every device.
-   Anchor to the stage centre instead of screen bottom (which can extend
-   into Safari's black letterbox on portrait phones). */
+/* Shared collection chrome geometry: 1400x1050 logical stage.
+   One footer height and one right inset for iPad and phones alike. */
 .collection-screen .collection-categories,
 .collection-detail-screen .collection-categories {
   left:calc(50% - 700px * var(--collection-nav-scale, 1) + 24px * var(--collection-nav-scale, 1));
   top:auto;
   bottom:calc(50% - 525px * var(--collection-nav-scale, 1));
   width:max-content;
-  height:76px;
+  height:60px;
   transform-origin:left bottom;
   transform:scale(var(--collection-nav-scale, 1));
 }
@@ -5294,11 +5293,12 @@ button, input { font: inherit; }
   width:120px;
   min-width:120px;
   max-width:120px;
-  height:76px;
-  min-height:76px;
-  max-height:76px;
-  padding:8px 10px;
+  height:60px;
+  min-height:60px;
+  max-height:60px;
+  padding:0 10px 8px;
   border-radius:16px 16px 0 0;
+  overflow:visible;
 }
 .collection-screen .collection-categories .category-button svg,
 .collection-screen .collection-categories .category-button .collection-tab-icon,
@@ -5306,14 +5306,30 @@ button, input { font: inherit; }
 .collection-detail-screen .collection-categories .category-button .collection-tab-icon {
   width:54px;
   height:54px;
+  flex-shrink:0;
+  transform:translateY(-4px);
+}
+/* Selected tab lifts visually, but its face continues to the stage floor. */
+.collection-screen .collection-categories .category-button.selected::after,
+.collection-detail-screen .collection-categories .category-button.selected::after {
+  content:"";
+  position:absolute;
+  left:-2px;
+  right:-2px;
+  bottom:-7px;
+  height:9px;
+  border-left:2px solid #eaffff;
+  border-right:2px solid #eaffff;
+  background:#0d4a8f;
+  pointer-events:none;
 }
 .collection-stage > .collection-time-panel,
 .collection-detail-stage .detail-header .collection-time {
   width:180px;
   min-width:180px;
   height:52px;
-  right:4px;
-  bottom:4px;
+  right:24px;
+  bottom:8px;
   padding:4px 10px;
   font-size:25px;
   border-radius:14px;
@@ -5330,4 +5346,9 @@ button, input { font: inherit; }
   font-variant-numeric:tabular-nums;
   font-feature-settings:"tnum" 1;
   -webkit-font-smoothing:antialiased;
+}
+/* Consistent right inset across collection list/detail close controls. */
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon {
+  right:24px;
 }
