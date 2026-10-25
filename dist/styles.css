@@ -783,6 +783,14 @@ button, input { font: inherit; }
   line-height:1.65;
   text-shadow:0 5px 9px rgba(0,39,78,.6);
 }
+.mode-select-mission-complete strong .mission-title-line {
+  display:block;
+  font-size:inherit;
+  font-weight:inherit;
+  line-height:inherit;
+  color:inherit;
+  text-shadow:inherit;
+}
 .mode-select-mission-complete span:last-child { color:#e2fff7; }
 .mode-select-mission-complete ruby { ruby-align:center; }
 .mode-select-mission-complete rt { font-size:.43em; font-weight:800; text-shadow:none; }
