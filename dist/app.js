@@ -263,7 +263,7 @@
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionCategoryPage: 0, collectionSwipeStartX: null, collectionNewCategoryKeys: new Set(),
-    collectionMode: "browse", phonicsRewardSelectedVehicleIndex: null, phonicsLastRewardVehicleIndex: null,
+    collectionMode: "browse", phonicsRewardSelectedVehicleIndex: null, phonicsLastRewardVehicleIndex: null, phonicsScanInProgress: false,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0, bgmTransitionId: 0, bgmFadeTimer: null
   };
@@ -4153,13 +4153,15 @@
       selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
     );
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    if (selectionMode) $("collection-header-title").textContent = "どののりものを育てる？";
+    if (selectionMode) $("collection-header-title").textContent = "サーチライトで なかまを みつけよう！";
     else renderCollectionBaseTitle();
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
       $("phonics-reward-intro").hidden = true;
       $("collection-screen").classList.remove("is-phonics-reward-intro-open");
       state.phonicsRewardSelectedVehicleIndex = null;
+      state.phonicsScanInProgress = false;
+      document.getElementById("phonics-cross-scan")?.remove();
     }
   }
   function seedPatrolCarForPhonicsRewardIfNeeded() {
@@ -4183,15 +4185,67 @@
       });
     } catch (_) {}
   }
-  function recommendedPhonicsRewardVehicleIndex() {
-    const recent = state.phonicsLastRewardVehicleIndex;
-    if (Number.isInteger(recent)) {
-      const progress = vehicleProgress(recent);
-      if (progress.discovered && (!progress.masterMedal || progress.energy < 500)) return recent;
+
+  // Pick from all discovered vehicles, regardless of rarity.
+  function randomPhonicsRewardVehicleIndex() {
+    const eligible = vehicles.filter((vehicle) => vehicleProgress(vehicle.index).discovered);
+    return (eligible[Math.floor(Math.random() * eligible.length)] || vehicles[0]).index;
+  }
+  function scanPause(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
+  async function runPhonicsCrossScan() {
+    if (state.collectionMode !== "phonics-reward-select" || state.phonicsScanInProgress) return;
+    state.phonicsScanInProgress = true;
+    stopCollectionTimer();
+    $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
+    const vehicleIndex = randomPhonicsRewardVehicleIndex();
+    state.phonicsRewardSelectedVehicleIndex = vehicleIndex;
+    const grid = $("collection-grid");
+    const cards = [...grid.querySelectorAll(".collection-card")];
+    const target = cards.find((card) => Number(card.dataset.vehicle) === vehicleIndex);
+    if (!target) { state.phonicsScanInProgress = false; applyPhonicsRewardGrowth(vehicleIndex); return; }
+    const targetRect = target.getBoundingClientRect(), gridRect = grid.getBoundingClientRect();
+    const x = targetRect.left-gridRect.left, y = targetRect.top-gridRect.top, w = targetRect.width, h = targetRect.height;
+    const left = Math.min(...cards.map((card) => card.offsetLeft));
+    const right = Math.max(...cards.map((card) => card.offsetLeft+card.offsetWidth))-w;
+    const top = Math.min(...cards.map((card) => card.offsetTop));
+    const bottom = Math.max(...cards.map((card) => card.offsetTop+card.offsetHeight))-h;
+    const overlay = document.createElement("div");
+    overlay.id = "phonics-cross-scan";
+    overlay.className = "phonics-cross-scan";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = '<div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
+    grid.append(overlay);
+    const column = overlay.querySelector(".phonics-scan-column"), row = overlay.querySelector(".phonics-scan-row"), impact = overlay.querySelector(".phonics-scan-impact");
+    const move = async (beam, values, axis, dimension) => {
+      beam.style[axis === "X" ? "width" : "height"] = dimension + "px";
+      beam.style[axis === "X" ? "height" : "width"] = "100%";
+      const keyframes = values.map((value,i) => ({ transform: "translate"+axis+"("+value+"px)", offset:[0,.32,.64,1][i] }));
+      const animation = beam.animate(keyframes,{ duration:1550, easing:"ease-in-out", fill:"forwards" });
+      await animation.finished;
+      beam.style.transform = "translate"+axis+"("+values[3]+"px)";
+      animation.cancel();
+    };
+    try {
+      // Two bounces: far edge, near edge, then selected column.
+      await move(column,[left,right,left,x],"X",w);
+      column.classList.add("is-locked");
+      await scanPause(160);
+      // Two bounces: bottom, top, then selected row.
+      await move(row,[top,bottom,top,y],"Y",h);
+      row.classList.add("is-locked");
+      await scanPause(180);
+      // Flash ONLY after the row and column are both fully resolved.
+      Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+      impact.classList.add("is-revealed");
+      target.classList.add("is-phonics-scan-winner");
+      await scanPause(800);
+    } finally {
+      overlay.remove();
+      target.classList.remove("is-phonics-scan-winner");
+      state.phonicsScanInProgress = false;
     }
-    if (vehicleProgress(0).discovered) return 0;
-    const discovered = state.rewardProgress.findIndex((progress) => progress?.discovered);
-    return discovered >= 0 ? discovered : 0;
+    if (state.collectionMode === "phonics-reward-select") applyPhonicsRewardGrowth(vehicleIndex);
   }
   function phonicsGrowthAmounts() {
     return phonicsYoutube.rewardAlmostZero
@@ -4267,11 +4321,7 @@
     openNormalCollectionAfterPhonicsReward();
   }
   function startPhonicsRewardVehicleSelection() {
-    $("phonics-reward-intro").hidden = true;
-    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-    state.collectionDeadline = Date.now() + 60000;
-    updateCollectionClock();
-    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+    void runPhonicsCrossScan();
   }
   function cancelPhonicsRewardSelection() {
     $("phonics-reward-intro").hidden = true;
@@ -4523,7 +4573,7 @@
   function collectionTimeUp() {
     if (state.collectionClosing) return;
     if (state.collectionMode === "phonics-reward-select") {
-      applyPhonicsRewardGrowth(recommendedPhonicsRewardVehicleIndex());
+      return; // The scanner commits the reward; never roll from a timer.
       return;
     }
     state.collectionClosing = true;
@@ -4871,7 +4921,7 @@
       const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
       const isUp = showSessionMarkers && !isNew && (friendshipGrew || energyGrew);
       const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
-      const selectionDisabled = (state.collectionMode === "phonics-reward-select" && !discovered) || capsuleDisabled;
+      const selectionDisabled = (state.collectionMode === "phonics-reward-select") || capsuleDisabled;
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${equipmentComposition || artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
@@ -4881,7 +4931,7 @@
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
       if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }
-      else if (state.collectionMode === "phonics-reward-select") openPhonicsGrowConfirm(vehicleIndex);
+      else if (state.collectionMode === "phonics-reward-select") return;
       else openVehicleDetail(vehicleIndex);
     }));
   }
