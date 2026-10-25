@@ -3463,8 +3463,10 @@ button, input { font: inherit; }
 .collection-categories {
   position:absolute;
   z-index:12;
-  left:calc((100vw - var(--content-stage-width)) / 2 + 24px);
-  bottom:calc((100dvh - var(--content-stage-height)) / 2 - 10px);
+  left:calc((100vw - var(--content-stage-width)) / 2 + 24px * var(--collection-nav-scale, 1));
+  bottom:calc((100dvh - var(--content-stage-height)) / 2 - 10px * var(--collection-nav-scale, 1));
+  transform-origin:left bottom;
+  transform:scale(var(--collection-nav-scale, 1));
   height:48px;
   display:flex;
   align-items:flex-start;
@@ -5308,3 +5310,141 @@ button, input { font: inherit; }
 .profile-card .admin-pin-keypad .admin-pin-keypad-action { background:#fff; color:#42576b; border:2px solid #a8b8c6; }
 .profile-card .admin-reset-button { background:#fff; color:#b9363e; border:2px solid #b9363e; }
 .admin-setting-row[hidden], .profile-card .admin-action-button[hidden] { display:none; }
+
+/* Scale the collection navigation with the validated 1400x1050 canvas,
+   not with a separate phone/tablet breakpoint. */
+.quit-confirm-card { white-space:normal; box-sizing:border-box; max-width:calc(100% - 24px); }
+.quit-confirm-card p, .quit-confirm-card p span, .quit-confirm-card p strong { white-space:normal; overflow-wrap:anywhere; }
+.quit-confirm-actions { flex-wrap:wrap; }
+.quit-confirm-actions button { max-width:100%; }
+
+/* Shared collection chrome geometry: 1400x1050 logical stage.
+   One footer height and one right inset for iPad and phones alike. */
+.collection-screen .collection-categories,
+.collection-detail-screen .collection-categories {
+  left:calc(50% - 700px * var(--collection-nav-scale, 1) + 24px * var(--collection-nav-scale, 1));
+  top:auto;
+  bottom:calc(50% - 525px * var(--collection-nav-scale, 1));
+  width:max-content;
+  height:60px;
+  transform-origin:left bottom;
+  transform:scale(var(--collection-nav-scale, 1));
+}
+.collection-screen .collection-categories .category-button,
+.collection-detail-screen .collection-categories .category-button {
+  width:120px;
+  min-width:120px;
+  max-width:120px;
+  height:60px;
+  min-height:60px;
+  max-height:60px;
+  padding:0 10px;
+  border-radius:16px 16px 0 0;
+  overflow:visible;
+}
+.collection-screen .collection-categories .category-button svg,
+.collection-screen .collection-categories .category-button .collection-tab-icon,
+.collection-detail-screen .collection-categories .category-button svg,
+.collection-detail-screen .collection-categories .category-button .collection-tab-icon {
+  width:62px;
+  height:62px;
+  flex-shrink:0;
+  transform:none;
+}
+/* Selected tab lifts visually, but its face continues to the stage floor. */
+.collection-screen .collection-categories .category-button.selected::after,
+.collection-detail-screen .collection-categories .category-button.selected::after {
+  content:"";
+  position:absolute;
+  left:-2px;
+  right:-2px;
+  bottom:-7px;
+  height:9px;
+  border-left:2px solid #eaffff;
+  border-right:2px solid #eaffff;
+  background:linear-gradient(180deg,#2378c9,#0d4a8f);
+  box-shadow:0 0 10px rgba(38,186,255,.45);
+  pointer-events:none;
+}
+/* Follow the selected face color all the way to the canvas floor. */
+.collection-screen .collection-categories .category-button-summary.selected::after,
+.collection-detail-screen .collection-categories .category-button-summary.selected::after {
+  background:linear-gradient(180deg,#1676ae,#0b4a7d);
+}
+.collection-screen .collection-categories .category-button.is-new-category.selected::after,
+.collection-detail-screen .collection-categories .category-button.is-new-category.selected::after {
+  background:linear-gradient(180deg,#c92e1a,#a01512);
+}
+/* Summary no longer has a separate cyan line above its tab. */
+.collection-screen .collection-categories .category-button-summary::before,
+.collection-detail-screen .collection-categories .category-button-summary::before {
+  content:none;
+  display:none;
+}
+.collection-stage > .collection-time-panel,
+.collection-detail-stage .detail-header .collection-time {
+  width:180px;
+  min-width:180px;
+  height:52px;
+  right:24px;
+  bottom:8px;
+  padding:4px 10px;
+  font-size:25px;
+  border-radius:14px;
+  transform:none;
+  font-synthesis:none;
+  font-kerning:none;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+.collection-stage > .collection-time-panel strong,
+.collection-detail-stage .detail-header .collection-time strong {
+  font-synthesis:none;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+/* Consistent right inset across collection list/detail close controls. */
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon {
+  right:24px;
+}
+
+/* Final collection chrome: match the 28px edges of the 1344px summary grid. */
+.collection-screen .collection-categories,
+.collection-detail-screen .collection-categories {
+  left:calc(50% - 700px * var(--collection-nav-scale, 1) + 28px * var(--collection-nav-scale, 1));
+}
+.collection-stage > .collection-time-panel,
+.collection-detail-stage .detail-header .collection-time,
+#collection-exit.collection-close-icon,
+.collection-detail-stage #detail-back.collection-close-icon,
+.collection-header .collection-end {
+  right:28px;
+}
+/* Extend the *selected* tab face beyond its raised bottom edge, not an
+   unselected blue strip. Maintain the same treatment on both collection views. */
+.collection-screen .collection-categories .category-button.selected,
+.collection-detail-screen .collection-categories .category-button.selected {
+  overflow:visible;
+}
+.collection-screen .collection-categories .category-button.selected::after,
+.collection-detail-screen .collection-categories .category-button.selected::after {
+  bottom:-8px;
+  height:10px;
+  z-index:2;
+  border-left:2px solid #eaffff;
+  border-right:2px solid #eaffff;
+  border-bottom:0;
+  background:linear-gradient(180deg,#2378c9 0%,#0d4a8f 100%);
+  box-shadow:inset 0 0 8px rgba(221,251,255,.24),0 0 10px rgba(38,186,255,.35);
+}
+.collection-screen .collection-categories .category-button-summary.selected::after,
+.collection-detail-screen .collection-categories .category-button-summary.selected::after {
+  background:linear-gradient(180deg,#1676ae,#0b4a7d);
+}
+.collection-screen .collection-categories .category-button.is-new-category.selected::after,
+.collection-detail-screen .collection-categories .category-button.is-new-category.selected::after {
+  background:linear-gradient(180deg,#c92e1a,#a01512);
+}

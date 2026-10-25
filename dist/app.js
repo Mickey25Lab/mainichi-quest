@@ -846,6 +846,11 @@
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     }
     if (includeCollection) {
+      // Navigation sits beside, not inside, the scaled canvas. Give both
+      // collection screens the same validated scale as the main stage.
+      document.querySelectorAll(".collection-screen, .collection-detail-screen").forEach(screen => {
+        screen.style.setProperty("--collection-nav-scale", String(scale));
+      });
       const stage = $("collection-stage");
       stage.style.setProperty("--stage-scale", String(scale));
       // Temporary aliases keep an older cached stylesheet at the same scale.
