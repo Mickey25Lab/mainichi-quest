@@ -5616,7 +5616,6 @@ button, input { font: inherit; }
   background:rgba(4,20,49,.94);border:2px solid rgba(126,217,255,.9);
   text-shadow:0 2px 4px #00102c;
 }
-.collection-screen.is-phonics-reward-select .phonics-scan-showcase .card-vehicle {object-fit:contain;max-width:100%;max-height:100%;}
 
 /* Keep the source card's artwork coordinates and layered equipment intact. */
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .name-band,
