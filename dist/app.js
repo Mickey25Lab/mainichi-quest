@@ -4364,7 +4364,14 @@
       // Keep the completed gauge visible throughout the entire 1.5-second cue.
       const nextNotice=document.createElement("div");
       nextNotice.className="phonics-scan-next-notice";
-      nextNotice.textContent="さあコレクションを見てみよう";
+      nextNotice.textContent="さあコレクションを見てみよう！";
+      // Position the opaque hand-off precisely over the entire reward caption
+      // instead of overlapping only the caption's lower portion.
+      Object.assign(nextNotice.style,{
+        left:(endX+endW*.045)+"px",
+        top:(endY+endH+52)+"px",
+        width:(endW*.91)+"px"
+      });
       stage.append(nextNotice);
       try {
         await scanPause(1500);
