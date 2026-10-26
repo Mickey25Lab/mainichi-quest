@@ -47,7 +47,7 @@
     setTimeout(()=>URL.revokeObjectURL(url),60000);
   };
   const start = () => {
-    const footer=document.querySelector(".top-footer-tools");
+    const footer=document.getElementById("admin-panel-overlay")?.querySelector(".profile-card");
     if (!footer || document.getElementById("mq-transfer-open")) return;
     const launch=$("button","データ移行"); launch.id="mq-transfer-open"; launch.type="button";
     launch.style.cssText="font-size:12px;padding:6px 9px;border-radius:8px;border:1px solid #fff;color:#fff;background:#222;";
