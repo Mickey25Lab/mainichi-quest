@@ -253,12 +253,12 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-categories[\s\S]*display:none/);
   assert.match(app, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*openPhonicsRewardSelection\(\)/);
   assert.match(app, /const phonicsBackgroundPath = playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)[\s\S]*phonics-intro-background[\s\S]*phonics-youtube-background/);
-  assert.match(app, /phonicsYoutube\.backgroundPath = phonicsBackgroundPath[\s\S]*--phonics-reward-background/);
-  assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-stage \{[\s\S]*var\(--phonics-reward-background\)/);
   assert.match(app, /function openPhonicsRewardSelection\(\)[\s\S]*collectionNewVehicleIndexes = new Set\(\)[\s\S]*resultStartProgress = state\.rewardProgress\.map/);
   assert.match(app, /function seedPatrolCarForPhonicsRewardIfNeeded\(\)[\s\S]*vehicleProgress\(0\)[\s\S]*discovered = true/);
   assert.match(app, /function applyPhonicsRewardGrowth\(vehicleIndex\)[\s\S]*friendship \+ amounts\.friendship[\s\S]*applyEnergyGain\(progress, vehicleIndex, amounts\.energy\)/);
-  assert.match(app, /function runPhonicsCrossScan\(\)[\s\S]*randomPhonicsRewardVehicleIndex\(\)[\s\S]*scanPause\(180\)[\s\S]*is-revealed/);
+  assert.match(css, /phonics-scan-darkness/);
+  assert.match(css, /phonics-scan-showcase/);
+  assert.match(app, /function runPhonicsCrossScan\(\)[\s\S]*randomPhonicsRewardVehicleIndex\(\)[\s\S]*scanPause\(290\)[\s\S]*is-revealed/);
   assert.match(app, /function openNormalCollectionAfterPhonicsReward\(\)[\s\S]*Date\.now\(\) \+ 60000/);
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);
