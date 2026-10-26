@@ -1,6 +1,6 @@
 # Cloudflare Pages: revalidate app shell and release metadata on every request.
 # This does not touch browser localStorage or profile data.
-/ 
+/
   Cache-Control: no-cache, max-age=0, must-revalidate
 
 /index.html
