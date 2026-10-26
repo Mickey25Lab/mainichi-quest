@@ -6089,6 +6089,17 @@
     }));
   }
 
+  function setAllParentTargetsToZero() {
+    if (!parentSettingsProfileId) return;
+    const settings = parentDraftForProfile(parentSettingsProfileId);
+    // Explicit zeros override default targets and legacy shared phonics settings.
+    for (const mode of parentModeDefinitions) {
+      settings.dailyTargetCounts[mode.id] = 0;
+      settings.enabledModes[mode.id] = false;
+    }
+    renderParentModeSettings();
+  }
+
   function saveParentSettings() {
     parentSettingsDrafts.forEach((settings, profileId) => {
       profileStore.setProfileLearningSettings(profileId, settings);
@@ -6379,6 +6390,7 @@
   $("parent-pin-cancel").addEventListener("click", closeParentPin);
   $("parent-settings-close").addEventListener("click", closeParentSettings);
   $("parent-settings-cancel").addEventListener("click", closeParentSettings);
+  $("parent-all-modes-off").addEventListener("click", setAllParentTargetsToZero);
   $("parent-settings-save").addEventListener("click", saveParentSettings);
   $("admin-pin-form").addEventListener("submit", (event) => event.preventDefault());
   document.querySelectorAll("[data-admin-pin-digit]").forEach((button) => button.addEventListener("click", () => appendAdminPinDigit(button.dataset.adminPinDigit)));
