@@ -1394,7 +1394,7 @@
     const versionLabel = $("app-version");
     versionLabel.textContent = `Version ${appVersion}`;
     versionLabel.classList.remove("is-preview");
-    try {
+    if (location.hostname.endsWith(".pages.dev")) try {
       const releaseResponse = await fetch("./release-meta.json", { cache: "no-store" });
       if (releaseResponse.ok) {
         const release = await releaseResponse.json();
