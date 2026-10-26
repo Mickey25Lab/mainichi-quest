@@ -63,51 +63,78 @@
       try {const file=serialise();saveFile("maique-transfer-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(file,null,2));status.textContent="保存ファイルを確認してください。元のデータは変更していません。";}
       catch(e){status.textContent="書き出し失敗: "+e.message;}
     });
-    // Destructive action is deliberately limited to the Cloudflare destination,
-    // and only when it contains exactly one expendable "Papa" profile.
-    if (location.origin === "https://mainichi-quest-63c.pages.dev") {
-      button("検証用Papaデータを削除", () => {
-        try {
-          const raw=localStorage.getItem(PROFILE_KEY);
-          const {data,ids}=parseProfiles(raw);
-          const papa=data.profiles[0];
-          if(data.profiles.length!==1 || papa.displayName!=="Papa" || ids.size!==1 ||
-             localStorage.getItem(ACTIVE_KEY)!==papa.profileId) {
-            throw Error("Papaだけの保存領域ではありません。削除を中止しました。");
+    // Profile deletion is explicit and available on either supported origin.
+    // A full local backup is downloaded before any destructive change.
+    const deleteRow=$("div");
+    const deleteLabel=$("p","③ プロフィール削除（先にバックアップを保存）");
+    const profileSelect=$("select");profileSelect.id="mq-transfer-delete-profile";
+    profileSelect.style.cssText="display:block;width:100%;padding:10px;margin:8px 0;background:#fff;color:#111;";
+    deleteRow.append(deleteLabel,profileSelect);
+    const refreshDeleteProfiles=()=>{
+      profileSelect.replaceChildren();
+      const raw=localStorage.getItem(PROFILE_KEY);
+      if(!raw)return;
+      try {
+        const {data}=parseProfiles(raw);
+        for(const p of data.profiles){const option=$("option");option.value=p.profileId;option.textContent=p.displayName+" ("+p.profileId.slice(0,8)+")";profileSelect.append(option);}
+      }catch(_){/* Reject invalid registries when deletion is attempted. */}
+    };
+    const deleteBtn=$("button","選択したプロフィールを削除");
+    deleteBtn.type="button";deleteBtn.style.cssText="padding:11px;margin:6px;border-radius:8px;border:1px solid #f77;background:#4b1d26;color:white;";
+    deleteBtn.addEventListener("click",()=>{
+      try {
+        const raw=localStorage.getItem(PROFILE_KEY);
+        const {data}=parseProfiles(raw);
+        const selectedId=profileSelect.value;
+        const target=data.profiles.find(p=>p.profileId===selectedId);
+        if(!target)throw Error("対象プロフィールを確認できません。");
+        const snapshot=serialise();
+        if(!confirm("「"+target.displayName+"」のデータを削除します。まず全データのバックアップJSONを書き出しますか？")){status.textContent="キャンセルしました。";return;}
+        saveFile("maique-before-profile-delete-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(snapshot,null,2));
+        if(prompt("バックアップがファイルに保存されたのを確認してから、削除するプロフィール名「"+target.displayName+"」を入力してください。")!==target.displayName){
+          status.textContent="バックアップのみ保存しました。削除はキャンセルしました。";return;
+        }
+        // Reject concurrent changes before mutation.
+        const now=serialise();
+        if(JSON.stringify(now.entries)!==JSON.stringify(snapshot.entries))throw Error("確認中にデータが変更されました。削除を中止します。");
+        if(!confirm("最終確認：「"+target.displayName+"」のプロフィールと学習記録を削除します。よろしいですか？")){status.textContent="キャンセルしました。";return;}
+        const removed=[];
+        const changes=[];
+        const remaining=data.profiles.filter(p=>p.profileId!==selectedId);
+        if(remaining.length===0){
+          // Last profile: remove all app-storage keys so the existing importer can work.
+          for(const key of Object.keys(snapshot.entries))changes.push([key,null]);
+        }else{
+          changes.push([PROFILE_KEY,JSON.stringify({...data,profiles:remaining})]);
+          if(localStorage.getItem(ACTIVE_KEY)===selectedId)changes.push([ACTIVE_KEY,remaining[0].profileId]);
+          const qaKey=PREFIX+"profile-qa-state-v1";
+          const qaRaw=localStorage.getItem(qaKey);
+          if(qaRaw){
+            const qa=JSON.parse(qaRaw);
+            if(qa && typeof qa==="object" && Object.hasOwn(qa,selectedId)){
+              delete qa[selectedId];
+              changes.push([qaKey,JSON.stringify(qa)]);
+            }
           }
-          const snapshot=serialise();
-          const keys=Object.keys(snapshot.entries);
-          if(!keys.length)throw Error("削除対象がありません。");
-          if(!confirm("Cloudflare版のPapaプロフィールと同じ保存領域の関連データを削除します。ミナトのGitHub Pages版には触れません。バックアップを書き出しますか？")) {
-            status.textContent="削除をキャンセルしました。";return;
+        }
+        try{
+          for(const [key,value] of changes){
+            if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);
+            removed.push(key);
           }
-          saveFile("maique-papa-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(snapshot,null,2));
-          status.textContent="Papaのバックアップファイルを保存しました。ファイルアプリで実際に保存されたことを確認してください。";
-          if(prompt("保存したバックアップを確認できたら『Papa削除』と入力してください。")!=="Papa削除") {
-            status.textContent="バックアップ書き出しのみ行いました。データ削除はキャンセルしました。";return;
+          for(const [key,value] of changes)if(localStorage.getItem(key)!==value)throw Error("削除後の照合に失敗: "+key);
+        }catch(e){
+          for(const key of removed){
+            const previous=snapshot.entries[key];
+            if(previous===undefined)localStorage.removeItem(key);else localStorage.setItem(key,previous);
           }
-          // Recheck immediately before touching storage; do not erase a newly changed registry.
-          if(localStorage.getItem(PROFILE_KEY)!==raw ||
-             localStorage.getItem(ACTIVE_KEY)!==papa.profileId ||
-             keys.some(key=>localStorage.getItem(key)!==snapshot.entries[key]) ||
-             Object.keys(localStorage).some(key=>isStoreKey(key) && !keys.includes(key))) {
-            throw Error("確認中に保存データが変更されました。削除を中止しました。");
-          }
-          if(!confirm("最終確認：このCloudflare版のPapaデータを削除します。よろしいですか？")) {
-            status.textContent="削除をキャンセルしました。";return;
-          }
-          const removed=[];
-          try {
-            for(const key of keys){localStorage.removeItem(key);removed.push(key);}
-            if(keys.some(key=>localStorage.getItem(key)!==null))throw Error("削除後の照合に失敗");
-          }catch(error) {
-            for(const key of removed)localStorage.setItem(key,snapshot.entries[key]);
-            throw Error("削除に失敗しました。復元を試みました: "+error.message);
-          }
-          status.textContent="Papaデータを削除しました。画面を再読み込みすると、保存済みJSONを移行できます。";
-        }catch(error){status.textContent="削除中止: "+error.message;}
-      });
-    }
+          throw Error("削除エラー。復旧を試みました: "+e.message);
+        }
+        refreshDeleteProfiles();
+        status.textContent="「"+target.displayName+"」の削除が完了しました。アプリを再起動して確認してください。";
+      }catch(e){status.textContent="削除中止: "+e.message;}
+    });
+    deleteRow.append(deleteBtn);panel.append(deleteRow);
     const fileInput=$("input");fileInput.type="file";fileInput.accept=".json,application/json";fileInput.style.display="none";panel.append(fileInput);
     button("② ファイルを読み込む",()=>fileInput.click());
     fileInput.addEventListener("change",async()=>{
@@ -139,14 +166,14 @@
     });
     button("閉じる",()=>{layer.style.display="none";});
     panel.append(status);layer.append(panel);document.body.append(layer);
-    launch.addEventListener("click",()=>{layer.style.display="flex";});
+    launch.addEventListener("click",()=>{refreshDeleteProfiles();layer.style.display="flex";});
     // An empty destination shows profile setup before the top screen; allow import there.
     const setup=document.getElementById("profile-setup-overlay");
     if(setup) {
       const setupLaunch=$("button","以前のデータを移行する");
       setupLaunch.type="button";
       setupLaunch.style.cssText="padding:12px;margin:10px;background:#eef;color:#111;border-radius:9px;border:1px solid #888;";
-      setupLaunch.addEventListener("click",()=>{layer.style.display="flex";});
+      setupLaunch.addEventListener("click",()=>{refreshDeleteProfiles();layer.style.display="flex";});
       const form=setup.querySelector("form");
       if(form)form.append(setupLaunch);else setup.append(setupLaunch);
     }
