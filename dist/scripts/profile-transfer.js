@@ -92,6 +92,16 @@
     button("閉じる",()=>{layer.style.display="none";});
     panel.append(status);layer.append(panel);document.body.append(layer);
     launch.addEventListener("click",()=>{layer.style.display="flex";});
+    // An empty destination shows profile setup before the top screen; allow import there.
+    const setup=document.getElementById("profile-setup-overlay");
+    if(setup) {
+      const setupLaunch=$("button","以前のデータを移行する");
+      setupLaunch.type="button";
+      setupLaunch.style.cssText="padding:12px;margin:10px;background:#eef;color:#111;border-radius:9px;border:1px solid #888;";
+      setupLaunch.addEventListener("click",()=>{layer.style.display="flex";});
+      const form=setup.querySelector("form");
+      if(form)form.append(setupLaunch);else setup.append(setupLaunch);
+    }
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
