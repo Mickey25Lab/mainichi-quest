@@ -339,6 +339,7 @@
   let questBonusSelecting = false;
   let questBonusClaimPendingDate = null;
   let questBonusSelectionDate = null;
+  let questBonusSelectionProfileId = null;
   function saveRewardProgress() {
     if (roundTransaction) return;
     // QA presets must never become permanent player points.
@@ -2498,6 +2499,7 @@
   function promptQuestBonusIfAvailable() {
     if (!questBonusAvailable()) return false;
     questBonusSelectionDate = japanDateKey();
+    questBonusSelectionProfileId = profileStore.getActiveProfileId();
     const mission = dailyMissionState();
     if (!mission.questRewardLevel) {
       mission.questRewardLevel = levelSystem.levelAt(profileStore.getPointLedger()?.total || 0);
@@ -4609,7 +4611,8 @@
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
     const amounts = phonicsGrowthAmounts();
     if (questBonusSelecting) {
-      if (!questBonusSelectionDate || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
+      if (!questBonusSelectionDate || questBonusSelectionProfileId !== profileStore.getActiveProfileId()
+        || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
       questBonusClaimPendingDate = questBonusSelectionDate;
     }
     let reward = null;
@@ -4629,7 +4632,7 @@
       if (!reward) saveCollectionProgress();
     }
     // The selected quest charge and its once-per-day claim are saved together.
-    if (questBonusSelecting) { questBonusSelecting = false; questBonusSelectionDate = null; }
+    if (questBonusSelecting) { questBonusSelecting = false; questBonusSelectionDate = null; questBonusSelectionProfileId = null; }
     // Retain the existing card DOM and artwork; only patch progress indicators.
     if (reward) {
       showReward(reward, false, onFinished);
