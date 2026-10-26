@@ -102,46 +102,49 @@ test("write failure rolls back only values created by import",async t=>{
   assert.equal(await dst.page.evaluate(()=>localStorage.length),0);
 });
 
-test("Papa-only Cloudflare reset creates backup and clears transfer keys",async t=>{
-  const papa={...profile,profileId:"papa-id",displayName:"Papa"};
-  const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles:[papa]}),[ACTIVE]:"papa-id","warizan-robot:bgm-enabled-v1":"false"};
-  const dst=await pageAt(ORIGINS[1],prior);t.after(()=>dst.context.close());
-  await dst.page.locator("#mq-transfer-open").click();
-  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"Papa削除";});
-  const downloaded=dst.page.waitForEvent("download");
-  await dst.page.getByRole("button",{name:"検証用Papaデータを削除"}).click();
-  const file=await downloaded;
-  assert.match(file.suggestedFilename(),/^maique-papa-backup-/);
-  assert.deepEqual(JSON.parse(fs.readFileSync(await file.path(),"utf8")).entries,prior);
-  assert.equal(await dst.page.evaluate(()=>localStorage.length),0);
-  assert.match(await dst.page.locator('#mq-transfer-dialog [role="status"]').textContent(),/削除しました/);
-});
-test("reset refuses non-Papa, multiple profiles, and GitHub source",async t=>{
-  for(const [origin,profiles] of [
-    [ORIGINS[1],[profile]],
-    [ORIGINS[1],[{...profile,profileId:"papa-id",displayName:"Papa"},profile]],
-    [ORIGINS[0],[{...profile,profileId:"papa-id",displayName:"Papa"}]]
-  ]) {
-    const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles}),[ACTIVE]:profiles[0].profileId};
+
+test("last profile deletion works on either origin with backup and leaves destination importable",async t=>{
+  for(const origin of ORIGINS){
+    const prior={...original,"warizan-robot:bgm-enabled-v1":"false"};
     const dst=await pageAt(origin,prior);t.after(()=>dst.context.close());
     await dst.page.locator("#mq-transfer-open").click();
-    const button=dst.page.getByRole("button",{name:"検証用Papaデータを削除"});
-    if(origin===ORIGINS[0]) assert.equal(await button.count(),0);
-    else {
-      await button.click();
-      assert.match(await dst.page.locator('#mq-transfer-dialog [role="status"]').textContent(),/削除中止/);
-    }
-    assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),prior);
+    await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"ミナト";});
+    const downloaded=dst.page.waitForEvent("download");
+    await dst.page.getByRole("button",{name:"選択したプロフィールを削除"}).click();
+    const file=await downloaded;
+    assert.match(file.suggestedFilename(),/^maique-before-profile-delete-/);
+    assert.deepEqual(JSON.parse(fs.readFileSync(await file.path(),"utf8")).entries,prior);
+    assert.equal(await dst.page.evaluate(()=>localStorage.length),0);
+    assert.match(await dst.page.locator('#mq-transfer-dialog [role="status"]').textContent(),/削除が完了/);
   }
 });
-test("Papa reset cancels without deleting after backup",async t=>{
+test("deleting one profile preserves other profiles, active ID and unrelated data",async t=>{
   const papa={...profile,profileId:"papa-id",displayName:"Papa"};
-  const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles:[papa]}),[ACTIVE]:"papa-id"};
+  const minato={...profile,profileId:"minato-id",displayName:"Minato"};
+  const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles:[papa,minato]}),[ACTIVE]:"papa-id",
+    "warizan-robot:profile-qa-state-v1":JSON.stringify({"papa-id":{qaEnabled:true},"minato-id":{qaEnabled:false}}),
+    "warizan-robot:bgm-enabled-v1":"false"};
   const dst=await pageAt(ORIGINS[1],prior);t.after(()=>dst.context.close());
   await dst.page.locator("#mq-transfer-open").click();
-  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"やめる";});
+  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"Papa";});
   const downloaded=dst.page.waitForEvent("download");
-  await dst.page.getByRole("button",{name:"検証用Papaデータを削除"}).click();
+  await dst.page.getByRole("button",{name:"選択したプロフィールを削除"}).click();
   await downloaded;
-  assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),prior);
+  const saved=await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)])));
+  assert.deepEqual(JSON.parse(saved[KEY]).profiles,[minato]);
+  assert.equal(saved[ACTIVE],"minato-id");
+  assert.deepEqual(JSON.parse(saved["warizan-robot:profile-qa-state-v1"]),{"minato-id":{qaEnabled:false}});
+  assert.equal(saved["warizan-robot:bgm-enabled-v1"],"false");
+});
+test("profile deletion refusal and cancellation leave existing data unchanged",async t=>{
+  const dst=await pageAt(ORIGINS[1],original);t.after(()=>dst.context.close());
+  await dst.page.locator("#mq-transfer-open").click();
+  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"wrong-name";});
+  const downloaded=dst.page.waitForEvent("download");
+  await dst.page.getByRole("button",{name:"選択したプロフィールを削除"}).click();
+  await downloaded;
+  assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),original);
+  await dst.page.evaluate(()=>{window.confirm=()=>false;});
+  await dst.page.getByRole("button",{name:"選択したプロフィールを削除"}).click();
+  assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),original);
 });
