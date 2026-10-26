@@ -74,7 +74,7 @@
         for(const key of Object.keys(entries))if(localStorage.getItem(key)!==null)throw Error("移行先に同じ保存キーがあります: "+key);
         const names=data.profiles.map(p=>p.displayName).join("・");
         status.textContent="読み込み候補: "+names+"（"+data.profiles.length+"プロフィール）\nこの端末にはまだ保存していません。";
-        if(!confirm("移行先に "+names+" のデータを書き込みます。元データは削除しません。続行しますか？"))return;
+        if(!confirm("移行先に "+names+" のデータを書き込みます。元データは削除しません。続行しますか？")){status.textContent="キャンセルしました。";return;}
         const typed=prompt("誤操作防止のため『移行』と入力してください。");
         if(typed!=="移行"){status.textContent="キャンセルしました。";return;}
         const written=[];
