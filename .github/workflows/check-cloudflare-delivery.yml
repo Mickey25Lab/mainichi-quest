@@ -1,0 +1,33 @@
+name: Check Cloudflare production delivery
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/verify-cloudflare-delivery*'
+      - '.github/workflows/check-cloudflare-delivery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delivery-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests
+        run: node --test .github/scripts/verify-cloudflare-delivery.test.mjs
+
+  production-headers:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Cloudflare deployment headers
+        run: node .github/scripts/verify-cloudflare-delivery.mjs
