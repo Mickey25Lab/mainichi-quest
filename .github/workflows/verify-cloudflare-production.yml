@@ -1,0 +1,21 @@
+name: Verify Cloudflare production release
+
+on:
+  schedule:
+    - cron: '17 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify release metadata matches main
+        run: node .github/scripts/verify-cloudflare-production.mjs
