@@ -5623,8 +5623,12 @@ button, input { font: inherit; }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-up-ribbon,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-new-ribbon {display:none!important;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+ box-shadow:0 0 15px rgba(171,236,255,.45);
+}
 .collection-screen.is-phonics-reward-select .phonics-scan-progress {
- position:absolute;z-index:48;pointer-events:none;transform:scale(.74);transform-origin:top left;
+ position:absolute;z-index:48;right:14px;top:24px;pointer-events:none;
+ transform:scale(.58);transform-origin:top right;
  font-family:"Noto Sans JP",sans-serif;color:var(--navy);
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-progress,
