@@ -1395,6 +1395,21 @@
     versionLabel.textContent = `Version ${appVersion}`;
     versionLabel.classList.remove("is-preview");
     try {
+      const releaseResponse = await fetch("./release-meta.json", { cache: "no-store" });
+      if (releaseResponse.ok) {
+        const release = await releaseResponse.json();
+        if (/^[a-f0-9]{40}$/.test(String(release.commit || "")) &&
+            release.version === release.commit.slice(0, 12) &&
+            ["production", "preview"].includes(release.environment)) {
+          versionLabel.textContent = `Version ${release.version} | ${release.environment === "production" ? "Production" : "Preview"}`;
+          versionLabel.classList.toggle("is-preview", release.environment === "preview");
+          return;
+        }
+      }
+    } catch (_) {
+      // Older static deployments do not provide release metadata.
+    }
+    try {
       const response = await fetch("./preview-meta.json", { cache: "no-store" });
       if (!response.ok) return;
       const metadata = await response.json();
