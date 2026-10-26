@@ -5699,3 +5699,19 @@ button, input { font: inherit; }
 
 /* Continue from the existing daily quest completion dialog. */
 #quest-bonus-continue:not([hidden]) { position:relative; z-index:1; display:block; padding:20px 46px; margin-top:12px; border:5px solid #fff2b8; border-radius:28px; background:#178ee3; box-shadow:0 8px 0 #075890; color:#fff; font:900 35px 'Noto Sans JP',sans-serif; cursor:pointer; }
+
+/* Popup is a direct child of the mode screen, not part of its scaled canvas.
+   Keep it in the same 1400×1050 logical coordinate system on iPad and desktop. */
+.mode-select-screen > .mode-select-mission-complete,
+.mode-select-screen > .mode-select-mission-complete.is-final {
+  position:absolute;
+  z-index:50;
+  inset:auto;
+  left:50%;
+  top:50%;
+  width:1080px;
+  height:795px;
+  min-height:0;
+  transform:translate(-50%,-50%) scale(var(--mode-dialog-scale,1));
+  transform-origin:center;
+}
