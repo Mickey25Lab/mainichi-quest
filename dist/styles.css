@@ -5283,8 +5283,8 @@ button, input { font: inherit; }
 }
 /* Equipment cards: make the standalone item the star. A shared, translucent,
    unequipped super-robot bust is placed behind it. No vehicle-specific tuning. */
-#collection-grid .collection-card .card-super-robot-ghost,
-#collection-grid .collection-card .card-equipment-feature {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-super-robot-ghost,
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-equipment-feature {
   position:absolute;
   display:block;
   width:100%;
@@ -5295,7 +5295,7 @@ button, input { font: inherit; }
   object-fit:contain;
   pointer-events:none;
 }
-#collection-grid .collection-card .card-super-robot-ghost {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-super-robot-ghost {
   z-index:1;
   left:-55px;
   /* Match the unequipped super robot display scale (stage 4). */
@@ -5305,7 +5305,7 @@ button, input { font: inherit; }
   opacity:.35;
   filter:grayscale(.30);
 }
-#collection-grid .collection-card .card-equipment-feature {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-equipment-feature {
   z-index:2;
   left:15px;
   /* 30% larger than the previous equipment size; retain its vertical slot. */
@@ -5618,22 +5618,20 @@ button, input { font: inherit; }
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .card-vehicle {object-fit:contain;max-width:100%;max-height:100%;}
 
-/* Actual collection card markup: remove all metadata in enlarged preview. */
+/* Keep the source card's artwork coordinates and layered equipment intact. */
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .name-band,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .card-rarity,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-up-ribbon,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-new-ribbon {display:none!important;}
-.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .vehicle-area {
-  inset:0; width:100%; height:100%; overflow:hidden;
+.collection-screen.is-phonics-reward-select .phonics-scan-progress {
+ position:absolute;z-index:48;pointer-events:none;transform:scale(.74);transform-origin:top left;
+ font-family:"Noto Sans JP",sans-serif;color:var(--navy);
 }
-.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .card-vehicle {
-  object-fit:contain!important;
-}
-
-/* Separate the reward copy from the enlarged card's strong glow. */
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-progress,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-progress {display:flex;}
+/* Reward copy stays below the card and clear of its glow. */
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
-  top:calc(100% + 68px);
-  left:5%;width:90%;
-  background:rgba(3,16,40,.97);
-  box-shadow:0 8px 25px rgba(0,7,25,.85);
+ top:calc(100% + 68px);left:5%;width:90%;background:rgba(3,16,40,.97);
+ box-shadow:0 8px 25px rgba(0,7,25,.85);
 }
