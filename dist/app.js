@@ -4203,56 +4203,60 @@
     const cards = [...grid.querySelectorAll(".collection-card")];
     const target = cards.find((card) => Number(card.dataset.vehicle) === vehicleIndex);
     if (!target) { state.phonicsScanInProgress = false; applyPhonicsRewardGrowth(vehicleIndex); return; }
-    const targetRect = target.getBoundingClientRect(), gridRect = grid.getBoundingClientRect();
-    const x = targetRect.left-gridRect.left, y = targetRect.top-gridRect.top, w = targetRect.width, h = targetRect.height;
-    const left = Math.min(...cards.map((card) => card.offsetLeft));
-    const right = Math.max(...cards.map((card) => card.offsetLeft+card.offsetWidth))-w;
-    const top = Math.min(...cards.map((card) => card.offsetTop));
-    const bottom = Math.max(...cards.map((card) => card.offsetTop+card.offsetHeight))-h;
-    const overlay = document.createElement("div");
-    overlay.id = "phonics-cross-scan";
-    overlay.className = "phonics-cross-scan";
-    overlay.setAttribute("aria-hidden", "true");
-    overlay.innerHTML = '<div class="phonics-scan-darkness"></div><div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
-    const darkness = overlay.querySelector(".phonics-scan-darkness");
+    const stage = $("collection-stage");
+    const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
+    const x=targetRect.left-stageRect.left, y=targetRect.top-stageRect.top, w=targetRect.width, h=targetRect.height;
+    const centerX=x+w/2, centerY=y+h/2;
+    const overlay=document.createElement("div");
+    overlay.id="phonics-cross-scan";
+    overlay.className="phonics-cross-scan";
+    overlay.setAttribute("aria-hidden","true");
+    overlay.innerHTML='<div class="phonics-scan-darkness"></div><div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
+    stage.append(overlay);
     $("collection-screen").classList.add("is-phonics-scanning");
-    grid.append(overlay);
-    const column = overlay.querySelector(".phonics-scan-column"), row = overlay.querySelector(".phonics-scan-row"), impact = overlay.querySelector(".phonics-scan-impact");
-    const move = async (beam, values, axis, dimension) => {
-      beam.style[axis === "X" ? "width" : "height"] = dimension + "px";
-      beam.style[axis === "X" ? "height" : "width"] = "100%";
-      const keyframes = values.map((value,i) => ({ transform: "translate"+axis+"("+value+"px)", offset:[0,.32,.64,1][i] }));
-      const animation = beam.animate(keyframes,{ duration:3100, easing:"ease-in-out", fill:"forwards" });
-      let active = true;
-      const paint = () => {
-        if (!active) return;
-        const beamRect = beam.getBoundingClientRect();
-        const gridBounds = grid.getBoundingClientRect();
-        const cx = beamRect.left - gridBounds.left + beamRect.width / 2;
-        const cy = beamRect.top - gridBounds.top + beamRect.height / 2;
-        const rx = axis === "X" ? w * .64 : gridBounds.width;
-        const ry = axis === "Y" ? h * .64 : gridBounds.height;
-        darkness.style.maskImage = `radial-gradient(ellipse ${rx}px ${ry}px at ${cx}px ${cy}px, transparent 0%, rgba(0,0,0,.08) 33%, black 100%)`;
+    const darkness=overlay.querySelector(".phonics-scan-darkness");
+    const column=overlay.querySelector(".phonics-scan-column"), row=overlay.querySelector(".phonics-scan-row"), impact=overlay.querySelector(".phonics-scan-impact");
+    const paintMask=(axis,center,radius)=>{
+      const gradient=`linear-gradient(to ${axis==="X"?"right":"bottom"},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
+      darkness.style.maskImage=gradient;
+      darkness.style.webkitMaskImage=gradient;
+    };
+    const move=async(beam,axis,targetCenter,dimension)=>{
+      const span=axis==="X"?stageRect.width:stageRect.height;
+      const size=dimension*1.25, radius=dimension*.9;
+      beam.style[axis==="X"?"width":"height"]=size+"px";
+      beam.style[axis==="X"?"height":"width"]="100%";
+      const transform=center=>axis==="X"?`translate3d(${center-size/2}px,0,0)`:`translate3d(0,${center-size/2}px,0)`;
+      const values=[size/2,span-size/2,size/2,targetCenter];
+      const animation=beam.animate(values.map((center,i)=>({transform:transform(center),offset:[0,.32,.64,1][i]})),{duration:6200,easing:"ease-in-out",fill:"forwards"});
+      let active=true;
+      const paint=()=>{
+        if(!active)return;
+        const b=beam.getBoundingClientRect();
+        const center=axis==="X"?b.left-stageRect.left+b.width/2:b.top-stageRect.top+b.height/2;
+        paintMask(axis,center,radius);
         window.requestAnimationFrame(paint);
       };
       paint();
-      try { await animation.finished; } finally { active = false; }
-      beam.style.transform = "translate"+axis+"("+values[3]+"px)";
+      try{await animation.finished;}finally{active=false;}
+      beam.style.transform=transform(targetCenter);
       animation.cancel();
+      paintMask(axis,targetCenter,radius);
     };
     try {
       // Two bounces: far edge, near edge, then selected column.
-      await move(column,[left,right,left,x],"X",w);
+      await move(column,"X",centerX,w);
       column.classList.add("is-locked");
       await scanPause(500);
       // Two bounces: bottom, top, then selected row.
-      await move(row,[top,bottom,top,y],"Y",h);
+      await move(row,"Y",centerY,h);
       row.classList.add("is-locked");
       await scanPause(290);
       // Flash ONLY after the row and column are both fully resolved.
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
       target.classList.add("is-phonics-scan-winner");
+      darkness.style.opacity=".45";
       await scanPause(900);
       // Animate a visual clone, keeping the actual collection card and artwork loaded.
       const showcase = document.createElement("div");
@@ -4267,14 +4271,15 @@
       caption.replaceChildren(Object.assign(document.createElement("strong"),{textContent:vehicles[vehicleIndex].nameJa}), Object.assign(document.createElement("span"),{textContent:amount}));
       showcase.append(featured,caption);
       $("collection-stage").append(showcase);
-      const stageRect = $("collection-stage").getBoundingClientRect();
-      const originRect = target.getBoundingClientRect();
-      const originX = originRect.left-stageRect.left, originY = originRect.top-stageRect.top;
-      const endW = Math.min(stageRect.width*.35,420), endH = endW*(h/w);
-      const endX=(stageRect.width-endW)/2, endY=(stageRect.height-endH)/2-35;
-      Object.assign(showcase.style,{"--from-x":originX+"px","--from-y":originY+"px","--from-w":w+"px","--from-h":h+"px","--to-x":endX+"px","--to-y":endY+"px","--to-w":endW+"px","--to-h":endH+"px"});
-      showcase.classList.add("is-animating");
-      await scanPause(1000);
+      const originX=x,originY=y;
+      const endW=Math.min(stageRect.width*.35,420),endH=endW*(h/w);
+      const endX=(stageRect.width-endW)/2,endY=(stageRect.height-endH)/2-35;
+      const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
+      Object.assign(showcase.style,frame(originX,originY,w,h));
+      const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],{duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"});
+      await fly.finished;
+      Object.assign(showcase.style,frame(endX,endY,endW,endH));
+      fly.cancel();
       showcase.classList.add("is-settled");
       await scanPause(2000);
       showcase.remove();
