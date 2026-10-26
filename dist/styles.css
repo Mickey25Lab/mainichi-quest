@@ -5629,3 +5629,11 @@ button, input { font: inherit; }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .card-vehicle {
   object-fit:contain!important;
 }
+
+/* Separate the reward copy from the enlarged card's strong glow. */
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
+  top:calc(100% + 68px);
+  left:5%;width:90%;
+  background:rgba(3,16,40,.97);
+  box-shadow:0 8px 25px rgba(0,7,25,.85);
+}
