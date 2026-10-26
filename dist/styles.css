@@ -5585,3 +5585,14 @@ button, input { font: inherit; }
 .phonics-scan-showcase-caption { position:absolute;top:calc(100% + 12px);left:-50%;width:200%;text-align:center;color:#fff;text-shadow:0 2px 6px #001a44,0 0 15px #4cdcff;opacity:0;display:flex;flex-direction:column;gap:6px;font-size:clamp(22px,3vw,40px);font-weight:900; }
 .phonics-scan-showcase.is-settled .phonics-scan-showcase-caption { opacity:1; }
 @keyframes mq-showcase-fly { from{width:var(--from-w);height:var(--from-h);transform:translate(var(--from-x),var(--from-y))}to{width:var(--to-w);height:var(--to-h);transform:translate(var(--to-x),var(--to-y))} }
+
+/* Full-garage scanner: grayscale staging, stage-wide shutter and centered beams. */
+.collection-screen.is-phonics-reward-select .collection-stage { filter:grayscale(.8); }
+.collection-screen.is-phonics-reward-select .collection-header { position:relative;z-index:30;filter:none; }
+.collection-screen.is-phonics-reward-select .phonics-cross-scan {position:absolute;inset:0;z-index:20;overflow:hidden;pointer-events:none;}
+.collection-screen.is-phonics-reward-select .phonics-scan-darkness {position:absolute;inset:0;z-index:1;background:rgba(10,13,19,.93);}
+.collection-screen.is-phonics-reward-select .phonics-scan-beam {z-index:2;}
+.collection-screen.is-phonics-reward-select .phonics-scan-impact {z-index:3;}
+.collection-screen.is-phonics-scanning .collection-card.is-phonics-scan-winner {z-index:21;outline:5px solid #fff;box-shadow:0 0 0 10px #fff,0 0 75px 38px #fff,0 0 145px 80px #85edff!important;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase {animation:none!important;transform:none!important;position:absolute;z-index:45;margin:0;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase.is-settled .phonics-scan-showcase-caption {opacity:1;}
