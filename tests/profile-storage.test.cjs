@@ -376,7 +376,8 @@ test("quest bonus claim is atomic with progression, once a JST day and profile",
   assert.deepEqual(store.getPointLedger(), snapshot);
   const next = makeStore(storage);
   assert.equal(next.getQuestBonusClaimDate(), "2026-10-26");
-  next.createProfile("B");
+  const profileB = next.createProfile("B");
+  next.setActiveProfile(profileB.profileId);
   assert.equal(next.getQuestBonusClaimDate(), null);
   next.setActiveProfile(a.profileId);
   next.commitRewardProgressWithPoints([{ ...gained[0], energy:24 }], { questBonusClaimDate:"2026-10-27" });
