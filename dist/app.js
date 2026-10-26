@@ -4332,7 +4332,31 @@
         if (fill) fill.style.height = Math.min(100, progress.energy / max * 100)+"%";
         status.setAttribute("aria-label", `エネルギー ${progress.energy} / ${max}`);
       }
-      if (idx === state.phonicsLastRewardVehicleIndex) card.classList.add("is-up");
+      if (idx === state.phonicsLastRewardVehicleIndex) {
+        card.classList.add("is-up");
+        const hearts = card.querySelector(".collection-card-hearts");
+        if (hearts) {
+          hearts.setAttribute("aria-label", `なかよし ${progress.friendship} / 5`);
+          hearts.querySelectorAll("i").forEach((heart, i) => heart.classList.toggle("is-earned", 5-i <= progress.friendship));
+        }
+        if (progress.friendly && hearts) {
+          hearts.remove();
+          const energy = document.createElement("span");
+          energy.className = "collection-card-status collection-card-energy";
+          energy.setAttribute("aria-label", `エネルギー ${progress.energy} / ${requiredEnergyForStage(progress.stage)}`);
+          const bar = document.createElement("i");
+          bar.style.height = Math.min(100,progress.energy / requiredEnergyForStage(progress.stage)*100)+"%";
+          energy.append(bar);
+          card.append(energy);
+        }
+        const correctStage = progress.masterMedal ? 5 : Math.max(2,Math.min(5,progress.stage));
+        if (Number(card.dataset.stage) !== correctStage) {
+          card.dataset.stage = String(correctStage);
+          const art = card.querySelector(".card-vehicle");
+          if (art) art.src = answerArtworkPath(idx,correctStage);
+        }
+        card.querySelector(".card-vehicle")?.classList.toggle("is-pre-friendship",!progress.friendly && correctStage === 2);
+      }
     });
     sizeCollectionStage();
     showScreen("collection-screen");
