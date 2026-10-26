@@ -1,6 +1,10 @@
 name: Verify Cloudflare production release
 
 on:
+  pull_request:
+    paths:
+      - '.github/scripts/verify-cloudflare-production*'
+      - '.github/workflows/verify-cloudflare-production.yml'
   schedule:
     - cron: '17 21 * * *'
   workflow_dispatch:
@@ -9,7 +13,17 @@ permissions:
   contents: read
 
 jobs:
+  test-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test .github/scripts/verify-cloudflare-production.test.mjs
+
   verify-production:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
