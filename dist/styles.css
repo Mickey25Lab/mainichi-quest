@@ -5627,7 +5627,7 @@ button, input { font: inherit; }
    The garage scrim is a real element so reward-screen toggles cannot disable it. */
 .collection-screen.is-phonics-reward-select .phonics-reward-scrim {
  position:absolute;inset:0;z-index:38;pointer-events:none;
- background:rgba(5,11,24,.86);
+ background:rgba(10,13,19,.93);
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase {
  position:absolute;z-index:45;overflow:visible;border-radius:14px;
@@ -5683,4 +5683,13 @@ button, input { font: inherit; }
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption.is-collection-handoff {
  white-space:nowrap;opacity:1;visibility:visible;
+}
+
+/* One visual contract from target lock through acquisition and handoff.
+   Do not affect the ordinary play-mode reward popup. */
+.collection-screen.is-phonics-reward-select.is-phonics-winner-selected #collection-header-title {
+ visibility:hidden;
+}
+.reward-screen.reward-overlay.phonics-reward-overlay .reward-dimmer {
+ background:transparent;
 }
