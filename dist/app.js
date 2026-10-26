@@ -4159,6 +4159,7 @@
       state.phonicsRewardSelectedVehicleIndex = null;
       state.phonicsScanInProgress = false;
       document.getElementById("phonics-cross-scan")?.remove();
+      document.getElementById("phonics-reward-scrim")?.remove();
       document.getElementById("phonics-scan-showcase")?.remove();
       $("collection-screen").classList.remove("is-phonics-scanning");
     }
@@ -4311,7 +4312,11 @@
       const cardScale=endW/w;
       // Preserve the former preview's thin border instead of scaling the
       // collection card's native stroke several times larger.
-      featured.style.borderWidth=(2/cardScale)+"px";
+      // The collection card is scaled but the halo is not: compensate its
+      // source-space corner radius so both have the same rendered 14px arc.
+      featured.style.setProperty("border-width","0","important");
+      featured.style.setProperty("border-radius",(14/cardScale)+"px","important");
+      featured.style.setProperty("clip-path",`inset(0 round ${14/cardScale}px)`,"important");
       const enlarge=featured.animate([{transform:"scale(1)"},{transform:`scale(${cardScale})`}],timing);
       await Promise.all([fly.finished,enlarge.finished]);
       Object.assign(showcase.style,frame(endX,endY,endW,endH));
@@ -4361,6 +4366,14 @@
         });
       }
       await scanPause(900);
+      // The persistent scrim survives scan, acquisition and handoff.
+      // Install BEFORE removing the scanner so there is no bright frame.
+      if (!document.getElementById("phonics-reward-scrim")) {
+        const scrim=document.createElement("div");
+        scrim.id="phonics-reward-scrim";
+        scrim.className="phonics-reward-scrim";
+        stage.append(scrim);
+      }
       // Save the charged visual; hide it only while an acquisition popup plays.
       // Reuse this exact completed card for the subsequent collection handoff.
       state.phonicsChargedShowcase=showcase;
@@ -4406,6 +4419,9 @@
     state.collectionClosing = false;
     setBackgroundMusicDucked(false);
     setCollectionPresentationMode("browse");
+    // The browsing scene is ready; release the one persistent reward scrim.
+    document.getElementById("phonics-reward-scrim")?.remove();
+    $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
     resetCapsuleDialog();
     state.collectionDeadline = Date.now() + 60000;
     $("collection-item-count").textContent = String(availableEnergyCapsuleCount());
@@ -4474,7 +4490,6 @@
     window.setTimeout(()=>{
       state.phonicsChargedShowcase?.remove();
       state.phonicsChargedShowcase=null;
-      $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
       state.phonicsShowcaseGeometry=null;
       openNormalCollectionAfterPhonicsReward();
     },2500);
