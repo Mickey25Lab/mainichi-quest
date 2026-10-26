@@ -4360,6 +4360,17 @@
         });
       }
       await scanPause(900);
+      // Mark the change of scene explicitly after the charging animation ends.
+      // Keep the completed gauge visible throughout the entire 1.5-second cue.
+      const nextNotice=document.createElement("div");
+      nextNotice.className="phonics-scan-next-notice";
+      nextNotice.textContent="さあコレクションを見てみよう";
+      stage.append(nextNotice);
+      try {
+        await scanPause(1500);
+      } finally {
+        nextNotice.remove();
+      }
       progressHolder.remove();
       showcase.remove();
     } finally {
