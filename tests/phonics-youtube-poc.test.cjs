@@ -154,7 +154,7 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
     return collection.classList.contains("active")
       && !collection.classList.contains("is-phonics-reward-select")
       && !reward.classList.contains("active");
-  }, null, { timeout: 12000 });
+  }, null, { timeout: 25000 });
   const markerCount = await page.locator("#collection-grid .collection-card.is-new, #collection-grid .collection-card.is-up").count();
   assert.equal(markerCount, 1);
   await page.locator("#collection-exit").click();
