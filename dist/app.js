@@ -3726,6 +3726,7 @@
     $("reward-stage").dataset.rewardKind = kind;
     $("reward-image").alt = `${vehicle.nameJa}の獲得演出`;
     $("reward-screen").classList.toggle("reward-overlay", stage < 5);
+    $("reward-screen").classList.toggle("phonics-reward-overlay", Boolean(onDone) && state.collectionMode === "phonics-reward-select");
     const runId = state.runId;
     const nextVehicleOverlayReady = shouldShowNextVehicleOverlay
       ? preloadDecodedImage(nextVehicleOverlayPath)
@@ -4161,7 +4162,8 @@
       document.getElementById("phonics-cross-scan")?.remove();
       document.getElementById("phonics-reward-scrim")?.remove();
       document.getElementById("phonics-scan-showcase")?.remove();
-      $("collection-screen").classList.remove("is-phonics-scanning");
+      $("collection-screen").classList.remove("is-phonics-scanning","is-phonics-winner-selected","is-phonics-reward-handoff-pending");
+      $("reward-screen").classList.remove("phonics-reward-overlay");
     }
   }
   function seedPatrolCarForPhonicsRewardIfNeeded() {
@@ -4274,6 +4276,7 @@
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
       target.classList.add("is-phonics-scan-winner");
+      $("collection-screen").classList.add("is-phonics-winner-selected");
       darkness.style.opacity="1";
       darkness.style.webkitMaskImage="none";
       darkness.style.maskImage="none";
@@ -4366,8 +4369,8 @@
         });
       }
       await scanPause(900);
-      // The persistent scrim survives scan, acquisition and handoff.
-      // Install BEFORE removing the scanner so there is no bright frame.
+      // Keep the same neutral darkness throughout all reward phases.
+      // Install before the scan darkness goes away, so no bright frame leaks.
       if (!document.getElementById("phonics-reward-scrim")) {
         const scrim=document.createElement("div");
         scrim.id="phonics-reward-scrim";
@@ -4421,7 +4424,8 @@
     setCollectionPresentationMode("browse");
     // The browsing scene is ready; release the one persistent reward scrim.
     document.getElementById("phonics-reward-scrim")?.remove();
-    $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
+    $("collection-screen").classList.remove("is-phonics-reward-handoff-pending","is-phonics-winner-selected");
+    $("reward-screen").classList.remove("phonics-reward-overlay");
     resetCapsuleDialog();
     state.collectionDeadline = Date.now() + 60000;
     $("collection-item-count").textContent = String(availableEnergyCapsuleCount());
