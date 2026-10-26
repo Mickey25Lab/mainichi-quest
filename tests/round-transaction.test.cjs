@@ -81,7 +81,7 @@ test("a profile change cannot commit another child's pending rewards", () => {
 test("round lifecycle is wired to start, normal completion and quit", () => {
   assert.match(source, /function beginRound\([^]*?beginRoundTransaction\(\)/);
   assert.match(source, /function finishRound\(\)\s*\{\s*commitRoundTransaction\(\)/);
-  assert.match(source, /function endToModeSelect\(\)\s*\{\s*discardRoundTransaction\(\)/);
+  assert.match(source, /function endToModeSelect\(\)\s*\{\s*cancelDailyMissionAttempt\(\);\s*discardRoundTransaction\(\)/);
   assert.match(source, /function saveCollection\(\)\s*\{\s*if \(roundTransaction\) return/);
   assert.match(source, /function saveRecentVehicles\(\)\s*\{\s*if \(roundTransaction\) return/);
   assert.match(source, /function recordCommittedAcquisition\([^]*?roundTransaction\.acquisitionHistory\.push/);
