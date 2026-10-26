@@ -63,6 +63,51 @@
       try {const file=serialise();saveFile("maique-transfer-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(file,null,2));status.textContent="保存ファイルを確認してください。元のデータは変更していません。";}
       catch(e){status.textContent="書き出し失敗: "+e.message;}
     });
+    // Destructive action is deliberately limited to the Cloudflare destination,
+    // and only when it contains exactly one expendable "Papa" profile.
+    if (location.origin === "https://mainichi-quest-63c.pages.dev") {
+      button("検証用Papaデータを削除", () => {
+        try {
+          const raw=localStorage.getItem(PROFILE_KEY);
+          const {data,ids}=parseProfiles(raw);
+          const papa=data.profiles[0];
+          if(data.profiles.length!==1 || papa.displayName!=="Papa" || ids.size!==1 ||
+             localStorage.getItem(ACTIVE_KEY)!==papa.profileId) {
+            throw Error("Papaだけの保存領域ではありません。削除を中止しました。");
+          }
+          const snapshot=serialise();
+          const keys=Object.keys(snapshot.entries);
+          if(!keys.length)throw Error("削除対象がありません。");
+          if(!confirm("Cloudflare版のPapaプロフィールと同じ保存領域の関連データを削除します。ミナトのGitHub Pages版には触れません。バックアップを書き出しますか？")) {
+            status.textContent="削除をキャンセルしました。";return;
+          }
+          saveFile("maique-papa-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(snapshot,null,2));
+          status.textContent="Papaのバックアップファイルを保存しました。ファイルアプリで実際に保存されたことを確認してください。";
+          if(prompt("保存したバックアップを確認できたら『Papa削除』と入力してください。")!=="Papa削除") {
+            status.textContent="バックアップ書き出しのみ行いました。データ削除はキャンセルしました。";return;
+          }
+          // Recheck immediately before touching storage; do not erase a newly changed registry.
+          if(localStorage.getItem(PROFILE_KEY)!==raw ||
+             localStorage.getItem(ACTIVE_KEY)!==papa.profileId ||
+             keys.some(key=>localStorage.getItem(key)!==snapshot.entries[key]) ||
+             Object.keys(localStorage).some(key=>isStoreKey(key) && !keys.includes(key))) {
+            throw Error("確認中に保存データが変更されました。削除を中止しました。");
+          }
+          if(!confirm("最終確認：このCloudflare版のPapaデータを削除します。よろしいですか？")) {
+            status.textContent="削除をキャンセルしました。";return;
+          }
+          const removed=[];
+          try {
+            for(const key of keys){localStorage.removeItem(key);removed.push(key);}
+            if(keys.some(key=>localStorage.getItem(key)!==null))throw Error("削除後の照合に失敗");
+          }catch(error) {
+            for(const key of removed)localStorage.setItem(key,snapshot.entries[key]);
+            throw Error("削除に失敗しました。復元を試みました: "+error.message);
+          }
+          status.textContent="Papaデータを削除しました。画面を再読み込みすると、保存済みJSONを移行できます。";
+        }catch(error){status.textContent="削除中止: "+error.message;}
+      });
+    }
     const fileInput=$("input");fileInput.type="file";fileInput.accept=".json,application/json";fileInput.style.display="none";panel.append(fileInput);
     button("② ファイルを読み込む",()=>fileInput.click());
     fileInput.addEventListener("change",async()=>{
