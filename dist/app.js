@@ -4287,6 +4287,9 @@
       featured.removeAttribute("id");
       featured.disabled = true;
       featured.classList.add("is-phonics-art-only");
+      // The source card receives a strong scan-winner outline. Never clone that
+      // effect into the enlarged card: it makes the frame and glow oversized.
+      featured.classList.remove("is-phonics-scan-winner");
       // Keep the original card's own layout; only scale the complete card.
       featured.style.width = w + "px";
       featured.style.height = h + "px";
@@ -4305,6 +4308,9 @@
       const timing={duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"};
       const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],timing);
       const cardScale=endW/w;
+      // Preserve the former preview's thin border instead of scaling the
+      // collection card's native stroke several times larger.
+      featured.style.borderWidth=(2/cardScale)+"px";
       const enlarge=featured.animate([{transform:"scale(1)"},{transform:`scale(${cardScale})`}],timing);
       await Promise.all([fly.finished,enlarge.finished]);
       Object.assign(showcase.style,frame(endX,endY,endW,endH));
@@ -4321,9 +4327,10 @@
       progressPanel.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
       const progressHolder=document.createElement("div");
       progressHolder.className="phonics-scan-progress";
-      Object.assign(progressHolder.style,{left:(endX+endW+18)+"px",top:(endY+22)+"px"});
       progressHolder.append(progressPanel);
-      stage.append(progressHolder);
+      // Nest the unchanged arithmetic UI inside the card's right-hand space,
+      // leaving a visible gap from the card frame.
+      showcase.append(progressHolder);
       const amounts=phonicsGrowthAmounts();
       if(isFriendship){
         const hearts=[...progressPanel.querySelectorAll(".friendship-heart")];
