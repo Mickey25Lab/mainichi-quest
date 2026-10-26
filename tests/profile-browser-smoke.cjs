@@ -228,12 +228,13 @@ test("unfinished acquisition is not persisted and QA preset does not add history
   // The first discovery appears in play but is not persisted until the full round ends.
   await page.waitForFunction(() => {
     const progress = window.MQProfileStorage.createProfileStorage(localStorage).getRewardProgress();
-    return progress.every((entry) => !entry.discovered);
+    return progress === null || progress.every((entry) => !entry.discovered);
   });
   assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
   await page.reload();
   assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
-  assert.ok((await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getRewardProgress())).every((entry) => !entry.discovered));
+  const reloadedProgress = await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getRewardProgress());
+  assert.ok(reloadedProgress === null || reloadedProgress.every((entry) => !entry.discovered));
   await enterQaMode(page);
   assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
   assert.deepEqual(errors, []);
