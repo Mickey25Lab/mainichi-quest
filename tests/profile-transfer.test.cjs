@@ -47,7 +47,7 @@ async function importData(page,payload,approve=true) {
   const fileInput=page.locator('input[type="file"]');
   await page.locator('#mq-transfer-dialog [role="status"]').evaluate(el=>el.textContent="");
   await fileInput.setInputFiles({name:"transfer.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(payload))});
-  await page.waitForFunction(()=>document.querySelector('#mq-transfer-dialog [role="status"]').textContent.length>0);
+  await page.waitForFunction(()=>/保存完了|読み込み中止|キャンセルしました/.test(document.querySelector('#mq-transfer-dialog [role="status"]').textContent));
   return await page.locator('#mq-transfer-dialog [role="status"]').textContent();
 }
 test("round-trip: all saved keys, profile IDs and progress retained; source unchanged",async t=>{
