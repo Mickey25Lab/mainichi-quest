@@ -74,6 +74,9 @@ jobs:
             tests/level-system.test.cjs \
             tests/bgm-controller.test.cjs \
             tests/two-digit-multiplication-guides.test.cjs
+      - name: Run PWA origin transfer safety tests
+        if: steps.changes.outputs.docs_only != 'true'
+        run: node --test tests/profile-transfer.test.cjs
       - name: Run two browser smoke suites
         if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
