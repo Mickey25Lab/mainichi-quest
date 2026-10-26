@@ -4459,26 +4459,25 @@
     const showcase=state.phonicsChargedShowcase;
     $("reward-screen").classList.remove("active");
     screens.forEach(id=>$(id).classList.toggle("active",id==="collection-screen"));
-    // Restore the completed character, fill and halo above the dimmed garage.
+    // Restore the exact completed showcase; reuse its existing caption rather
+    // than layering a differently sized notification box over the reward text.
     if (showcase) {
-      showcase.querySelector(".phonics-scan-showcase-caption")?.remove();
+      const caption=showcase.querySelector(".phonics-scan-showcase-caption");
+      if (caption) {
+        caption.replaceChildren(Object.assign(document.createElement("strong"),{
+          textContent:"さあコレクションを見てみよう！"
+        }));
+        caption.classList.add("is-collection-handoff");
+      }
       stage.append(showcase);
     }
-    const notice=document.createElement("div");
-    notice.className="phonics-scan-next-notice";
-    notice.textContent="さあコレクションを見てみよう！";
-    if(geometry)Object.assign(notice.style,{
-      left:geometry.left+"px",top:(geometry.top+geometry.height+68)+"px",width:geometry.width+"px"
-    });
-    stage.append(notice);
     window.setTimeout(()=>{
-      notice.remove();
       state.phonicsChargedShowcase?.remove();
       state.phonicsChargedShowcase=null;
       $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
       state.phonicsShowcaseGeometry=null;
       openNormalCollectionAfterPhonicsReward();
-    },1500);
+    },2500);
   }
   function applyPhonicsRewardGrowth(vehicleIndex, onFinished = showPhonicsCollectionHandoff) {
     if (!Number.isInteger(vehicleIndex)) return;
