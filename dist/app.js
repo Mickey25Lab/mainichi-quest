@@ -4148,10 +4148,7 @@
   function setCollectionPresentationMode(mode = "browse") {
     state.collectionMode = mode;
     const selectionMode = mode === "phonics-reward-select";
-    $("collection-stage").style.setProperty(
-      "--phonics-reward-background",
-      selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
-    );
+    // Use the regular garage background in both modes.
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
     if (selectionMode) $("collection-header-title").innerHTML = "どののりものが<ruby>育<rt>そだ</rt></ruby>つかな？";
     else renderCollectionBaseTitle();
@@ -4162,6 +4159,8 @@
       state.phonicsRewardSelectedVehicleIndex = null;
       state.phonicsScanInProgress = false;
       document.getElementById("phonics-cross-scan")?.remove();
+      document.getElementById("phonics-scan-showcase")?.remove();
+      $("collection-screen").classList.remove("is-phonics-scanning");
     }
   }
   function seedPatrolCarForPhonicsRewardIfNeeded() {
@@ -4214,15 +4213,30 @@
     overlay.id = "phonics-cross-scan";
     overlay.className = "phonics-cross-scan";
     overlay.setAttribute("aria-hidden", "true");
-    overlay.innerHTML = '<div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
+    overlay.innerHTML = '<div class="phonics-scan-darkness"></div><div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
+    const darkness = overlay.querySelector(".phonics-scan-darkness");
+    $("collection-screen").classList.add("is-phonics-scanning");
     grid.append(overlay);
     const column = overlay.querySelector(".phonics-scan-column"), row = overlay.querySelector(".phonics-scan-row"), impact = overlay.querySelector(".phonics-scan-impact");
     const move = async (beam, values, axis, dimension) => {
       beam.style[axis === "X" ? "width" : "height"] = dimension + "px";
       beam.style[axis === "X" ? "height" : "width"] = "100%";
       const keyframes = values.map((value,i) => ({ transform: "translate"+axis+"("+value+"px)", offset:[0,.32,.64,1][i] }));
-      const animation = beam.animate(keyframes,{ duration:1550, easing:"ease-in-out", fill:"forwards" });
-      await animation.finished;
+      const animation = beam.animate(keyframes,{ duration:3100, easing:"ease-in-out", fill:"forwards" });
+      let active = true;
+      const paint = () => {
+        if (!active) return;
+        const beamRect = beam.getBoundingClientRect();
+        const gridBounds = grid.getBoundingClientRect();
+        const cx = beamRect.left - gridBounds.left + beamRect.width / 2;
+        const cy = beamRect.top - gridBounds.top + beamRect.height / 2;
+        const rx = axis === "X" ? w * .64 : gridBounds.width;
+        const ry = axis === "Y" ? h * .64 : gridBounds.height;
+        darkness.style.maskImage = `radial-gradient(ellipse ${rx}px ${ry}px at ${cx}px ${cy}px, transparent 0%, rgba(0,0,0,.08) 33%, black 100%)`;
+        window.requestAnimationFrame(paint);
+      };
+      paint();
+      try { await animation.finished; } finally { active = false; }
       beam.style.transform = "translate"+axis+"("+values[3]+"px)";
       animation.cancel();
     };
@@ -4230,7 +4244,7 @@
       // Two bounces: far edge, near edge, then selected column.
       await move(column,[left,right,left,x],"X",w);
       column.classList.add("is-locked");
-      await scanPause(160);
+      await scanPause(500);
       // Two bounces: bottom, top, then selected row.
       await move(row,[top,bottom,top,y],"Y",h);
       row.classList.add("is-locked");
@@ -4239,9 +4253,35 @@
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
       target.classList.add("is-phonics-scan-winner");
-      await scanPause(800);
+      await scanPause(900);
+      // Animate a visual clone, keeping the actual collection card and artwork loaded.
+      const showcase = document.createElement("div");
+      showcase.id = "phonics-scan-showcase";
+      showcase.className = "phonics-scan-showcase";
+      const featured = target.cloneNode(true);
+      featured.removeAttribute("id");
+      featured.disabled = true;
+      const caption = document.createElement("div");
+      caption.className = "phonics-scan-showcase-caption";
+      const amount = phonicsGrowthAmountLabel(vehicleIndex);
+      caption.replaceChildren(Object.assign(document.createElement("strong"),{textContent:vehicles[vehicleIndex].nameJa}), Object.assign(document.createElement("span"),{textContent:amount}));
+      showcase.append(featured,caption);
+      $("collection-stage").append(showcase);
+      const stageRect = $("collection-stage").getBoundingClientRect();
+      const originRect = target.getBoundingClientRect();
+      const originX = originRect.left-stageRect.left, originY = originRect.top-stageRect.top;
+      const endW = Math.min(stageRect.width*.35,420), endH = endW*(h/w);
+      const endX=(stageRect.width-endW)/2, endY=(stageRect.height-endH)/2-35;
+      Object.assign(showcase.style,{"--from-x":originX+"px","--from-y":originY+"px","--from-w":w+"px","--from-h":h+"px","--to-x":endX+"px","--to-y":endY+"px","--to-w":endW+"px","--to-h":endH+"px"});
+      showcase.classList.add("is-animating");
+      await scanPause(1000);
+      showcase.classList.add("is-settled");
+      await scanPause(2000);
+      showcase.remove();
     } finally {
       overlay.remove();
+      document.getElementById("phonics-scan-showcase")?.remove();
+      $("collection-screen").classList.remove("is-phonics-scanning");
       target.classList.remove("is-phonics-scan-winner");
       state.phonicsScanInProgress = false;
     }
@@ -4281,7 +4321,19 @@
     state.collectionShowSessionMarkers = true;
     prepareCollectionCategoryTabs();
     setCollectionCategory("summary");
-    renderCollectionGrid({ showSessionMarkers: true });
+    // Keep the existing garage cards mounted to avoid flashing empty images.
+    $("collection-grid").querySelectorAll(".collection-card").forEach((card) => {
+      const idx = Number(card.dataset.vehicle);
+      const progress = vehicleProgress(idx);
+      const status = card.querySelector(".collection-card-status");
+      if (status?.classList.contains("collection-card-energy")) {
+        const max = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+        const fill = status.querySelector("i");
+        if (fill) fill.style.height = Math.min(100, progress.energy / max * 100)+"%";
+        status.setAttribute("aria-label", `エネルギー ${progress.energy} / ${max}`);
+      }
+      if (idx === state.phonicsLastRewardVehicleIndex) card.classList.add("is-up");
+    });
     sizeCollectionStage();
     showScreen("collection-screen");
     updateCollectionClock();
@@ -4313,7 +4365,7 @@
       reward = gain.reward;
       if (!reward) saveCollectionProgress();
     }
-    renderCollectionGrid({ showSessionMarkers: false });
+    // Retain the existing card DOM and artwork; only patch progress indicators.
     if (reward) {
       showReward(reward, false, openNormalCollectionAfterPhonicsReward);
       return;
