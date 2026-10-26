@@ -27,3 +27,20 @@ test("daily completion respects start context and complete-round hooks", () => {
   assert.match(app, /attempt.date !== japanDateKey\(\)/);
   assert.match(app, /attempt.profileId !== profileStore.getActiveProfileId\(\)/);
 });
+
+test("parent target changes only update completion state; they do not trigger an award", () => {
+  // Parent adds a required round after the child had completed every prior target.
+  assert.equal(detect([{id:"normal",remaining:0},{id:"counting1",remaining:1}], "normal"), false);
+  assert.equal(detect([{id:"normal",remaining:0},{id:"counting1",remaining:1}], "counting1"), true);
+  // Parent lowers or disables the last requirement: no play completion callback occurs.
+  assert.equal(detect([{id:"normal",remaining:0}], "normal"), false);
+  // Parent later increases an already-completed target.
+  assert.equal(detect([{id:"normal",remaining:1}], "normal"), true);
+});
+test("only a completed attempt can save completion and emit a final signal", () => {
+  assert.match(app, /if \(!attempt \|\| attempt.mode !== mode/);
+  assert.match(app, /if \(isFinal\) lastDailyMissionCompletion =/);
+  assert.match(app, /function endToModeSelect\(\) \{\s*cancelDailyMissionAttempt\(\)/);
+  assert.match(app, /function leavePhonicsYoutube\(\) \{\s*cancelDailyMissionAttempt\(\)/);
+  assert.match(app, /function dailyMissionCompletionTransition\(items, completedMode\) \{\s*if \(!items.length\) return false/);
+});
