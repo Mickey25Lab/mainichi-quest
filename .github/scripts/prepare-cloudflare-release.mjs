@@ -8,7 +8,7 @@ const branch = process.env.CF_PAGES_BRANCH || "";
 if (!branch) throw new Error("CF_PAGES_BRANCH missing: refusing to infer a release environment");
 
 const source = readFileSync("dist/app.js", "utf8");
-const match = source.match(/const appVersion = "(\\d+\\.\\d+\\.\\d+)";/);
+const match = source.match(/const appVersion = "(\d+\.\d+\.\d+)";/);
 if (!match) throw new Error("appVersion missing in dist/app.js");
 
 const commit = process.env.CF_PAGES_COMMIT_SHA || execFileSync("git", ["rev-parse", "HEAD"], { encoding:"utf8" }).trim();
