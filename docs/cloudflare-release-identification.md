@@ -1,25 +1,30 @@
-# Cloudflare Pages release identification
+# Cloudflare Pages production versioning
 
-Cloudflare Pages is the intended production host:
-https://mainichi-quest-63c.pages.dev/
+Official production URL: https://mainichi-quest-63c.pages.dev/
 
-## Cloudflare dashboard settings (must be verified manually)
+## Version policy
 
-- Git repository: `Mickey25Lab/mainichi-quest`
+Retain the existing numeric `0.3.x` semantic-version series. The last version managed by the former GitHub Pages release mechanism is anchored at Git tag `mq-prod-v0.3.61`. Cloudflare versions use `0.3.(61 + N)` where N is the count of **first-parent commits on main since that anchor**, so each mainline release has a stable, increasing number. Retried deployments of the same main commit retain the same number. Other branches and commits do not affect this count.
+
+- Production: display `Version 0.3.62 | <commit7>` (example); numeric version plus the separately tracked deployed Git commit SHA.
+- Preview: display `Version 0.3.62_P | <commit7>` (example); take the numeric version from the current main while exposing the actual Preview commit separately. Preview commits do not advance the number.
+- `dist/release-meta.json`: generated at build time and contains `version`, `commit`, `branch`, `environment`, and `releaseCommit`. It must not be committed.
+- **Important**: this policy counts *all* mainline commits as releases, including documentation-only changes. It does not automate semantic MINOR or MAJOR upgrades. Changes of series require an explicitly designed and tested migration of the baseline.
+
+## Required Cloudflare Pages configuration (dashboard verification pending)
+
+- Repository: `Mickey25Lab/mainichi-quest`
 - Production branch: `main`
 - Build command: `node .github/scripts/prepare-cloudflare-release.mjs`
 - Build output directory: `dist`
 - Root directory: repository root
-- Cloudflare Pages Git integration must supply `CF_PAGES_COMMIT_SHA` and `CF_PAGES_BRANCH`
+- Cloudflare must supply full `CF_PAGES_COMMIT_SHA` and `CF_PAGES_BRANCH` values.
+- Git checkout must retain access to the origin and permit fetching history and `mq-prod-v0.3.61`.
 
-These settings cannot be confirmed or changed through the GitHub repository alone. Do not consider this migration complete until production and Preview builds have been checked on Cloudflare.
+The build script fails rather than emitting a wrong version if the required tag/ancestry cannot be found. The application continues to show its older embedded fallback version if Cloudflare does not execute the build script; treat that as a deployment configuration defect.
 
-## Release identification
+## Acceptance checks
 
-`dist/release-meta.json` is generated during the Cloudflare build from the deployment commit. The app displays `Version <12-char commit> | Production` for main and `Version <12-char commit> | Preview` for other branches. The complete 40-character commit SHA is retained in metadata. A commit-derived release ID avoids divergent version counters: the same commit always has the same ID regardless of build order or deployment retries. GitHub Pages' legacy semantic-version counter is not used for Cloudflare.
+After PR merge and Cloudflare deployment, inspect `https://mainichi-quest-63c.pages.dev/release-meta.json`: verify `environment=production`, `branch=main`, numerical `version` and full `commit` against deployed main SHA. Check the homepage displays the same version and abbreviated commit. On the Cloudflare Preview URL, verify `environment=preview`, `_P` display, and version based on main (no increment for Preview).
 
-The current committed `appVersion` is retained solely as a legacy fallback until GitHub Pages retirement. A missing release-meta file will show that fallback; treat that as a failed Cloudflare build configuration check, not a successful new production release.
-
-Verify: open `https://mainichi-quest-63c.pages.dev/release-meta.json` and check `environment=production`, `branch=main`, and `commit` against the production deployment SHA. Confirm the homepage shows the same abbreviated SHA. Perform the same check on a Cloudflare Preview URL with `environment=preview`. No storage keys, PWA installation, profile, or migration data are altered by this change.
-
-Do not disable GitHub Pages or remove its release tags until PR-B validation is complete.
+GitHub Actions CI checks generator behavior using a miniature Git repository (two main releases and one Preview). This PR does not change localStorage, profile IDs, migration tools, installed PWA data, or the old GitHub Pages workflow. Do not disable GitHub Pages until Cloudflare production validation (PR-B) succeeds.
