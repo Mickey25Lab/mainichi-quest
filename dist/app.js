@@ -882,6 +882,7 @@
   function sizeStages({ width, height, includePlay = false, includeCollection = false }) {
     const scale = stageScaleFor(width, height);
     if (includePlay) {
+      $("mode-select-screen").style.setProperty("--mode-dialog-scale", String(scale));
       document.querySelector(".start-layer")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".mode-select-stage")?.style.setProperty("--stage-scale", String(scale));
       document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale", String(scale));
@@ -2400,6 +2401,8 @@
     };
   }
 
+  // The completion dialog must not be clipped or obscured by the iPad-scaled mode canvas.
+  $("mode-select-screen").append($("mode-select-mission-complete"));
   function renderModeSelectMission() {
     const overview = missionOverview();
     const freePlayActive = overview.allComplete && overview.freePlayEnabled;
