@@ -5599,3 +5599,21 @@ button, input { font: inherit; }
 
 .collection-screen.is-phonics-reward-select .collection-stage::before { display:block;content:"";position:absolute;inset:0;background:rgba(76,78,83,.28);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);pointer-events:none;z-index:0; }
 .collection-screen.is-phonics-reward-select .collection-grid {z-index:1;}
+
+/* Preserve column reveal during row scan; layered masks combine as union. */
+.collection-screen.is-phonics-reward-select .phonics-scan-darkness { mask-composite:intersect; -webkit-mask-composite:source-in; }
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase { overflow:visible; }
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+  overflow:hidden; contain:paint;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-name,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-stars,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-hearts {display:none!important;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
+  left:0;width:100%;box-sizing:border-box;top:calc(100% + 14px);
+  padding:12px 18px;border-radius:14px;
+  background:rgba(4,20,49,.94);border:2px solid rgba(126,217,255,.9);
+  text-shadow:0 2px 4px #00102c;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .card-vehicle {object-fit:contain;max-width:100%;max-height:100%;}
