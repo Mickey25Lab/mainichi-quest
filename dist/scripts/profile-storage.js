@@ -75,7 +75,7 @@
         recentVehicles: [],
         topCollectionLastUsedJst: null,
         openingMovieLastPlayedJst: null,
-        dailyMission: { date: null, completedCounts: {}, questRewardLevel: null },
+        dailyMission: { date: null, completedCounts: {} },
         questBonusClaimDate: null,
         collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] },
         collectionCategorySeen: [],
@@ -144,7 +144,7 @@
     profile.progress.dailyMission = {
       date: typeof dailyMission?.date === "string" ? dailyMission.date : null,
       completedCounts: dailyMission?.completedCounts && typeof dailyMission.completedCounts === "object" ? clone(dailyMission.completedCounts) : {},
-      questRewardLevel: Number.isInteger(dailyMission?.questRewardLevel) && dailyMission.questRewardLevel >= 1 ? dailyMission.questRewardLevel : null
+      ...(Number.isInteger(dailyMission?.questRewardLevel) && dailyMission.questRewardLevel >= 1 ? { questRewardLevel:dailyMission.questRewardLevel } : {})
     };
     const sceneOrder = value.progress?.collectionSceneOrder;
     profile.progress.collectionSceneOrder = {
@@ -440,7 +440,7 @@
         profile.progress.dailyMission = {
           date: typeof mission.date === "string" ? mission.date : null,
           completedCounts: mission.completedCounts && typeof mission.completedCounts === "object" ? clone(mission.completedCounts) : {},
-          questRewardLevel: Number.isInteger(mission.questRewardLevel) && mission.questRewardLevel >= 1 ? mission.questRewardLevel : null
+          ...(Number.isInteger(mission.questRewardLevel) && mission.questRewardLevel >= 1 ? { questRewardLevel:mission.questRewardLevel } : {})
         };
       });
     }
@@ -533,7 +533,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{}, questRewardLevel:null }, questBonusClaimDate: null, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, questBonusClaimDate: null, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
         profile.pointLedger = null;
