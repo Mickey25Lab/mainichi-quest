@@ -80,8 +80,11 @@
         const written=[];
         try {
           for(const [key,value] of Object.entries(entries)){localStorage.setItem(key,value);written.push(key);}
-          if(localStorage.getItem(PROFILE_KEY)!==entries[PROFILE_KEY])throw Error("保存後の一致確認に失敗");
-          validate({...JSON.parse(await file.text()),sourceOrigin:JSON.parse(await file.text()).sourceOrigin});
+          for(const [key,value] of Object.entries(entries)) {
+            if(localStorage.getItem(key)!==value)throw Error("保存後の一致確認に失敗: "+key);
+          }
+          const saved=parseProfiles(localStorage.getItem(PROFILE_KEY));
+          if(!saved.ids.has(localStorage.getItem(ACTIVE_KEY)))throw Error("移行後のプロフィールID確認に失敗");
         } catch(err) {
           for(const key of written)localStorage.removeItem(key);
           throw Error("保存に失敗したため書き込み分を取り消しました: "+err.message);
