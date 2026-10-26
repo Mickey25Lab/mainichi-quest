@@ -1,21 +1,28 @@
 # マイクエ
 
-repository: `mainichi-quest`
+Repository: `Mickey25Lab/mainichi-quest`
 
-ChatGPT Sites の `warizan-robot` から初回移行した版です。
+## 本番配信（正本）
 
-元 Site: https://warizan-robot.kimihiko-sato25.chatgpt.site/
+**Cloudflare Pages:** https://mainichi-quest-63c.pages.dev/
 
-初回移行ではリファクタリングを行わず、Sites 版のアセットもそのまま移行しています。
+- Production branch: `main`. Cloudflare Pages Git連携によってmainマージ後に本番ビルド。
+- Preview: PRブランチごとのCloudflare Pages Preview。
+- Build command（Cloudflare側設定）: `node scripts/generate-preview-meta.mjs && node .github/scripts/prepare-cloudflare-release.mjs`
+- Build output: `dist`。
+- 配信バージョンとSHA: https://mainichi-quest-63c.pages.dev/release-meta.json
+- CI: GitHub Actions。詳細は `docs/cloudflare-release-identification.md` と `docs/cloudflare-production-acceptance.md`。
 
-## バージョン運用
+## GitHub Pages（旧配信）
 
-マイクエは [Semantic Versioning](https://semver.org/lang/ja/) 形式の `MAJOR.MINOR.PATCH` を使用します。
-MVP段階では、当面 `MAJOR` は `0` とします。
+GitHub Pages は**正式な本番配信先ではありません**。`PR-C` で旧 `.github/workflows/deploy-pages.yml` を廃止し、mainへのpush時の二重デプロイと旧方式の自動リリースタグ発行を停止しました。既にGitHub Pages上に公開されているファイルは、このPRだけでは削除・非公開になりません。
 
-- `PATCH`: バグ修正、軽微なUI・文言・favicon・演出の変更
-- `MINOR`: 新しい学習モード、親管理画面、クラウド保存などの大きな新機能
-- `MAJOR`: 正式サービス化や大規模な互換性変更
+公開停止はGitHubリポジトリのPages設定で別途行う操作です。既存PWAや保存データを初期化しないでください。Cloudflare本番運用への切替完了確認後に判断します。
 
-Sites最終版 Version 111 は `0.0.111`、GitHub移行後の初回正式基準版は `0.0.112`、現在の正式Versionは `0.2.0` です。
-以後のリリースでは、version番号と必要なアプリ内表示を更新し、commit、`vX.Y.Z` Git tag、push、GitHub Pages反映確認を行います。
+## バージョン管理
+
+Cloudflare本番は `0.3.x` の数値バージョンと配信コミットSHAを表示します。基準タグ `mq-prod-v0.3.61` からのmain first-parentコミット数でバージョンを算出します。GitHub Pages時代のリリースタグを新規発行する必要はありません。仕組み・例外は `docs/cloudflare-release-identification.md` を参照してください。
+
+## 移行の経緯
+
+このリポジトリはChatGPT Sitesの `warizan-robot` から移行しました。
