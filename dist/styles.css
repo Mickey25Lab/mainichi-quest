@@ -5623,16 +5623,37 @@ button, input { font: inherit; }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-up-ribbon,
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-new-ribbon {display:none!important;}
+/* Old showcase lighting: a slender bright white frame with a broad cyan halo.
+   Apply it to the UNscaled showcase, not to the scaled collection-card clone. */
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
- box-shadow:0 0 15px rgba(171,236,255,.45);
+ box-shadow:none;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase::before {
+ content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+ border:5px solid rgba(255,255,255,.98);border-radius:20px;
+ box-shadow:0 0 9px 3px #fff,0 0 31px 16px rgba(195,246,255,.95),
+  0 0 82px 47px rgba(117,227,255,.68);
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-progress {
- position:absolute;z-index:48;right:14px;top:24px;pointer-events:none;
- transform:scale(.58);transform-origin:top right;
- font-family:"Noto Sans JP",sans-serif;color:var(--navy);
+ position:absolute;z-index:48;right:16px;top:50%;pointer-events:none;
+ transform:scale(.58) translateY(-50%);transform-origin:top right;
+ font-family:"Noto Sans JP",sans-serif;color:#fff;
 }
+/* Keep the arithmetic answer screen's capsule and hearts, but remove
+   only the white panel so the card artwork remains visible beneath it. */
 .collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-progress,
-.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-progress {display:flex;}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-progress {
+ display:flex;background:transparent;border:none;box-shadow:none;
+ backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-label,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-label,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-value {
+ color:#fff;text-shadow:0 2px 5px rgba(0,18,47,.95),0 0 7px rgba(0,18,47,.8);
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-fraction-bar {
+ background:rgba(255,255,255,.96);
+}
 /* Reward copy stays below the card and clear of its glow. */
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
  top:calc(100% + 68px);left:5%;width:90%;background:rgba(3,16,40,.97);
