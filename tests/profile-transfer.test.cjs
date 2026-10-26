@@ -45,7 +45,9 @@ async function importData(page,payload,approve=true) {
     window.prompt=()=>approve?"移行":"キャンセル";
   },approve);
   const fileInput=page.locator('input[type="file"]');
+  await page.locator('#mq-transfer-dialog [role="status"]').evaluate(el=>el.textContent="");
   await fileInput.setInputFiles({name:"transfer.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(payload))});
+  await page.waitForFunction(()=>document.querySelector('#mq-transfer-dialog [role="status"]').textContent.length>0);
   return await page.locator('#mq-transfer-dialog [role="status"]').textContent();
 }
 test("round-trip: all saved keys, profile IDs and progress retained; source unchanged",async t=>{
