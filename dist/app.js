@@ -4259,8 +4259,8 @@
       await move(column,"X",centerX,w);
       column.classList.add("is-locked");
       // Preserve the already-selected column while searching for the row.
-      darkness.style.webkitMaskImage = "none";
-      darkness.style.maskImage = "none";
+      // Keep the chosen column visible throughout the half-second pause.
+      paintMask("X",centerX,w*.9);
       darkness.classList.add("is-column-locked");
       darkness.style.setProperty("--locked-column-center",centerX+"px");
       darkness.style.setProperty("--locked-column-radius",w*.9+"px");
@@ -4294,7 +4294,7 @@
       showcase.append(featured,caption);
       $("collection-stage").append(showcase);
       const originX=x,originY=y;
-      const endW=Math.min(stageWidth*.35,420),endH=endW*(h/w);
+      const endW=Math.min(stageWidth*.525,630),endH=endW*(h/w);
       const endX=(stageWidth-endW)/2,endY=(stageHeight-endH)/2-35;
       const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
       Object.assign(showcase.style,frame(originX,originY,w,h));
@@ -4303,7 +4303,7 @@
       Object.assign(showcase.style,frame(endX,endY,endW,endH));
       fly.cancel();
       showcase.classList.add("is-settled");
-      await scanPause(2000);
+      await scanPause(3000);
       showcase.remove();
     } finally {
       overlay.remove();
