@@ -4224,7 +4224,8 @@
     // No asynchronous WAAPI-vs-requestAnimationFrame tracking lag.
     const paintMask=(axis,center,radius)=>{
       const direction=axis==="X"?"right":"bottom";
-      const gradient=`linear-gradient(to ${direction},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
+      const moving=`linear-gradient(to ${direction},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
+      const gradient=axis==="Y" ? `linear-gradient(to right,black ${centerX-w*.9}px,transparent ${centerX}px,black ${centerX+w*.9}px),${moving}` : moving;
       darkness.style.maskImage=gradient;
       darkness.style.webkitMaskImage=gradient;
     };
@@ -4257,6 +4258,12 @@
       // Two bounces: far edge, near edge, then selected column.
       await move(column,"X",centerX,w);
       column.classList.add("is-locked");
+      // Preserve the already-selected column while searching for the row.
+      darkness.style.webkitMaskImage = "none";
+      darkness.style.maskImage = "none";
+      darkness.classList.add("is-column-locked");
+      darkness.style.setProperty("--locked-column-center",centerX+"px");
+      darkness.style.setProperty("--locked-column-radius",w*.9+"px");
       await scanPause(500);
       // Two bounces: bottom, top, then selected row.
       await move(row,"Y",centerY,h);
@@ -4266,7 +4273,9 @@
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
       target.classList.add("is-phonics-scan-winner");
-      darkness.style.opacity=".45";
+      darkness.style.opacity="1";
+      darkness.style.webkitMaskImage="none";
+      darkness.style.maskImage="none";
       column.style.opacity="0";
       row.style.opacity="0";
       await scanPause(900);
@@ -4277,6 +4286,7 @@
       const featured = target.cloneNode(true);
       featured.removeAttribute("id");
       featured.disabled = true;
+      featured.classList.add("is-phonics-art-only");
       const caption = document.createElement("div");
       caption.className = "phonics-scan-showcase-caption";
       const amount = phonicsGrowthAmountLabel(vehicleIndex);
