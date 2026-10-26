@@ -14,6 +14,7 @@ if (!branch) throw Error("Cannot determine deployment branch");
 const environment = branch === "main" ? "production" : "preview";
 // Cloudflare Git clones can be shallow. Fetch main history and the pinned release
 // anchor so the version is calculated from real ancestry rather than guesswork.
+try { git("rev-parse", "--is-shallow-repository") === "true" && git("fetch", "--unshallow", "origin"); } catch { /* full-history clone */ }
 git("fetch", "--no-tags", "origin", "main");
 git("fetch", "--no-tags", "origin", "tag", baselineTag);
 const anchor = git("rev-parse", baselineTag);
