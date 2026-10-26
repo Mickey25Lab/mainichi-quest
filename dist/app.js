@@ -4205,7 +4205,11 @@
     if (!target) { state.phonicsScanInProgress = false; applyPhonicsRewardGrowth(vehicleIndex); return; }
     const stage = $("collection-stage");
     const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
-    const x=targetRect.left-stageRect.left, y=targetRect.top-stageRect.top, w=targetRect.width, h=targetRect.height;
+    // Convert viewport coordinates into stage CSS pixels (the stage is scaled on iPad).
+    const scaleX = stageRect.width / stage.offsetWidth, scaleY = stageRect.height / stage.offsetHeight;
+    const stageWidth = stage.offsetWidth, stageHeight = stage.offsetHeight;
+    const x=(targetRect.left-stageRect.left)/scaleX, y=(targetRect.top-stageRect.top)/scaleY;
+    const w=targetRect.width/scaleX, h=targetRect.height/scaleY;
     const centerX=x+w/2, centerY=y+h/2;
     const overlay=document.createElement("div");
     overlay.id="phonics-cross-scan";
@@ -4216,33 +4220,39 @@
     $("collection-screen").classList.add("is-phonics-scanning");
     const darkness=overlay.querySelector(".phonics-scan-darkness");
     const column=overlay.querySelector(".phonics-scan-column"), row=overlay.querySelector(".phonics-scan-row"), impact=overlay.querySelector(".phonics-scan-impact");
+    // One animation clock drives BOTH the beam and its reveal aperture.
+    // No asynchronous WAAPI-vs-requestAnimationFrame tracking lag.
     const paintMask=(axis,center,radius)=>{
-      const gradient=`linear-gradient(to ${axis==="X"?"right":"bottom"},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
+      const direction=axis==="X"?"right":"bottom";
+      const gradient=`linear-gradient(to ${direction},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
       darkness.style.maskImage=gradient;
       darkness.style.webkitMaskImage=gradient;
     };
-    const move=async(beam,axis,targetCenter,dimension)=>{
-      const span=axis==="X"?stageRect.width:stageRect.height;
+    const move=(beam,axis,targetCenter,dimension)=>new Promise(resolve=>{
+      const span=axis==="X"?stageWidth:stageHeight;
       const size=dimension*1.25, radius=dimension*.9;
       beam.style[axis==="X"?"width":"height"]=size+"px";
       beam.style[axis==="X"?"height":"width"]="100%";
-      const transform=center=>axis==="X"?`translate3d(${center-size/2}px,0,0)`:`translate3d(0,${center-size/2}px,0)`;
-      const values=[size/2,span-size/2,size/2,targetCenter];
-      const animation=beam.animate(values.map((center,i)=>({transform:transform(center),offset:[0,.32,.64,1][i]})),{duration:6200,easing:"ease-in-out",fill:"forwards"});
-      let active=true;
-      const paint=()=>{
-        if(!active)return;
-        const b=beam.getBoundingClientRect();
-        const center=axis==="X"?b.left-stageRect.left+b.width/2:b.top-stageRect.top+b.height/2;
+      // Beam CENTER reaches the actual full-stage boundaries before reversing.
+      const stops=[0,span,0,targetCenter];
+      const duration=6200, segments=[0,.32,.64,1];
+      const started=performance.now();
+      const tick=now=>{
+        const progress=Math.min(1,(now-started)/duration);
+        let segment=0;
+        while(segment<2&&progress>segments[segment+1])segment++;
+        const fraction=Math.max(0,Math.min(1,(progress-segments[segment])/(segments[segment+1]-segments[segment])));
+        const eased=fraction*fraction*(3-2*fraction);
+        const center=stops[segment]+(stops[segment+1]-stops[segment])*eased;
+        beam.style.transform=axis==="X"
+          ?`translate3d(${center-size/2}px,0,0)`
+          :`translate3d(0,${center-size/2}px,0)`;
         paintMask(axis,center,radius);
-        window.requestAnimationFrame(paint);
+        if(progress<1)window.requestAnimationFrame(tick);
+        else resolve();
       };
-      paint();
-      try{await animation.finished;}finally{active=false;}
-      beam.style.transform=transform(targetCenter);
-      animation.cancel();
-      paintMask(axis,targetCenter,radius);
-    };
+      window.requestAnimationFrame(tick);
+    });
     try {
       // Two bounces: far edge, near edge, then selected column.
       await move(column,"X",centerX,w);
@@ -4257,6 +4267,8 @@
       impact.classList.add("is-revealed");
       target.classList.add("is-phonics-scan-winner");
       darkness.style.opacity=".45";
+      column.style.opacity="0";
+      row.style.opacity="0";
       await scanPause(900);
       // Animate a visual clone, keeping the actual collection card and artwork loaded.
       const showcase = document.createElement("div");
@@ -4272,8 +4284,8 @@
       showcase.append(featured,caption);
       $("collection-stage").append(showcase);
       const originX=x,originY=y;
-      const endW=Math.min(stageRect.width*.35,420),endH=endW*(h/w);
-      const endX=(stageRect.width-endW)/2,endY=(stageRect.height-endH)/2-35;
+      const endW=Math.min(stageWidth*.35,420),endH=endW*(h/w);
+      const endX=(stageWidth-endW)/2,endY=(stageHeight-endH)/2-35;
       const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
       Object.assign(showcase.style,frame(originX,originY,w,h));
       const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],{duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"});
