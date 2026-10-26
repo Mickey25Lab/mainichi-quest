@@ -5687,3 +5687,27 @@ button, input { font: inherit; }
 .collection-screen.is-phonics-reward-handoff-pending .phonics-scan-next-notice {
  white-space:nowrap;font-size:29px;
 }
+
+/* Final showcase: one common clip geometry for the scaled card and both
+   outer strokes. Neither the source card nor its pseudo-element draws a
+   second differently rounded border. Keep the previously approved glow. */
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase {
+ border-radius:14px;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+ border:0!important;border-radius:14px!important;
+ box-shadow:none!important;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase::before {
+ border-radius:14px!important;
+}
+.collection-screen.is-phonics-reward-handoff-pending .phonics-scan-showcase {
+ z-index:45;
+}
+.collection-screen.is-phonics-reward-handoff-pending .phonics-scan-showcase-caption {
+ display:none!important;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-next-notice {
+ font-size:clamp(22px,3vw,40px);font-weight:900;
+ min-height:114px;white-space:nowrap;
+}
