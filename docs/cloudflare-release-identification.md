@@ -28,3 +28,15 @@ The build script fails rather than emitting a wrong version if the required tag/
 After PR merge and Cloudflare deployment, inspect `https://mainichi-quest-63c.pages.dev/release-meta.json`: verify `environment=production`, `branch=main`, numerical `version` and full `commit` against deployed main SHA. Check the homepage displays the same version and abbreviated commit. On the Cloudflare Preview URL, verify `environment=preview`, `_P` display, and version based on main (no increment for Preview).
 
 GitHub Actions CI checks generator behavior using a miniature Git repository (two main releases and one Preview). This PR does not change localStorage, profile IDs, migration tools, installed PWA data, or the old GitHub Pages workflow. Do not disable GitHub Pages until Cloudflare production validation (PR-B) succeeds.
+
+## Safe cutover order (do not save Cloudflare settings early)
+
+1. Keep the current Cloudflare Build command `node scripts/generate-preview-meta.mjs` unchanged while PR #222 is unmerged.
+2. Obtain explicit merge approval, confirm all required CI checks pass, and merge PR #222 into main.
+3. Wait for the automatic Cloudflare production deploy using the **old** Build command. This may still show the previous embedded number; it does not require client data migration.
+4. In Cloudflare Settings → Build configuration, change Build command to **`node scripts/generate-preview-meta.mjs && node .github/scripts/prepare-cloudflare-release.mjs`**. Preserve `dist` output, root directory and `main` production branch.
+5. Trigger a new Cloudflare deployment of the latest main commit (retry/redeploy) because merely saving Build command does not establish that the existing deployed artifact was rebuilt. Confirm successful deploy.
+6. Confirm `/release-meta.json` for the production URL has the current main commit SHA, an increasing numeric version, `environment=production`, and `branch=main`. Confirm the app label.
+7. Confirm Preview continues to produce `preview-meta.json` as well as `release-meta.json` and shows numeric version with `_P`. Only then proceed to PR-B and eventually PR-C.
+
+Never reset localStorage, reinstall either child's PWA, or stop GitHub Pages during this cutover. If the new build fails, restore the old Build command and redeploy the last known-good commit; do not alter saved data.
