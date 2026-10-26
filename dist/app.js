@@ -4287,6 +4287,10 @@
       featured.removeAttribute("id");
       featured.disabled = true;
       featured.classList.add("is-phonics-art-only");
+      // Keep the original card's own layout; only scale the complete card.
+      featured.style.width = w + "px";
+      featured.style.height = h + "px";
+      featured.style.transformOrigin = "top left";
       const caption = document.createElement("div");
       caption.className = "phonics-scan-showcase-caption";
       const amount = phonicsGrowthAmountLabel(vehicleIndex);
@@ -4298,12 +4302,58 @@
       const endX=(stageWidth-endW)/2,endY=(stageHeight-endH)/2-35;
       const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
       Object.assign(showcase.style,frame(originX,originY,w,h));
-      const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],{duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"});
-      await fly.finished;
+      const timing={duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"};
+      const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],timing);
+      const cardScale=endW/w;
+      const enlarge=featured.animate([{transform:"scale(1)"},{transform:`scale(${cardScale})`}],timing);
+      await Promise.all([fly.finished,enlarge.finished]);
       Object.assign(showcase.style,frame(endX,endY,endW,endH));
-      fly.cancel();
+      featured.style.transform=`scale(${cardScale})`;
+      fly.cancel();enlarge.cancel();
       showcase.classList.add("is-settled");
-      await scanPause(3000);
+      // Reuse the answer screen's actual progress UI, not collection card indicators.
+      const progress=vehicleProgress(vehicleIndex);
+      const isFriendship=!progress.friendly;
+      const source=$(isFriendship?"friendship-progress":"energy-progress");
+      const progressPanel=source.cloneNode(true);
+      progressPanel.removeAttribute("id");
+      progressPanel.removeAttribute("hidden");
+      progressPanel.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+      const progressHolder=document.createElement("div");
+      progressHolder.className="phonics-scan-progress";
+      Object.assign(progressHolder.style,{left:(endX+endW+18)+"px",top:(endY+22)+"px"});
+      progressHolder.append(progressPanel);
+      stage.append(progressHolder);
+      const amounts=phonicsGrowthAmounts();
+      if(isFriendship){
+        const hearts=[...progressPanel.querySelectorAll(".friendship-heart")];
+        const initial=Math.min(5,progress.friendship);
+        const final=Math.min(5,initial+amounts.friendship);
+        const paint=count=>hearts.forEach((heart,i)=>heart.classList.toggle("is-filled",i>=5-count));
+        paint(initial);
+        await scanPause(600);
+        for(let value=initial+1;value<=final;value++){paint(value);await scanPause(220);}
+      }else{
+        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
+        const capsule=progressPanel.querySelector(".energy-capsule");
+        const fill=progressPanel.querySelector(".energy-fill");
+        const current=progressPanel.querySelector(".energy-value span");
+        const required=progressPanel.querySelector(".energy-value span:last-child");
+        required.textContent=String(needed);
+        const heights={30:194,50:254,100:314,200:374,500:374};
+        capsule.style.setProperty("--capsule-height",(heights[needed]||194)+"px");
+        const paint=value=>{fill.style.height=Math.min(100,value/needed*100)+"%";current.textContent=String(value);};
+        paint(initial);
+        await scanPause(600);
+        const start=performance.now(),duration=1400;
+        await new Promise(resolve=>{
+          const tick=now=>{const ratio=Math.min(1,(now-start)/duration);paint(Math.round(initial+(final-initial)*ratio));if(ratio<1)requestAnimationFrame(tick);else resolve();};
+          requestAnimationFrame(tick);
+        });
+      }
+      await scanPause(900);
+      progressHolder.remove();
       showcase.remove();
     } finally {
       overlay.remove();
