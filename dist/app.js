@@ -4303,6 +4303,7 @@
       const originX=x,originY=y;
       const endW=Math.min(stageWidth*.525,630),endH=endW*(h/w);
       const endX=(stageWidth-endW)/2,endY=(stageHeight-endH)/2-35;
+      state.phonicsShowcaseGeometry={left:endX,top:endY,width:endW,height:endH};
       const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
       Object.assign(showcase.style,frame(originX,originY,w,h));
       const timing={duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"};
@@ -4360,24 +4361,6 @@
         });
       }
       await scanPause(900);
-      // Mark the change of scene explicitly after the charging animation ends.
-      // Keep the completed gauge visible throughout the entire 1.5-second cue.
-      const nextNotice=document.createElement("div");
-      nextNotice.className="phonics-scan-next-notice";
-      nextNotice.textContent="さあコレクションを見てみよう！";
-      // Position the opaque hand-off precisely over the entire reward caption
-      // instead of overlapping only the caption's lower portion.
-      Object.assign(nextNotice.style,{
-        left:(endX+endW*.045)+"px",
-        top:(endY+endH+52)+"px",
-        width:(endW*.91)+"px"
-      });
-      stage.append(nextNotice);
-      try {
-        await scanPause(1500);
-      } finally {
-        nextNotice.remove();
-      }
       progressHolder.remove();
       showcase.remove();
     } finally {
@@ -4387,7 +4370,10 @@
       target.classList.remove("is-phonics-scan-winner");
       state.phonicsScanInProgress = false;
     }
-    if (state.collectionMode === "phonics-reward-select") applyPhonicsRewardGrowth(vehicleIndex);
+    if (state.collectionMode === "phonics-reward-select") {
+      $("collection-screen").classList.add("is-phonics-reward-handoff-pending");
+      applyPhonicsRewardGrowth(vehicleIndex, showPhonicsCollectionHandoff);
+    }
   }
   function phonicsGrowthAmounts() {
     return phonicsYoutube.rewardAlmostZero
@@ -4465,7 +4451,25 @@
     updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
-  function applyPhonicsRewardGrowth(vehicleIndex) {
+  function showPhonicsCollectionHandoff() {
+    const stage=$("collection-stage"), geometry=state.phonicsShowcaseGeometry;
+    $("reward-screen").classList.remove("active");
+    screens.forEach(id=>$(id).classList.toggle("active",id==="collection-screen"));
+    const notice=document.createElement("div");
+    notice.className="phonics-scan-next-notice";
+    notice.textContent="さあコレクションを見てみよう！";
+    if(geometry)Object.assign(notice.style,{
+      left:geometry.left+"px",top:(geometry.top+geometry.height+52)+"px",width:geometry.width+"px"
+    });
+    stage.append(notice);
+    window.setTimeout(()=>{
+      notice.remove();
+      $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
+      state.phonicsShowcaseGeometry=null;
+      openNormalCollectionAfterPhonicsReward();
+    },1500);
+  }
+  function applyPhonicsRewardGrowth(vehicleIndex, onFinished = showPhonicsCollectionHandoff) {
     if (!Number.isInteger(vehicleIndex)) return;
     const progress = vehicleProgress(vehicleIndex);
     if (!progress.discovered) return;
@@ -4493,10 +4497,10 @@
     }
     // Retain the existing card DOM and artwork; only patch progress indicators.
     if (reward) {
-      showReward(reward, false, openNormalCollectionAfterPhonicsReward);
+      showReward(reward, false, onFinished);
       return;
     }
-    openNormalCollectionAfterPhonicsReward();
+    onFinished();
   }
   function startPhonicsRewardVehicleSelection() {
     void runPhonicsCrossScan();
