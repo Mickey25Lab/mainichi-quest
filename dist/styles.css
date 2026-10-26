@@ -5632,9 +5632,9 @@ button, input { font: inherit; }
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-showcase::before {
  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
- border:5px solid rgba(255,255,255,.98);border-radius:20px;
- box-shadow:0 0 9px 3px #fff,0 0 32px 18px rgba(195,246,255,.95),
-  0 0 115px 78px rgba(117,227,255,.73);
+ border:5px solid rgba(255,255,255,.98);border-radius:14px;
+ box-shadow:0 0 8px 3px #fff,0 0 75px 38px #fff,
+  0 0 145px 80px #85edff;
 }
 .collection-screen.is-phonics-reward-select .phonics-scan-progress {
  position:absolute;z-index:48;right:16px;top:50%;pointer-events:none;
@@ -5673,4 +5673,17 @@ button, input { font: inherit; }
  text-shadow:0 2px 5px rgba(0,11,38,.7);
  box-shadow:0 7px 26px rgba(0,9,29,.75),0 0 16px rgba(123,221,255,.45);
  pointer-events:none;
+}
+
+.collection-screen.is-phonics-reward-handoff-pending .collection-stage::after {
+ content:"";position:absolute;inset:0;z-index:12;pointer-events:none;background:rgba(6,12,24,.87);
+}
+.collection-screen.is-phonics-reward-handoff-pending .phonics-scan-next-notice {z-index:65;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {left:0;width:100%;box-sizing:border-box;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+ border-radius:14px;box-shadow:inset 0 0 0 1px #071220;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-next-notice,
+.collection-screen.is-phonics-reward-handoff-pending .phonics-scan-next-notice {
+ white-space:nowrap;font-size:29px;
 }
