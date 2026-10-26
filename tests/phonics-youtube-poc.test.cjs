@@ -133,10 +133,10 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   await completionButton.click();
   await page.locator("#collection-screen.active").waitFor();
   assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-select")), true);
-  assert.equal(await page.locator("#collection-header-title").textContent(), "どののりものを育てる？");
+  assert.match(await page.locator("#collection-header-title").innerHTML(), /どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？/);
   await page.locator("#phonics-reward-intro:not([hidden])").waitFor();
   assert.equal(await page.locator("#phonics-reward-intro-title").textContent(), "よくがんばったね！");
-  assert.match(await page.locator("#phonics-reward-intro").textContent(), /どののりものを育てる？/);
+  assert.match(await page.locator("#phonics-reward-intro").innerHTML(), /どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？/);
   assert.equal(await page.locator("#collection-seconds").textContent(), "60");
   assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-intro-open")), true);
   assert.equal(await page.locator('#collection-grid .collection-card[data-vehicle="0"]').evaluate((node) => getComputedStyle(node).pointerEvents), "none");
@@ -145,17 +145,16 @@ test("phonics Part 2 repeats G-K normally, then moves to the next frame seamless
   assert.equal(await page.locator("#collection-screen").evaluate((node) => node.classList.contains("is-phonics-reward-intro-open")), false);
   assert.equal(await page.locator("#collection-grid .collection-card").count(), 20);
   assert.equal(await page.locator("#collection-grid .collection-card:not(.locked)").count(), 1);
-  await page.locator('#collection-grid .collection-card[data-vehicle="0"]').click();
-  await page.locator("#phonics-grow-confirm:not([hidden])").waitFor();
-  assert.equal(await page.locator("#phonics-grow-amount").textContent(), "♥ +5");
-  await page.locator("#phonics-grow-accept").click();
+  // The scanner chooses the target; users cannot choose a collection card.
+  await page.waitForFunction(() => !!document.querySelector("#phonics-cross-scan"), null, { timeout: 4000 }).catch(() => {});
+  assert.equal(await page.locator("#phonics-grow-confirm").isVisible(), false);
   await page.waitForFunction(() => {
     const collection = document.querySelector("#collection-screen");
     const reward = document.querySelector("#reward-screen");
     return collection.classList.contains("active")
       && !collection.classList.contains("is-phonics-reward-select")
       && !reward.classList.contains("active");
-  }, null, { timeout: 7000 });
+  }, null, { timeout: 25000 });
   const markerCount = await page.locator("#collection-grid .collection-card.is-new, #collection-grid .collection-card.is-up").count();
   assert.equal(markerCount, 1);
   await page.locator("#collection-exit").click();
@@ -236,15 +235,15 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /function judge\(answer\)[\s\S]*playSimpleCorrectSound\(\)/);
   assert.match(app, /function showReward\([\s\S]*showRewardOverCollection\(\)[\s\S]*playFanfareSound\(\)/);
   assert.match(app, /function renderCollectionBaseTitle\(\)[\s\S]*getActiveProfile\(\)[\s\S]*displayName[\s\S]*ロボット[\s\S]*秘密基地[\s\S]*ひみつきち/);
-  assert.match(app, /if \(selectionMode\) \$\("collection-header-title"\)\.textContent = "どののりものを育てる？";[\s\S]*else renderCollectionBaseTitle\(\)/);
+  assert.match(app, /if \(selectionMode\) \$\("collection-header-title"\)\.innerHTML = "どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？";[\s\S]*else renderCollectionBaseTitle\(\)/);
   assert.match(html, /id="phonics-grow-confirm"[\s\S]*id="phonics-grow-amount"[\s\S]*♥ \+5/);
-  assert.match(html, /id="phonics-reward-intro"[\s\S]*よくがんばったね！[\s\S]*どののりものを育てる？[\s\S]*育てるのりものを[\s\S]*選ぶ/);
+  assert.match(html, /id="phonics-reward-intro"[\s\S]*よくがんばったね！[\s\S]*どののりものが<ruby>育<rt>そだ<\/rt><\/ruby>つかな？[\s\S]*サーチライトを[\s\S]*スタート/);
   assert.match(html, /id="phonics-reward-intro"[^>]*quit-confirm[\s\S]*answer-confirm-card quit-confirm-card/);
   assert.match(css, /\.phonics-reward-intro \{ z-index:46; pointer-events:auto; \}/);
   assert.match(css, /\.collection-screen\.is-phonics-reward-intro-open \.collection-grid[\s\S]*pointer-events:none/);
   assert.match(css, /\.phonics-reward-intro \.quit-confirm-cancel[\s\S]*background:linear-gradient\(#8f98a2,#626b75\)/);
   assert.match(css, /\.phonics-reward-intro \.quit-confirm-continue[\s\S]*color:#fff[\s\S]*background:linear-gradient\(#59d7ff,#159bd8\)/);
-  assert.match(app, /function startPhonicsRewardVehicleSelection\(\)[\s\S]*Date\.now\(\) \+ 60000/);
+  assert.match(app, /function startPhonicsRewardVehicleSelection\(\)[\s\S]*runPhonicsCrossScan\(\)/);
   assert.match(app, /function openPhonicsRewardSelection\(\)[\s\S]*collectionDeadline = 0[\s\S]*phonics-reward-intro/);
   assert.match(app, /rewardAlmostZero: false/);
   assert.match(app, /const missionAtStart = missionOverview\(\)[\s\S]*rewardAlmostZero = missionAtStart\.allComplete[\s\S]*freePlayEnergyMode === "almost-zero"/);
@@ -254,12 +253,15 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-categories[\s\S]*display:none/);
   assert.match(app, /function completePhonicsYoutubeAndLeave\(\)[\s\S]*openPhonicsRewardSelection\(\)/);
   assert.match(app, /const phonicsBackgroundPath = playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)[\s\S]*phonics-intro-background[\s\S]*phonics-youtube-background/);
-  assert.match(app, /phonicsYoutube\.backgroundPath = phonicsBackgroundPath[\s\S]*--phonics-reward-background/);
-  assert.match(css, /\.collection-screen\.is-phonics-reward-select \.collection-stage \{[\s\S]*var\(--phonics-reward-background\)/);
   assert.match(app, /function openPhonicsRewardSelection\(\)[\s\S]*collectionNewVehicleIndexes = new Set\(\)[\s\S]*resultStartProgress = state\.rewardProgress\.map/);
   assert.match(app, /function seedPatrolCarForPhonicsRewardIfNeeded\(\)[\s\S]*vehicleProgress\(0\)[\s\S]*discovered = true/);
   assert.match(app, /function applyPhonicsRewardGrowth\(vehicleIndex\)[\s\S]*friendship \+ amounts\.friendship[\s\S]*applyEnergyGain\(progress, vehicleIndex, amounts\.energy\)/);
-  assert.match(app, /function collectionTimeUp\(\)[\s\S]*phonics-reward-select[\s\S]*recommendedPhonicsRewardVehicleIndex\(\)/);
+  assert.match(app, /const stops=\[0,span,0,targetCenter\]/);
+  assert.match(app, /const scaleX = stageRect\.width \/ stage\.offsetWidth/);
+  assert.match(app, /paintMask\(axis,center,radius\)/);
+    assert.match(css, /phonics-scan-darkness/);
+  assert.match(css, /phonics-scan-showcase/);
+  assert.match(app, /function runPhonicsCrossScan\(\)[\s\S]*randomPhonicsRewardVehicleIndex\(\)[\s\S]*scanPause\(290\)[\s\S]*is-revealed/);
   assert.match(app, /function openNormalCollectionAfterPhonicsReward\(\)[\s\S]*Date\.now\(\) \+ 60000/);
   assert.match(app, /playBackgroundPath\(Math\.floor\(Math\.random\(\) \* vehicles\.length\)\)/);
   assert.match(app, /function normalizedMissionTarget\(settings, modeId\) \{[\s\S]*return parentModeSetting\(settings, modeId\)\.target;[\s\S]*\}/);

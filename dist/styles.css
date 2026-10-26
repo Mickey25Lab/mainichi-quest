@@ -2787,10 +2787,7 @@ button, input { font: inherit; }
   grid-template-columns:1fr;
 }
 .collection-screen.is-phonics-reward-select .collection-stage {
-  background:
-    linear-gradient(rgba(3,20,45,.42),rgba(3,20,45,.42)),
-    var(--phonics-reward-background) center / cover no-repeat;
-  box-shadow:inset 0 0 110px rgba(0,4,18,.56);
+  box-shadow:inset 0 0 110px rgba(0,4,18,.18);
 }
 .collection-screen.is-phonics-reward-select .collection-stage::before,
 .collection-screen.is-phonics-reward-select .collection-stage::after {
@@ -5286,8 +5283,8 @@ button, input { font: inherit; }
 }
 /* Equipment cards: make the standalone item the star. A shared, translucent,
    unequipped super-robot bust is placed behind it. No vehicle-specific tuning. */
-#collection-grid .collection-card .card-super-robot-ghost,
-#collection-grid .collection-card .card-equipment-feature {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-super-robot-ghost,
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-equipment-feature {
   position:absolute;
   display:block;
   width:100%;
@@ -5298,7 +5295,7 @@ button, input { font: inherit; }
   object-fit:contain;
   pointer-events:none;
 }
-#collection-grid .collection-card .card-super-robot-ghost {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-super-robot-ghost {
   z-index:1;
   left:-55px;
   /* Match the unequipped super robot display scale (stage 4). */
@@ -5308,7 +5305,7 @@ button, input { font: inherit; }
   opacity:.35;
   filter:grayscale(.30);
 }
-#collection-grid .collection-card .card-equipment-feature {
+:is(#collection-grid, #phonics-scan-showcase) .collection-card .card-equipment-feature {
   z-index:2;
   left:15px;
   /* 30% larger than the previous equipment size; retain its vertical slot. */
@@ -5539,4 +5536,160 @@ button, input { font: inherit; }
 .collection-screen .collection-categories .category-button.is-new-category.selected::after,
 .collection-detail-screen .collection-categories .category-button.is-new-category.selected::after {
   background:linear-gradient(180deg,#c92e1a,#a01512);
+}
+
+/* Phonics light-beam scanner: luminous cores with soft light falloff. */
+.collection-screen.is-phonics-reward-select .collection-card { pointer-events:none; }
+.phonics-cross-scan { position:absolute; inset:0; z-index:12; pointer-events:none; overflow:visible; }
+.phonics-scan-beam { position:absolute; top:0; left:0; pointer-events:none; mix-blend-mode:screen; will-change:transform; }
+.phonics-scan-column { background:linear-gradient(90deg,transparent,rgba(31,179,255,.15) 12%,rgba(61,216,255,.45) 33%,#f1ffff 50%,rgba(61,216,255,.45) 67%,rgba(31,179,255,.15) 88%,transparent); filter:drop-shadow(0 0 13px #4ce6ff) drop-shadow(0 0 29px rgba(35,193,255,.85)); }
+.phonics-scan-row { background:linear-gradient(180deg,transparent,rgba(255,187,48,.13) 12%,rgba(255,226,90,.46) 33%,#fffdf2 50%,rgba(255,226,90,.46) 67%,rgba(255,187,48,.13) 88%,transparent); filter:drop-shadow(0 0 13px #ffdb56) drop-shadow(0 0 29px rgba(255,185,42,.85)); }
+.phonics-scan-beam.is-locked { opacity:.7; }
+.phonics-scan-impact { position:absolute; opacity:0; border-radius:16px; pointer-events:none; }
+.phonics-scan-impact.is-revealed { animation:mq-phonics-impact .8s ease-out both; }
+.collection-card.is-phonics-scan-winner { z-index:2; outline:4px solid #fff2a0; box-shadow:0 0 22px 9px rgba(255,244,164,.9),0 0 55px 22px rgba(78,230,255,.65)!important; }
+@keyframes mq-phonics-impact {0%{opacity:0;transform:scale(.8)}20%{opacity:1;transform:scale(1.06);background:rgba(255,255,255,.88);box-shadow:0 0 40px 24px #fff,0 0 80px 44px rgba(91,229,255,.84)}100%{opacity:0;transform:scale(1.16);background:transparent;box-shadow:0 0 60px 28px transparent}}
+
+/* Cross-scan polish: thin luminous cores, gentle surrounding glow and a clear final lock. */
+.collection-screen.is-phonics-reward-select .collection-stage > .collection-time-panel { display:none !important; }
+.collection-screen.is-phonics-reward-select .collection-header h2 ruby { ruby-position:over; }
+.collection-screen.is-phonics-reward-select .collection-header h2 rt { font-size:.4em; font-weight:700; }
+.phonics-scan-column {
+  background:linear-gradient(90deg,transparent 0%,rgba(31,179,255,.025) 16%,rgba(40,202,255,.11) 32%,rgba(69,227,255,.24) 44%,rgba(207,251,255,.74) 49%,#ffffff 50%,rgba(207,251,255,.74) 51%,rgba(69,227,255,.24) 56%,rgba(40,202,255,.11) 68%,rgba(31,179,255,.025) 84%,transparent 100%);
+  filter:drop-shadow(0 0 10px rgba(115,237,255,.87)) drop-shadow(0 0 23px rgba(51,189,255,.48));
+}
+.phonics-scan-row {
+  background:linear-gradient(180deg,transparent 0%,rgba(255,187,48,.025) 16%,rgba(255,226,90,.10) 32%,rgba(255,231,114,.24) 44%,rgba(255,250,213,.76) 49%,#ffffff 50%,rgba(255,250,213,.76) 51%,rgba(255,231,114,.24) 56%,rgba(255,226,90,.10) 68%,rgba(255,187,48,.025) 84%,transparent 100%);
+  filter:drop-shadow(0 0 10px rgba(255,226,109,.84)) drop-shadow(0 0 23px rgba(255,190,66,.45));
+}
+.phonics-scan-beam.is-locked { opacity:.5; }
+.collection-card.is-phonics-scan-winner { outline:4px solid #fff; box-shadow:0 0 0 6px rgba(255,255,255,.55),0 0 34px 16px rgba(255,253,212,.98),0 0 86px 36px rgba(86,228,255,.85)!important; }
+@keyframes mq-phonics-impact {
+  0% {opacity:0;transform:scale(.82);background:rgba(255,255,255,0)}
+  18% {opacity:1;transform:scale(1.035);background:rgba(255,255,255,.98);box-shadow:0 0 55px 29px #fff,0 0 110px 55px rgba(116,239,255,.96)}
+  54% {opacity:.95;transform:scale(1.08);background:rgba(255,247,177,.45);box-shadow:0 0 43px 26px #fff4ba,0 0 93px 50px rgba(70,218,255,.78)}
+  100% {opacity:0;transform:scale(1.17);background:transparent;box-shadow:0 0 55px 30px transparent}
+}
+
+/* Darkened garage search: light wakes the cards up as it travels. */
+.collection-screen.is-phonics-scanning .collection-grid { isolation:isolate; }
+.phonics-scan-darkness { position:absolute; inset:0; z-index:1; background:rgba(1,5,13,.91); pointer-events:none; }
+.phonics-scan-beam { z-index:2; }
+.phonics-scan-impact { z-index:3; }
+.phonics-scan-column { background:linear-gradient(90deg,transparent 0%,rgba(35,192,255,.06) 5%,rgba(58,201,255,.14) 24%,rgba(78,226,255,.3) 46%,#fff 50%,rgba(78,226,255,.3) 54%,rgba(58,201,255,.14) 76%,rgba(35,192,255,.06) 95%,transparent 100%); filter:drop-shadow(0 0 20px rgba(58,222,255,.95)) drop-shadow(0 0 42px rgba(58,222,255,.6)); }
+.phonics-scan-row { background:linear-gradient(180deg,transparent 0%,rgba(255,207,61,.06) 5%,rgba(255,215,95,.14) 24%,rgba(255,232,131,.3) 46%,#fff 50%,rgba(255,232,131,.3) 54%,rgba(255,215,95,.14) 76%,rgba(255,207,61,.06) 95%,transparent 100%); filter:drop-shadow(0 0 20px rgba(255,227,100,.93)) drop-shadow(0 0 42px rgba(255,205,69,.58)); }
+.phonics-scan-showcase { position:absolute;z-index:39;left:0;top:0; width:var(--from-w);height:var(--from-h);transform:translate(var(--from-x),var(--from-y));pointer-events:none; }
+.phonics-scan-showcase > .collection-card { width:100%;height:100%;display:block;pointer-events:none;box-shadow:0 0 26px rgba(255,250,180,.7); }
+.phonics-scan-showcase.is-animating { animation:mq-showcase-fly 1s cubic-bezier(.18,.85,.24,1) both; }
+.phonics-scan-showcase.is-settled { width:var(--to-w);height:var(--to-h);transform:translate(var(--to-x),var(--to-y)); }
+.phonics-scan-showcase-caption { position:absolute;top:calc(100% + 12px);left:-50%;width:200%;text-align:center;color:#fff;text-shadow:0 2px 6px #001a44,0 0 15px #4cdcff;opacity:0;display:flex;flex-direction:column;gap:6px;font-size:clamp(22px,3vw,40px);font-weight:900; }
+.phonics-scan-showcase.is-settled .phonics-scan-showcase-caption { opacity:1; }
+@keyframes mq-showcase-fly { from{width:var(--from-w);height:var(--from-h);transform:translate(var(--from-x),var(--from-y))}to{width:var(--to-w);height:var(--to-h);transform:translate(var(--to-x),var(--to-y))} }
+
+/* Full-garage scanner: grayscale staging, stage-wide shutter and centered beams. */
+.collection-screen.is-phonics-reward-select .collection-stage { filter:none; background-color:#27303a; }
+.collection-screen.is-phonics-reward-select .collection-header { position:relative;z-index:30;filter:none; }
+.collection-screen.is-phonics-reward-select .phonics-cross-scan {position:absolute;inset:0;z-index:20;overflow:hidden;pointer-events:none;}
+.collection-screen.is-phonics-reward-select .phonics-scan-darkness {position:absolute;inset:0;z-index:1;background:rgba(10,13,19,.93);}
+.collection-screen.is-phonics-reward-select .phonics-scan-beam {z-index:2;}
+.collection-screen.is-phonics-reward-select .phonics-scan-impact {z-index:3;}
+.collection-screen.is-phonics-scanning .collection-card.is-phonics-scan-winner {z-index:21;outline:5px solid #fff;box-shadow:0 0 0 10px #fff,0 0 75px 38px #fff,0 0 145px 80px #85edff!important;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase {animation:none!important;transform:none!important;position:absolute;z-index:45;margin:0;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase.is-settled .phonics-scan-showcase-caption {opacity:1;}
+
+.collection-screen.is-phonics-reward-select .collection-stage::before { display:block;content:"";position:absolute;inset:0;background:rgba(76,78,83,.28);backdrop-filter:grayscale(1);-webkit-backdrop-filter:grayscale(1);pointer-events:none;z-index:0; }
+.collection-screen.is-phonics-reward-select .collection-grid {z-index:1;}
+
+/* Preserve column reveal during row scan; layered masks combine as union. */
+.collection-screen.is-phonics-reward-select .phonics-scan-darkness { mask-composite:intersect; -webkit-mask-composite:source-in; }
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase { overflow:visible; }
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+  overflow:hidden; contain:paint;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-name,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-stars,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-hearts {display:none!important;}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
+  left:0;width:100%;box-sizing:border-box;top:calc(100% + 14px);
+  padding:12px 18px;border-radius:14px;
+  background:rgba(4,20,49,.94);border:2px solid rgba(126,217,255,.9);
+  text-shadow:0 2px 4px #00102c;
+}
+
+/* Keep the source card's artwork coordinates and layered equipment intact. */
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .name-band,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .card-rarity,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-up-ribbon,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-new-ribbon {display:none!important;}
+/* Phonics reward presentation: single owner per property.
+   The garage scrim is a real element so reward-screen toggles cannot disable it. */
+.collection-screen.is-phonics-reward-select .phonics-reward-scrim {
+ position:absolute;inset:0;z-index:38;pointer-events:none;
+ background:rgba(10,13,19,.93);
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase {
+ position:absolute;z-index:45;overflow:visible;border-radius:14px;
+ animation:none!important;transform:none!important;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase > .collection-card {
+ border:0!important;box-shadow:none!important;
+ /* Radius/clip-path in source coordinates set in JS using the live scale. */
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase::before {
+ content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+ box-sizing:border-box;border:5px solid #fff;border-radius:14px;
+ box-shadow:0 0 8px 3px #fff,0 0 75px 38px #fff,0 0 145px 80px #85edff;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .name-band,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .card-rarity,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-status,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-up-ribbon,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-new-ribbon,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-name,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-stars,
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase .is-phonics-art-only .collection-card-hearts {
+ display:none!important;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress {
+ position:absolute;z-index:48;right:16px;top:50%;pointer-events:none;
+ transform:scale(.87) translateY(-50%);transform-origin:top right;
+ font-family:"Noto Sans JP",sans-serif;color:#fff;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-progress,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-progress {
+ display:flex;background:transparent;border:none;box-shadow:none;
+ backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-label,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .friendship-label,
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-value {
+ color:#fff;text-shadow:0 2px 5px rgba(0,18,47,.95),0 0 7px rgba(0,18,47,.8);
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-progress .energy-fraction-bar {
+ background:rgba(255,255,255,.96);
+}
+/* The original reward caption is also the one-line handoff:
+   one fixed box, centered text and the same dimensions in both states. */
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption {
+ left:0;top:calc(100% + 68px);width:100%;height:114px;
+ min-height:114px;box-sizing:border-box;padding:12px 18px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:6px;border-radius:14px;border:2px solid rgba(126,217,255,.9);
+ background:rgba(3,16,40,.97);box-shadow:0 8px 25px rgba(0,7,25,.85);
+ color:#fff;text-align:center;text-shadow:0 2px 6px #001a44;
+ font-size:clamp(22px,3vw,40px);font-weight:900;
+}
+.collection-screen.is-phonics-reward-select .phonics-scan-showcase-caption.is-collection-handoff {
+ white-space:nowrap;opacity:1;visibility:visible;
+}
+
+/* One visual contract from target lock through acquisition and handoff.
+   Do not affect the ordinary play-mode reward popup. */
+.collection-screen.is-phonics-reward-select.is-phonics-winner-selected #collection-header-title {
+ visibility:hidden;
+}
+.reward-screen.reward-overlay.phonics-reward-overlay .reward-dimmer {
+ background:transparent;
 }

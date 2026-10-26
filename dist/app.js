@@ -263,7 +263,7 @@
     collectionDeadline: 0, collectionTimerId: null, collectionClosing: false, detailVehicleIndex: 0, preparedNextQuestionVisual: null, pendingNextVehicleOverlay: null,
     questionDeadline: 0, questionTimeoutId: null, idleGuideTimer: null, retryAutoStartTimer: null, correctStreak: 0, vehicleChallengeQuestionCount: 0,
     energyDisplayOverride: null, collectionCategory: "summary", collectionCategoryPage: 0, collectionSwipeStartX: null, collectionNewCategoryKeys: new Set(),
-    collectionMode: "browse", phonicsRewardSelectedVehicleIndex: null, phonicsLastRewardVehicleIndex: null,
+    collectionMode: "browse", phonicsRewardSelectedVehicleIndex: null, phonicsLastRewardVehicleIndex: null, phonicsScanInProgress: false,
     mode: "normal", longDivision: null, numberCards: null, multiplication: null, multiplication2x2: null,
     bgmBuffers: Object.create(null), bgmBufferPromises: Object.create(null), bgmSource: null, bgmGain: null, bgmEnabled: true, bgmDucked: false, bgmGroup: null, desiredBgmGroup: null, bgmRequestId: 0, bgmTransitionId: 0, bgmFadeTimer: null
   };
@@ -3765,6 +3765,7 @@
     $("reward-stage").dataset.rewardKind = kind;
     $("reward-image").alt = `${vehicle.nameJa}の獲得演出`;
     $("reward-screen").classList.toggle("reward-overlay", stage < 5);
+    $("reward-screen").classList.toggle("phonics-reward-overlay", Boolean(onDone) && state.collectionMode === "phonics-reward-select");
     const runId = state.runId;
     const nextVehicleOverlayReady = shouldShowNextVehicleOverlay
       ? preloadDecodedImage(nextVehicleOverlayPath)
@@ -4189,18 +4190,21 @@
   function setCollectionPresentationMode(mode = "browse") {
     state.collectionMode = mode;
     const selectionMode = mode === "phonics-reward-select";
-    $("collection-stage").style.setProperty(
-      "--phonics-reward-background",
-      selectionMode && phonicsYoutube.backgroundPath ? `url("${phonicsYoutube.backgroundPath}")` : "none"
-    );
+    // Use the regular garage background in both modes.
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
-    if (selectionMode) $("collection-header-title").textContent = "どののりものを育てる？";
+    if (selectionMode) $("collection-header-title").innerHTML = "どののりものが<ruby>育<rt>そだ</rt></ruby>つかな？";
     else renderCollectionBaseTitle();
     if (!selectionMode) {
       $("phonics-grow-confirm").hidden = true;
       $("phonics-reward-intro").hidden = true;
       $("collection-screen").classList.remove("is-phonics-reward-intro-open");
       state.phonicsRewardSelectedVehicleIndex = null;
+      state.phonicsScanInProgress = false;
+      document.getElementById("phonics-cross-scan")?.remove();
+      document.getElementById("phonics-reward-scrim")?.remove();
+      document.getElementById("phonics-scan-showcase")?.remove();
+      $("collection-screen").classList.remove("is-phonics-scanning","is-phonics-winner-selected","is-phonics-reward-handoff-pending");
+      $("reward-screen").classList.remove("phonics-reward-overlay");
     }
   }
   function seedPatrolCarForPhonicsRewardIfNeeded() {
@@ -4224,15 +4228,212 @@
       });
     } catch (_) {}
   }
-  function recommendedPhonicsRewardVehicleIndex() {
-    const recent = state.phonicsLastRewardVehicleIndex;
-    if (Number.isInteger(recent)) {
-      const progress = vehicleProgress(recent);
-      if (progress.discovered && (!progress.masterMedal || progress.energy < 500)) return recent;
+
+  // Pick from all discovered vehicles, regardless of rarity.
+  function randomPhonicsRewardVehicleIndex() {
+    const eligible = vehicles.filter((vehicle) => vehicleProgress(vehicle.index).discovered);
+    return (eligible[Math.floor(Math.random() * eligible.length)] || vehicles[0]).index;
+  }
+  function scanPause(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
+  async function runPhonicsCrossScan() {
+    if (state.collectionMode !== "phonics-reward-select" || state.phonicsScanInProgress) return;
+    state.phonicsScanInProgress = true;
+    stopCollectionTimer();
+    $("phonics-reward-intro").hidden = true;
+    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
+    const vehicleIndex = randomPhonicsRewardVehicleIndex();
+    state.phonicsRewardSelectedVehicleIndex = vehicleIndex;
+    const grid = $("collection-grid");
+    const cards = [...grid.querySelectorAll(".collection-card")];
+    const target = cards.find((card) => Number(card.dataset.vehicle) === vehicleIndex);
+    if (!target) { state.phonicsScanInProgress = false; applyPhonicsRewardGrowth(vehicleIndex); return; }
+    const stage = $("collection-stage");
+    const stageRect = stage.getBoundingClientRect(), targetRect = target.getBoundingClientRect();
+    // Convert viewport coordinates into stage CSS pixels (the stage is scaled on iPad).
+    const scaleX = stageRect.width / stage.offsetWidth, scaleY = stageRect.height / stage.offsetHeight;
+    const stageWidth = stage.offsetWidth, stageHeight = stage.offsetHeight;
+    const x=(targetRect.left-stageRect.left)/scaleX, y=(targetRect.top-stageRect.top)/scaleY;
+    const w=targetRect.width/scaleX, h=targetRect.height/scaleY;
+    const centerX=x+w/2, centerY=y+h/2;
+    const overlay=document.createElement("div");
+    overlay.id="phonics-cross-scan";
+    overlay.className="phonics-cross-scan";
+    overlay.setAttribute("aria-hidden","true");
+    overlay.innerHTML='<div class="phonics-scan-darkness"></div><div class="phonics-scan-beam phonics-scan-column"></div><div class="phonics-scan-beam phonics-scan-row"></div><div class="phonics-scan-impact"></div>';
+    stage.append(overlay);
+    $("collection-screen").classList.add("is-phonics-scanning");
+    const darkness=overlay.querySelector(".phonics-scan-darkness");
+    const column=overlay.querySelector(".phonics-scan-column"), row=overlay.querySelector(".phonics-scan-row"), impact=overlay.querySelector(".phonics-scan-impact");
+    // One animation clock drives BOTH the beam and its reveal aperture.
+    // No asynchronous WAAPI-vs-requestAnimationFrame tracking lag.
+    const paintMask=(axis,center,radius)=>{
+      const direction=axis==="X"?"right":"bottom";
+      const moving=`linear-gradient(to ${direction},black ${center-radius}px,transparent ${center}px,black ${center+radius}px)`;
+      const gradient=axis==="Y" ? `linear-gradient(to right,black ${centerX-w*.9}px,transparent ${centerX}px,black ${centerX+w*.9}px),${moving}` : moving;
+      darkness.style.maskImage=gradient;
+      darkness.style.webkitMaskImage=gradient;
+    };
+    const move=(beam,axis,targetCenter,dimension)=>new Promise(resolve=>{
+      const span=axis==="X"?stageWidth:stageHeight;
+      const size=dimension*1.25, radius=dimension*.9;
+      beam.style[axis==="X"?"width":"height"]=size+"px";
+      beam.style[axis==="X"?"height":"width"]="100%";
+      // Beam CENTER reaches the actual full-stage boundaries before reversing.
+      const stops=[0,span,0,targetCenter];
+      const duration=6200, segments=[0,.32,.64,1];
+      const started=performance.now();
+      const tick=now=>{
+        const progress=Math.min(1,(now-started)/duration);
+        let segment=0;
+        while(segment<2&&progress>segments[segment+1])segment++;
+        const fraction=Math.max(0,Math.min(1,(progress-segments[segment])/(segments[segment+1]-segments[segment])));
+        const eased=fraction*fraction*(3-2*fraction);
+        const center=stops[segment]+(stops[segment+1]-stops[segment])*eased;
+        beam.style.transform=axis==="X"
+          ?`translate3d(${center-size/2}px,0,0)`
+          :`translate3d(0,${center-size/2}px,0)`;
+        paintMask(axis,center,radius);
+        if(progress<1)window.requestAnimationFrame(tick);
+        else resolve();
+      };
+      window.requestAnimationFrame(tick);
+    });
+    try {
+      // Two bounces: far edge, near edge, then selected column.
+      await move(column,"X",centerX,w);
+      column.classList.add("is-locked");
+      // Preserve the already-selected column while searching for the row.
+      // Keep the chosen column visible throughout the half-second pause.
+      paintMask("X",centerX,w*.9);
+      darkness.classList.add("is-column-locked");
+      darkness.style.setProperty("--locked-column-center",centerX+"px");
+      darkness.style.setProperty("--locked-column-radius",w*.9+"px");
+      await scanPause(500);
+      // Two bounces: bottom, top, then selected row.
+      await move(row,"Y",centerY,h);
+      row.classList.add("is-locked");
+      await scanPause(290);
+      // Flash ONLY after the row and column are both fully resolved.
+      Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+      impact.classList.add("is-revealed");
+      target.classList.add("is-phonics-scan-winner");
+      $("collection-screen").classList.add("is-phonics-winner-selected");
+      darkness.style.opacity="1";
+      darkness.style.webkitMaskImage="none";
+      darkness.style.maskImage="none";
+      column.style.opacity="0";
+      row.style.opacity="0";
+      await scanPause(900);
+      // Animate a visual clone, keeping the actual collection card and artwork loaded.
+      const showcase = document.createElement("div");
+      showcase.id = "phonics-scan-showcase";
+      showcase.className = "phonics-scan-showcase";
+      const featured = target.cloneNode(true);
+      featured.removeAttribute("id");
+      featured.disabled = true;
+      featured.classList.add("is-phonics-art-only");
+      // The source card receives a strong scan-winner outline. Never clone that
+      // effect into the enlarged card: it makes the frame and glow oversized.
+      featured.classList.remove("is-phonics-scan-winner");
+      // Keep the original card's own layout; only scale the complete card.
+      featured.style.width = w + "px";
+      featured.style.height = h + "px";
+      featured.style.transformOrigin = "top left";
+      const caption = document.createElement("div");
+      caption.className = "phonics-scan-showcase-caption";
+      const amount = phonicsGrowthAmountLabel(vehicleIndex);
+      caption.replaceChildren(Object.assign(document.createElement("strong"),{textContent:vehicles[vehicleIndex].nameJa}), Object.assign(document.createElement("span"),{textContent:amount}));
+      showcase.append(featured,caption);
+      $("collection-stage").append(showcase);
+      const originX=x,originY=y;
+      const endW=Math.min(stageWidth*.525,630),endH=endW*(h/w);
+      const endX=(stageWidth-endW)/2,endY=(stageHeight-endH)/2-35;
+      state.phonicsShowcaseGeometry={left:endX,top:endY,width:endW,height:endH};
+      const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
+      Object.assign(showcase.style,frame(originX,originY,w,h));
+      const timing={duration:1000,easing:"cubic-bezier(.18,.85,.24,1)",fill:"forwards"};
+      const fly=showcase.animate([frame(originX,originY,w,h),frame(endX,endY,endW,endH)],timing);
+      const cardScale=endW/w;
+      // Preserve the former preview's thin border instead of scaling the
+      // collection card's native stroke several times larger.
+      // The collection card is scaled but the halo is not: compensate its
+      // source-space corner radius so both have the same rendered 14px arc.
+      featured.style.setProperty("border-width","0","important");
+      featured.style.setProperty("border-radius",(14/cardScale)+"px","important");
+      featured.style.setProperty("clip-path",`inset(0 round ${14/cardScale}px)`,"important");
+      const enlarge=featured.animate([{transform:"scale(1)"},{transform:`scale(${cardScale})`}],timing);
+      await Promise.all([fly.finished,enlarge.finished]);
+      Object.assign(showcase.style,frame(endX,endY,endW,endH));
+      featured.style.transform=`scale(${cardScale})`;
+      fly.cancel();enlarge.cancel();
+      showcase.classList.add("is-settled");
+      // Reuse the answer screen's actual progress UI, not collection card indicators.
+      const progress=vehicleProgress(vehicleIndex);
+      const isFriendship=!progress.friendly;
+      const source=$(isFriendship?"friendship-progress":"energy-progress");
+      const progressPanel=source.cloneNode(true);
+      progressPanel.removeAttribute("id");
+      progressPanel.removeAttribute("hidden");
+      progressPanel.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+      const progressHolder=document.createElement("div");
+      progressHolder.className="phonics-scan-progress";
+      progressHolder.append(progressPanel);
+      // Nest the unchanged arithmetic UI inside the card's right-hand space,
+      // leaving a visible gap from the card frame.
+      showcase.append(progressHolder);
+      const amounts=phonicsGrowthAmounts();
+      if(isFriendship){
+        const hearts=[...progressPanel.querySelectorAll(".friendship-heart")];
+        const initial=Math.min(5,progress.friendship);
+        const final=Math.min(5,initial+amounts.friendship);
+        const paint=count=>hearts.forEach((heart,i)=>heart.classList.toggle("is-filled",i>=5-count));
+        paint(initial);
+        await scanPause(600);
+        for(let value=initial+1;value<=final;value++){paint(value);await scanPause(220);}
+      }else{
+        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
+        const capsule=progressPanel.querySelector(".energy-capsule");
+        const fill=progressPanel.querySelector(".energy-fill");
+        const current=progressPanel.querySelector(".energy-value span");
+        const required=progressPanel.querySelector(".energy-value span:last-child");
+        required.textContent=String(needed);
+        const heights={30:194,50:254,100:314,200:374,500:374};
+        capsule.style.setProperty("--capsule-height",(heights[needed]||194)+"px");
+        const paint=value=>{fill.style.height=Math.min(100,value/needed*100)+"%";current.textContent=String(value);};
+        paint(initial);
+        await scanPause(600);
+        const start=performance.now(),duration=1400;
+        await new Promise(resolve=>{
+          const tick=now=>{const ratio=Math.min(1,(now-start)/duration);paint(Math.round(initial+(final-initial)*ratio));if(ratio<1)requestAnimationFrame(tick);else resolve();};
+          requestAnimationFrame(tick);
+        });
+      }
+      await scanPause(900);
+      // Keep the same neutral darkness throughout all reward phases.
+      // Install before the scan darkness goes away, so no bright frame leaks.
+      if (!document.getElementById("phonics-reward-scrim")) {
+        const scrim=document.createElement("div");
+        scrim.id="phonics-reward-scrim";
+        scrim.className="phonics-reward-scrim";
+        stage.append(scrim);
+      }
+      // Save the charged visual; hide it only while an acquisition popup plays.
+      // Reuse this exact completed card for the subsequent collection handoff.
+      state.phonicsChargedShowcase=showcase;
+      showcase.remove();
+    } finally {
+      overlay.remove();
+      if (state.phonicsChargedShowcase !== document.getElementById("phonics-scan-showcase"))
+        document.getElementById("phonics-scan-showcase")?.remove();
+      $("collection-screen").classList.remove("is-phonics-scanning");
+      target.classList.remove("is-phonics-scan-winner");
+      state.phonicsScanInProgress = false;
     }
-    if (vehicleProgress(0).discovered) return 0;
-    const discovered = state.rewardProgress.findIndex((progress) => progress?.discovered);
-    return discovered >= 0 ? discovered : 0;
+    if (state.collectionMode === "phonics-reward-select") {
+      $("collection-screen").classList.add("is-phonics-reward-handoff-pending");
+      applyPhonicsRewardGrowth(vehicleIndex, showPhonicsCollectionHandoff);
+    }
   }
   function phonicsGrowthAmounts() {
     return phonicsYoutube.rewardAlmostZero
@@ -4262,19 +4463,83 @@
     state.collectionClosing = false;
     setBackgroundMusicDucked(false);
     setCollectionPresentationMode("browse");
+    // The browsing scene is ready; release the one persistent reward scrim.
+    document.getElementById("phonics-reward-scrim")?.remove();
+    $("collection-screen").classList.remove("is-phonics-reward-handoff-pending","is-phonics-winner-selected");
+    $("reward-screen").classList.remove("phonics-reward-overlay");
     resetCapsuleDialog();
     state.collectionDeadline = Date.now() + 60000;
     $("collection-item-count").textContent = String(availableEnergyCapsuleCount());
     state.collectionShowSessionMarkers = true;
     prepareCollectionCategoryTabs();
     setCollectionCategory("summary");
-    renderCollectionGrid({ showSessionMarkers: true });
+    // Keep the existing garage cards mounted to avoid flashing empty images.
+    $("collection-grid").querySelectorAll(".collection-card").forEach((card) => {
+      const idx = Number(card.dataset.vehicle);
+      const progress = vehicleProgress(idx);
+      const status = card.querySelector(".collection-card-status");
+      if (status?.classList.contains("collection-card-energy")) {
+        const max = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+        const fill = status.querySelector("i");
+        if (fill) fill.style.height = Math.min(100, progress.energy / max * 100)+"%";
+        status.setAttribute("aria-label", `エネルギー ${progress.energy} / ${max}`);
+      }
+      if (idx === state.phonicsLastRewardVehicleIndex) {
+        card.classList.add("is-up");
+        const hearts = card.querySelector(".collection-card-hearts");
+        if (hearts) {
+          hearts.setAttribute("aria-label", `なかよし ${progress.friendship} / 5`);
+          hearts.querySelectorAll("i").forEach((heart, i) => heart.classList.toggle("is-earned", 5-i <= progress.friendship));
+        }
+        if (progress.friendly && hearts) {
+          hearts.remove();
+          const energy = document.createElement("span");
+          energy.className = "collection-card-status collection-card-energy";
+          energy.setAttribute("aria-label", `エネルギー ${progress.energy} / ${requiredEnergyForStage(progress.stage)}`);
+          const bar = document.createElement("i");
+          bar.style.height = Math.min(100,progress.energy / requiredEnergyForStage(progress.stage)*100)+"%";
+          energy.append(bar);
+          card.append(energy);
+        }
+        const correctStage = progress.masterMedal ? 5 : Math.max(2,Math.min(5,progress.stage));
+        if (Number(card.dataset.stage) !== correctStage) {
+          card.dataset.stage = String(correctStage);
+          const art = card.querySelector(".card-vehicle");
+          if (art) art.src = answerArtworkPath(idx,correctStage);
+        }
+        card.querySelector(".card-vehicle")?.classList.toggle("is-pre-friendship",!progress.friendly && correctStage === 2);
+      }
+    });
     sizeCollectionStage();
     showScreen("collection-screen");
     updateCollectionClock();
     state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
   }
-  function applyPhonicsRewardGrowth(vehicleIndex) {
+  function showPhonicsCollectionHandoff() {
+    const stage=$("collection-stage"), geometry=state.phonicsShowcaseGeometry;
+    const showcase=state.phonicsChargedShowcase;
+    $("reward-screen").classList.remove("active");
+    screens.forEach(id=>$(id).classList.toggle("active",id==="collection-screen"));
+    // Restore the exact completed showcase; reuse its existing caption rather
+    // than layering a differently sized notification box over the reward text.
+    if (showcase) {
+      const caption=showcase.querySelector(".phonics-scan-showcase-caption");
+      if (caption) {
+        caption.replaceChildren(Object.assign(document.createElement("strong"),{
+          textContent:"さあコレクションを見てみよう！"
+        }));
+        caption.classList.add("is-collection-handoff");
+      }
+      stage.append(showcase);
+    }
+    window.setTimeout(()=>{
+      state.phonicsChargedShowcase?.remove();
+      state.phonicsChargedShowcase=null;
+      state.phonicsShowcaseGeometry=null;
+      openNormalCollectionAfterPhonicsReward();
+    },2500);
+  }
+  function applyPhonicsRewardGrowth(vehicleIndex, onFinished = showPhonicsCollectionHandoff) {
     if (!Number.isInteger(vehicleIndex)) return;
     const progress = vehicleProgress(vehicleIndex);
     if (!progress.discovered) return;
@@ -4300,19 +4565,15 @@
       reward = gain.reward;
       if (!reward) saveCollectionProgress();
     }
-    renderCollectionGrid({ showSessionMarkers: false });
+    // Retain the existing card DOM and artwork; only patch progress indicators.
     if (reward) {
-      showReward(reward, false, openNormalCollectionAfterPhonicsReward);
+      showReward(reward, false, onFinished);
       return;
     }
-    openNormalCollectionAfterPhonicsReward();
+    onFinished();
   }
   function startPhonicsRewardVehicleSelection() {
-    $("phonics-reward-intro").hidden = true;
-    $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-    state.collectionDeadline = Date.now() + 60000;
-    updateCollectionClock();
-    state.collectionTimerId = window.setInterval(updateCollectionClock, 200);
+    void runPhonicsCrossScan();
   }
   function cancelPhonicsRewardSelection() {
     $("phonics-reward-intro").hidden = true;
@@ -4564,7 +4825,7 @@
   function collectionTimeUp() {
     if (state.collectionClosing) return;
     if (state.collectionMode === "phonics-reward-select") {
-      applyPhonicsRewardGrowth(recommendedPhonicsRewardVehicleIndex());
+      return; // The scanner commits the reward; never roll from a timer.
       return;
     }
     state.collectionClosing = true;
@@ -4912,7 +5173,7 @@
       const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
       const isUp = showSessionMarkers && !isNew && (friendshipGrew || energyGrew);
       const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
-      const selectionDisabled = (state.collectionMode === "phonics-reward-select" && !discovered) || capsuleDisabled;
+      const selectionDisabled = (state.collectionMode === "phonics-reward-select") || capsuleDisabled;
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${equipmentComposition || artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
@@ -4922,7 +5183,7 @@
     document.querySelectorAll(".collection-card").forEach((card) => card.addEventListener("click", () => {
       const vehicleIndex = Number(card.dataset.vehicle);
       if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }
-      else if (state.collectionMode === "phonics-reward-select") openPhonicsGrowConfirm(vehicleIndex);
+      else if (state.collectionMode === "phonics-reward-select") return;
       else openVehicleDetail(vehicleIndex);
     }));
   }
