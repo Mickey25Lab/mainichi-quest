@@ -101,3 +101,47 @@ test("write failure rolls back only values created by import",async t=>{
   assert.match(await importData(dst.page,payload),/書き込み分を取り消しました/);
   assert.equal(await dst.page.evaluate(()=>localStorage.length),0);
 });
+
+test("Papa-only Cloudflare reset creates backup and clears transfer keys",async t=>{
+  const papa={...profile,profileId:"papa-id",displayName:"Papa"};
+  const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles:[papa]}),[ACTIVE]:"papa-id","warizan-robot:bgm-enabled-v1":"false"};
+  const dst=await pageAt(ORIGINS[1],prior);t.after(()=>dst.context.close());
+  await dst.page.locator("#mq-transfer-open").click();
+  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"Papa削除";});
+  const downloaded=dst.page.waitForEvent("download");
+  await dst.page.getByRole("button",{name:"検証用Papaデータを削除"}).click();
+  const file=await downloaded;
+  assert.match(file.suggestedFilename(),/^maique-papa-backup-/);
+  assert.deepEqual(JSON.parse(fs.readFileSync(await file.path(),"utf8")).entries,prior);
+  assert.equal(await dst.page.evaluate(()=>localStorage.length),0);
+  assert.match(await dst.page.locator('#mq-transfer-dialog [role="status"]').textContent(),/削除しました/);
+});
+test("reset refuses non-Papa, multiple profiles, and GitHub source",async t=>{
+  for(const [origin,profiles] of [
+    [ORIGINS[1],[profile]],
+    [ORIGINS[1],[{...profile,profileId:"papa-id",displayName:"Papa"},profile]],
+    [ORIGINS[0],[{...profile,profileId:"papa-id",displayName:"Papa"}]]
+  ]) {
+    const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles}),[ACTIVE]:profiles[0].profileId};
+    const dst=await pageAt(origin,prior);t.after(()=>dst.context.close());
+    await dst.page.locator("#mq-transfer-open").click();
+    const button=dst.page.getByRole("button",{name:"検証用Papaデータを削除"});
+    if(origin===ORIGINS[0]) assert.equal(await button.count(),0);
+    else {
+      await button.click();
+      assert.match(await dst.page.locator('#mq-transfer-dialog [role="status"]').textContent(),/削除中止/);
+    }
+    assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),prior);
+  }
+});
+test("Papa reset cancels without deleting after backup",async t=>{
+  const papa={...profile,profileId:"papa-id",displayName:"Papa"};
+  const prior={[KEY]:JSON.stringify({schemaVersion:1,profiles:[papa]}),[ACTIVE]:"papa-id"};
+  const dst=await pageAt(ORIGINS[1],prior);t.after(()=>dst.context.close());
+  await dst.page.locator("#mq-transfer-open").click();
+  await dst.page.evaluate(()=>{window.confirm=()=>true;window.prompt=()=>"やめる";});
+  const downloaded=dst.page.waitForEvent("download");
+  await dst.page.getByRole("button",{name:"検証用Papaデータを削除"}).click();
+  await downloaded;
+  assert.deepEqual(await dst.page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(key=>[key,localStorage.getItem(key)]))),prior);
+});
