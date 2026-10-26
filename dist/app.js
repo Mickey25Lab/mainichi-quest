@@ -4361,11 +4361,14 @@
         });
       }
       await scanPause(900);
-      progressHolder.remove();
+      // Save the charged visual; hide it only while an acquisition popup plays.
+      // Reuse this exact completed card for the subsequent collection handoff.
+      state.phonicsChargedShowcase=showcase;
       showcase.remove();
     } finally {
       overlay.remove();
-      document.getElementById("phonics-scan-showcase")?.remove();
+      if (state.phonicsChargedShowcase !== document.getElementById("phonics-scan-showcase"))
+        document.getElementById("phonics-scan-showcase")?.remove();
       $("collection-screen").classList.remove("is-phonics-scanning");
       target.classList.remove("is-phonics-scan-winner");
       state.phonicsScanInProgress = false;
@@ -4453,17 +4456,25 @@
   }
   function showPhonicsCollectionHandoff() {
     const stage=$("collection-stage"), geometry=state.phonicsShowcaseGeometry;
+    const showcase=state.phonicsChargedShowcase;
     $("reward-screen").classList.remove("active");
     screens.forEach(id=>$(id).classList.toggle("active",id==="collection-screen"));
+    // Restore the completed character, fill and halo above the dimmed garage.
+    if (showcase) {
+      showcase.querySelector(".phonics-scan-showcase-caption")?.remove();
+      stage.append(showcase);
+    }
     const notice=document.createElement("div");
     notice.className="phonics-scan-next-notice";
     notice.textContent="さあコレクションを見てみよう！";
     if(geometry)Object.assign(notice.style,{
-      left:geometry.left+"px",top:(geometry.top+geometry.height+52)+"px",width:geometry.width+"px"
+      left:geometry.left+"px",top:(geometry.top+geometry.height+68)+"px",width:geometry.width+"px"
     });
     stage.append(notice);
     window.setTimeout(()=>{
       notice.remove();
+      state.phonicsChargedShowcase?.remove();
+      state.phonicsChargedShowcase=null;
       $("collection-screen").classList.remove("is-phonics-reward-handoff-pending");
       state.phonicsShowcaseGeometry=null;
       openNormalCollectionAfterPhonicsReward();
