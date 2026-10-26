@@ -779,6 +779,7 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    beginDailyMissionAttempt(modeId);
     const missionAtStart = missionOverview();
     phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
       && missionAtStart.freePlayEnabled
@@ -845,6 +846,7 @@
     $("phonics-youtube-player").replaceChildren();
   }
   function leavePhonicsYoutube() {
+    cancelDailyMissionAttempt();
     stopAndDestroyPhonicsYoutube();
     phonicsYoutube.activeModeId = null;
     renderModeSelectMission();
@@ -2432,13 +2434,42 @@
     return (overview.allComplete && overview.freePlayEnabled) || item.remaining > 0;
   }
 
+  // Internal-only completion signal. PR4/PR7 will consume this later.
+  // Never persist a second flag: the date-scoped completedCounts is authoritative.
+  let activeMissionAttempt = null;
+  let lastDailyMissionCompletion = null;
+  function beginDailyMissionAttempt(mode) {
+    activeMissionAttempt = { mode, date: japanDateKey(), profileId: profileStore.getActiveProfileId() };
+    lastDailyMissionCompletion = null;
+  }
+  function cancelDailyMissionAttempt() { activeMissionAttempt = null; }
+  function dailyMissionCompletionTransition(items, completedMode) {
+    if (!items.length) return false;
+    const before = items.every((item) => item.remaining === 0);
+    const item = items.find((entry) => entry.id === completedMode);
+    if (!item || before || item.remaining <= 0) return false;
+    return items.every((entry) => entry.id === completedMode ? entry.remaining === 1 : entry.remaining === 0);
+  }
   function completeDailyMissionRound(mode) {
     const overview = missionOverview();
     const item = overview.items.find((entry) => entry.id === mode);
-    if (!item || overview.allComplete || item.remaining <= 0) return;
+    const attempt = activeMissionAttempt;
+    activeMissionAttempt = null;
+    lastDailyMissionCompletion = null;
+    if (!attempt || attempt.mode !== mode || attempt.date !== japanDateKey()
+      || attempt.profileId !== profileStore.getActiveProfileId()
+      || !item || overview.allComplete || item.remaining <= 0) return false;
+    const isFinal = dailyMissionCompletionTransition(overview.items, mode);
     const mission = overview.mission;
     mission.completedCounts[mode] = item.completed + 1;
-    try { profileStore.setDailyMission(mission); } catch (_) {}
+    try {
+      profileStore.setDailyMission(mission);
+    } catch (error) {
+      console.error("Daily mission completion could not be saved", error);
+      return false;
+    }
+    if (isFinal) lastDailyMissionCompletion = { date: attempt.date, profileId: attempt.profileId, mode };
+    return isFinal;
   }
 
   function energyPresentationForMode(mode) {
@@ -2465,6 +2496,7 @@
   function startGameFromGesture(mode) {
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
     recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
+    beginDailyMissionAttempt(mode);
     primeBackgroundMusicFromGesture("game"); playStartSound(); audioContext(); preloadFanfareSounds(); beginRound(mode);
   }
   function startApp() { startGameFromGesture("normal"); }
@@ -4159,6 +4191,7 @@
   }
 
   function endToModeSelect() {
+    cancelDailyMissionAttempt();
     discardRoundTransaction();
     resetCapsuleDialog();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
