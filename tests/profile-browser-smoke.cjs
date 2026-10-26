@@ -482,6 +482,8 @@ test("completed quest offers a chosen vehicle charge once, surviving reload", as
   });
   await page.reload();
   await page.locator("#start-button").click();
+  await page.locator("#mode-select-screen.active").waitFor();
+  await page.locator("#quest-bonus-continue").click();
   await page.locator("#collection-screen.active").waitFor();
   await page.locator("#collection-grid .collection-card[data-vehicle='0']").click();
   await page.locator("#phonics-grow-confirm").waitFor({state:"visible"});
