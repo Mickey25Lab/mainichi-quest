@@ -256,7 +256,10 @@ test("all five phonics parts use the shared playback-only timing model", () => {
   assert.match(app, /function openPhonicsRewardSelection\(\)[\s\S]*collectionNewVehicleIndexes = new Set\(\)[\s\S]*resultStartProgress = state\.rewardProgress\.map/);
   assert.match(app, /function seedPatrolCarForPhonicsRewardIfNeeded\(\)[\s\S]*vehicleProgress\(0\)[\s\S]*discovered = true/);
   assert.match(app, /function applyPhonicsRewardGrowth\(vehicleIndex\)[\s\S]*friendship \+ amounts\.friendship[\s\S]*applyEnergyGain\(progress, vehicleIndex, amounts\.energy\)/);
-  assert.match(css, /phonics-scan-darkness/);
+  assert.match(app, /const stops=\[0,span,0,targetCenter\]/);
+  assert.match(app, /const scaleX = stageRect\.width \/ stage\.offsetWidth/);
+  assert.match(app, /paintMask\(axis,center,radius\)/);
+    assert.match(css, /phonics-scan-darkness/);
   assert.match(css, /phonics-scan-showcase/);
   assert.match(app, /function runPhonicsCrossScan\(\)[\s\S]*randomPhonicsRewardVehicleIndex\(\)[\s\S]*scanPause\(290\)[\s\S]*is-revealed/);
   assert.match(app, /function openNormalCollectionAfterPhonicsReward\(\)[\s\S]*Date\.now\(\) \+ 60000/);
