@@ -358,3 +358,27 @@ test("profiles from before progressive collection tabs preserve a legacy unseen 
 
   assert.equal(store.getCollectionCategorySeen(), null);
 });
+
+test("quest bonus claim is atomic with progression, once a JST day and profile", () => {
+  const storage = new MemoryStorage();
+  const store = makeStore(storage);
+  const a = store.createProfile("A");
+  const initial = [{ discovered:true, friendly:true, friendship:5, stage:2, energy:3, masterMedal:false }];
+  store.setRewardProgress(initial);
+  store.initializePointLedger(initial);
+  const gained = [{ ...initial[0], energy:18 }];
+  store.commitRewardProgressWithPoints(gained, { questBonusClaimDate:"2026-10-26" });
+  assert.equal(store.getQuestBonusClaimDate(), "2026-10-26");
+  assert.deepEqual(store.getRewardProgress(), gained);
+  const snapshot = store.getPointLedger();
+  assert.throws(() => store.commitRewardProgressWithPoints([{ ...gained[0], energy:28 }], { questBonusClaimDate:"2026-10-26" }), /already claimed/);
+  assert.deepEqual(store.getRewardProgress(), gained);
+  assert.deepEqual(store.getPointLedger(), snapshot);
+  const next = makeStore(storage);
+  assert.equal(next.getQuestBonusClaimDate(), "2026-10-26");
+  next.createProfile("B");
+  assert.equal(next.getQuestBonusClaimDate(), null);
+  next.setActiveProfile(a.profileId);
+  next.commitRewardProgressWithPoints([{ ...gained[0], energy:24 }], { questBonusClaimDate:"2026-10-27" });
+  assert.equal(next.getQuestBonusClaimDate(), "2026-10-27");
+});
