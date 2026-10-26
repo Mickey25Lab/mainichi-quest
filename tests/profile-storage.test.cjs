@@ -376,7 +376,8 @@ test("quest bonus claim is atomic with progression, once a JST day and profile",
   assert.deepEqual(store.getPointLedger(), snapshot);
   const next = makeStore(storage);
   assert.equal(next.getQuestBonusClaimDate(), "2026-10-26");
-  const profileB = next.createProfile("B");
+  // Reuse the original UUID factory; makeStore() restarts its test counter at 1.
+  const profileB = store.createProfile("B");
   next.setActiveProfile(profileB.profileId);
   assert.equal(next.getQuestBonusClaimDate(), null);
   next.setActiveProfile(a.profileId);
