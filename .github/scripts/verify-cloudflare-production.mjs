@@ -6,7 +6,7 @@ export function validateProductionRelease(meta, mainSha) {
   if (meta.schemaVersion !== 1) errors.push("Unexpected metadata schemaVersion");
   if (meta.environment !== "production") errors.push("Cloudflare is not serving production metadata");
   if (meta.branch !== "main") errors.push("Deployment branch is not main");
-  if (!/^\\d+\\.\\d+\\.\\d+$/.test(String(meta.version ?? ""))) errors.push("Invalid numeric version");
+  if (!/^\d+\.\d+\.\d+$/.test(String(meta.version ?? ""))) errors.push("Invalid numeric version");
   if (!/^[a-f0-9]{40}$/.test(String(meta.commit ?? ""))) errors.push("Invalid deployment commit SHA");
   if (meta.commit !== mainSha) errors.push(`Production commit ${meta.commit ?? "missing"} differs from main ${mainSha}`);
   if (meta.releaseCommit !== meta.commit) errors.push("Production releaseCommit differs from deployment commit");
