@@ -1399,9 +1399,9 @@
       if (releaseResponse.ok) {
         const release = await releaseResponse.json();
         if (/^[a-f0-9]{40}$/.test(String(release.commit || "")) &&
-            release.version === release.commit.slice(0, 12) &&
+            /^\d+\.\d+\.\d+$/.test(String(release.version || "")) &&
             ["production", "preview"].includes(release.environment)) {
-          versionLabel.textContent = `Version ${release.version} | ${release.environment === "production" ? "Production" : "Preview"}`;
+          versionLabel.textContent = `Version ${release.version}${release.environment === "preview" ? "_P" : ""} | ${release.commit.slice(0, 7)}`;
           versionLabel.classList.toggle("is-preview", release.environment === "preview");
           return;
         }
