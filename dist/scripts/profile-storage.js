@@ -76,6 +76,7 @@
         topCollectionLastUsedJst: null,
         openingMovieLastPlayedJst: null,
         dailyMission: { date: null, completedCounts: {} },
+        questBonusClaimDate: null,
         collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] },
         collectionCategorySeen: [],
         legacyHistory: null,
@@ -138,6 +139,7 @@
     profile.progress.recentVehicles = Array.isArray(value.progress?.recentVehicles) ? clone(value.progress.recentVehicles) : [];
     profile.progress.topCollectionLastUsedJst = typeof value.progress?.topCollectionLastUsedJst === "string" ? value.progress.topCollectionLastUsedJst : null;
     profile.progress.openingMovieLastPlayedJst = typeof value.progress?.openingMovieLastPlayedJst === "string" ? value.progress.openingMovieLastPlayedJst : null;
+    profile.progress.questBonusClaimDate = typeof value.progress?.questBonusClaimDate === "string" ? value.progress.questBonusClaimDate : null;
     const dailyMission = value.progress?.dailyMission;
     profile.progress.dailyMission = {
       date: typeof dailyMission?.date === "string" ? dailyMission.date : null,
@@ -371,9 +373,13 @@
           recentEvents: [{ id: "migration-v1", type: "initial-migration", points: total }] };
       }).pointLedger;
     }
-    function commitRewardProgressWithPoints(progress, { consumeEnergyCapsule = false } = {}) {
+    function commitRewardProgressWithPoints(progress, { consumeEnergyCapsule = false, questBonusClaimDate = null } = {}) {
       if (!Array.isArray(progress)) throw new Error("reward progress array required");
       return mutateActiveProfile((profile) => {
+        if (questBonusClaimDate) {
+          if (profile.progress.questBonusClaimDate === questBonusClaimDate) throw new Error("quest bonus already claimed today");
+          profile.progress.questBonusClaimDate = questBonusClaimDate;
+        }
         if (consumeEnergyCapsule) {
           if (profile.energyCapsuleCount < 1) throw new Error("no energy capsule to use");
           profile.energyCapsuleCount -= 1;
@@ -422,6 +428,7 @@
     function setTopCollectionLastUsedJst(value) { return mutateActiveProfile((profile) => { profile.progress.topCollectionLastUsedJst = value ? String(value) : null; }); }
     function getOpeningMovieLastPlayedJst() { return getActiveProfile()?.progress.openingMovieLastPlayedJst ?? null; }
     function setOpeningMovieLastPlayedJst(value) { return mutateActiveProfile((profile) => { profile.progress.openingMovieLastPlayedJst = value ? String(value) : null; }); }
+    function getQuestBonusClaimDate() { return getActiveProfile()?.progress.questBonusClaimDate ?? null; }
     function getDailyMission() {
       const mission = getActiveProfile()?.progress.dailyMission;
       return clone(mission && typeof mission === "object" ? mission : { date:null, completedCounts:{} });
@@ -524,7 +531,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
+        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, questBonusClaimDate: null, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
         profile.pointLedger = null;
@@ -565,7 +572,7 @@
       getRecentVehicles, setRecentVehicles, getBestTime, setBestTime,
       getTopCollectionLastUsedJst, setTopCollectionLastUsedJst,
       getOpeningMovieLastPlayedJst, setOpeningMovieLastPlayedJst,
-      getDailyMission, setDailyMission,
+      getDailyMission, setDailyMission, getQuestBonusClaimDate,
       getProfileLearningSettings, setProfileLearningSettings,
       getCollectionSceneOrder, setCollectionSceneOrder,
       getCollectionCategorySeen, setCollectionCategorySeen,
