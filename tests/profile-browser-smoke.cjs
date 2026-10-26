@@ -201,7 +201,7 @@ test("new profile, profile separation, persistence, and game smoke", async (t) =
   assert.deepEqual(errors, []);
 });
 
-test("a real new acquisition is recorded once and QA preset does not add history", async (t) => {
+test("unfinished acquisition is not persisted and QA preset does not add history", async (t) => {
   const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
   const context = await browser.newContext({ viewport: { width: 1400, height: 1050 } });
@@ -225,15 +225,18 @@ test("a real new acquisition is recorded once and QA preset does not add history
     await page.locator("#remainder-key").click();
     await clickDigits(remainder);
   }
-  await page.waitForFunction(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length === 1);
-  const first = await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory()[0]);
-  assert.equal(first.acquisitionType, "vehicle_discovered");
-  assert.equal(first.mode, "normal");
-  assert.equal(first.sequence, 1);
+  // The first discovery appears in play but is not persisted until the full round ends.
+  await page.waitForFunction(() => {
+    const progress = window.MQProfileStorage.createProfileStorage(localStorage).getRewardProgress();
+    return progress === null || progress.every((entry) => !entry.discovered);
+  });
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
   await page.reload();
-  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 1);
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
+  const reloadedProgress = await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getRewardProgress());
+  assert.ok(reloadedProgress === null || reloadedProgress.every((entry) => !entry.discovered));
   await enterQaMode(page);
-  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 1);
+  assert.equal(await page.evaluate(() => window.MQProfileStorage.createProfileStorage(localStorage).getAcquisitionHistory().length), 0);
   assert.deepEqual(errors, []);
 });
 

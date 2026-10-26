@@ -301,7 +301,43 @@
     } catch (_) {}
     syncCollectionFromRewardProgress();
   }
+  // Unfinished rounds modify only the in-memory working state.
+  let roundTransaction = null;
+  function discardRoundTransaction() {
+    if (!roundTransaction) return;
+    state.rewardProgress = roundTransaction.rewardProgress;
+    state.collection = roundTransaction.collection;
+    state.recentVehicleHistory = roundTransaction.recentVehicleHistory;
+    roundTransaction = null;
+    capsuleSpendPending = false;
+  }
+  function beginRoundTransaction() {
+    discardRoundTransaction();
+    roundTransaction = {
+      profileId: profileStore.getActiveProfileId(),
+      rewardProgress: state.rewardProgress.map((entry) => ({ ...entry })),
+      collection: [...state.collection],
+      recentVehicleHistory: [...state.recentVehicleHistory],
+      acquisitionHistory: []
+    };
+  }
+  function commitRoundTransaction() {
+    const pending = roundTransaction;
+    if (!pending) return;
+    if (pending.profileId !== profileStore.getActiveProfileId()) {
+      discardRoundTransaction();
+      throw new Error("Active profile changed during a round");
+    }
+    roundTransaction = null;
+    saveCollectionProgress();
+    saveRecentVehicles();
+    for (const acquisition of pending.acquisitionHistory) {
+      try { profileStore.appendAcquisitionHistory(acquisition); }
+      catch (error) { console.error("Acquisition history save failed", error); }
+    }
+  }
   function saveRewardProgress() {
+    if (roundTransaction) return;
     // QA presets must never become permanent player points.
     if (qaProgressModeEnabled()) {
       profileStore.setRewardProgress(state.rewardProgress);
@@ -340,6 +376,7 @@
     } catch (_) {}
   }
   function saveCollection() {
+    if (roundTransaction) return;
     try { profileStore.setCollectionStages(state.collection); } catch (_) {}
   }
   function qaProgressModeEnabled() {
@@ -413,6 +450,7 @@
     } catch (_) {}
   }
   function saveRecentVehicles() {
+    if (roundTransaction) return;
     try { profileStore.setRecentVehicles(state.recentVehicleHistory); } catch (_) {}
   }
   function getBestTime() {
@@ -2272,6 +2310,7 @@
     });
   }
   function beginRound(mode = state.mode || "normal") {
+    beginRoundTransaction();
     clearRetryAutoStartTimer(); clearIdleGuide();
     stopCollectionTimer();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
@@ -3401,16 +3440,16 @@
     if (qaProgressModeEnabled()) return;
     const vehicle = vehicles[vehicleIndex];
     if (!vehicle) return;
-    try {
-      profileStore.appendAcquisitionHistory({
+    const acquisition = {
         vehicleId: vehicle.stem,
         mode: state.mode,
         source,
         acquisitionType,
         displayForm: definition.displayForm,
         displayStage: currentStageForVehicle(vehicleIndex)
-      });
-    } catch (_) {}
+      };
+    if (roundTransaction) { roundTransaction.acquisitionHistory.push(acquisition); return; }
+    try { profileStore.appendAcquisitionHistory(acquisition); } catch (_) {}
   }
   function commitAcquisition({ vehicleIndex, acquisitionType, stage, source = "normal" }) {
     const definition = acquisitionDefinitions[acquisitionType];
@@ -3928,6 +3967,7 @@
     displayQuestion(state.queue.shift());
   }
   function finishRound() {
+    commitRoundTransaction();
     completeDailyMissionRound(state.mode);
     state.transitioning = true; state.phase = "result"; state.finalElapsedMs = getElapsedTime(); stopQuestionTimeout(); stopTimer();
     $("elapsed-time").textContent = formatTime(state.finalElapsedMs); $("result-time").textContent = formatTime(state.finalElapsedMs);
@@ -4118,6 +4158,7 @@
   }
 
   function endToModeSelect() {
+    discardRoundTransaction();
     resetCapsuleDialog();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
