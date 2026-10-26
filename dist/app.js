@@ -2466,6 +2466,7 @@
     const isFinal = dailyMissionCompletionTransition(overview.items, mode);
     const mission = overview.mission;
     mission.completedCounts[mode] = item.completed + 1;
+    if (isFinal && !mission.questRewardLevel) mission.questRewardLevel = levelSystem.levelAt(profileStore.getPointLedger()?.total || 0);
     try {
       profileStore.setDailyMission(mission);
     } catch (error) {
@@ -2497,6 +2498,11 @@
   function promptQuestBonusIfAvailable() {
     if (!questBonusAvailable()) return false;
     questBonusSelectionDate = japanDateKey();
+    const mission = dailyMissionState();
+    if (!mission.questRewardLevel) {
+      mission.questRewardLevel = levelSystem.levelAt(profileStore.getPointLedger()?.total || 0);
+      profileStore.setDailyMission(mission);
+    }
     questBonusSelecting = true;
     void openPhonicsRewardSelection({ quest: true });
     return true;
@@ -4488,7 +4494,7 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:10 + levelSystem.levelAt(profileStore.getPointLedger()?.total || 0) * 5 };
+    if (questBonusSelecting) return { friendship:5, energy:10 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 5 };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
       : { friendship:5, energy:25 };
