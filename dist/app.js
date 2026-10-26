@@ -2430,6 +2430,7 @@
     const banner = $("mode-select-mission-complete");
     banner.hidden = !overview.allComplete;
     banner.classList.toggle("is-final", overview.allComplete && !overview.freePlayEnabled);
+    $("quest-bonus-continue").hidden = !questBonusAvailable();
   }
 
   function isModeAvailableForMission(mode) {
@@ -2517,8 +2518,8 @@
     // Preload the YouTube player while the user is choosing a mode. This makes
     // the subsequent phonics-mode tap the only interaction needed before play.
     preparePhonicsYoutubePlayback();
-    promptQuestBonusIfAvailable();
   }
+  $("quest-bonus-continue").addEventListener("click", promptQuestBonusIfAvailable);
   function startGameFromGesture(mode) {
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
     recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
@@ -4232,7 +4233,6 @@
     renderModeSelectMission();
     showFixedScreenWhenReady("mode-select-screen", [], () => {
       state.collectionClosing = false;
-      promptQuestBonusIfAvailable();
     });
   }
 
