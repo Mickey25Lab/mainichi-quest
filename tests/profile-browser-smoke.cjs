@@ -461,7 +461,7 @@ test("admin reset cancels safely then clears only the active profile progress", 
 test("completed quest offers a chosen vehicle charge once, surviving reload", async (t) => {
   const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
   t.after(() => browser.close());
-  const context = await browser.newContext({ viewport:{width:1400,height:1050} });
+  const context = await browser.newContext({ viewport:{width:1024,height:665}, hasTouch:true, isMobile:true });
   const page = await context.newPage();
   const errors = watchErrors(page);
   await createInitialProfile(page, "クエストテスト");
@@ -485,6 +485,8 @@ test("completed quest offers a chosen vehicle charge once, surviving reload", as
   await page.locator("#mode-select-screen.active").waitFor();
   assert.equal(await page.locator("#mode-select-screen > #mode-select-mission-complete").isVisible(), true);
   assert.equal(await page.locator("#quest-bonus-continue").isVisible(), true);
+  const buttonBounds = await page.locator("#quest-bonus-continue").boundingBox();
+  assert.ok(buttonBounds && buttonBounds.y >= 0 && buttonBounds.y + buttonBounds.height <= 665, "tablet continue button fits viewport");
   await page.locator("#quest-bonus-continue").click();
   await page.locator("#collection-screen.active").waitFor();
   assert.equal(await page.locator("#collection-seconds").textContent(), "30");
