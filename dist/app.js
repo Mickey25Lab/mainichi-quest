@@ -288,7 +288,8 @@
   function loadRewardProgress() {
     state.rewardProgress = Array.from({ length: vehicles.length }, emptyVehicleProgress);
     try {
-      const saved = profileStore.getRewardProgress();
+      const qaSaved = qaProgressModeEnabled() ? profileStore.getActiveQaState().timeEnergyRewardProgress : null;
+      const saved = Array.isArray(qaSaved) && qaSaved.length === vehicles.length ? qaSaved : profileStore.getRewardProgress();
       if (Array.isArray(saved) && saved.length === vehicles.length) state.rewardProgress = saved.map(normalizeVehicleProgress);
       else {
         const legacyCollection = profileStore.getCollectionStages();
