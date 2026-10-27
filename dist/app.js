@@ -2549,7 +2549,7 @@
   }
 
   function questBonusAvailable() {
-    if (qaProgressModeEnabled()) return false;
+    if (qaProgressModeEnabled() || questBonusSelecting || roundTransaction) return false;
     const today = japanDateKey();
     return missionOverview().allComplete && profileStore.getQuestBonusClaimDate() !== today;
   }
