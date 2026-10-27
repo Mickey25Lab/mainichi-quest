@@ -80,4 +80,4 @@ jobs:
         run: node --test tests/profile-transfer.test.cjs
       - name: Run two browser smoke suites
         if: steps.changes.outputs.docs_only != 'true'
-        run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs
+        run: node --test tests/bgm-browser-smoke.cjs tests/profile-browser-smoke.cjs tests/time-energy-browser-smoke.cjs
