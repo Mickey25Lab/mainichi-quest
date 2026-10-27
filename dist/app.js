@@ -415,7 +415,6 @@
     const rect = stage.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     const widthScale = stage.offsetWidth / rect.width, heightScale = stage.offsetHeight / rect.height;
-    const allCards = cards.filter((card) => !card.disabled);
     const targetX = (targetRect.left - rect.left + targetRect.width/2)*widthScale;
     const targetY = (targetRect.top - rect.top + targetRect.height/2)*heightScale;
     const vertical = document.createElement("div");
@@ -547,7 +546,7 @@
   function restoreQaProgressBackup() {
     try {
       const qaState = profileStore.getActiveQaState();
-      if (!qaState.backupInitialized) return;
+      if (!qaState.backupInitialized) { profileStore.setActiveQaState({}); return; }
       const snapshot = qaState.progressBackup || {
         rewardProgress: qaState.rewardProgressBackup ?? null,
         collection: null
