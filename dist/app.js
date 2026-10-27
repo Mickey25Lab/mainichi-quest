@@ -378,11 +378,33 @@
     try {
       const committed = profileStore.commitTimeEnergyAllocation(locked.id, next);
       if (!committed) return false;
+      const before = state.rewardProgress[vehicleIndex];
       state.rewardProgress = next;
       state.collection = next.map(collectionStageForProgress);
       // No second progress save: the time-energy commit already persisted it.
       state.phonicsLastRewardVehicleIndex = vehicleIndex;
+      let acquisitionType = null;
+      let stage = null;
+      if (!before.friendly && progress.friendly) { acquisitionType = "friendship_complete"; stage = 1; }
+      else if (!before.masterMedal && progress.masterMedal) { acquisitionType = "master_medal"; stage = 5; }
+      else if (progress.stage > before.stage) {
+        stage = before.stage;
+        acquisitionType = ({ 2:"robot", 3:"super_robot", 4:"super_robot_equipped" })[stage];
+      }
+      if (acquisitionType) {
+        const definition = acquisitionDefinitions[acquisitionType];
+        if (definition) {
+          recordCommittedAcquisition({ vehicleIndex, acquisitionType, source:"time_energy", definition });
+          state.sessionUnlocks[stage] += 1;
+        }
+      }
       endTimeEnergyAllocationUi();
+      if (acquisitionType) {
+        const definition = acquisitionDefinitions[acquisitionType];
+        if (definition) showReward({
+          stage, vehicleIndex, isNew:true, kind:definition.rewardKind
+        }, false, () => openNormalCollectionAfterPhonicsReward());
+      }
       return true;
     } catch (error) {
       console.error("Time energy allocation was not committed", error);
@@ -459,7 +481,7 @@
     timeEnergyScanRunning = false;
     await openPhonicsRewardSelection({ quest:true });
     if (!timeEnergySelecting) return;
-    $("collection-header-title").textContent = "今日のタイムエネルギー +" + allocation.amount;
+    $("collection-header-title").textContent = "タイムエネルギー +" + allocation.amount + "｜のりものをえらぼう！";
     $("collection-seconds").textContent = String(Math.max(0,Math.ceil((allocation.deadline-Date.now())/1000)));
     updateTimeEnergyClock();
     timeEnergyTimer = window.setInterval(updateTimeEnergyClock,200);
