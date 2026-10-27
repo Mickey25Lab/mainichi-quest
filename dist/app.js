@@ -349,6 +349,7 @@
   function timeEnergyAllocation() { return profileStore.getTimeEnergy().allocation; }
   function endTimeEnergyAllocationUi() {
     clearTimeEnergyTimer();
+    $("collection-screen").classList.remove("is-time-bonus-select");
     timeEnergySelecting = false;
     timeEnergyScanRunning = false;
     state.collectionClosing = false;
@@ -365,7 +366,7 @@
     const next = state.rewardProgress.map((item) => ({ ...item }));
     const progress = next[vehicleIndex];
     if (!progress.friendly) {
-      progress.friendship = Math.min(5, progress.friendship + 5);
+      progress.friendship = Math.min(5, progress.friendship + Math.min(locked.amount, 5));
       if (progress.friendship === 5) progress.friendly = true;
     } else {
       const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
@@ -483,7 +484,8 @@
     timeEnergyScanRunning = false;
     await openPhonicsRewardSelection({ quest:true });
     if (!timeEnergySelecting) return;
-    $("collection-header-title").textContent = "タイムエネルギー +" + allocation.amount + "｜のりものをえらぼう！";
+    $("collection-screen").classList.add("is-time-bonus-select");
+    $("collection-header-title").replaceChildren(document.createTextNode("タイムボーナス +" + allocation.amount), document.createElement("br"), document.createTextNode("のりものをえらぼう！"));
     $("collection-seconds").textContent = String(Math.max(0,Math.ceil((allocation.deadline-Date.now())/1000)));
     updateTimeEnergyClock();
     timeEnergyTimer = window.setInterval(updateTimeEnergyClock,200);
@@ -493,7 +495,7 @@
     if (!qaButton || !$("admin-qa-toggle").parentElement) return;
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = "QA：タイムエネルギー +8 → 30秒割り当て";
+    button.textContent = "QA：タイムボーナス +8 → 30秒割り当て";
     button.style.cssText = "margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
     qaButton.parentElement.after(button);
     const sync = () => { button.hidden = !qaProgressModeEnabled(); };
@@ -4694,7 +4696,7 @@
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     const amounts = phonicsGrowthAmounts();
-    return timeEnergySelecting ? (progress.friendly ? `ピンクエネルギー +${timeEnergyAllocation()?.amount || 0}` : "♥ +5") : (progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`);
+    return timeEnergySelecting ? (progress.friendly ? `タイムボーナス エネルギー +${timeEnergyAllocation()?.amount || 0}` : `タイムボーナス ♥ +${Math.min(timeEnergyAllocation()?.amount || 0, 5)}`) : (progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`);
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
