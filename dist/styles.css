@@ -5723,3 +5723,7 @@ button, input { font: inherit; }
 /* Time bonus uses the garage cards but must retain its own visible 30s clock. */
 .collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-stage > .collection-time-panel { display:flex !important; z-index:35; }
 .collection-screen.is-time-bonus-select .collection-header h2 { white-space:normal; line-height:1.23; }
+
+/* Raise the two-line bonus heading clear of the first card row. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header h2 { position:relative; top:-18px; }
+#phonics-grow-amount { white-space:pre-line; }
