@@ -484,9 +484,12 @@ test("completed quest offers a chosen vehicle charge once, surviving reload", as
   await page.locator("#start-button").click();
   await page.locator("#mode-select-screen.active").waitFor();
   assert.equal(await page.locator("#mode-select-screen > #mode-select-mission-complete").isVisible(), true);
+  assert.equal(await page.locator("#quest-bonus-continue").isVisible(), true);
   await page.locator("#quest-bonus-continue").click();
   await page.locator("#collection-screen.active").waitFor();
   assert.equal(await page.locator("#collection-seconds").textContent(), "30");
+  assert.equal(await page.locator("#collection-screen").evaluate((element) => element.classList.contains("is-quest-reward-select")), true);
+  assert.equal(await page.locator(".collection-stage > .collection-time-panel:not(.collection-capsule-time)").isVisible(), true);
   assert.equal(await page.locator("#collection-header-title ruby rt").textContent(), "たっせい");
   await page.locator("#collection-grid .collection-card[data-vehicle='0']").click();
   await page.locator("#phonics-grow-confirm").waitFor({state:"visible"});
