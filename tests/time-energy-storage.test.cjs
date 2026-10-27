@@ -61,3 +61,21 @@ test("invalid credits and missing commits cannot consume balance", () => {
   assert.throws(() => store.commitTimeEnergyAllocation("allot-1", []));
   assert.equal(store.getTimeEnergy().balance, 8);
 });
+
+test("single allocation atomically advances vehicle and balance, replay does nothing", () => {
+  const { storage, store } = setup();
+  const empty = Array.from({ length:20 }, () => ({ discovered:false, friendship:0, friendly:false, stage:1, energy:0, masterMedal:false }));
+  empty[0] = { discovered:true, friendship:5, friendly:true, stage:2, energy:5, masterMedal:false };
+  store.setRewardProgress(empty);
+  store.creditTimeEnergy(8,"gain");
+  store.beginTimeEnergyAllocation("allocation-1", Date.now()+30000);
+  store.lockTimeEnergyVehicle("allocation-1",0);
+  const grown = empty.map((item) => ({ ...item }));
+  grown[0].energy = 13;
+  assert.equal(store.commitTimeEnergyAllocation("allocation-1",grown), true);
+  const fresh = createProfileStorage(storage);
+  assert.equal(fresh.getTimeEnergy().balance,0);
+  assert.equal(fresh.getRewardProgress()[0].energy,13);
+  assert.equal(fresh.commitTimeEnergyAllocation("allocation-1",grown),false);
+  assert.equal(fresh.getRewardProgress()[0].energy,13);
+});
