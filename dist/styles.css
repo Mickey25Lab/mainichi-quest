@@ -5719,3 +5719,7 @@ button, input { font: inherit; }
 /* Parent settings: batch disable only edits draft; Save confirms changes. */
 .parent-all-modes-off { display:block; width:100%; max-width:760px; margin:16px auto 22px; padding:16px 24px; border:2px solid #87b6d5; border-radius:14px; color:#18445e; background:#eef8ff; font-size:20px; font-weight:800; cursor:pointer; }
 .parent-all-modes-off:active { transform:translateY(1px); }
+
+/* Time bonus uses the garage cards but must retain its own visible 30s clock. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-stage > .collection-time-panel { display:flex !important; z-index:35; }
+.collection-screen.is-time-bonus-select .collection-header h2 { white-space:normal; line-height:1.23; }
