@@ -56,3 +56,13 @@ test("parent can set every mode to zero without persisting before Save", () => {
   assert.doesNotMatch(implementation, /setProfileLearningSettings/);
   assert.match(app, /parent-all-modes-off"\)\.addEventListener\("click", setAllParentTargetsToZero\)/);
 });
+
+test("quest reward quantity and timer fallback remain separate from phonics", () => {
+  assert.match(app, /if \(questBonusSelecting\) return \{ friendship:5, energy:8 \+ \(/);
+  assert.match(app, /function startQuestBonusTimer\(\) \{[^]*?questBonusDeadline = Date\.now\(\) \+ 30000/);
+  assert.match(app, /const displayed = remaining <= 10 \? remaining : Math\.ceil\(remaining \/ 10\) \* 10/);
+  assert.match(app, /const candidates = collectionDisplayOrder\.filter\(index => vehicleProgress\(index\)\.discovered\)/);
+  assert.match(app, /Math\.floor\(Math\.random\(\) \* candidates\.length\)/);
+  assert.match(app, /applyPhonicsRewardGrowth\(choice, openNormalCollectionAfterPhonicsReward\)/);
+  assert.match(app, /return progress\.friendly \? .エネルギー \+\$\{amounts\.energy\}. : .ハート \+\$\{amounts\.friendship\}./);
+});
