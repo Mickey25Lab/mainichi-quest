@@ -480,24 +480,20 @@
       if (!Array.isArray(nextProgress) || nextProgress.length !== 20) throw new Error("invalid progress");
       const qa = getActiveQaState();
       if (qa.qaEnabled) {
-        let saved = false;
-        const result = mutateTimeEnergy((state) => {
-          if (state.completed.some((item) => item.id === eventId)) return false;
-          const allocation = state.allocation;
-          if (!allocation || allocation.id !== eventId || allocation.vehicleIndex === null) return false;
-          if (state.balance < allocation.amount) throw new Error("insufficient time energy");
-          state.balance -= allocation.amount;
-          state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:allocation.vehicleIndex });
-          state.completed = state.completed.slice(-100);
-          state.allocation = null;
-          saved = true;
-          return true;
-        });
-        if (saved) {
-          const latest = getActiveQaState();
-          setActiveQaState({ ...latest, timeEnergyRewardProgress: clone(nextProgress) });
-        }
-        return result;
+        const state = normalizeTimeEnergy(qa.timeEnergy);
+        if (state.completed.some((item) => item.id === eventId)) return false;
+        const allocation = state.allocation;
+        if (!allocation || allocation.id !== eventId || allocation.vehicleIndex === null) return false;
+        if (state.balance < allocation.amount) throw new Error("insufficient time energy");
+        const before = Array.isArray(qa.timeEnergyRewardProgress) ? qa.timeEnergyRewardProgress : getRewardProgress();
+        if (expectedPrevious && Array.isArray(before) && JSON.stringify(before[allocation.vehicleIndex]) !== JSON.stringify(expectedPrevious)) throw new Error("stale QA vehicle progress");
+        state.balance -= allocation.amount;
+        state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:allocation.vehicleIndex });
+        state.completed = state.completed.slice(-100);
+        state.allocation = null;
+        // The QA ledger and its vehicle state must be saved in the SAME QA-key write.
+        setActiveQaState({ ...qa, timeEnergy:state, timeEnergyRewardProgress:clone(nextProgress) });
+        return true;
       }
       return mutateTimeEnergy((state, profile) => {
         if (state.completed.some((item) => item.id === eventId)) return false;
