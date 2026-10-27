@@ -479,7 +479,26 @@
     function commitTimeEnergyAllocation(eventId, nextProgress) {
       if (!Array.isArray(nextProgress) || nextProgress.length !== 20) throw new Error("invalid progress");
       const qa = getActiveQaState();
-      if (qa.qaEnabled) throw new Error("QA time energy cannot commit to production progress");
+      if (qa.qaEnabled) {
+        let saved = false;
+        const result = mutateTimeEnergy((state) => {
+          if (state.completed.some((item) => item.id === eventId)) return false;
+          const allocation = state.allocation;
+          if (!allocation || allocation.id !== eventId || allocation.vehicleIndex === null) return false;
+          if (state.balance < allocation.amount) throw new Error("insufficient time energy");
+          state.balance -= allocation.amount;
+          state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:allocation.vehicleIndex });
+          state.completed = state.completed.slice(-100);
+          state.allocation = null;
+          saved = true;
+          return true;
+        });
+        if (saved) {
+          const latest = getActiveQaState();
+          setActiveQaState({ ...latest, timeEnergyRewardProgress: clone(nextProgress) });
+        }
+        return result;
+      }
       return mutateTimeEnergy((state, profile) => {
         if (state.completed.some((item) => item.id === eventId)) return false;
         const allocation = state.allocation;
