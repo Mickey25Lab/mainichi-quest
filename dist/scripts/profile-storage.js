@@ -494,8 +494,13 @@
         state.completed = state.completed.slice(-100);
         state.allocation = null;
         // Shares the point-ledger semantics of commitRewardProgressWithPoints.
+        if (!profile.pointLedger) {
+          const baseline = Array.isArray(before) ? before : [];
+          const total = baseline.reduce((sum, item) => sum + vehiclePointValue(item), 0);
+          profile.pointLedger = { schemaVersion:1, total, initialPoints:total, observedProgress:clone(baseline), nextSequence:1, recentEvents:[] };
+        }
         const ledger = profile.pointLedger;
-        if (!ledger || !Array.isArray(ledger.observedProgress)) throw new Error("point ledger not initialized");
+        if (!Array.isArray(ledger.observedProgress)) throw new Error("invalid point ledger");
         const delta = Math.max(0, vehiclePointValue(nextProgress[index]) - vehiclePointValue(ledger.observedProgress[index]));
         if (delta) {
           ledger.total += delta;
@@ -504,7 +509,7 @@
         }
         ledger.observedProgress = clone(nextProgress);
         profile.progress.rewardProgressPhase1 = clone(nextProgress);
-        profile.collection.stages = nextProgress.map((v) => !v.discovered ? 0 : v.masterMedal ? 5 : v.stage === 1 ? 1 : Math.min(5,v.stage-1));
+        // The collection stages are refreshed by the existing collection sync path.
         return true;
       });
     }
