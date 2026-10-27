@@ -2474,7 +2474,19 @@
     const banner = $("mode-select-mission-complete");
     banner.hidden = !overview.allComplete;
     banner.classList.toggle("is-final", overview.allComplete && !overview.freePlayEnabled);
-    $("quest-bonus-continue").hidden = !questBonusAvailable();
+    const questButton = $("quest-bonus-continue");
+    const questClaimedToday = profileStore.getQuestBonusClaimDate() === japanDateKey();
+    const questQaEnabled = qaProgressModeEnabled();
+    const questAvailable = overview.allComplete && !questClaimedToday && !questQaEnabled;
+    // The finished day and profile-specific claim determine visibility.
+    // In-flight animation/transaction flags must never hide the earned action.
+    questButton.hidden = !questAvailable;
+    questButton.dataset.questReason = !overview.allComplete ? "incomplete"
+      : questClaimedToday ? "claimed-today"
+      : questQaEnabled ? "qa"
+      : "available";
+    questButton.dataset.questProfile = profileStore.getActiveProfileId() || "";
+    questButton.dataset.questClaimDate = profileStore.getQuestBonusClaimDate() || "";
   }
 
   function isModeAvailableForMission(mode) {
@@ -2537,7 +2549,7 @@
   }
 
   function questBonusAvailable() {
-    if (qaProgressModeEnabled() || questBonusSelecting || roundTransaction) return false;
+    if (qaProgressModeEnabled()) return false;
     const today = japanDateKey();
     return missionOverview().allComplete && profileStore.getQuestBonusClaimDate() !== today;
   }
