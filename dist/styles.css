@@ -5786,3 +5786,12 @@ button, input { font: inherit; }
     line-height:1;
   }
 }
+
+/* Bulk-disable is a neutral parent-settings utility, not a primary action. */
+.parent-all-modes-off {
+  background:#697987 !important;
+  color:#fff !important;
+  border-color:#84919c !important;
+  box-shadow:none !important;
+}
+.parent-all-modes-off:active { background:#52616d !important; }
