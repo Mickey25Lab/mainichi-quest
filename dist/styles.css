@@ -5762,3 +5762,27 @@ button, input { font: inherit; }
     margin-top:4px;
   }
 }
+
+/* On touch tablets keep the completion dialog and its action above every
+   mode-select stage layer. Desktop styles remain unchanged. */
+@media (pointer:coarse) and (max-width:1199px) {
+  .mode-select-screen > .mode-select-mission-complete,
+  .mode-select-screen > .mode-select-mission-complete.is-final {
+    z-index:10000 !important;
+    isolation:isolate;
+  }
+  #quest-bonus-continue:not([hidden]) {
+    position:relative !important;
+    z-index:10001 !important;
+    pointer-events:auto !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+  /* iPad WebKit reserves extra ruby line leading: nudge only its annotations. */
+  .phonics-intro-screen ruby rt,
+  .phonics-intro-stage ruby rt {
+    position:relative;
+    top:.25em;
+    line-height:1;
+  }
+}
