@@ -476,7 +476,7 @@
         return clone(allocation);
       });
     }
-    function commitTimeEnergyAllocation(eventId, nextProgress) {
+    function commitTimeEnergyAllocation(eventId, nextProgress, expectedPrevious = null) {
       if (!Array.isArray(nextProgress) || nextProgress.length !== 20) throw new Error("invalid progress");
       const qa = getActiveQaState();
       if (qa.qaEnabled) {
@@ -507,6 +507,7 @@
         const before = profile.progress.rewardProgressPhase1;
         if (!Array.isArray(before) || before.length !== 20) throw new Error("missing vehicle progress");
         const index = allocation.vehicleIndex;
+        if (expectedPrevious && JSON.stringify(before[index]) !== JSON.stringify(expectedPrevious)) throw new Error("stale vehicle progress");
         if (JSON.stringify(before.filter((_, i) => i !== index)) !== JSON.stringify(nextProgress.filter((_, i) => i !== index))) throw new Error("unrelated vehicle progress changed");
         state.balance -= allocation.amount;
         state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:index });
