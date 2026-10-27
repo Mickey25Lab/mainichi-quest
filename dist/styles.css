@@ -5719,3 +5719,22 @@ button, input { font: inherit; }
 /* Parent settings: batch disable only edits draft; Save confirms changes. */
 .parent-all-modes-off { display:block; width:100%; max-width:760px; margin:16px auto 22px; padding:16px 24px; border:2px solid #87b6d5; border-radius:14px; color:#18445e; background:#eef8ff; font-size:20px; font-weight:800; cursor:pointer; }
 .parent-all-modes-off:active { transform:translateY(1px); }
+
+/* Quest bonus garage title: single line with a readable ruby, not the phonics two-line title. */
+.collection-screen.is-phonics-reward-select #collection-header-title:has(ruby) {
+  white-space:nowrap;
+  font-style:normal;
+  font-size:34px;
+  letter-spacing:0;
+  line-height:1.35;
+}
+.collection-screen.is-phonics-reward-select #collection-header-title:has(ruby) rt { font-size:.36em; }
+/* Readable everyday typography replaces the outlined, decorative victory lettering. */
+.mode-select-mission-complete strong,
+.mode-select-mission-complete strong .mission-title-line {
+  font-family:"Noto Sans JP",sans-serif;
+  font-weight:900;
+  -webkit-text-stroke:0;
+  text-shadow:0 3px 5px rgba(4,34,66,.45);
+  letter-spacing:0;
+}
