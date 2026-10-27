@@ -66,3 +66,10 @@ test("quest reward quantity and timer fallback remain separate from phonics", ()
   assert.match(app, /applyPhonicsRewardGrowth\(choice, openNormalCollectionAfterPhonicsReward\)/);
   assert.match(app, /return progress\.friendly \? .エネルギー \+\$\{amounts\.energy\}. : .ハート \+\$\{amounts\.friendship\}./);
 });
+
+test("tablet-only ruby and highest-priority quest action styles remain scoped", () => {
+  const styles = fs.readFileSync(require("node:path").join(__dirname, "../dist/styles.css"), "utf8");
+  assert.match(styles, /@media \(pointer:coarse\) and \(max-width:1199px\)/);
+  assert.match(styles, /\.phonics-intro-screen ruby rt,[\s\S]*?\.phonics-intro-stage ruby rt/);
+  assert.match(styles, /#quest-bonus-continue:not\(\[hidden\]\) \{[\s\S]*?z-index:10001 !important/);
+});
