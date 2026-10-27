@@ -41,3 +41,18 @@ test("only a completed attempt can save completion and emit a final signal", () 
   assert.match(app, /function leavePhonicsYoutube\(\) \{\s*cancelDailyMissionAttempt\(\)/);
   assert.match(app, /function dailyMissionCompletionTransition\(items, completedMode\) \{\s*if \(!items.length\) return false/);
 });
+
+test("parent can set every mode to zero without persisting before Save", () => {
+  const html = fs.readFileSync(require("node:path").join(__dirname, "../dist/index.html"), "utf8");
+  assert.match(html, /id="parent-all-modes-off"/);
+  const first = app.indexOf("  function setAllParentTargetsToZero()");
+  const last = app.indexOf("  function saveParentSettings()", first);
+  assert.ok(first >= 0 && last > first);
+  const implementation = app.slice(first, last);
+  assert.match(implementation, /parentDraftForProfile\(parentSettingsProfileId\)/);
+  assert.match(implementation, /for \(const mode of parentModeDefinitions\)/);
+  assert.match(implementation, /settings\.dailyTargetCounts\[mode\.id\] = 0/);
+  assert.match(implementation, /settings\.enabledModes\[mode\.id\] = false/);
+  assert.doesNotMatch(implementation, /setProfileLearningSettings/);
+  assert.match(app, /parent-all-modes-off"\)\.addEventListener\("click", setAllParentTargetsToZero\)/);
+});

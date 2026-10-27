@@ -5540,6 +5540,9 @@ button, input { font: inherit; }
 
 /* Phonics light-beam scanner: luminous cores with soft light falloff. */
 .collection-screen.is-phonics-reward-select .collection-card { pointer-events:none; }
+/* Quest completion reuses this garage, but lets children choose the car. */
+.collection-screen.is-phonics-reward-select .collection-card:not(.locked) { pointer-events:auto; }
+
 .phonics-cross-scan { position:absolute; inset:0; z-index:12; pointer-events:none; overflow:visible; }
 .phonics-scan-beam { position:absolute; top:0; left:0; pointer-events:none; mix-blend-mode:screen; will-change:transform; }
 .phonics-scan-column { background:linear-gradient(90deg,transparent,rgba(31,179,255,.15) 12%,rgba(61,216,255,.45) 33%,#f1ffff 50%,rgba(61,216,255,.45) 67%,rgba(31,179,255,.15) 88%,transparent); filter:drop-shadow(0 0 13px #4ce6ff) drop-shadow(0 0 29px rgba(35,193,255,.85)); }
@@ -5693,3 +5696,26 @@ button, input { font: inherit; }
 .reward-screen.reward-overlay.phonics-reward-overlay .reward-dimmer {
  background:transparent;
 }
+
+/* Continue from the existing daily quest completion dialog. */
+#quest-bonus-continue:not([hidden]) { position:relative; z-index:1; display:block; padding:20px 46px; margin-top:12px; border:5px solid #fff2b8; border-radius:28px; background:#178ee3; box-shadow:0 8px 0 #075890; color:#fff; font:900 35px 'Noto Sans JP',sans-serif; cursor:pointer; }
+
+/* Popup is a direct child of the mode screen, not part of its scaled canvas.
+   Keep it in the same 1400×1050 logical coordinate system on iPad and desktop. */
+.mode-select-screen > .mode-select-mission-complete,
+.mode-select-screen > .mode-select-mission-complete.is-final {
+  position:absolute;
+  z-index:50;
+  inset:auto;
+  left:50%;
+  top:50%;
+  width:1080px;
+  height:795px;
+  min-height:0;
+  transform:translate(-50%,-50%) scale(var(--mode-dialog-scale,1));
+  transform-origin:center;
+}
+
+/* Parent settings: batch disable only edits draft; Save confirms changes. */
+.parent-all-modes-off { display:block; width:100%; max-width:760px; margin:16px auto 22px; padding:16px 24px; border:2px solid #87b6d5; border-radius:14px; color:#18445e; background:#eef8ff; font-size:20px; font-weight:800; cursor:pointer; }
+.parent-all-modes-off:active { transform:translateY(1px); }

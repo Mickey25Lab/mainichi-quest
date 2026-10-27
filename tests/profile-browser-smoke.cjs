@@ -457,3 +457,49 @@ test("admin reset cancels safely then clears only the active profile progress", 
   assert.equal(await page.locator("#active-profile-name").textContent(), "A");
   assert.deepEqual(errors, []);
 });
+
+test("completed quest offers a chosen vehicle charge once, surviving reload", async (t) => {
+  const browser = await chromium.launch({ headless: true, ...(browserExecutable ? { executablePath: browserExecutable } : {}) });
+  t.after(() => browser.close());
+  const context = await browser.newContext({ viewport:{width:1400,height:1050} });
+  const page = await context.newPage();
+  const errors = watchErrors(page);
+  await createInitialProfile(page, "クエストテスト");
+  const date = await page.evaluate(() => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    const profileId = store.getActiveProfileId();
+    const modes = ["numbercards","counting1","counting2","multiplication","multiplication2x2","multiplication2x2-unguided","normal","longdivision","phonics-part-1","phonics-part-2","phonics-part-3","phonics-part-4","phonics-part-5","phonics-review"];
+    const dailyTargetCounts = Object.fromEntries(modes.map((mode) => [mode,mode === "normal" ? 1 : 0]));
+    store.setProfileLearningSettings(profileId,{...store.getProfileLearningSettings(profileId),dailyTargetCounts});
+    const parts = new Intl.DateTimeFormat("en-US", {timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+    const fields = Object.fromEntries(parts.filter((part)=>part.type!=="literal").map((part)=>[part.type,part.value]));
+    const today = fields.year + "-" + fields.month + "-" + fields.day;
+    store.setDailyMission({ date:today, completedCounts:{ normal:1 }});
+    const progress = Array.from({length:20}, (_,i)=>({discovered:i===0,friendship:0,friendly:false,stage:i===0?2:1,energy:0,masterMedal:false}));
+    store.setRewardProgress(progress);
+    store.setCollectionStages(progress.map((p)=>p.discovered?2:0));
+    return today;
+  });
+  await page.reload();
+  await page.locator("#start-button").click();
+  await page.locator("#mode-select-screen.active").waitFor();
+  assert.equal(await page.locator("#mode-select-screen > #mode-select-mission-complete").isVisible(), true);
+  await page.locator("#quest-bonus-continue").click();
+  await page.locator("#collection-screen.active").waitFor();
+  await page.locator("#collection-grid .collection-card[data-vehicle='0']").click();
+  await page.locator("#phonics-grow-confirm").waitFor({state:"visible"});
+  assert.match(await page.locator("#phonics-grow-amount").textContent(), /5/);
+  await page.locator("#phonics-grow-accept").click();
+  await page.waitForFunction((today) => window.MQProfileStorage.createProfileStorage(localStorage).getQuestBonusClaimDate()===today,date);
+  const storeAfter = await page.evaluate(() => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    return {heart:store.getRewardProgress()[0].friendship,claim:store.getQuestBonusClaimDate()};
+  });
+  assert.equal(storeAfter.heart,5);
+  assert.equal(storeAfter.claim,date);
+  await page.reload();
+  await page.locator("#start-button").click();
+  await page.locator("#mode-select-screen.active").waitFor();
+  assert.equal(await page.locator("#collection-screen.active").count(),0);
+  assert.deepEqual(errors,[]);
+});
