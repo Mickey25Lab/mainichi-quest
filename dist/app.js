@@ -4696,7 +4696,7 @@
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     const amounts = phonicsGrowthAmounts();
-    return timeEnergySelecting ? (progress.friendly ? `タイムボーナス エネルギー +${timeEnergyAllocation()?.amount || 0}` : `タイムボーナス ♥ +${Math.min(timeEnergyAllocation()?.amount || 0, 5)}`) : (progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`);
+    return timeEnergySelecting ? (progress.friendly ? `タイムボーナス\nエネルギー +${timeEnergyAllocation()?.amount || 0}` : `タイムボーナス\n♥ +${Math.min(timeEnergyAllocation()?.amount || 0, 5)}`) : (progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`);
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
