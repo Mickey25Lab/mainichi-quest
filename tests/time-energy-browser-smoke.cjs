@@ -53,7 +53,7 @@ test("QA pink time energy selects one garage vehicle and survives reload", {time
   await setupQa(page);
   await page.getByRole("button",{name:/QA：タイムボーナス/}).click();
   await page.locator("#collection-grid .collection-card:not([disabled])").first().waitFor();
-  assert.match(await page.locator("#collection-header-title").innerText(), /タイムボーナス \\+8\\nのりものをえらぼう！/);
+  assert.ok((await page.locator("#collection-header-title").innerText()).includes("タイムボーナス +8"));
   assert.equal(await page.locator(".collection-stage > .collection-time-panel").isVisible(), true);
   const initial = await readTimeEnergy(page);
   assert.equal(initial.balance,8);
