@@ -35,7 +35,7 @@ async function setupQa(page) {
   await page.locator("#admin-settings-button").click();
   for (const digit of "3710") await page.locator('[data-admin-pin-digit="'+digit+'"]').click();
   await page.locator("#admin-panel-overlay").waitFor({state:"visible"});
-  assert.equal(await page.getByRole("button",{name:/QA：タイムエネルギー/}).isVisible(),false);
+  assert.equal(await page.getByRole("button",{name:/QA：タイムボーナス/}).isVisible(),false);
   await Promise.all([page.waitForEvent("load"), page.locator("#admin-qa-toggle").click()]);
   await page.locator("#profile-setup-overlay").waitFor({state:"hidden"});
   await page.locator("#admin-settings-button").click();
@@ -51,8 +51,10 @@ test("QA pink time energy selects one garage vehicle and survives reload", {time
   t.after(() => browser.close());
   const page = await browser.newPage({viewport:{width:1400,height:1050}});
   await setupQa(page);
-  await page.getByRole("button",{name:/QA：タイムエネルギー/}).click();
+  await page.getByRole("button",{name:/QA：タイムボーナス/}).click();
   await page.locator("#collection-grid .collection-card:not([disabled])").first().waitFor();
+  assert.match(await page.locator("#collection-header-title").innerText(), /タイムボーナス \\+8\\nのりものをえらぼう！/);
+  assert.equal(await page.locator(".collection-stage > .collection-time-panel").isVisible(), true);
   const initial = await readTimeEnergy(page);
   assert.equal(initial.balance,8);
   assert.equal(initial.allocation.amount,8);
@@ -77,7 +79,7 @@ test("expired QA deadline scans one persistently locked candidate after reload",
   t.after(() => browser.close());
   const page = await browser.newPage({viewport:{width:1400,height:1050}});
   await setupQa(page);
-  await page.getByRole("button",{name:/QA：タイムエネルギー/}).click();
+  await page.getByRole("button",{name:/QA：タイムボーナス/}).click();
   await page.locator("#collection-grid .collection-card:not([disabled])").first().waitFor();
   const original = await readTimeEnergy(page);
   await page.evaluate(() => {
