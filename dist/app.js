@@ -358,7 +358,7 @@
     if (!candidates.length) return;
     $("phonics-grow-confirm").hidden = true;
     const choice = candidates[Math.floor(Math.random() * candidates.length)];
-    applyPhonicsRewardGrowth(choice, openNormalCollectionAfterPhonicsReward);
+    void runPhonicsCrossScan({selectedVehicleIndex:choice,skipSearch:true});
   }
   function startQuestBonusTimer() {
     stopQuestBonusTimer();
@@ -4340,14 +4340,18 @@
     return (eligible[Math.floor(Math.random() * eligible.length)] || vehicles[0]).index;
   }
   function scanPause(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
-  async function runPhonicsCrossScan() {
+  async function runPhonicsCrossScan({selectedVehicleIndex = null, skipSearch = false} = {}) {
     if (state.collectionMode !== "phonics-reward-select" || state.phonicsScanInProgress) return;
     state.phonicsScanInProgress = true;
     stopCollectionTimer();
     $("phonics-reward-intro").hidden = true;
     $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-    const vehicleIndex = randomPhonicsRewardVehicleIndex();
+    const vehicleIndex = Number.isInteger(selectedVehicleIndex) ? selectedVehicleIndex : randomPhonicsRewardVehicleIndex();
     state.phonicsRewardSelectedVehicleIndex = vehicleIndex;
+    if (skipSearch) {
+      stopQuestBonusTimer();
+      $("phonics-grow-confirm").hidden = true;
+    }
     const grid = $("collection-grid");
     const cards = [...grid.querySelectorAll(".collection-card")];
     const target = cards.find((card) => Number(card.dataset.vehicle) === vehicleIndex);
@@ -4405,6 +4409,7 @@
     });
     try {
       // Two bounces: far edge, near edge, then selected column.
+      if (!skipSearch) {
       await move(column,"X",centerX,w);
       column.classList.add("is-locked");
       // Preserve the already-selected column while searching for the row.
@@ -4418,6 +4423,7 @@
       await move(row,"Y",centerY,h);
       row.classList.add("is-locked");
       await scanPause(290);
+      }
       // Flash ONLY after the row and column are both fully resolved.
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
@@ -4428,7 +4434,7 @@
       darkness.style.maskImage="none";
       column.style.opacity="0";
       row.style.opacity="0";
-      await scanPause(900);
+      await scanPause(skipSearch ? 400 : 900);
       // Animate a visual clone, keeping the actual collection card and artwork loaded.
       const showcase = document.createElement("div");
       showcase.id = "phonics-scan-showcase";
@@ -6522,7 +6528,11 @@
   $("phonics-grow-cancel").addEventListener("click", closePhonicsGrowConfirm);
   $("phonics-grow-accept").addEventListener("click", () => {
     const quest = questBonusSelecting;
-    applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex, quest ? openNormalCollectionAfterPhonicsReward : showPhonicsCollectionHandoff);
+    if (quest) {
+      void runPhonicsCrossScan({selectedVehicleIndex:state.phonicsRewardSelectedVehicleIndex,skipSearch:true});
+    } else {
+      applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex, showPhonicsCollectionHandoff);
+    }
   });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; acknowledgeCollectionCategoryTabs(); endToModeSelect(); });
