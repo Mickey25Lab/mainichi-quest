@@ -79,3 +79,10 @@ test("quest chosen vehicle reuses phonics spotlight winner zoom and charging seq
   assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:state\.phonicsRewardSelectedVehicleIndex,skipSearch:true\}\)/);
   assert.match(app, /applyPhonicsRewardGrowth\(vehicleIndex, showPhonicsCollectionHandoff\)/);
 });
+
+test("quest button visibility is based on daily completion and active profile claim, not animations", () => {
+  assert.match(app, /const questAvailable = overview\.allComplete && !questClaimedToday && !questQaEnabled/);
+  assert.match(app, /questButton\.hidden = !questAvailable/);
+  assert.match(app, /questButton\.dataset\.questReason =/);
+  assert.match(app, /questButton\.dataset\.questProfile = profileStore\.getActiveProfileId\(\)/);
+});
