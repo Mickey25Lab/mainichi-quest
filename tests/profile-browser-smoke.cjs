@@ -486,9 +486,11 @@ test("completed quest offers a chosen vehicle charge once, surviving reload", as
   assert.equal(await page.locator("#mode-select-screen > #mode-select-mission-complete").isVisible(), true);
   await page.locator("#quest-bonus-continue").click();
   await page.locator("#collection-screen.active").waitFor();
+  assert.equal(await page.locator("#collection-seconds").textContent(), "30");
+  assert.equal(await page.locator("#collection-header-title ruby rt").textContent(), "たっせい");
   await page.locator("#collection-grid .collection-card[data-vehicle='0']").click();
   await page.locator("#phonics-grow-confirm").waitFor({state:"visible"});
-  assert.match(await page.locator("#phonics-grow-amount").textContent(), /5/);
+  assert.equal(await page.locator("#phonics-grow-amount").textContent(), "ハート +5");
   await page.locator("#phonics-grow-accept").click();
   await page.waitForFunction((today) => window.MQProfileStorage.createProfileStorage(localStorage).getQuestBonusClaimDate()===today,date);
   const storeAfter = await page.evaluate(() => {
