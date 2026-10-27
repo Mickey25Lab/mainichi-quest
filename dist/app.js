@@ -377,7 +377,7 @@
       }
     }
     try {
-      const committed = profileStore.commitTimeEnergyAllocation(locked.id, next);
+      const committed = profileStore.commitTimeEnergyAllocation(locked.id, next, state.rewardProgress[vehicleIndex]);
       if (!committed) return false;
       const before = state.rewardProgress[vehicleIndex];
       state.rewardProgress = next;
@@ -461,6 +461,7 @@
     target.style.boxShadow = "0 0 36px 12px #ff91e8";
     await scanPause(500);
     beam.remove();
+    target.style.boxShadow = "";
     applyTimeEnergyCharge(locked.vehicleIndex);
   }
   function updateTimeEnergyClock() {
