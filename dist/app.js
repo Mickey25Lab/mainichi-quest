@@ -4296,6 +4296,7 @@
     const selectionMode = mode === "phonics-reward-select";
     // Use the regular garage background in both modes.
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
+    if (!selectionMode) $("collection-screen").classList.remove("is-quest-reward-select");
     if (selectionMode) $("collection-header-title").innerHTML = "どののりものが<ruby>育<rt>そだ</rt></ruby>つかな？";
     else renderCollectionBaseTitle();
     if (!selectionMode) {
@@ -4713,6 +4714,7 @@
     showScreen("collection-screen");
     $("collection-screen").classList.add("is-phonics-reward-intro-open");
     $("phonics-reward-intro").hidden = quest;
+    $("collection-screen").classList.toggle("is-quest-reward-select", quest);
     if (quest) {
       $("collection-screen").classList.remove("is-phonics-reward-intro-open");
       $("collection-header-title").innerHTML = `クエスト<ruby>達成<rt>たっせい</rt></ruby>！ そだてるのりものをえらぼう！`;
