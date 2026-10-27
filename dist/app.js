@@ -340,6 +340,32 @@
   let questBonusClaimPendingDate = null;
   let questBonusSelectionDate = null;
   let questBonusSelectionProfileId = null;
+  let questBonusTimerId = null;
+  let questBonusDeadline = 0;
+  function stopQuestBonusTimer() {
+    if (questBonusTimerId !== null) window.clearInterval(questBonusTimerId);
+    questBonusTimerId = null;
+    questBonusDeadline = 0;
+  }
+  function updateQuestBonusTimer() {
+    if (!questBonusSelecting || questBonusDeadline === 0) { stopQuestBonusTimer(); return; }
+    const remaining = Math.max(0, Math.ceil((questBonusDeadline - Date.now()) / 1000));
+    const displayed = remaining <= 10 ? remaining : Math.ceil(remaining / 10) * 10;
+    $("collection-seconds").textContent = String(displayed);
+    if (remaining !== 0) return;
+    stopQuestBonusTimer();
+    const candidates = collectionDisplayOrder.filter(index => vehicleProgress(index).discovered);
+    if (!candidates.length) return;
+    $("phonics-grow-confirm").hidden = true;
+    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+    applyPhonicsRewardGrowth(choice, openNormalCollectionAfterPhonicsReward);
+  }
+  function startQuestBonusTimer() {
+    stopQuestBonusTimer();
+    questBonusDeadline = Date.now() + 30000;
+    updateQuestBonusTimer();
+    questBonusTimerId = window.setInterval(updateQuestBonusTimer, 200);
+  }
   function saveRewardProgress() {
     if (roundTransaction) return;
     // QA presets must never become permanent player points.
@@ -4514,7 +4540,7 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:10 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 5 };
+    if (questBonusSelecting) return { friendship:5, energy:8 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 2 };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
       : { friendship:5, energy:25 };
@@ -4522,7 +4548,7 @@
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     const amounts = phonicsGrowthAmounts();
-    return progress.friendly ? `エネルギー +${amounts.energy}` : `♥ +${amounts.friendship}`;
+    return progress.friendly ? `エネルギー +${amounts.energy}` : `ハート +${amounts.friendship}`;
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -4624,6 +4650,7 @@
     if (!progress.discovered) return;
     state.collectionClosing = true;
     stopCollectionTimer();
+    if (questBonusSelecting) stopQuestBonusTimer();
     $("phonics-grow-confirm").hidden = true;
     state.phonicsRewardSelectedVehicleIndex = null;
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
@@ -4688,7 +4715,8 @@
     $("phonics-reward-intro").hidden = quest;
     if (quest) {
       $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-      $("collection-header-title").textContent = "クエスト達成！ そだてるのりものをえらぼう！";
+      $("collection-header-title").innerHTML = `クエスト<ruby>達成<rt>たっせい</rt></ruby>！ そだてるのりものをえらぼう！`;
+      startQuestBonusTimer();
     } else $("phonics-reward-intro-continue").focus();
   }
 
