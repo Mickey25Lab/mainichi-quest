@@ -5738,3 +5738,27 @@ button, input { font: inherit; }
   text-shadow:0 3px 5px rgba(4,34,66,.45);
   letter-spacing:0;
 }
+
+/* Quest reward, unlike the phonics scanner, has a strict 30-second clock. */
+.collection-screen.is-phonics-reward-select:has(#collection-header-title ruby) .collection-stage > .collection-time-panel:not(.collection-capsule-time) {
+  display:flex !important;
+  z-index:25;
+}
+/* iPad WebKit adds more ruby leading and may push the continuation below
+   the fixed-size, overflow-hidden completion panel. Keep desktop unchanged. */
+@media (pointer:coarse) and (max-width:1199px) {
+  .mode-select-screen > .mode-select-mission-complete {
+    gap:16px;
+    padding:38px 45px;
+    overflow:visible;
+  }
+  .mode-select-mission-complete rt {
+    position:relative;
+    top:.25em;
+    line-height:1;
+  }
+  #quest-bonus-continue:not([hidden]) {
+    flex-shrink:0;
+    margin-top:4px;
+  }
+}
