@@ -501,6 +501,7 @@
     button.addEventListener("click", () => {
       if (!qaProgressModeEnabled()) return;
       profileStore.creditTimeEnergy(8,"qa-" + Date.now());
+      $("admin-panel-overlay").hidden = true;
       void openTimeEnergyAllocation();
     });
     const pending = timeEnergyAllocation();
