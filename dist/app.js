@@ -494,7 +494,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "QA：タイムエネルギー +8 → 30秒割り当て";
-    button.style.cssText = "display:block;margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
+    button.style.cssText = "margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
     qaButton.parentElement.append(button);
     const sync = () => { button.hidden = !qaProgressModeEnabled(); };
     sync();
