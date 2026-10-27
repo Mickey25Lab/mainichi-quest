@@ -5740,7 +5740,7 @@ button, input { font: inherit; }
 }
 
 /* Quest reward, unlike the phonics scanner, has a strict 30-second clock. */
-.collection-screen.is-phonics-reward-select:has(#collection-header-title ruby) .collection-stage > .collection-time-panel:not(.collection-capsule-time) {
+.collection-screen.is-quest-reward-select .collection-stage > .collection-time-panel:not(.collection-capsule-time) {
   display:flex !important;
   z-index:25;
 }
