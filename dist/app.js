@@ -347,6 +347,103 @@
     timeEnergyTimer = null;
   }
   function timeEnergyAllocation() { return profileStore.getTimeEnergy().allocation; }
+  // Shared post-selection presentation for time bonus and quest reward.
+  // Phonics scanner keeps its existing search but uses the same charged-showcase handoff.
+  async function animateSelectedVehicleCharge(vehicleIndex, amounts, commit) {
+    if (state.phonicsScanInProgress || timeEnergyScanRunning) return;
+    const stage = $("collection-stage");
+    const target = [...$("collection-grid").querySelectorAll(".collection-card")]
+      .find(card => Number(card.dataset.vehicle) === vehicleIndex);
+    if (!target) return;
+    state.phonicsScanInProgress = true;
+    $("phonics-grow-confirm").hidden = true;
+    clearTimeEnergyTimer();
+    const stageRect = stage.getBoundingClientRect(), rect = target.getBoundingClientRect();
+    const sx = stage.offsetWidth / stageRect.width, sy = stage.offsetHeight / stageRect.height;
+    const x=(rect.left-stageRect.left)*sx, y=(rect.top-stageRect.top)*sy;
+    const w=rect.width*sx, h=rect.height*sy;
+    const cover=document.createElement("div");
+    cover.className="phonics-reward-scrim";
+    cover.id="phonics-reward-scrim";
+    stage.append(cover);
+    const showcase=document.createElement("div");
+    showcase.id="phonics-scan-showcase";
+    showcase.className="phonics-scan-showcase";
+    const featured=target.cloneNode(true);
+    featured.disabled=true;
+    featured.classList.add("is-phonics-art-only");
+    featured.style.width=w+"px";
+    featured.style.height=h+"px";
+    featured.style.transformOrigin="top left";
+    const caption=document.createElement("div");
+    caption.className="phonics-scan-showcase-caption";
+    caption.replaceChildren(
+      Object.assign(document.createElement("strong"), {textContent:vehicles[vehicleIndex].nameJa}),
+      Object.assign(document.createElement("span"), {textContent:phonicsGrowthAmountLabel(vehicleIndex)})
+    );
+    showcase.append(featured,caption);
+    stage.append(showcase);
+    const endW=Math.min(stage.offsetWidth*.525,630),endH=endW*h/w;
+    const endX=(stage.offsetWidth-endW)/2,endY=(stage.offsetHeight-endH)/2-35;
+    const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
+    Object.assign(showcase.style,frame(x,y,w,h));
+    const scale=endW/w;
+    try {
+      const animation=showcase.animate([frame(x,y,w,h),frame(endX,endY,endW,endH)],{duration:950,easing:"ease-out",fill:"forwards"});
+      featured.animate([{transform:"scale(1)"},{transform:"scale("+scale+")"}],{duration:950,easing:"ease-out",fill:"forwards"});
+      await animation.finished;
+      Object.assign(showcase.style,frame(endX,endY,endW,endH));
+      featured.style.transform="scale("+scale+")";
+      showcase.classList.add("is-settled");
+      const progress=vehicleProgress(vehicleIndex),friendship=!progress.friendly;
+      const source=$(friendship?"friendship-progress":"energy-progress");
+      const panel=source.cloneNode(true);
+      panel.removeAttribute("id");
+      panel.removeAttribute("hidden");
+      panel.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+      const holder=document.createElement("div");
+      holder.className="phonics-scan-progress";
+      holder.append(panel);
+      showcase.append(holder);
+      await scanPause(400);
+      if(friendship){
+        const hearts=[...panel.querySelectorAll(".friendship-heart")];
+        const initial=Math.min(5,progress.friendship),final=Math.min(5,initial+amounts.friendship);
+        for(let count=initial;count<=final;count++){
+          hearts.forEach((heart,i)=>heart.classList.toggle("is-filled",i>=5-count));
+          await scanPause(230);
+        }
+      }else{
+        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
+        const fill=panel.querySelector(".energy-fill"),current=panel.querySelector(".energy-value span");
+        const required=panel.querySelector(".energy-value span:last-child");
+        if(required)required.textContent=String(needed);
+        const start=performance.now();
+        await new Promise(resolve=>{
+          const tick=now=>{
+            const ratio=Math.min(1,(now-start)/1400),value=Math.round(initial+(final-initial)*ratio);
+            if(fill)fill.style.height=Math.min(100,value/needed*100)+"%";
+            if(current)current.textContent=String(value);
+            if(ratio<1)requestAnimationFrame(tick);else resolve();
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+      await scanPause(550);
+      state.phonicsChargedShowcase=showcase;
+      state.phonicsShowcaseGeometry={left:endX,top:endY,width:endW,height:endH};
+      showcase.remove();
+      state.phonicsScanInProgress=false;
+      commit();
+    }catch(error){
+      console.error("Charge animation failed",error);
+      showcase.remove();
+      cover.remove();
+      state.phonicsScanInProgress=false;
+      commit();
+    }
+  }
   function endTimeEnergyAllocationUi() {
     clearTimeEnergyTimer();
     $("collection-screen").classList.remove("is-time-bonus-select");
@@ -354,7 +451,6 @@
     timeEnergyScanRunning = false;
     state.collectionClosing = false;
     $("phonics-grow-confirm").hidden = true;
-    openNormalCollectionAfterPhonicsReward();
   }
   function applyTimeEnergyCharge(vehicleIndex) {
     const allocation = timeEnergyAllocation();
@@ -405,8 +501,8 @@
         const definition = acquisitionDefinitions[acquisitionType];
         if (definition) showReward({
           stage, vehicleIndex, isNew:true, kind:definition.rewardKind
-        }, false, () => openNormalCollectionAfterPhonicsReward());
-      }
+        }, false, showPhonicsCollectionHandoff);
+      } else showPhonicsCollectionHandoff();
       return true;
     } catch (error) {
       console.error("Time energy allocation was not committed", error);
@@ -463,7 +559,7 @@
     await scanPause(500);
     beam.remove();
     target.style.boxShadow = "";
-    applyTimeEnergyCharge(locked.vehicleIndex);
+    await animateSelectedVehicleCharge(locked.vehicleIndex, {friendship:Math.min(locked.amount,5),energy:locked.amount}, () => applyTimeEnergyCharge(locked.vehicleIndex));
   }
   function updateTimeEnergyClock() {
     if (!timeEnergySelecting || timeEnergyScanRunning) return;
@@ -6666,9 +6762,18 @@
   $("phonics-reward-intro-continue").addEventListener("click", startPhonicsRewardVehicleSelection);
   $("phonics-grow-cancel").addEventListener("click", closePhonicsGrowConfirm);
   $("phonics-grow-accept").addEventListener("click", () => {
-    if (timeEnergySelecting) { applyTimeEnergyCharge(state.phonicsRewardSelectedVehicleIndex); return; }
-    const quest = questBonusSelecting;
-    applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex, quest ? openNormalCollectionAfterPhonicsReward : showPhonicsCollectionHandoff);
+    const index=state.phonicsRewardSelectedVehicleIndex;
+    if (timeEnergySelecting) {
+      const amount=timeEnergyAllocation()?.amount || 0;
+      void animateSelectedVehicleCharge(index, {friendship:Math.min(amount,5),energy:amount}, () => applyTimeEnergyCharge(index));
+      return;
+    }
+    if (questBonusSelecting) {
+      const amounts=phonicsGrowthAmounts();
+      void animateSelectedVehicleCharge(index, amounts, () => applyPhonicsRewardGrowth(index,showPhonicsCollectionHandoff));
+      return;
+    }
+    applyPhonicsRewardGrowth(index,showPhonicsCollectionHandoff);
   });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; acknowledgeCollectionCategoryTabs(); endToModeSelect(); });
