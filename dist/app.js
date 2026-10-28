@@ -2943,7 +2943,7 @@
     const totalText = String(question.product);
     const specialZero = state.mode === "multiplication2x2-zero" && question.multiplier % 10 === 0;
     const rows = [
-      { key: "partial1", value: specialZero ? totalText : partial1Text, holder: $("multiplication-2x2-partial-1"), order: specialZero ? [...totalText].map((_, i) => totalText.length - i - 1) : twoDigitRowOrder(question.multiplicand, question.partial1) },
+      { key: "partial1", value: specialZero ? totalText : partial1Text, holder: $("multiplication-2x2-partial-1"), order: specialZero ? [totalText.length - 1, ...twoDigitRowOrder(question.multiplicand, question.partial2)] : twoDigitRowOrder(question.multiplicand, question.partial1) },
       { key: "partial2", value: partial2Text, holder: $("multiplication-2x2-partial-2"), order: twoDigitRowOrder(question.multiplicand, question.partial2) },
       { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: twoDigitTotalInputOrder(question) }
     ];
