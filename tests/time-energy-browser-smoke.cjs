@@ -145,7 +145,7 @@ test("real ten-answer division round credits earned pink energy only at result s
     const match=problem.match(/(\d+)\s*÷\s*(\d+)/);
     assert.ok(match,"division question must be visible: "+problem);
     const dividend=Number(match[1]),divisor=Number(match[2]);
-    await page.waitForFunction(() => { const key=document.querySelector('.number-key[data-number="1"]'); return key && key.disabled===false; },null,{timeout:20000});
+    await page.waitForFunction(() => document.querySelector('#keypad')?.getAttribute('aria-busy') === 'false' && document.querySelector('#assist-button')?.disabled === false,null,{timeout:20000});
     await clickDigits(Math.floor(dividend/divisor));
     assert.equal((await page.locator('#answer-text').textContent()).trim(),String(Math.floor(dividend/divisor)),'quotient entry was ignored');
     if(dividend%divisor===0) await page.locator("#no-remainder-key").click();
