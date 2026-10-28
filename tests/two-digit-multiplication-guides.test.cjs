@@ -82,7 +82,7 @@ test("zero mode places a zero in lower multiplier only in questions 2 and 4", ()
     questions.forEach((question, index) => {
       assert.ok(question.multiplicand >= 10 && question.multiplicand <= 99);
       assert.ok(question.multiplier >= 10 && question.multiplier <= 99);
-      assert.equal(question.multiplier % 10 === 0, index === 1 || index === 3);
+      assert.equal(question.multiplier % 10 === 0, index === 0 || index === 3);
       assert.equal(question.partial1, question.multiplicand * (question.multiplier % 10));
       assert.equal(question.partial2, question.multiplicand * Math.floor(question.multiplier / 10));
       assert.equal(question.product, question.multiplicand * question.multiplier);
@@ -93,7 +93,7 @@ test("zero mode has a separate label and immediate correction for zero-only step
   assert.match(html, /2けた×2けた その3（2段目に0あり）/);
   assert.match(app, /state\.mode === "multiplication2x2-zero"/);
   assert.match(app, /String\(number\) !== "0"/);
-  assert.match(css, /is-special-zero-sparkle/);
+  assert.match(app, /playTwoDigitRowCorrectEffect\(\{ holder: slot \}\)/);\n  assert.match(app, /model\.specialZero && model\.inputStep > 0/);
 });
 
 test("zero multiplier uses a single row and grades the rest only after all digits are entered", () => {
