@@ -95,3 +95,15 @@ test("zero mode has a separate label and immediate correction for zero-only step
   assert.match(app, /String\(number\) !== "0"/);
   assert.match(css, /is-special-zero-sparkle/);
 });
+
+test("zero multiplier uses a single row and grades the rest only after all digits are entered", () => {
+  assert.match(app, /value: specialZero \? totalText : partial1Text/);
+  assert.match(app, /specialZero \? \[\.\.\.totalText\]\.map/);
+  assert.match(app, /if \(specialZero && rowIndex > 0\) return/);
+  assert.match(app, /if \(!model\.specialZero && step\.rowIndex/);
+  assert.match(app, /model\.specialZero \? model\.rows\[0\]/);
+  assert.match(app, /step\.cellIndex === row\.value\.length - 1 && String\(number\) !== "0"/);
+  assert.match(css, /is-zero-single-row #multiplication-2x2-partial-2/);
+  assert.match(css, /is-zero-single-row #multiplication-2x2-total/);
+  assert.match(css, /is-zero-single-row \.multiplication-2x2-bar-sum/);
+});
