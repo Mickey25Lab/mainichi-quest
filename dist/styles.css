@@ -5803,3 +5803,8 @@ button, input { font: inherit; }
 .multiplication-2x2-slot.is-special-zero-wrong::after { content:"×"; position:absolute; top:-19px; right:-12px; color:#d92d2d; font-size:30px; font-weight:900; }
 @keyframes special-zero-glint { 0% { box-shadow:0 0 0 0 rgba(24,183,217,.8); } 45% { box-shadow:0 0 0 10px rgba(24,183,217,.3),0 0 24px rgba(24,183,217,.95); } 100% { box-shadow:0 0 0 17px rgba(24,183,217,0); } }
 .multiplication-2x2-slot.is-special-zero-sparkle { animation:special-zero-glint .7s ease-out; }
+
+/* Retain the original vertical layout while omitting unused calculation rows. */
+.multiplication-2x2-panel.is-zero-single-row #multiplication-2x2-partial-2,
+.multiplication-2x2-panel.is-zero-single-row #multiplication-2x2-total,
+.multiplication-2x2-panel.is-zero-single-row .multiplication-2x2-bar-sum { visibility:hidden; }
