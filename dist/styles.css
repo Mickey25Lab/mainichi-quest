@@ -5795,3 +5795,11 @@ button, input { font: inherit; }
   box-shadow:none !important;
 }
 .parent-all-modes-off:active { background:#52616d !important; }
+
+/* 2けた×2けた その3: zero is a learning cue, never a correction mark. */
+.multiplication-2x2-mode .multiplication-problem-digit.is-special-zero,
+.multiplication-2x2-slot.is-special-zero:not(.is-special-zero-wrong) { color:#18b7d9; }
+.multiplication-2x2-slot.is-special-zero-wrong { color:#d92d2d; position:relative; }
+.multiplication-2x2-slot.is-special-zero-wrong::after { content:"×"; position:absolute; top:-19px; right:-12px; color:#d92d2d; font-size:30px; font-weight:900; }
+@keyframes special-zero-glint { 0% { box-shadow:0 0 0 0 rgba(24,183,217,.8); } 45% { box-shadow:0 0 0 10px rgba(24,183,217,.3),0 0 24px rgba(24,183,217,.95); } 100% { box-shadow:0 0 0 17px rgba(24,183,217,0); } }
+.multiplication-2x2-slot.is-special-zero-sparkle { animation:special-zero-glint .7s ease-out; }
