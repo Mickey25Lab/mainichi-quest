@@ -56,7 +56,7 @@ test("the cyan operand guide is a rounded connected background in the 2x2 panel"
   assert.match(html, /id="multiplication-2x2-operation-guide"/);
   assert.match(html, /id="multiplication-2x2-sum-operator"/);
   assert.match(app, /guideStage: 1/);
-  assert.match(app, /operationGuide\.dataset\.stage = model\.guideStage === 1 \? "ones" : "tens"/);
+  assert.match(app, /operationGuide\.dataset\.stage = model\.specialZero \? "tens" : \(model\.guideStage === 1 \? "ones" : "tens"\)/);
   assert.match(app, /model\.guideStage = 2/);
   assert.match(app, /model\.sumOperatorVisible = true/);
   assert.match(css, /\.multiplication-2x2-operation-guide/);
