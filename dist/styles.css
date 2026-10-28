@@ -5746,6 +5746,7 @@ button, input { font: inherit; }
   position:static;
   top:auto;
   left:auto;
+  transform:none;
   width:auto;
   height:auto;
   min-width:0;
