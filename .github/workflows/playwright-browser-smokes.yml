@@ -69,6 +69,7 @@ jobs:
           node --test \
             tests/profile-storage.test.cjs \
             tests/time-energy-storage.test.cjs \
+            tests/time-energy-earning.test.cjs \
             tests/round-transaction.test.cjs \
             tests/acquisition-commit-flow.test.cjs \
             tests/collection-earned-layouts.test.cjs \
