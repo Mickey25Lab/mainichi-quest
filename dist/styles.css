@@ -5808,3 +5808,7 @@ button, input { font: inherit; }
 .multiplication-2x2-panel.is-zero-single-row #multiplication-2x2-partial-2,
 .multiplication-2x2-panel.is-zero-single-row #multiplication-2x2-total,
 .multiplication-2x2-panel.is-zero-single-row .multiplication-2x2-bar-sum { visibility:hidden; }
+
+/* Reuse the existing row sparkle beneath the single confirmed zero digit. */
+.multiplication-2x2-slot:has(> .multiplication-2x2-row-sparkles) { position:relative; overflow:visible; }
+.multiplication-2x2-slot > .multiplication-2x2-row-sparkles { bottom:-10px; right:0; }
