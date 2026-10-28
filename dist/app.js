@@ -2158,7 +2158,7 @@
         do {
           multiplicand = 10 + Math.floor(Math.random() * 90);
           const tens = 1 + Math.floor(Math.random() * 9);
-          const ones = (index === 1 || index === 3) ? 0 : 1 + Math.floor(Math.random() * 9);
+          const ones = (index === 0 || index === 3) ? 0 : 1 + Math.floor(Math.random() * 9);
           multiplier = tens * 10 + ones;
           key = `${multiplicand}*${multiplier}`;
         } while (used.has(key));
@@ -2989,9 +2989,9 @@
     });
     const operationGuide = $("multiplication-2x2-operation-guide");
     const unguided = state.mode === "multiplication2x2-unguided" || state.mode === "multiplication2x2-zero";
-    const isGuidedMultiplicationRow = !unguided && (model.guideStage === 1 || model.guideStage === 2);
+    const isGuidedMultiplicationRow = (model.specialZero && model.inputStep > 0) || (!unguided && (model.guideStage === 1 || model.guideStage === 2));
     operationGuide.hidden = !isGuidedMultiplicationRow;
-    operationGuide.dataset.stage = model.guideStage === 1 ? "ones" : "tens";
+    operationGuide.dataset.stage = model.specialZero ? "tens" : (model.guideStage === 1 ? "ones" : "tens");
     $("multiplication-2x2-shift-guide").hidden = unguided || !model.shiftGuideVisible;
     const sumOperator = $("multiplication-2x2-sum-operator");
     sumOperator.hidden = unguided || !model.sumOperatorVisible;
@@ -3102,11 +3102,8 @@
     if (model.specialZero && step.rowIndex === 0 && step.cellIndex === row.value.length - 1) {
       const slot = row.holder.children[step.cellIndex];
       if (slot) {
-        slot.classList.remove("is-special-zero-sparkle");
-        void slot.offsetWidth;
-        slot.classList.add("is-special-zero-sparkle");
+        playTwoDigitRowCorrectEffect({ holder: slot });
         playSimpleCorrectSound();
-        window.setTimeout(() => slot.classList.remove("is-special-zero-sparkle"), 700);
       }
     }
     model.history.push({ ...step });
