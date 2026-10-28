@@ -5812,3 +5812,42 @@ button, input { font: inherit; }
 /* Reuse the existing row sparkle beneath the single confirmed zero digit. */
 .multiplication-2x2-slot:has(> .multiplication-2x2-row-sparkles) { position:relative; overflow:visible; }
 .multiplication-2x2-slot > .multiplication-2x2-row-sparkles { bottom:-10px; right:0; }
+
+/* Time bonus uses the garage cards but must retain its own visible 30s clock. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-stage > .collection-time-panel:not(.collection-capsule-time) { display:flex !important; z-index:35; }
+.collection-screen.is-time-bonus-select .collection-header h2 { white-space:normal; line-height:1.23; }
+
+/* Raise the two-line bonus heading clear of the first card row. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header h2 { position:relative; top:-18px; }
+#phonics-grow-amount { white-space:pre-line; }
+
+/* The garage grid starts at 135px in the 1400x1050 stage.
+   Center the two-line title in the actual 0..135px gap, not a relative
+   header participating in document flow. 0..130 leaves 5px clearance. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header {
+  position:absolute;
+  inset:0 0 auto;
+  top:0;
+  height:130px;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30;
+}
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header h2 {
+  position:static;
+  top:auto;
+  left:auto;
+  transform:none;
+  width:auto;
+  height:auto;
+  min-width:0;
+  max-height:124px;
+  box-sizing:border-box;
+  margin:0;
+  padding:3px 24px;
+  font-size:37px;
+  line-height:1.12;
+  text-align:center;
+}

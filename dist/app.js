@@ -289,7 +289,8 @@
   function loadRewardProgress() {
     state.rewardProgress = Array.from({ length: vehicles.length }, emptyVehicleProgress);
     try {
-      const saved = profileStore.getRewardProgress();
+      const qaSaved = qaProgressModeEnabled() ? profileStore.getActiveQaState().timeEnergyRewardProgress : null;
+      const saved = Array.isArray(qaSaved) && qaSaved.length === vehicles.length ? qaSaved : profileStore.getRewardProgress();
       if (Array.isArray(saved) && saved.length === vehicles.length) state.rewardProgress = saved.map(normalizeVehicleProgress);
       else {
         const legacyCollection = profileStore.getCollectionStages();
@@ -336,6 +337,275 @@
       try { profileStore.appendAcquisitionHistory(acquisition); }
       catch (error) { console.error("Acquisition history save failed", error); }
     }
+  }
+  let timeEnergySelecting = false;
+  let timeEnergyTimer = null;
+  let timeEnergyScanRunning = false;
+  // The time-energy selection uses the existing garage cards and confirmation.
+  // Its persisted deadline is independent of the 60-second browse timer.
+  function clearTimeEnergyTimer() {
+    if (timeEnergyTimer !== null) window.clearInterval(timeEnergyTimer);
+    timeEnergyTimer = null;
+  }
+  function timeEnergyAllocation() { return profileStore.getTimeEnergy().allocation; }
+  // Shared post-selection presentation for time bonus and quest reward.
+  // Phonics scanner keeps its existing search but uses the same charged-showcase handoff.
+  async function animateSelectedVehicleCharge(vehicleIndex, amounts, commit) {
+    if (state.phonicsScanInProgress) return;
+    const stage = $("collection-stage");
+    const target = [...$("collection-grid").querySelectorAll(".collection-card")]
+      .find(card => Number(card.dataset.vehicle) === vehicleIndex);
+    if (!target) return;
+    state.phonicsScanInProgress = true;
+    $("phonics-grow-confirm").hidden = true;
+    clearTimeEnergyTimer();
+    const stageRect = stage.getBoundingClientRect(), rect = target.getBoundingClientRect();
+    const sx = stage.offsetWidth / stageRect.width, sy = stage.offsetHeight / stageRect.height;
+    const x=(rect.left-stageRect.left)*sx, y=(rect.top-stageRect.top)*sy;
+    const w=rect.width*sx, h=rect.height*sy;
+    const cover=document.createElement("div");
+    cover.className="phonics-reward-scrim";
+    cover.id="phonics-reward-scrim";
+    stage.append(cover);
+    const showcase=document.createElement("div");
+    showcase.id="phonics-scan-showcase";
+    showcase.className="phonics-scan-showcase";
+    const featured=target.cloneNode(true);
+    featured.disabled=true;
+    featured.classList.add("is-phonics-art-only");
+    featured.style.width=w+"px";
+    featured.style.height=h+"px";
+    featured.style.transformOrigin="top left";
+    const caption=document.createElement("div");
+    caption.className="phonics-scan-showcase-caption";
+    caption.replaceChildren(
+      Object.assign(document.createElement("strong"), {textContent:vehicles[vehicleIndex].nameJa}),
+      Object.assign(document.createElement("span"), {textContent:phonicsGrowthAmountLabel(vehicleIndex)})
+    );
+    showcase.append(featured,caption);
+    stage.append(showcase);
+    const endW=Math.min(stage.offsetWidth*.525,630),endH=endW*h/w;
+    const endX=(stage.offsetWidth-endW)/2,endY=(stage.offsetHeight-endH)/2-35;
+    const frame=(left,top,width,height)=>({left:left+"px",top:top+"px",width:width+"px",height:height+"px"});
+    Object.assign(showcase.style,frame(x,y,w,h));
+    const scale=endW/w;
+    try {
+      const animation=showcase.animate([frame(x,y,w,h),frame(endX,endY,endW,endH)],{duration:950,easing:"ease-out",fill:"forwards"});
+      featured.animate([{transform:"scale(1)"},{transform:"scale("+scale+")"}],{duration:950,easing:"ease-out",fill:"forwards"});
+      await animation.finished;
+      Object.assign(showcase.style,frame(endX,endY,endW,endH));
+      featured.style.transform="scale("+scale+")";
+      showcase.classList.add("is-settled");
+      const progress=vehicleProgress(vehicleIndex),friendship=!progress.friendly;
+      const source=$(friendship?"friendship-progress":"energy-progress");
+      const panel=source.cloneNode(true);
+      panel.removeAttribute("id");
+      panel.removeAttribute("hidden");
+      panel.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+      const holder=document.createElement("div");
+      holder.className="phonics-scan-progress";
+      holder.append(panel);
+      showcase.append(holder);
+      await scanPause(400);
+      if(friendship){
+        const hearts=[...panel.querySelectorAll(".friendship-heart")];
+        const initial=Math.min(5,progress.friendship),final=Math.min(5,initial+amounts.friendship);
+        for(let count=initial;count<=final;count++){
+          hearts.forEach((heart,i)=>heart.classList.toggle("is-filled",i>=5-count));
+          await scanPause(230);
+        }
+      }else{
+        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
+        const fill=panel.querySelector(".energy-fill"),current=panel.querySelector(".energy-value span");
+        const required=panel.querySelector(".energy-value span:last-child");
+        if(required)required.textContent=String(needed);
+        const start=performance.now();
+        await new Promise(resolve=>{
+          const tick=now=>{
+            const ratio=Math.min(1,(now-start)/1400),value=Math.round(initial+(final-initial)*ratio);
+            if(fill)fill.style.height=Math.min(100,value/needed*100)+"%";
+            if(current)current.textContent=String(value);
+            if(ratio<1)requestAnimationFrame(tick);else resolve();
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+      await scanPause(550);
+      state.phonicsChargedShowcase=showcase;
+      state.phonicsShowcaseGeometry={left:endX,top:endY,width:endW,height:endH};
+      showcase.remove();
+      state.phonicsScanInProgress=false;
+      commit();
+    }catch(error){
+      console.error("Charge animation failed",error);
+      showcase.remove();
+      cover.remove();
+      state.phonicsScanInProgress=false;
+      commit();
+    }
+  }
+  function endTimeEnergyAllocationUi() {
+    clearTimeEnergyTimer();
+    $("collection-screen").classList.remove("is-time-bonus-select");
+    timeEnergySelecting = false;
+    timeEnergyScanRunning = false;
+    state.collectionClosing = false;
+    $("phonics-grow-confirm").hidden = true;
+  }
+  function applyTimeEnergyCharge(vehicleIndex) {
+    const allocation = timeEnergyAllocation();
+    if (!allocation || !Number.isInteger(vehicleIndex)) return false;
+    const eligible = state.rewardProgress[vehicleIndex]?.discovered;
+    if (!eligible) return false;
+    const locked = profileStore.lockTimeEnergyVehicle(allocation.id, vehicleIndex);
+    if (!locked || locked.vehicleIndex !== vehicleIndex) return false;
+    const next = state.rewardProgress.map((item) => ({ ...item }));
+    const progress = next[vehicleIndex];
+    if (!progress.friendly) {
+      progress.friendship = Math.min(5, progress.friendship + Math.min(locked.amount, 5));
+      if (progress.friendship === 5) progress.friendly = true;
+    } else {
+      const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+      progress.energy = Math.min(required, progress.energy + locked.amount);
+      if (progress.energy >= required && !progress.masterMedal) {
+        progress.energy = 0;
+        if (progress.stage === 5) progress.masterMedal = true;
+        else progress.stage += 1;
+      }
+    }
+    try {
+      const committed = profileStore.commitTimeEnergyAllocation(locked.id, next, state.rewardProgress[vehicleIndex]);
+      if (!committed) return false;
+      const before = state.rewardProgress[vehicleIndex];
+      state.rewardProgress = next;
+      state.collection = next.map(collectionStageForProgress);
+      // No second progress save: the time-energy commit already persisted it.
+      state.phonicsLastRewardVehicleIndex = vehicleIndex;
+      let acquisitionType = null;
+      let stage = null;
+      if (!before.friendly && progress.friendly) { acquisitionType = "friendship_complete"; stage = 1; }
+      else if (!before.masterMedal && progress.masterMedal) { acquisitionType = "master_medal"; stage = 5; }
+      else if (progress.stage > before.stage) {
+        stage = before.stage;
+        acquisitionType = ({ 2:"robot", 3:"super_robot", 4:"super_robot_equipped" })[stage];
+      }
+      if (acquisitionType) {
+        const definition = acquisitionDefinitions[acquisitionType];
+        if (definition) {
+          recordCommittedAcquisition({ vehicleIndex, acquisitionType, source:"time_energy", definition });
+          state.sessionUnlocks[stage] += 1;
+        }
+      }
+      endTimeEnergyAllocationUi();
+      if (acquisitionType) {
+        const definition = acquisitionDefinitions[acquisitionType];
+        if (definition) showReward({
+          stage, vehicleIndex, isNew:true, kind:definition.rewardKind
+        }, false, showPhonicsCollectionHandoff);
+      } else showPhonicsCollectionHandoff();
+      return true;
+    } catch (error) {
+      console.error("Time energy allocation was not committed", error);
+      return false;
+    }
+  }
+  async function runTimeEnergyCrossScan() {
+    if (!timeEnergySelecting || timeEnergyScanRunning) return;
+    const allocation = timeEnergyAllocation();
+    if (!allocation) return;
+    const candidates = [...$("collection-grid").querySelectorAll(".collection-card")]
+      .filter((card) => state.rewardProgress[Number(card.dataset.vehicle)]?.discovered);
+    if (!candidates.length) { clearTimeEnergyTimer(); return; }
+    const chosen = allocation.vehicleIndex === null
+      ? Number(candidates[Math.floor(Math.random() * candidates.length)].dataset.vehicle)
+      : allocation.vehicleIndex;
+    const locked = profileStore.lockTimeEnergyVehicle(allocation.id, chosen);
+    if (!locked) return;
+    timeEnergyScanRunning = true;
+    clearTimeEnergyTimer();
+    const cards = [...$("collection-grid").querySelectorAll(".collection-card")];
+    const target = cards.find((card) => Number(card.dataset.vehicle) === locked.vehicleIndex);
+    if (!target) return;
+    // Column and row sweep. The winning vehicle was durably locked before animation.
+    const stage = $("collection-stage");
+    const beam = document.createElement("div");
+    beam.setAttribute("aria-hidden", "true");
+    beam.style.cssText = "position:absolute;inset:0;z-index:25;pointer-events:none";
+    stage.append(beam);
+    const rect = stage.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const widthScale = stage.offsetWidth / rect.width, heightScale = stage.offsetHeight / rect.height;
+    const targetX = (targetRect.left - rect.left + targetRect.width/2)*widthScale;
+    const targetY = (targetRect.top - rect.top + targetRect.height/2)*heightScale;
+    const vertical = document.createElement("div");
+    const horizontal = document.createElement("div");
+    vertical.style.cssText = "position:absolute;top:0;bottom:0;width:12%;background:#ffd1ef88;box-shadow:0 0 38px #ff7bc6;transition:left .13s";
+    horizontal.style.cssText = "position:absolute;left:0;right:0;height:17%;background:#ffd1ef88;box-shadow:0 0 38px #ff7bc6;transition:top .13s";
+    beam.append(vertical,horizontal);
+    for (let i=0; i<12; i++) {
+      if (!timeEnergySelecting) { beam.remove(); return; }
+      vertical.style.left = ((i%5)*18) + "%";
+      await scanPause(120);
+    }
+    vertical.style.left = (targetX - stage.offsetWidth*.06) + "px";
+    await scanPause(320);
+    for (let i=0; i<12; i++) {
+      if (!timeEnergySelecting) { beam.remove(); return; }
+      horizontal.style.top = ((i%5)*16) + "%";
+      await scanPause(120);
+    }
+    horizontal.style.top = (targetY - stage.offsetHeight*.085) + "px";
+    target.style.boxShadow = "0 0 36px 12px #ff91e8";
+    await scanPause(500);
+    beam.remove();
+    target.style.boxShadow = "";
+    await animateSelectedVehicleCharge(locked.vehicleIndex, {friendship:Math.min(locked.amount,5),energy:locked.amount}, () => applyTimeEnergyCharge(locked.vehicleIndex));
+  }
+  function updateTimeEnergyClock() {
+    if (!timeEnergySelecting || timeEnergyScanRunning) return;
+    const allocation = timeEnergyAllocation();
+    if (!allocation) { clearTimeEnergyTimer(); return; }
+    const seconds = Math.max(0,Math.ceil((allocation.deadline - Date.now())/1000));
+    $("collection-seconds").textContent = String(seconds);
+    $("detail-seconds").textContent = String(seconds);
+    if (seconds === 0) void runTimeEnergyCrossScan();
+  }
+  async function openTimeEnergyAllocation() {
+    let allocation = timeEnergyAllocation();
+    if (!allocation) allocation = profileStore.beginTimeEnergyAllocation(
+      "time-energy-" + profileStore.getActiveProfileId() + "-" + Date.now(), Date.now() + 30000);
+    if (!allocation) return;
+    clearTimeEnergyTimer();
+    timeEnergySelecting = true;
+    timeEnergyScanRunning = false;
+    await openPhonicsRewardSelection({ quest:true });
+    if (!timeEnergySelecting) return;
+    $("collection-screen").classList.add("is-time-bonus-select");
+    $("collection-header-title").replaceChildren(document.createTextNode("タイムボーナス +" + allocation.amount), document.createElement("br"), document.createTextNode("のりものをえらぼう！"));
+    $("collection-seconds").textContent = String(Math.max(0,Math.ceil((allocation.deadline-Date.now())/1000)));
+    updateTimeEnergyClock();
+    timeEnergyTimer = window.setInterval(updateTimeEnergyClock,200);
+  }
+  function setupTimeEnergyQaControls() {
+    const qaButton = $("admin-qa-toggle");
+    if (!qaButton || !$("admin-qa-toggle").parentElement) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "QA：タイムボーナス +8 → 30秒割り当て";
+    button.style.cssText = "margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
+    qaButton.parentElement.after(button);
+    const sync = () => { button.hidden = !qaProgressModeEnabled(); };
+    sync();
+    button.addEventListener("click", () => {
+      if (!qaProgressModeEnabled()) return;
+      profileStore.creditTimeEnergy(8,"qa-" + Date.now());
+      $("admin-panel-overlay").hidden = true;
+      void openTimeEnergyAllocation();
+    });
+    const pending = timeEnergyAllocation();
+    if (pending && qaProgressModeEnabled())
+      window.setTimeout(() => { if (qaProgressModeEnabled()) void openTimeEnergyAllocation(); },1500);
   }
   let questBonusSelecting = false;
   let questBonusClaimPendingDate = null;
@@ -426,7 +696,7 @@
   function restoreQaProgressBackup() {
     try {
       const qaState = profileStore.getActiveQaState();
-      if (!qaState.backupInitialized) return;
+      if (!qaState.backupInitialized) { profileStore.setActiveQaState({}); return; }
       const snapshot = qaState.progressBackup || {
         rewardProgress: qaState.rewardProgressBackup ?? null,
         collection: null
@@ -4609,7 +4879,7 @@
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     const amounts = phonicsGrowthAmounts();
-    return progress.friendly ? `エネルギー +${amounts.energy}` : `ハート +${amounts.friendship}`;
+    return timeEnergySelecting ? (progress.friendly ? `タイムボーナス\nエネルギー +${timeEnergyAllocation()?.amount || 0}` : `タイムボーナス\n♥ +${Math.min(timeEnergyAllocation()?.amount || 0, 5)}`) : (progress.friendly ? `エネルギー +${amounts.energy}` : `${questBonusSelecting ? "ハート" : "♥"} +${amounts.friendship}`);
   }
   function openPhonicsGrowConfirm(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -4717,6 +4987,7 @@
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
     const amounts = phonicsGrowthAmounts();
     if (questBonusSelecting) {
+      stopQuestBonusTimer();
       if (!questBonusSelectionDate || questBonusSelectionProfileId !== profileStore.getActiveProfileId()
         || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
       questBonusClaimPendingDate = questBonusSelectionDate;
@@ -5352,7 +5623,7 @@
       const energyGrew = progress.stage === before.stage && progress.energy > before.energy;
       const isUp = showSessionMarkers && !isNew && (friendshipGrew || energyGrew);
       const capsuleDisabled = capsuleSelecting && !capsuleEligibleIndexes().includes(vehicle.index);
-      const selectionDisabled = (state.collectionMode === "phonics-reward-select" && (!questBonusSelecting || !discovered)) || capsuleDisabled;
+      const selectionDisabled = (state.collectionMode === "phonics-reward-select" && (!(questBonusSelecting || timeEnergySelecting) || !discovered)) || capsuleDisabled;
       return `<button class="collection-card ${discovered ? "" : "locked"} ${complete ? "complete" : ""} ${isNew ? "is-new" : ""} ${isUp ? "is-up" : ""} ${capsuleDisabled ? "is-capsule-disabled" : ""}" data-vehicle="${vehicle.index}" data-stage="${formStage}" aria-label="${discovered ? `${vehicle.nameEn}、進捗${formStage}` : "未発見"}" ${selectionDisabled ? 'disabled aria-disabled="true"' : ""} style="--card-color:${vehicle.color}">
         <span class="card-garage"></span><span class="vehicle-area">${medal}${equipmentComposition || artwork}</span>
         <span class="name-band"><span class="name-band-text">${discovered ? vehicle.nameEn : "???"}</span></span>
@@ -5363,7 +5634,7 @@
       const vehicleIndex = Number(card.dataset.vehicle);
       if (capsuleSelecting) { if (capsuleEligibleIndexes().includes(vehicleIndex)) useCapsuleOnVehicle(vehicleIndex); }
       else if (state.collectionMode === "phonics-reward-select") {
-        if (questBonusSelecting) openPhonicsGrowConfirm(vehicleIndex);
+        if (questBonusSelecting || timeEnergySelecting) openPhonicsGrowConfirm(vehicleIndex);
         return;
       }
       else openVehicleDetail(vehicleIndex);
@@ -6515,6 +6786,7 @@
   $("admin-points-open").addEventListener("click", openPointsDiagnostics);
   $("admin-points-close").addEventListener("click", closePointsDiagnostics);
   $("admin-qa-toggle").addEventListener("click", toggleQaProgressMode);
+  setupTimeEnergyQaControls();
   $("parent-free-play-toggle").addEventListener("click", () => {
     const settings = parentDraftForProfile(parentSettingsProfileId);
     if (!settings) return;
@@ -6584,12 +6856,19 @@
   $("phonics-reward-intro-continue").addEventListener("click", startPhonicsRewardVehicleSelection);
   $("phonics-grow-cancel").addEventListener("click", closePhonicsGrowConfirm);
   $("phonics-grow-accept").addEventListener("click", () => {
-    const quest = questBonusSelecting;
-    if (quest) {
-      void runPhonicsCrossScan({selectedVehicleIndex:state.phonicsRewardSelectedVehicleIndex,skipSearch:true});
-    } else {
-      applyPhonicsRewardGrowth(state.phonicsRewardSelectedVehicleIndex, showPhonicsCollectionHandoff);
+    const index=state.phonicsRewardSelectedVehicleIndex;
+    if (timeEnergySelecting) {
+      const amount=timeEnergyAllocation()?.amount || 0;
+      void animateSelectedVehicleCharge(index, {friendship:Math.min(amount,5),energy:amount}, () => applyTimeEnergyCharge(index));
+      return;
     }
+    if (questBonusSelecting) {
+      stopQuestBonusTimer();
+      const amounts=phonicsGrowthAmounts();
+      void animateSelectedVehicleCharge(index, amounts, () => applyPhonicsRewardGrowth(index,showPhonicsCollectionHandoff));
+      return;
+    }
+    applyPhonicsRewardGrowth(index,showPhonicsCollectionHandoff);
   });
   $("collection-exit-no").addEventListener("click", closeCollectionExit);
   $("collection-exit-yes").addEventListener("click", () => { $("collection-exit-confirm").hidden = true; acknowledgeCollectionCategoryTabs(); endToModeSelect(); });

@@ -64,7 +64,7 @@ test("quest reward quantity and timer fallback remain separate from phonics", ()
   assert.match(app, /const candidates = collectionDisplayOrder\.filter\(index => vehicleProgress\(index\)\.discovered\)/);
   assert.match(app, /Math\.floor\(Math\.random\(\) \* candidates\.length\)/);
   assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:choice,skipSearch:true\}\)/);
-  assert.match(app, /return progress\.friendly \? .エネルギー \+\$\{amounts\.energy\}. : .ハート \+\$\{amounts\.friendship\}./);
+  assert.match(app, /const amounts=phonicsGrowthAmounts\(\)/);
 });
 
 test("tablet-only ruby and highest-priority quest action styles remain scoped", () => {
@@ -74,10 +74,9 @@ test("tablet-only ruby and highest-priority quest action styles remain scoped", 
   assert.match(styles, /#quest-bonus-continue:not\(\[hidden\]\) \{[\s\S]*?z-index:10001 !important/);
 });
 
-test("quest chosen vehicle reuses phonics spotlight winner zoom and charging sequence", () => {
-  assert.match(app, /async function runPhonicsCrossScan\(\{selectedVehicleIndex = null, skipSearch = false\} = \{\}\)/);
-  assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:state\.phonicsRewardSelectedVehicleIndex,skipSearch:true\}\)/);
-  assert.match(app, /applyPhonicsRewardGrowth\(vehicleIndex, showPhonicsCollectionHandoff\)/);
+test("quest chosen vehicle reuses shared spotlight zoom and charging", () => {
+  assert.match(app, /animateSelectedVehicleCharge\(index, amounts, \(\) => applyPhonicsRewardGrowth\(index,showPhonicsCollectionHandoff\)\)/);
+  assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:choice,skipSearch:true\}\)/);
 });
 
 test("quest button visibility is based on daily completion and active profile claim, not animations", () => {
