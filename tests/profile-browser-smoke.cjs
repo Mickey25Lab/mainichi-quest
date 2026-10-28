@@ -468,7 +468,7 @@ test("completed quest offers a chosen vehicle charge once, surviving reload", as
   const date = await page.evaluate(() => {
     const store = window.MQProfileStorage.createProfileStorage(localStorage);
     const profileId = store.getActiveProfileId();
-    const modes = ["numbercards","counting1","counting2","multiplication","multiplication2x2","multiplication2x2-unguided","normal","longdivision","phonics-part-1","phonics-part-2","phonics-part-3","phonics-part-4","phonics-part-5","phonics-review"];
+    const modes = ["numbercards","counting1","counting2","multiplication","multiplication2x2","multiplication2x2-unguided","multiplication2x2-zero","normal","longdivision","phonics-part-1","phonics-part-2","phonics-part-3","phonics-part-4","phonics-part-5","phonics-review"];
     const dailyTargetCounts = Object.fromEntries(modes.map((mode) => [mode,mode === "normal" ? 1 : 0]));
     store.setProfileLearningSettings(profileId,{...store.getProfileLearningSettings(profileId),dailyTargetCounts});
     const parts = new Intl.DateTimeFormat("en-US", {timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
