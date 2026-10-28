@@ -5720,6 +5720,82 @@ button, input { font: inherit; }
 .parent-all-modes-off { display:block; width:100%; max-width:760px; margin:16px auto 22px; padding:16px 24px; border:2px solid #87b6d5; border-radius:14px; color:#18445e; background:#eef8ff; font-size:20px; font-weight:800; cursor:pointer; }
 .parent-all-modes-off:active { transform:translateY(1px); }
 
+/* Quest bonus garage title: single line with a readable ruby, not the phonics two-line title. */
+.collection-screen.is-phonics-reward-select #collection-header-title:has(ruby) {
+  white-space:nowrap;
+  font-style:normal;
+  font-size:34px;
+  letter-spacing:0;
+  line-height:1.35;
+}
+.collection-screen.is-phonics-reward-select #collection-header-title:has(ruby) rt { font-size:.36em; }
+/* Readable everyday typography replaces the outlined, decorative victory lettering. */
+.mode-select-mission-complete strong,
+.mode-select-mission-complete strong .mission-title-line {
+  font-family:"Noto Sans JP",sans-serif;
+  font-weight:900;
+  -webkit-text-stroke:0;
+  text-shadow:0 3px 5px rgba(4,34,66,.45);
+  letter-spacing:0;
+}
+
+/* Quest reward, unlike the phonics scanner, has a strict 30-second clock. */
+.collection-screen.is-quest-reward-select .collection-stage > .collection-time-panel:not(.collection-capsule-time) {
+  display:flex !important;
+  z-index:25;
+}
+/* iPad WebKit adds more ruby leading and may push the continuation below
+   the fixed-size, overflow-hidden completion panel. Keep desktop unchanged. */
+@media (pointer:coarse) and (max-width:1199px) {
+  .mode-select-screen > .mode-select-mission-complete {
+    gap:16px;
+    padding:38px 45px;
+    overflow:visible;
+  }
+  .mode-select-mission-complete rt {
+    position:relative;
+    top:.25em;
+    line-height:1;
+  }
+  #quest-bonus-continue:not([hidden]) {
+    flex-shrink:0;
+    margin-top:4px;
+  }
+}
+
+/* On touch tablets keep the completion dialog and its action above every
+   mode-select stage layer. Desktop styles remain unchanged. */
+@media (pointer:coarse) and (max-width:1199px) {
+  .mode-select-screen > .mode-select-mission-complete,
+  .mode-select-screen > .mode-select-mission-complete.is-final {
+    z-index:10000 !important;
+    isolation:isolate;
+  }
+  #quest-bonus-continue:not([hidden]) {
+    position:relative !important;
+    z-index:10001 !important;
+    pointer-events:auto !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+  /* iPad WebKit reserves extra ruby line leading: nudge only its annotations. */
+  .phonics-intro-screen ruby rt,
+  .phonics-intro-stage ruby rt {
+    position:relative;
+    top:.25em;
+    line-height:1;
+  }
+}
+
+/* Bulk-disable is a neutral parent-settings utility, not a primary action. */
+.parent-all-modes-off {
+  background:#697987 !important;
+  color:#fff !important;
+  border-color:#84919c !important;
+  box-shadow:none !important;
+}
+.parent-all-modes-off:active { background:#52616d !important; }
+
 /* Time bonus uses the garage cards but must retain its own visible 30s clock. */
 .collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-stage > .collection-time-panel:not(.collection-capsule-time) { display:flex !important; z-index:35; }
 .collection-screen.is-time-bonus-select .collection-header h2 { white-space:normal; line-height:1.23; }
