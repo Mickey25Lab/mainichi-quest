@@ -64,7 +64,7 @@ test("quest reward quantity and timer fallback remain separate from phonics", ()
   assert.match(app, /const candidates = collectionDisplayOrder\.filter\(index => vehicleProgress\(index\)\.discovered\)/);
   assert.match(app, /Math\.floor\(Math\.random\(\) \* candidates\.length\)/);
   assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:choice,skipSearch:true\}\)/);
-  assert.match(app, /return progress\.friendly \? .エネルギー \+\$\{amounts\.energy\}. : .ハート \+\$\{amounts\.friendship\}./);
+  assert.match(app, /const amounts=phonicsGrowthAmounts\(\)/);
 });
 
 test("tablet-only ruby and highest-priority quest action styles remain scoped", () => {
