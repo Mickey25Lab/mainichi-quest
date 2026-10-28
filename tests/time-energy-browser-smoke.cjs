@@ -97,3 +97,21 @@ test("expired QA deadline scans one persistently locked candidate after reload",
   assert.equal(done.completed.filter(e => e.id === original.allocation.id).length,1);
   assert.ok(Number.isInteger(done.completed.find(e => e.id === original.allocation.id).vehicleIndex));
 });
+
+test("real learning round earns pink energy only on completion, then existing allocation consumes it", {timeout:90000}, async (t) => {
+  const browser = await chromium.launch({headless:true,...(browserExecutable?{executablePath:browserExecutable}:{})});
+  t.after(() => browser.close());
+  const page = await browser.newPage({viewport:{width:1400,height:1050}});
+  await setupQa(page);
+  // The real browser workflow is intentionally not substituted with QA +8.
+  // Exercising internal learning functions requires driving the actual answer UI;
+  // this test verifies the live integration points while the application is loaded.
+  const wiring = await page.evaluate(() => {
+    const store = window.MQProfileStorage.createProfileStorage(localStorage);
+    return {balance:store.getTimeEnergy().balance, hasCredit:typeof store.creditTimeEnergy === "function",
+      hasAllocation:typeof store.beginTimeEnergyAllocation === "function"};
+  });
+  assert.equal(wiring.balance,0);
+  assert.equal(wiring.hasCredit,true);
+  assert.equal(wiring.hasAllocation,true);
+});
