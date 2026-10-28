@@ -3099,17 +3099,18 @@
     }
     row.cells[step.cellIndex] = String(number);
     row.wrongIndexes.delete(step.cellIndex);
-    if (model.specialZero && step.rowIndex === 0 && step.cellIndex === row.value.length - 1) {
+    const confirmedSpecialZero = model.specialZero && step.rowIndex === 0 && step.cellIndex === row.value.length - 1;
+    model.history.push({ ...step });
+    model.inputStep += 1;
+    advanceTwoDigitMultiplicationStep(model);
+    renderTwoDigitMultiplication();
+    if (confirmedSpecialZero) {
       const slot = row.holder.children[step.cellIndex];
       if (slot) {
         playTwoDigitRowCorrectEffect({ holder: slot });
         playSimpleCorrectSound();
       }
     }
-    model.history.push({ ...step });
-    model.inputStep += 1;
-    advanceTwoDigitMultiplicationStep(model);
-    renderTwoDigitMultiplication();
     if (!model.specialZero && step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) {
       checkTwoDigitIntermediateRow(model, step.rowIndex);
     }
