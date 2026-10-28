@@ -98,7 +98,7 @@ test("zero mode has a separate label and immediate correction for zero-only step
 
 test("zero multiplier uses a single row and grades the rest only after all digits are entered", () => {
   assert.match(app, /value: specialZero \? totalText : partial1Text/);
-  assert.match(app, /specialZero \? \[\.\.\.totalText\]\.map/);
+  assert.match(app, /specialZero \? \[totalText\.length - 1, \.\.\.twoDigitRowOrder\(question\.multiplicand, question\.partial2\)\]/);
   assert.match(app, /if \(specialZero && rowIndex > 0\) return/);
   assert.match(app, /if \(!model\.specialZero && step\.rowIndex/);
   assert.match(app, /model\.specialZero \? model\.rows\[0\]/);
@@ -106,4 +106,14 @@ test("zero multiplier uses a single row and grades the rest only after all digit
   assert.match(css, /is-zero-single-row #multiplication-2x2-partial-2/);
   assert.match(css, /is-zero-single-row #multiplication-2x2-total/);
   assert.match(css, /is-zero-single-row \.multiplication-2x2-bar-sum/);
+});
+
+test("zero mode keeps the ordinary final multiplication left-to-right digit block", () => {
+  const calculationInputOrder = (value, count) => {
+    const n = String(value).length;
+    const lower = Math.min(count, n - 1);
+    return [...Array(lower)].map((_, i) => n - i - 1).concat([...Array(n - lower)].map((_, i) => i));
+  };
+  const order = [3, ...calculationInputOrder(245, 1)];
+  assert.deepEqual(order, [3, 2, 0, 1]); // 49×50: initial 0, then 5, then 2→4 (45 is written 4 then 5, final 20 starts with 2)
 });
