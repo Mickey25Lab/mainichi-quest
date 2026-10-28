@@ -113,3 +113,52 @@ test("time-energy storage and allocation APIs are available in the loaded browse
   assert.equal(wiring.hasCredit,true);
   assert.equal(wiring.hasAllocation,true);
 });
+
+test("real ten-answer division round credits earned pink energy only at result screen", {timeout:180000}, async t => {
+  const browser=await chromium.launch({headless:true,...(browserExecutable?{executablePath:browserExecutable}:{})});
+  t.after(()=>browser.close());
+  const page=await browser.newPage({viewport:{width:1400,height:1050}});
+  await page.goto(baseUrl);
+  await page.locator("#profile-setup-overlay").waitFor({state:"visible"});
+  await page.locator("#profile-setup-name").fill("時間獲得実プレイ");
+  await page.locator("#profile-setup-form button[type=submit]").click();
+  await page.locator("#profile-setup-overlay").waitFor({state:"hidden"});
+  // Pre-unlock friendly stage for all vehicles to isolate time eligibility.
+  await page.evaluate(()=>{
+    const store=window.MQProfileStorage.createProfileStorage(localStorage);
+    store.setRewardProgress(Array.from({length:20},()=>({
+      discovered:true,friendship:5,friendly:true,stage:2,energy:0,masterMedal:false
+    })));
+  });
+  await page.reload();
+  await page.locator("#start-button").click();
+  await page.locator("#mode-select-normal").click();
+  await page.locator("#play-screen.active").waitFor();
+  const balance=()=>page.evaluate(()=>window.MQProfileStorage.createProfileStorage(localStorage).getTimeEnergy().balance);
+  assert.equal(await balance(),0);
+  const clickDigits=async value=>{
+    for(const digit of String(value)) await page.locator('.number-key[data-number="'+digit+'"]').click();
+  };
+  for(let i=1;i<=10;i++){
+    await page.waitForFunction(n=>document.querySelector("#progress-count")?.textContent?.trim()===n+" / 10",i);
+    const problem=await page.locator("#problem-card").innerText();
+    const match=problem.match(/(\d+)\s*÷\s*(\d+)/);
+    assert.ok(match,"division question must be visible: "+problem);
+    const dividend=Number(match[1]),divisor=Number(match[2]);
+    await clickDigits(Math.floor(dividend/divisor));
+    if(dividend%divisor===0) await page.locator("#no-remainder-key").click();
+    else {
+      await page.locator("#remainder-key").click();
+      await clickDigits(dividend%divisor);
+    }
+    if(i<10) {
+      await page.waitForFunction(n=>document.querySelector("#progress-count")?.textContent?.trim()===(n+1)+" / 10",i,{timeout:25000});
+      assert.equal(await balance(),0,"time energy must remain provisional during the round");
+    }
+  }
+  await page.locator("#result-screen.active").waitFor({timeout:30000});
+  const earned=await balance();
+  assert.ok(earned>0,"at least one qualifying timed answer should earn pink energy");
+  await page.reload();
+  assert.equal(await balance(),earned,"completed round credit survives reload");
+});
