@@ -2941,21 +2941,22 @@
     const partial1Text = String(question.partial1);
     const partial2Text = String(question.partial2);
     const totalText = String(question.product);
+    const specialZero = state.mode === "multiplication2x2-zero" && question.multiplier % 10 === 0;
     const rows = [
-      { key: "partial1", value: partial1Text, holder: $("multiplication-2x2-partial-1"), order: twoDigitRowOrder(question.multiplicand, question.partial1) },
+      { key: "partial1", value: specialZero ? totalText : partial1Text, holder: $("multiplication-2x2-partial-1"), order: specialZero ? [...totalText].map((_, i) => totalText.length - i - 1) : twoDigitRowOrder(question.multiplicand, question.partial1) },
       { key: "partial2", value: partial2Text, holder: $("multiplication-2x2-partial-2"), order: twoDigitRowOrder(question.multiplicand, question.partial2) },
       { key: "total", value: totalText, holder: $("multiplication-2x2-total"), order: twoDigitTotalInputOrder(question) }
     ];
     rows.forEach((row) => makeTwoDigitSlots(row.holder, row.value.length));
     makeMultiplicationDigits($("multiplication-2x2-multiplicand"), question.multiplicand);
     makeMultiplicationDigits($("multiplication-2x2-multiplier"), question.multiplier);
-    const specialZero = state.mode === "multiplication2x2-zero" && question.multiplier % 10 === 0;
+    $("multiplication-2x2-panel").classList.toggle("is-zero-single-row", specialZero);
     $("multiplication-2x2-multiplier").lastElementChild?.classList.toggle("is-special-zero", specialZero);
-    $("multiplication-2x2-partial-1").style.gridColumn = `${5 - partial1Text.length} / 5`;
+    $("multiplication-2x2-partial-1").style.gridColumn = `${5 - (specialZero ? totalText.length : partial1Text.length)} / 5`;
     $("multiplication-2x2-partial-2").style.gridColumn = `${4 - partial2Text.length} / 4`;
     $("multiplication-2x2-total").style.gridColumn = `${5 - totalText.length} / 5`;
     const inputOrder = [];
-    rows.forEach((row, rowIndex) => row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })));
+    rows.forEach((row, rowIndex) => { if (specialZero && rowIndex > 0) return; row.order.forEach((cellIndex) => inputOrder.push({ rowIndex, cellIndex })); });
     state.multiplication2x2 = {
       rows: rows.map((row) => ({
         ...row,
@@ -2982,7 +2983,7 @@
         slot.classList.toggle("is-active", Boolean(active && active.rowIndex === rowIndex && active.cellIndex === cellIndex));
         slot.classList.toggle("is-hinted", row.hintedIndexes.has(cellIndex));
         slot.classList.toggle("is-step-wrong-digit", row.wrongIndexes.has(cellIndex));
-        slot.classList.toggle("is-special-zero", model.specialZero && rowIndex === 0 && row.value[cellIndex] === "0");
+        slot.classList.toggle("is-special-zero", model.specialZero && rowIndex === 0 && cellIndex === row.value.length - 1);
         slot.classList.toggle("is-special-zero-wrong", model.specialZero && rowIndex === 0 && row.wrongIndexes.has(cellIndex));
       });
     });
@@ -3089,7 +3090,7 @@
     noteQuestionActivity();
     const step = model.inputOrder[model.inputStep];
     const row = model.rows[step.rowIndex];
-    if (model.specialZero && step.rowIndex === 0 && row.value[step.cellIndex] === "0" && String(number) !== "0") {
+    if (model.specialZero && step.rowIndex === 0 && step.cellIndex === row.value.length - 1 && String(number) !== "0") {
       row.wrongIndexes.add(step.cellIndex);
       if (state.current) { state.current.stepCorrectionUsed = true; state.current.progressPenalty = true; }
       renderTwoDigitMultiplication();
@@ -3098,7 +3099,7 @@
     }
     row.cells[step.cellIndex] = String(number);
     row.wrongIndexes.delete(step.cellIndex);
-    if (model.specialZero && step.rowIndex === 0 && row.value[step.cellIndex] === "0") {
+    if (model.specialZero && step.rowIndex === 0 && step.cellIndex === row.value.length - 1) {
       const slot = row.holder.children[step.cellIndex];
       if (slot) {
         slot.classList.remove("is-special-zero-sparkle");
@@ -3112,12 +3113,12 @@
     model.inputStep += 1;
     advanceTwoDigitMultiplicationStep(model);
     renderTwoDigitMultiplication();
-    if (step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) {
+    if (!model.specialZero && step.rowIndex < model.rows.length - 1 && row.cells.every(Boolean)) {
       checkTwoDigitIntermediateRow(model, step.rowIndex);
     }
     if (model.inputStep >= model.inputOrder.length) {
-      const allRowsCorrect = model.rows.every((currentRow) => currentRow.cells.join("") === currentRow.value);
-      const total = Number(model.rows[2].cells.join(""));
+      const allRowsCorrect = model.specialZero ? model.rows[0].cells.join("") === model.rows[0].value : model.rows.every((currentRow) => currentRow.cells.join("") === currentRow.value);
+      const total = Number(model.rows[model.specialZero ? 0 : 2].cells.join(""));
       judge({ quotient: allRowsCorrect ? total : total + 1, remainder: 0, usedRemainder: false });
     }
   }
@@ -3134,7 +3135,7 @@
   }
   function fillTwoDigitMultiplicationAnswer(question) {
     const model = state.multiplication2x2; if (!model) return;
-    const values = [String(question.partial1), String(question.partial2), String(question.product)];
+    const values = model.specialZero ? [String(question.product), String(question.partial2), String(question.product)] : [String(question.partial1), String(question.partial2), String(question.product)];
     model.rows.forEach((row, rowIndex) => { row.cells = values[rowIndex].split(""); });
     model.inputStep = model.inputOrder.length;
     renderTwoDigitMultiplication();
