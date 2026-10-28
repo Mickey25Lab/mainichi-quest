@@ -332,7 +332,8 @@
       discardRoundTransaction();
       throw new Error("Active profile changed during a round");
     }
-    roundTransaction = null;
+    // Preserve the pending round until every required save succeeds.
+    // On a retry, the PR4 credit event ID makes the time-energy write idempotent.
     saveCollectionProgress();
     saveRecentVehicles();
     for (const acquisition of pending.acquisitionHistory) {
@@ -344,6 +345,7 @@
     if (pending.timeEnergyAmount > 0) {
       profileStore.creditTimeEnergy(pending.timeEnergyAmount, pending.timeEnergyEventId);
     }
+    roundTransaction = null;
   }
   let timeEnergySelecting = false;
   let timeEnergyTimer = null;
