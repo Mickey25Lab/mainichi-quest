@@ -610,6 +610,32 @@
   let questBonusClaimPendingDate = null;
   let questBonusSelectionDate = null;
   let questBonusSelectionProfileId = null;
+  let questBonusTimerId = null;
+  let questBonusDeadline = 0;
+  function stopQuestBonusTimer() {
+    if (questBonusTimerId !== null) window.clearInterval(questBonusTimerId);
+    questBonusTimerId = null;
+    questBonusDeadline = 0;
+  }
+  function updateQuestBonusTimer() {
+    if (!questBonusSelecting || questBonusDeadline === 0) { stopQuestBonusTimer(); return; }
+    const remaining = Math.max(0, Math.ceil((questBonusDeadline - Date.now()) / 1000));
+    const displayed = remaining <= 10 ? remaining : Math.ceil(remaining / 10) * 10;
+    $("collection-seconds").textContent = String(displayed);
+    if (remaining !== 0) return;
+    stopQuestBonusTimer();
+    const candidates = collectionDisplayOrder.filter(index => vehicleProgress(index).discovered);
+    if (!candidates.length) return;
+    $("phonics-grow-confirm").hidden = true;
+    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+    void runPhonicsCrossScan({selectedVehicleIndex:choice,skipSearch:true});
+  }
+  function startQuestBonusTimer() {
+    stopQuestBonusTimer();
+    questBonusDeadline = Date.now() + 30000;
+    updateQuestBonusTimer();
+    questBonusTimerId = window.setInterval(updateQuestBonusTimer, 200);
+  }
   function saveRewardProgress() {
     if (roundTransaction) return;
     // QA presets must never become permanent player points.
@@ -2718,7 +2744,19 @@
     const banner = $("mode-select-mission-complete");
     banner.hidden = !overview.allComplete;
     banner.classList.toggle("is-final", overview.allComplete && !overview.freePlayEnabled);
-    $("quest-bonus-continue").hidden = !questBonusAvailable();
+    const questButton = $("quest-bonus-continue");
+    const questClaimedToday = profileStore.getQuestBonusClaimDate() === japanDateKey();
+    const questQaEnabled = qaProgressModeEnabled();
+    const questAvailable = overview.allComplete && !questClaimedToday && !questQaEnabled;
+    // The finished day and profile-specific claim determine visibility.
+    // In-flight animation/transaction flags must never hide the earned action.
+    questButton.hidden = !questAvailable;
+    questButton.dataset.questReason = !overview.allComplete ? "incomplete"
+      : questClaimedToday ? "claimed-today"
+      : questQaEnabled ? "qa"
+      : "available";
+    questButton.dataset.questProfile = profileStore.getActiveProfileId() || "";
+    questButton.dataset.questClaimDate = profileStore.getQuestBonusClaimDate() || "";
   }
 
   function isModeAvailableForMission(mode) {
@@ -4540,6 +4578,7 @@
     const selectionMode = mode === "phonics-reward-select";
     // Use the regular garage background in both modes.
     $("collection-screen").classList.toggle("is-phonics-reward-select", selectionMode);
+    if (!selectionMode) $("collection-screen").classList.remove("is-quest-reward-select");
     if (selectionMode) $("collection-header-title").innerHTML = "どののりものが<ruby>育<rt>そだ</rt></ruby>つかな？";
     else renderCollectionBaseTitle();
     if (!selectionMode) {
@@ -4583,14 +4622,18 @@
     return (eligible[Math.floor(Math.random() * eligible.length)] || vehicles[0]).index;
   }
   function scanPause(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
-  async function runPhonicsCrossScan() {
+  async function runPhonicsCrossScan({selectedVehicleIndex = null, skipSearch = false} = {}) {
     if (state.collectionMode !== "phonics-reward-select" || state.phonicsScanInProgress) return;
     state.phonicsScanInProgress = true;
     stopCollectionTimer();
     $("phonics-reward-intro").hidden = true;
     $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-    const vehicleIndex = randomPhonicsRewardVehicleIndex();
+    const vehicleIndex = Number.isInteger(selectedVehicleIndex) ? selectedVehicleIndex : randomPhonicsRewardVehicleIndex();
     state.phonicsRewardSelectedVehicleIndex = vehicleIndex;
+    if (skipSearch) {
+      stopQuestBonusTimer();
+      $("phonics-grow-confirm").hidden = true;
+    }
     const grid = $("collection-grid");
     const cards = [...grid.querySelectorAll(".collection-card")];
     const target = cards.find((card) => Number(card.dataset.vehicle) === vehicleIndex);
@@ -4648,6 +4691,7 @@
     });
     try {
       // Two bounces: far edge, near edge, then selected column.
+      if (!skipSearch) {
       await move(column,"X",centerX,w);
       column.classList.add("is-locked");
       // Preserve the already-selected column while searching for the row.
@@ -4661,6 +4705,7 @@
       await move(row,"Y",centerY,h);
       row.classList.add("is-locked");
       await scanPause(290);
+      }
       // Flash ONLY after the row and column are both fully resolved.
       Object.assign(impact.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
       impact.classList.add("is-revealed");
@@ -4671,7 +4716,7 @@
       darkness.style.maskImage="none";
       column.style.opacity="0";
       row.style.opacity="0";
-      await scanPause(900);
+      await scanPause(skipSearch ? 400 : 900);
       // Animate a visual clone, keeping the actual collection card and artwork loaded.
       const showcase = document.createElement("div");
       showcase.id = "phonics-scan-showcase";
@@ -4784,7 +4829,7 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:10 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 5 };
+    if (questBonusSelecting) return { friendship:5, energy:8 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 2 };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
       : { friendship:5, energy:25 };
@@ -4894,11 +4939,13 @@
     if (!progress.discovered) return;
     state.collectionClosing = true;
     stopCollectionTimer();
+    if (questBonusSelecting) stopQuestBonusTimer();
     $("phonics-grow-confirm").hidden = true;
     state.phonicsRewardSelectedVehicleIndex = null;
     state.phonicsLastRewardVehicleIndex = vehicleIndex;
     const amounts = phonicsGrowthAmounts();
     if (questBonusSelecting) {
+      stopQuestBonusTimer();
       if (!questBonusSelectionDate || questBonusSelectionProfileId !== profileStore.getActiveProfileId()
         || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
       questBonusClaimPendingDate = questBonusSelectionDate;
@@ -4956,9 +5003,11 @@
     showScreen("collection-screen");
     $("collection-screen").classList.add("is-phonics-reward-intro-open");
     $("phonics-reward-intro").hidden = quest;
+    $("collection-screen").classList.toggle("is-quest-reward-select", quest);
     if (quest) {
       $("collection-screen").classList.remove("is-phonics-reward-intro-open");
-      $("collection-header-title").textContent = "クエスト達成！ そだてるのりものをえらぼう！";
+      $("collection-header-title").innerHTML = `クエスト<ruby>達成<rt>たっせい</rt></ruby>！ そだてるのりものをえらぼう！`;
+      startQuestBonusTimer();
     } else $("phonics-reward-intro-continue").focus();
   }
 
@@ -6769,6 +6818,7 @@
       return;
     }
     if (questBonusSelecting) {
+      stopQuestBonusTimer();
       const amounts=phonicsGrowthAmounts();
       void animateSelectedVehicleCharge(index, amounts, () => applyPhonicsRewardGrowth(index,showPhonicsCollectionHandoff));
       return;
