@@ -56,3 +56,33 @@ test("parent can set every mode to zero without persisting before Save", () => {
   assert.doesNotMatch(implementation, /setProfileLearningSettings/);
   assert.match(app, /parent-all-modes-off"\)\.addEventListener\("click", setAllParentTargetsToZero\)/);
 });
+
+test("quest reward quantity and timer fallback remain separate from phonics", () => {
+  assert.match(app, /if \(questBonusSelecting\) return \{ friendship:5, energy:8 \+ \(/);
+  assert.match(app, /function startQuestBonusTimer\(\) \{[^]*?questBonusDeadline = Date\.now\(\) \+ 30000/);
+  assert.match(app, /const displayed = remaining <= 10 \? remaining : Math\.ceil\(remaining \/ 10\) \* 10/);
+  assert.match(app, /const candidates = collectionDisplayOrder\.filter\(index => vehicleProgress\(index\)\.discovered\)/);
+  assert.match(app, /Math\.floor\(Math\.random\(\) \* candidates\.length\)/);
+  assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:choice,skipSearch:true\}\)/);
+  assert.match(app, /return progress\.friendly \? .エネルギー \+\$\{amounts\.energy\}. : .ハート \+\$\{amounts\.friendship\}./);
+});
+
+test("tablet-only ruby and highest-priority quest action styles remain scoped", () => {
+  const styles = fs.readFileSync(require("node:path").join(__dirname, "../dist/styles.css"), "utf8");
+  assert.match(styles, /@media \(pointer:coarse\) and \(max-width:1199px\)/);
+  assert.match(styles, /\.phonics-intro-screen ruby rt,[\s\S]*?\.phonics-intro-stage ruby rt/);
+  assert.match(styles, /#quest-bonus-continue:not\(\[hidden\]\) \{[\s\S]*?z-index:10001 !important/);
+});
+
+test("quest chosen vehicle reuses phonics spotlight winner zoom and charging sequence", () => {
+  assert.match(app, /async function runPhonicsCrossScan\(\{selectedVehicleIndex = null, skipSearch = false\} = \{\}\)/);
+  assert.match(app, /runPhonicsCrossScan\(\{selectedVehicleIndex:state\.phonicsRewardSelectedVehicleIndex,skipSearch:true\}\)/);
+  assert.match(app, /applyPhonicsRewardGrowth\(vehicleIndex, showPhonicsCollectionHandoff\)/);
+});
+
+test("quest button visibility is based on daily completion and active profile claim, not animations", () => {
+  assert.match(app, /const questAvailable = overview\.allComplete && !questClaimedToday && !questQaEnabled/);
+  assert.match(app, /questButton\.hidden = !questAvailable/);
+  assert.match(app, /questButton\.dataset\.questReason =/);
+  assert.match(app, /questButton\.dataset\.questProfile = profileStore\.getActiveProfileId\(\)/);
+});
