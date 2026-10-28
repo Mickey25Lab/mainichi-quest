@@ -110,3 +110,17 @@ test("provisional pink energy stays with original profile and does not survive r
   const fresh = createHarness(h.data);
   assert.equal(fresh.data.timeBalance, 0);
 });
+
+test("failed pink credit retains completed round for a safe retry", () => {
+  const h = createHarness();
+  h.execute("beginRoundTransaction(); roundTransaction.timeEnergyAmount = 4");
+  const credit = h.context.profileStore.creditTimeEnergy;
+  h.context.profileStore.creditTimeEnergy = () => { throw new Error("storage unavailable"); };
+  assert.throws(() => h.execute("commitRoundTransaction()"), /storage unavailable/);
+  assert.equal(h.data.timeBalance, 0);
+  assert.equal(h.execute("roundTransaction.timeEnergyAmount"), 4);
+  h.context.profileStore.creditTimeEnergy = credit;
+  h.execute("commitRoundTransaction(); commitRoundTransaction()");
+  assert.equal(h.data.timeBalance, 4);
+  assert.equal(h.calls.filter(x => x === "time-credit").length, 1);
+});
