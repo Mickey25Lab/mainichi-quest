@@ -320,7 +320,9 @@
       rewardProgress: state.rewardProgress.map((entry) => ({ ...entry })),
       collection: [...state.collection],
       recentVehicleHistory: [...state.recentVehicleHistory],
-      acquisitionHistory: []
+      acquisitionHistory: [],
+      timeEnergyAmount: 0,
+      timeEnergyEventId: "round-" + (globalThis.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2))
     };
   }
   function commitRoundTransaction() {
@@ -336,6 +338,11 @@
     for (const acquisition of pending.acquisitionHistory) {
       try { profileStore.appendAcquisitionHistory(acquisition); }
       catch (error) { console.error("Acquisition history save failed", error); }
+    }
+    // A completed round is the only place where provisional pink energy is credited.
+    // PR4's credit event ID makes repeated completion idempotent.
+    if (pending.timeEnergyAmount > 0) {
+      profileStore.creditTimeEnergy(pending.timeEnergyAmount, pending.timeEnergyEventId);
     }
   }
   let timeEnergySelecting = false;
@@ -3978,12 +3985,12 @@
       const baseEnergyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
       energyGain = scaledEnergyGain(baseEnergyGain, state.mode);
       const timeBonus = getTimeBonusForCorrect(question);
-      if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
-      else {
-        const gain = applyEnergyGain(progress, vehicleIndex, energyGain);
-        reward = gain.reward;
-        energyVisual = { vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
-      }
+      // Time-qualified answers earn pink time energy, never an extra blue +1.
+      // Do not credit persistent balance until the entire round (including retry) ends.
+      if (timeBonus && roundTransaction) roundTransaction.timeEnergyAmount += timeBonus.amount;
+      const gain = applyEnergyGain(progress, vehicleIndex, energyGain);
+      reward = gain.reward;
+      energyVisual = { vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
     }
     if (vehicleIndex === state.currentVehicleIndex) state.currentStage = currentStageForVehicle(vehicleIndex);
     // Ordinary point gains remain progress-only; acquisitions persist inside
