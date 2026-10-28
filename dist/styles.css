@@ -5727,3 +5727,7 @@ button, input { font: inherit; }
 /* Raise the two-line bonus heading clear of the first card row. */
 .collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header h2 { position:relative; top:-18px; }
 #phonics-grow-amount { white-space:pre-line; }
+
+/* Center the two-line time-bonus heading within the gap above the garage grid. */
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header { min-height:124px; display:flex; align-items:center; justify-content:center; }
+.collection-screen.is-phonics-reward-select.is-time-bonus-select .collection-header h2 { position:static; top:auto; margin:0; padding:2px 18px; font-size:37px; line-height:1.12; min-width:0; }
