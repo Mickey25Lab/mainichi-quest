@@ -3104,6 +3104,7 @@
         slot.classList.remove("is-special-zero-sparkle");
         void slot.offsetWidth;
         slot.classList.add("is-special-zero-sparkle");
+        playSimpleCorrectSound();
         window.setTimeout(() => slot.classList.remove("is-special-zero-sparkle"), 700);
       }
     }
