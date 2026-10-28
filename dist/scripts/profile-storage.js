@@ -63,6 +63,20 @@
     });
   }
 
+  function normalizeTimeEnergy(value) {
+    const raw = value && typeof value === "object" ? value : {};
+    const balance = Number.isSafeInteger(raw.balance) && raw.balance >= 0 ? raw.balance : 0;
+    const allocation = raw.allocation && typeof raw.allocation === "object"
+      && typeof raw.allocation.id === "string" && Number.isSafeInteger(raw.allocation.amount)
+      && raw.allocation.amount > 0 && Number.isFinite(raw.allocation.deadline)
+      ? { id:raw.allocation.id, amount:raw.allocation.amount, deadline:raw.allocation.deadline,
+        vehicleIndex:Number.isInteger(raw.allocation.vehicleIndex) ? raw.allocation.vehicleIndex : null } : null;
+    const completed = Array.isArray(raw.completed) ? raw.completed.filter((item) =>
+      item && typeof item.id === "string" && Number.isInteger(item.vehicleIndex)
+      && Number.isSafeInteger(item.amount) && item.amount > 0).slice(-100) : [];
+    return { balance, allocation, completed };
+  }
+
   function emptyProfile(displayName, profileId, timestamp) {
     return {
       profileId,
@@ -77,6 +91,7 @@
         openingMovieLastPlayedJst: null,
         dailyMission: { date: null, completedCounts: {} },
         questBonusClaimDate: null,
+        timeEnergy: { balance: 0, allocation: null, completed: [] },
         collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] },
         collectionCategorySeen: [],
         legacyHistory: null,
@@ -140,6 +155,7 @@
     profile.progress.topCollectionLastUsedJst = typeof value.progress?.topCollectionLastUsedJst === "string" ? value.progress.topCollectionLastUsedJst : null;
     profile.progress.openingMovieLastPlayedJst = typeof value.progress?.openingMovieLastPlayedJst === "string" ? value.progress.openingMovieLastPlayedJst : null;
     profile.progress.questBonusClaimDate = typeof value.progress?.questBonusClaimDate === "string" ? value.progress.questBonusClaimDate : null;
+    profile.progress.timeEnergy = normalizeTimeEnergy(value.progress?.timeEnergy);
     const dailyMission = value.progress?.dailyMission;
     profile.progress.dailyMission = {
       date: typeof dailyMission?.date === "string" ? dailyMission.date : null,
@@ -409,6 +425,110 @@
       }).pointLedger;
     }
 
+    // Profile-scoped time energy. All commits update balance and vehicle progress
+    // in one registry write. QA uses its separate storage key, never production progress.
+    function getTimeEnergy() {
+      const qa = getActiveQaState();
+      return normalizeTimeEnergy(qa.qaEnabled ? qa.timeEnergy : getActiveProfile()?.progress.timeEnergy);
+    }
+    function mutateTimeEnergy(mutator) {
+      const qa = getActiveQaState();
+      if (qa.qaEnabled) {
+        const state = normalizeTimeEnergy(qa.timeEnergy);
+        const result = mutator(state, null);
+        setActiveQaState({ ...qa, timeEnergy: state });
+        return result;
+      }
+      let result;
+      mutateActiveProfile((profile) => {
+        profile.progress.timeEnergy = normalizeTimeEnergy(profile.progress.timeEnergy);
+        result = mutator(profile.progress.timeEnergy, profile);
+      });
+      return result;
+    }
+    function creditTimeEnergy(amount, eventId) {
+      if (!Number.isSafeInteger(amount) || amount <= 0 || typeof eventId !== "string" || !eventId) throw new Error("invalid time energy credit");
+      return mutateTimeEnergy((state) => {
+        if (state.completed.some((item) => item.id === "credit:" + eventId)) return false;
+        if (!Number.isSafeInteger(state.balance + amount)) throw new Error("time energy overflow");
+        state.balance += amount;
+        state.completed.push({ id:"credit:" + eventId, amount, vehicleIndex:-1 });
+        state.completed = state.completed.slice(-100);
+        return true;
+      });
+    }
+    function beginTimeEnergyAllocation(eventId, deadline) {
+      if (typeof eventId !== "string" || !eventId || !Number.isFinite(deadline)) throw new Error("invalid allocation");
+      return mutateTimeEnergy((state) => {
+        if (state.allocation) return clone(state.allocation);
+        if (!state.balance) return null;
+        if (state.completed.some((item) => item.id === eventId)) return null;
+        state.allocation = { id:eventId, amount:state.balance, deadline, vehicleIndex:null };
+        return clone(state.allocation);
+      });
+    }
+    function lockTimeEnergyVehicle(eventId, vehicleIndex) {
+      if (!Number.isInteger(vehicleIndex) || vehicleIndex < 0 || vehicleIndex >= 20) throw new Error("invalid vehicle");
+      return mutateTimeEnergy((state) => {
+        const allocation = state.allocation;
+        if (!allocation || allocation.id !== eventId) return null;
+        if (allocation.vehicleIndex === null) allocation.vehicleIndex = vehicleIndex;
+        return clone(allocation);
+      });
+    }
+    function commitTimeEnergyAllocation(eventId, nextProgress, expectedPrevious = null) {
+      if (!Array.isArray(nextProgress) || nextProgress.length !== 20) throw new Error("invalid progress");
+      const qa = getActiveQaState();
+      if (qa.qaEnabled) {
+        const state = normalizeTimeEnergy(qa.timeEnergy);
+        if (state.completed.some((item) => item.id === eventId)) return false;
+        const allocation = state.allocation;
+        if (!allocation || allocation.id !== eventId || allocation.vehicleIndex === null) return false;
+        if (state.balance < allocation.amount) throw new Error("insufficient time energy");
+        const before = Array.isArray(qa.timeEnergyRewardProgress) ? qa.timeEnergyRewardProgress : getRewardProgress();
+        if (expectedPrevious && Array.isArray(before) && JSON.stringify(before[allocation.vehicleIndex]) !== JSON.stringify(expectedPrevious)) throw new Error("stale QA vehicle progress");
+        state.balance -= allocation.amount;
+        state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:allocation.vehicleIndex });
+        state.completed = state.completed.slice(-100);
+        state.allocation = null;
+        // The QA ledger and its vehicle state must be saved in the SAME QA-key write.
+        setActiveQaState({ ...qa, timeEnergy:state, timeEnergyRewardProgress:clone(nextProgress) });
+        return true;
+      }
+      return mutateTimeEnergy((state, profile) => {
+        if (state.completed.some((item) => item.id === eventId)) return false;
+        const allocation = state.allocation;
+        if (!allocation || allocation.id !== eventId || allocation.vehicleIndex === null) return false;
+        if (state.balance < allocation.amount) throw new Error("insufficient time energy");
+        const before = profile.progress.rewardProgressPhase1;
+        if (!Array.isArray(before) || before.length !== 20) throw new Error("missing vehicle progress");
+        const index = allocation.vehicleIndex;
+        if (expectedPrevious && JSON.stringify(before[index]) !== JSON.stringify(expectedPrevious)) throw new Error("stale vehicle progress");
+        if (JSON.stringify(before.filter((_, i) => i !== index)) !== JSON.stringify(nextProgress.filter((_, i) => i !== index))) throw new Error("unrelated vehicle progress changed");
+        state.balance -= allocation.amount;
+        state.completed.push({ id:eventId, amount:allocation.amount, vehicleIndex:index });
+        state.completed = state.completed.slice(-100);
+        state.allocation = null;
+        // Shares the point-ledger semantics of commitRewardProgressWithPoints.
+        if (!profile.pointLedger) {
+          const baseline = Array.isArray(before) ? before : [];
+          const total = baseline.reduce((sum, item) => sum + vehiclePointValue(item), 0);
+          profile.pointLedger = { schemaVersion:1, total, initialPoints:total, observedProgress:clone(baseline), nextSequence:1, recentEvents:[] };
+        }
+        const ledger = profile.pointLedger;
+        if (!Array.isArray(ledger.observedProgress)) throw new Error("invalid point ledger");
+        const delta = Math.max(0, vehiclePointValue(nextProgress[index]) - vehiclePointValue(ledger.observedProgress[index]));
+        if (delta) {
+          ledger.total += delta;
+          ledger.recentEvents.push({ id:"earned-" + ledger.nextSequence++, type:"progress", vehicleIndex:index, points:delta });
+          if (ledger.recentEvents.length > 500) ledger.recentEvents = ledger.recentEvents.slice(-500);
+        }
+        ledger.observedProgress = clone(nextProgress);
+        profile.progress.rewardProgressPhase1 = clone(nextProgress);
+        // The collection stages are refreshed by the existing collection sync path.
+        return true;
+      });
+    }
     function getRewardProgress() { return clone(getActiveProfile()?.progress.rewardProgressPhase1 ?? null); }
     function setRewardProgress(value) { return mutateActiveProfile((profile) => { profile.progress.rewardProgressPhase1 = Array.isArray(value) ? clone(value) : null; }); }
     function getProgressSnapshot() {
@@ -533,7 +653,7 @@
     function resetActiveProfileData() {
       return mutateActiveProfile((profile) => {
         profile.collection = { stages: null };
-        profile.progress = { rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, questBonusClaimDate: null, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
+        profile.progress = { timeEnergy: { balance:0, allocation:null, completed:[] }, rewardProgressPhase1: null, recentVehicles: [], topCollectionLastUsedJst: null, openingMovieLastPlayedJst: null, dailyMission: { date:null, completedCounts:{} }, questBonusClaimDate: null, collectionSceneOrder: { vehicle: [], robot: [], "super-robot": [], equipment: [], medal: [] }, collectionCategorySeen: [], legacyHistory: null, legacyRanking: null };
         profile.bestRecords = { bestTimeMs: null };
         profile.acquisitionHistory = [];
         profile.pointLedger = null;
@@ -566,6 +686,7 @@
       listProfiles, getActiveProfileId, ensureActiveProfile, getActiveProfile, setActiveProfile,
       hasLegacyChildData, legacySnapshot, createProfile, migrateLegacyProfile, getMigrationState,
       getCollectionStages, setCollectionStages, getRewardProgress, setRewardProgress,
+      getTimeEnergy, creditTimeEnergy, beginTimeEnergyAllocation, lockTimeEnergyVehicle, commitTimeEnergyAllocation,
       getPointLedger, initializePointLedger, commitRewardProgressWithPoints,
       getLevelAcknowledged, setLevelAcknowledged,
       getEnergyCapsuleCount, awardEnergyCapsulesThroughLevel, consumeEnergyCapsule,
