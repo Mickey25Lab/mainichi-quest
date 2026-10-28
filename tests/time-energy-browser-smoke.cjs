@@ -152,7 +152,19 @@ test("real ten-answer division round credits earned pink energy only at result s
       await clickDigits(dividend%divisor);
     }
     if(i<10) {
-      await page.waitForFunction(n=>document.querySelector("#progress-count")?.textContent?.trim()===(n+1)+" / 10",i,{timeout:25000});
+      try {
+        await page.waitForFunction(n=>document.querySelector("#progress-count")?.textContent?.trim()===(n+1)+" / 10",i,{timeout:25000});
+      } catch(error) {
+        const diagnostic=await page.evaluate(()=>({
+          progress:document.querySelector("#progress-count")?.textContent,
+          problem:document.querySelector("#problem-card")?.textContent?.slice(0,250),
+          answer:document.querySelector("#answer-text")?.textContent,
+          active:[...document.querySelectorAll(".active")].map(x=>x.id).filter(Boolean),
+          retry:document.querySelector("#retry-count")?.textContent,
+          noRemainderDisabled:document.querySelector("#no-remainder-key")?.disabled
+        }));
+        throw new Error("round transition after question "+i+" failed: "+JSON.stringify(diagnostic)+"; "+error.message);
+      }
       assert.equal(await balance(),0,"time energy must remain provisional during the round");
     }
   }
