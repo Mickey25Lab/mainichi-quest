@@ -332,20 +332,23 @@
       discardRoundTransaction();
       throw new Error("Active profile changed during a round");
     }
-    // Preserve the pending round until every required save succeeds.
-    // On a retry, the PR4 credit event ID makes the time-energy write idempotent.
-    saveCollectionProgress();
-    saveRecentVehicles();
-    for (const acquisition of pending.acquisitionHistory) {
-      try { profileStore.appendAcquisitionHistory(acquisition); }
-      catch (error) { console.error("Acquisition history save failed", error); }
-    }
-    // A completed round is the only place where provisional pink energy is credited.
-    // PR4's credit event ID makes repeated completion idempotent.
-    if (pending.timeEnergyAmount > 0) {
-      profileStore.creditTimeEnergy(pending.timeEnergyAmount, pending.timeEnergyEventId);
-    }
+    // Persist the round using the existing transaction gate. If a required
+    // write fails, retain the pending receipt so retry uses the same event ID.
     roundTransaction = null;
+    try {
+      saveCollectionProgress();
+      saveRecentVehicles();
+      for (const acquisition of pending.acquisitionHistory) {
+        try { profileStore.appendAcquisitionHistory(acquisition); }
+        catch (error) { console.error("Acquisition history save failed", error); }
+      }
+      if (pending.timeEnergyAmount > 0) {
+        profileStore.creditTimeEnergy(pending.timeEnergyAmount, pending.timeEnergyEventId);
+      }
+    } catch (error) {
+      roundTransaction = pending;
+      throw error;
+    }
   }
   let timeEnergySelecting = false;
   let timeEnergyTimer = null;
