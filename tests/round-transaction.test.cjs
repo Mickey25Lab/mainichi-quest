@@ -13,11 +13,14 @@ function createHarness(persisted = { progress: [{ energy: 10 }], collection: [2]
   const data = structuredClone(persisted);
   let activeProfile = "child-one";
   const calls = [];
+  const credited = new Set();
+  data.timeBalance ??= 0;
   const store = {
     getActiveProfileId: () => activeProfile,
     setRewardProgress: (value) => { calls.push("qa-save"); data.progress = structuredClone(value); },
     commitRewardProgressWithPoints: (value) => { calls.push("commit-points"); data.progress = structuredClone(value); },
-    appendAcquisitionHistory: (value) => { calls.push("history"); data.history.push(structuredClone(value)); }
+    appendAcquisitionHistory: (value) => { calls.push("history"); data.history.push(structuredClone(value)); },
+    creditTimeEnergy: (amount, id) => { if (credited.has(id)) return false; credited.add(id); data.timeBalance += amount; calls.push("time-credit"); return true; }
   };
   const context = vm.createContext({
     profileStore: store,
@@ -85,4 +88,25 @@ test("round lifecycle is wired to start, normal completion and quit", () => {
   assert.match(source, /function saveCollection\(\)\s*\{\s*if \(roundTransaction\) return/);
   assert.match(source, /function saveRecentVehicles\(\)\s*\{\s*if \(roundTransaction\) return/);
   assert.match(source, /function recordCommittedAcquisition\([^]*?roundTransaction\.acquisitionHistory\.push/);
+});
+
+test("pink time energy remains provisional until the whole round completes", () => {
+  const h = createHarness();
+  h.execute("beginRoundTransaction(); roundTransaction.timeEnergyAmount += 3");
+  assert.equal(h.data.timeBalance, 0);
+  h.execute("discardRoundTransaction()");
+  assert.equal(h.data.timeBalance, 0);
+  h.execute("beginRoundTransaction(); roundTransaction.timeEnergyAmount += 2; commitRoundTransaction(); commitRoundTransaction()");
+  assert.equal(h.data.timeBalance, 2);
+  assert.equal(h.calls.filter(x => x === "time-credit").length, 1);
+});
+
+test("provisional pink energy stays with original profile and does not survive reload", () => {
+  const h = createHarness();
+  h.execute("beginRoundTransaction(); roundTransaction.timeEnergyAmount += 9");
+  h.switchProfile("child-two");
+  assert.throws(() => h.execute("commitRoundTransaction()"), /Active profile changed/);
+  assert.equal(h.data.timeBalance, 0);
+  const fresh = createHarness(h.data);
+  assert.equal(fresh.data.timeBalance, 0);
 });
