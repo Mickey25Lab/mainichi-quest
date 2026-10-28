@@ -350,7 +350,7 @@
   // Shared post-selection presentation for time bonus and quest reward.
   // Phonics scanner keeps its existing search but uses the same charged-showcase handoff.
   async function animateSelectedVehicleCharge(vehicleIndex, amounts, commit) {
-    if (state.phonicsScanInProgress || timeEnergyScanRunning) return;
+    if (state.phonicsScanInProgress) return;
     const stage = $("collection-stage");
     const target = [...$("collection-grid").querySelectorAll(".collection-card")]
       .find(card => Number(card.dataset.vehicle) === vehicleIndex);
