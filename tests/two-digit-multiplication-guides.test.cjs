@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(root, "dist/index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "dist/styles.css"), "utf8");
 
 function loadTwoDigitQuestionGenerator() {
-  const match = app.match(/function makeTwoDigitMultiplicationQuestions\(unguided = false\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function setGameMode/);
+  const match = app.match(/function makeTwoDigitMultiplicationQuestions\(unguided = false, zeroMode = false\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function setGameMode/);
   assert.ok(match, "two-digit multiplication generator must be present");
   const source = match[0].replace(/\r?\n\r?\n  function setGameMode$/, "");
   return vm.runInNewContext(`(${source})`, { Math, Set });
@@ -71,4 +71,27 @@ test("the obsolete upper gray multiplication cross is not rendered", () => {
   assert.doesNotMatch(app, /is-crossed/);
   assert.doesNotMatch(css, /is-crossed/);
   assert.match(css, /\.multiplication-2x2-shift-guide/);
+});
+
+test("zero mode places a zero in lower multiplier only in questions 2 and 4", () => {
+  const makeQuestions = loadTwoDigitQuestionGenerator();
+  for (let run = 0; run < 100; run += 1) {
+    const questions = makeQuestions(false, true);
+    assert.equal(questions.length, 5);
+    assert.equal(new Set(questions.map((question) => question.id)).size, 5);
+    questions.forEach((question, index) => {
+      assert.ok(question.multiplicand >= 10 && question.multiplicand <= 99);
+      assert.ok(question.multiplier >= 10 && question.multiplier <= 99);
+      assert.equal(question.multiplier % 10 === 0, index === 1 || index === 3);
+      assert.equal(question.partial1, question.multiplicand * (question.multiplier % 10));
+      assert.equal(question.partial2, question.multiplicand * Math.floor(question.multiplier / 10));
+      assert.equal(question.product, question.multiplicand * question.multiplier);
+    });
+  }
+});
+test("zero mode has a separate label and immediate correction for zero-only step", () => {
+  assert.match(html, /2けた×2けた その3（2段目に0あり）/);
+  assert.match(app, /state\.mode === "multiplication2x2-zero"/);
+  assert.match(app, /String\(number\) !== "0"/);
+  assert.match(css, /is-special-zero-sparkle/);
 });
