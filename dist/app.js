@@ -6035,9 +6035,12 @@
     const energy = parentEnergyLevels.some((level) => level.id === storedEnergy) ? storedEnergy : "medium";
     const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
+    // Newly introduced modes must not silently add a daily requirement to existing children.
+    const newModeUnconfigured = modeId === "multiplication2x2-zero"
+      && settings.enabledModes?.[settingsKey] === undefined;
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
-      : settings.enabledModes?.[settingsKey] === false ? 0 : 1;
+      : settings.enabledModes?.[settingsKey] === false || newModeUnconfigured ? 0 : 1;
     return { enabled: target > 0, energy, target };
   }
 
