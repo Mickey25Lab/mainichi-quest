@@ -93,7 +93,8 @@ test("zero mode has a separate label and immediate correction for zero-only step
   assert.match(html, /2けた×2けた その3（2段目に0あり）/);
   assert.match(app, /state\.mode === "multiplication2x2-zero"/);
   assert.match(app, /String\(number\) !== "0"/);
-  assert.match(app, /playTwoDigitRowCorrectEffect\(\{ holder: slot \}\)/);\n  assert.match(app, /model\.specialZero && model\.inputStep > 0/);
+  assert.match(app, /playTwoDigitRowCorrectEffect\(\{ holder: slot \}\)/);
+  assert.match(app, /model\.specialZero && model\.inputStep > 0/);
 });
 
 test("zero multiplier uses a single row and grades the rest only after all digits are entered", () => {
