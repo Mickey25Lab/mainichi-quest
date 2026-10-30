@@ -13,15 +13,15 @@
 3. 画面サイズ変更イベントの取りこぼし、CSS dvh/vh/viewport-fit、スクロール位置。
 4. 直近のマージによる描画レイアウトへの回帰。
 
-## 調査手順（このPRは調査資料のみ）
+## 調査手順（初期調査計画）
 1. 実際のアプリのHTML/CSS/JSのエントリポイントを特定し、viewport meta、固定寸法、transform、画面フィット処理、resize、visibilitychange、orientationchange、visualViewportイベントを追跡する。
 2. 10/26〜10/30のmainへの変更と、レイアウト・PWA関連の差分を照合する。時系列の一致のみで原因とは断定しない。
 3. iPad横向きのPWAで通常プレイ中の画面サイズ変化を再現できるか確認する。Safari通常タブとの比較も行う。
-4. 再現できなければ、次PRで軽量な端末内リングバッファログを実装する案を具体化する。ログ項目：timestamp、commit SHA、innerWidth/Height、screen.width/height、visualViewportのwidth/height/offset/scale、devicePixelRatio、主要コンテナのboundingClientRect、computed transform、scrollX/Y、visibilityState、resize/visualViewport/ページ遷移イベント。端末内保持し、再起動後に閲覧・コピー可能にする。個人情報や学習回答内容は収集しない。
+4. 再現できなければ、既存MQ-001の軽量な端末内リングバッファログを拡張する案を具体化する。ログ項目：timestamp、commit SHA、innerWidth/Height、screen.width/height、visualViewportのwidth/height/offset/scale、devicePixelRatio、主要コンテナのboundingClientRect、computed transform、scrollX/Y、visibilityState、resize/visualViewport/ページ遷移イベント。端末内保持し、再起動後に閲覧・コピー可能にする。個人情報や学習回答内容は収集しない。
 5. 診断UIは下部ボタンに依存させず、正常復帰後にアクセス可能にする。自動修復は根因が判明するまで実装しない。
 
 ## 非対象・安全条件
-- このPRでアプリの表示・ゲーム・報酬・保存処理を変更しない。
+- このPRでは診断専用コード以外のゲーム表示・報酬・子どもの保存処理を変更しない。
 - 既存の子どものデータを削除・初期化しない。
 - 原因未確定のままCSSの場当たり的修正や自動リロードを入れない。
 
@@ -65,15 +65,30 @@
 - 10/28 main最新 #230 は `dist/app.js`, `dist/index.html`, `dist/styles.css` を含むが、主題は2けた×2けたのゼロモード。変更ファイルの存在だけでは画面異常への因果関係は示せない。
 - 発生開始（約10/28）と既存viewport処理の導入（10/14〜17）には時間差がある。回帰の可能性は残すが、直接の引き金はまだ特定できない。
 
-### 次の診断改善案（このPRでは実装しない）
+### 診断改善案（同PRで診断コードのみ実装）
 1. MQ-001を重複新設せず拡張し、正常時と異常時双方の `window.innerWidth/Height`, `documentElement.clientWidth/Height`, `screen.width/height`, `devicePixelRatio`, `visualViewport`、`#app` と `#play-stage` の `getBoundingClientRect()`、computed style、scrollX/Yを**イベント種別・時間・SHA**とともに保持。
 2. 既存30件上限は稀な再現では履歴が消える可能性があるため、上限と採取頻度を設計し直す。端末内だけに保持し、個人情報・回答データは記録しない。
 3. window.resizeのほか、visualViewport.scroll、定期的な低頻度整合性チェック、document.visibilitychange等を比較する。正常時にログ負荷が増えすぎないようにする。
 4. 異常発生中にボタンを押せなくても、**次回の正常起動後**に履歴をコピーできることを検証する。ボタンの単なる右上移設だけでは不十分。
 5. 異常検知時の自動CSS修正、リロード、meta viewport書換え強化は原因が判明するまで保留。
 
-### 未実施
+### 初期調査時点で未実施
 - 実機再現（接続iPadが必要）。
 - 現物の異常時ログ採取（まだ未取得）。
 - 10/28直近各PRの該当行の完全な差分監査。
 - 実装・自動テスト（文書更新のみ）。仕様正本の変更は不要。
+
+## 診断実装（2026-10-30、PR #232）
+- `dist/app.js` の既存MQ-001診断を拡張。管理画面で診断ONにする既存のopt-in方式を維持。
+- 記録：window / root / screen寸法、DPR、visualViewport寸法・scale・offset、#appと#play-stageの矩形・computed transform、scroll位置、visibilityState、stageScale、時刻とイベント。
+- 5秒ごとに診断ON・ページ可視の場合のみ比較。変化時と30秒間隔のbaselineのみ保存する。visualViewport.scrollとwindow.resizeをイベントとして保存。
+- 端末内localStorageの履歴保持枠を30→180件に拡張し、PWA再起動後も既存の「MQ-001 LOG」ボタンでコピー可能。新しいデータ送信・学習データ採取は追加しない。
+- **画面を修正・リロードする処理は追加しない。** 既存のviewport復旧機構は変更しない。
+- テスト：`tests/ipad-pwa-viewport-diagnostics.test.cjs` で静的回帰検査を追加。
+- 注意：診断ON後に実機で発生するまで原因は確定しない。5秒以内に発生し消える異常は取り逃す可能性があるが、本件は持続するため5秒周期を優先。ログが180件を超えると古い情報から消える。
+- 次の実機確認：親設定のMQ-001診断をONにし、通常プレイ。異常発生後にPWAを再起動し、左上のMQ-001 LOGからログを取得。プロフィール削除やリセットは不要。
+
+### 変更に伴う扱い
+- 当初は文書のみを予定していたが、追加の続行指示を受け、調査可能にする診断コードと回帰テストも同一PRに追加した。
+- 正式仕様は変更なし。既存localStorageキー・子どものデータ形式も変更なし。
+- 未完了：iPad実機確認、異常ログ取得、根因確定、実コードの動的実行確認。CI結果は別途確認する。
