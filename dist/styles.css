@@ -4574,6 +4574,8 @@ button, input { font: inherit; }
 .mode-select-choice.is-free-play .mode-select-energy * {color:#ead78e;}
 /* Corner controls keep their dimensions; only text shrinks to 70%. */
 .play-screen #quit-button,
+.phonics-intro-screen #phonics-intro-back,
+.phonics-youtube-screen #phonics-youtube-back,
 .phonics-words-screen #phonics-words-back {font-size:21.7px;}
 .play-screen #assist-button {font-size:calc(var(--keypad-remainder-label-size) * .7);}
 @media(prefers-reduced-motion:reduce){
