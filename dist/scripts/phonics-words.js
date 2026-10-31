@@ -2,9 +2,9 @@
 (() => {
   "use strict";
   const vocabulary = [
-    [{word:"CAT",picture:"🐱",label:"ねこ"},{word:"DOG",picture:"🐶",label:"いぬ"},{word:"BED",picture:"🛏️",label:"ベッド"},{word:"BOX",picture:"📦",label:"はこ"},{word:"LEG",picture:"🦵",label:"あし"}],
-    [{word:"HAND",picture:"✋",label:"て"},{word:"MILK",picture:"🥛",label:"ぎゅうにゅう"},{word:"WIND",picture:"🌬️",label:"かぜ"}],
-    [{word:"PLANT",picture:"🪴",label:"しょくぶつ"},{word:"PICNIC",picture:"🧺",label:"ピクニック"}]
+    [{word:"CAT",picture:"🐱",label:"ねこ"},{word:"DOG",picture:"🐶",label:"いぬ"},{word:"SUN",picture:"☀️",label:"たいよう"},{word:"BOX",picture:"📦",label:"はこ"},{word:"LEG",picture:"🦵",label:"あし"}],
+    [{word:"HAND",picture:"✋",label:"て"},{word:"MILK",picture:"🥛",label:"ぎゅうにゅう"},{word:"WIND",picture:"🌬️",label:"かぜ"},{word:"FROG",picture:"🐸",label:"かえる"}],
+    [{word:"PLANT",picture:"🪴",label:"しょくぶつ"}]
   ];
   const shuffle = items => {
     const copy = items.slice();
