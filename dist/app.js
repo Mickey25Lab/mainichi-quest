@@ -1645,15 +1645,38 @@
       visualViewportOffsetTop: visualViewport?.offsetTop ?? null
     };
   }
+  // MQ-001 captures geometry rather than learning/profile data. Every field is
+  // safe to keep on-device and survives a standalone-PWA restart.
   function diagnosticViewportSnapshot() {
     const visualViewport = window.visualViewport;
+    const app = $("app");
     const playStage = $("play-stage");
+    const rect = (element) => {
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    };
+    const root = document.documentElement;
     return {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      clientWidth: root.clientWidth,
+      clientHeight: root.clientHeight,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      devicePixelRatio: window.devicePixelRatio,
       visualViewportWidth: visualViewport?.width ?? null,
       visualViewportHeight: visualViewport?.height ?? null,
       visualViewportScale: visualViewport?.scale ?? null,
       visualViewportOffsetLeft: visualViewport?.offsetLeft ?? null,
       visualViewportOffsetTop: visualViewport?.offsetTop ?? null,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      visibilityState: document.visibilityState,
+      appRect: rect(app),
+      stageRect: rect(playStage),
+      appTransform: app ? getComputedStyle(app).transform : null,
+      stageTransform: playStage ? getComputedStyle(playStage).transform : null,
       stageScale: playStage?.style.getPropertyValue("--stage-scale").trim() || null
     };
   }
@@ -1661,7 +1684,7 @@
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: diagnosticViewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 30) viewportDiagnostics = viewportDiagnostics.slice(-30);
+    if (viewportDiagnostics.length > 180) viewportDiagnostics = viewportDiagnostics.slice(-180);
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function updateViewportDiagnosticsButton() {
@@ -1684,7 +1707,7 @@
     viewportDiagnosticsEnabled = loadViewportDiagnosticsEnabled();
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-30);
+      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-180);
     } catch (_) {}
     const button = document.createElement("button");
     viewportDiagnosticsButton = button;
@@ -1711,6 +1734,31 @@
     });
     document.body.appendChild(button);
     updateViewportDiagnosticsButton();
+    if (viewportDiagnosticsEnabled) {
+      recordViewportDiagnostic("diagnostics-start");
+    }
+    // Sample low-frequency changes even if WebKit omits resize/focus events.
+    // Store transitions and an occasional baseline; do not log every frame.
+    let lastGeometry = null;
+    let lastBaselineAt = 0;
+    window.setInterval(() => {
+      if (!viewportDiagnosticsEnabled || document.hidden) return;
+      const snapshot = diagnosticViewportSnapshot();
+      const signature = JSON.stringify([
+        snapshot.innerWidth, snapshot.innerHeight,
+        snapshot.clientWidth, snapshot.clientHeight,
+        snapshot.visualViewportWidth, snapshot.visualViewportHeight,
+        snapshot.visualViewportScale, snapshot.visualViewportOffsetLeft,
+        snapshot.visualViewportOffsetTop, snapshot.appRect, snapshot.stageRect,
+        snapshot.stageScale, snapshot.scrollX, snapshot.scrollY
+      ]);
+      const now = Date.now();
+      if (signature !== lastGeometry || now - lastBaselineAt >= 30000) {
+        recordViewportDiagnostic(signature !== lastGeometry ? "geometry-change" : "geometry-baseline");
+        lastGeometry = signature;
+        lastBaselineAt = now;
+      }
+    }, 5000);
   }
   async function updateVersionLabelWithPreviewMetadata() {
     const versionLabel = $("app-version");
@@ -6732,7 +6780,10 @@
   updateVersionLabelWithPreviewMetadata();
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
-  window.addEventListener("resize", () => schedulePlayStageSize("resize"));
+  window.addEventListener("resize", () => {
+    recordViewportDiagnostic("window.resize");
+    schedulePlayStageSize("resize");
+  });
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
     resumeAudioAfterVisible("pageshow");
@@ -6757,6 +6808,7 @@
     recordViewportDiagnostic("visualViewport.resize");
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
+  window.visualViewport?.addEventListener("scroll", () => recordViewportDiagnostic("visualViewport.scroll"));
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
