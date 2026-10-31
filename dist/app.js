@@ -1094,6 +1094,7 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    const introRequestId = ++visualRequestId;
     beginDailyMissionAttempt(modeId);
     const missionAtStart = missionOverview();
     phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
@@ -1115,12 +1116,12 @@
     $("phonics-intro-status").textContent = "";
     preparePhonicsYoutubePlayback();
     void introBackgroundReady.then(() => {
-      if (phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
       showScreen("phonics-intro-screen");
       schedulePlayStageSize("phonics-intro");
     }).catch((error) => {
       console.warn("Phonics intro background failed to load", error);
-      if (phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
       showScreen("phonics-intro-screen");
       schedulePlayStageSize("phonics-intro");
     });
@@ -1185,12 +1186,13 @@
   function startPhonicsWordMode() {
     if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
     beginDailyMissionAttempt("phonics-words");
+    const wordsRequestId = ++visualRequestId;
     const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     const wordBackground = $("phonics-words-background");
     void preloadDecodedImage(backgroundPath).then(() => decodeImageElement(wordBackground, backgroundPath))
       .catch((error) => { console.warn("Phonics word background failed to load", error); })
       .then(() => {
-        if (!wordBackground.isConnected || !window.MQPhonicsWords) return;
+        if (wordsRequestId !== visualRequestId || !wordBackground.isConnected || !window.MQPhonicsWords) return;
         showScreen("phonics-words-screen");
         schedulePlayStageSize("phonics-words");
       });
