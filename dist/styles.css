@@ -2085,7 +2085,8 @@ button, input { font: inherit; }
   text-shadow:0 3px 0 #075795,0 0 7px #ffc928,0 0 17px rgba(255,219,58,.98),0 0 12px rgba(65,228,255,.95);
 }
 @keyframes energy-capsule-flash { 0%,100% { filter:brightness(1); } 45% { filter:brightness(1.75) drop-shadow(0 0 14px #bff9ff); } }
-.play-screen .topbar { position: absolute; z-index: 7; top: 28px; left: 42px; right: 42px; height: 78px; }
+.play-screen .topbar,
+.phonics-words-screen .topbar { position: absolute; z-index: 7; top: 28px; left: 42px; right: 42px; height: 78px; }
 .play-screen .incorrect-next-vehicle-notice {
   position:absolute;
   z-index:12;
@@ -2114,6 +2115,7 @@ button, input { font: inherit; }
   pointer-events:none;
 }
 .play-screen .progress-badge,
+.phonics-words-screen .progress-badge,
 .play-screen .elapsed-time,
 .play-screen .problem-card,
 .play-screen .answer-card,
@@ -2131,6 +2133,7 @@ button, input { font: inherit; }
   text-rendering: geometricPrecision;
 }
 .play-screen .progress-badge,
+.phonics-words-screen .progress-badge,
 .play-screen .elapsed-time {
   top: 50%;
   min-width: 0;
@@ -2143,6 +2146,7 @@ button, input { font: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .play-screen .progress-badge,
+.phonics-words-screen .progress-badge,
 .play-screen .elapsed-time { width: var(--play-corner-control-width); }
 .play-screen .progress-badge.is-retry { flex-direction: row; min-height: 0; gap: .2em; }
 .play-screen .game-area {
@@ -2946,6 +2950,7 @@ button, input { font: inherit; }
   }
   .keypad button:focus { outline: none; }
   .play-screen .progress-badge,
+  .phonics-words-screen .progress-badge,
   .play-screen .elapsed-time,
   .play-screen .assist-button { font-size:var(--keypad-remainder-label-size); }
   /* Corner-button geometry and typography are canvas-fixed on every device. */
@@ -3758,6 +3763,7 @@ button, input { font: inherit; }
 }
 
 .play-screen .progress-badge,
+.phonics-words-screen .progress-badge,
 .play-screen .quit-button,
 .phonics-intro-screen .quit-button,
 .phonics-youtube-screen .quit-button {
@@ -4567,7 +4573,8 @@ button, input { font: inherit; }
 .mode-select-choice.is-free-play .mode-select-energy,
 .mode-select-choice.is-free-play .mode-select-energy * {color:#ead78e;}
 /* Corner controls keep their dimensions; only text shrinks to 70%. */
-.play-screen #quit-button {font-size:21.7px;}
+.play-screen #quit-button,
+.phonics-words-screen #phonics-words-back {font-size:21.7px;}
 .play-screen #assist-button {font-size:calc(var(--keypad-remainder-label-size) * .7);}
 @media(prefers-reduced-motion:reduce){
   .collection-category-scene[data-category="super-robot"] .collection-scene-item-super-robot .collection-scene-art{animation:none!important}
