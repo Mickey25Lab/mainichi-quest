@@ -6917,7 +6917,7 @@
     const name = $("profile-setup-name").value;
     try {
       if (profileStore.hasLegacyChildData()) profileStore.migrateLegacyProfile(name);
-      else profileStore.createProfile(name);
+      else profileStore.createProfile(name, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       setProfileError($("profile-setup-error"), "");
       $("profile-setup-overlay").hidden = true;
       initializeGameForActiveProfile();
@@ -6929,7 +6929,7 @@
   $("profile-add-form").addEventListener("submit", (event) => {
     event.preventDefault();
     try {
-      profileStore.createProfile($("profile-add-name").value);
+      profileStore.createProfile($("profile-add-name").value, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       window.location.reload();
     } catch (error) {
       console.error("Profile creation failed", error);
