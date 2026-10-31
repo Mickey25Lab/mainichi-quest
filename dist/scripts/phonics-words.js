@@ -118,7 +118,7 @@
     .phonics-words-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.68)}
     .phonics-words-stage::after{content:"";position:absolute;inset:0;background:rgba(3,20,45,.18);pointer-events:none}
     .phonics-words-stage .phonics-intro-card{display:flex;align-items:center;justify-content:center;min-height:760px;height:760px;box-sizing:border-box}
-    .phonics-words-main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 290px 0 28px}
+    .phonics-words-main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0}
     #phonics-words-letters{display:inline-flex;align-items:stretch;gap:8px;max-width:100%;border-radius:18px}
     .phonics-words-letter{display:flex;align-items:center;justify-content:center;width:112px;height:160px;box-sizing:border-box;border-radius:18px;font:900 106px/1 "Noto Sans JP",sans-serif;color:#132b50}
     .phonics-words-letter.is-selected,#phonics-words-letters.is-combined{background:#adf0ff}
