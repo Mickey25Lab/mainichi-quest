@@ -320,7 +320,9 @@
       rewardProgress: state.rewardProgress.map((entry) => ({ ...entry })),
       collection: [...state.collection],
       recentVehicleHistory: [...state.recentVehicleHistory],
-      acquisitionHistory: []
+      acquisitionHistory: [],
+      timeEnergyAmount: 0,
+      timeEnergyEventId: "round-" + (globalThis.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2))
     };
   }
   function commitRoundTransaction() {
@@ -330,12 +332,22 @@
       discardRoundTransaction();
       throw new Error("Active profile changed during a round");
     }
+    // Persist the round using the existing transaction gate. If a required
+    // write fails, retain the pending receipt so retry uses the same event ID.
     roundTransaction = null;
-    saveCollectionProgress();
-    saveRecentVehicles();
-    for (const acquisition of pending.acquisitionHistory) {
-      try { profileStore.appendAcquisitionHistory(acquisition); }
-      catch (error) { console.error("Acquisition history save failed", error); }
+    try {
+      saveCollectionProgress();
+      saveRecentVehicles();
+      for (const acquisition of pending.acquisitionHistory) {
+        try { profileStore.appendAcquisitionHistory(acquisition); }
+        catch (error) { console.error("Acquisition history save failed", error); }
+      }
+      if (pending.timeEnergyAmount > 0) {
+        profileStore.creditTimeEnergy(pending.timeEnergyAmount, pending.timeEnergyEventId);
+      }
+    } catch (error) {
+      roundTransaction = pending;
+      throw error;
     }
   }
   let timeEnergySelecting = false;
@@ -4026,12 +4038,12 @@
       const baseEnergyGain = assistedOrPenalized ? 1 : question.kind === "multiplication2x2" ? 5 : 3;
       energyGain = scaledEnergyGain(baseEnergyGain, state.mode);
       const timeBonus = getTimeBonusForCorrect(question);
-      if (timeBonus) deferredTimeBonus = { vehicleIndex, energyGain, timeBonus };
-      else {
-        const gain = applyEnergyGain(progress, vehicleIndex, energyGain);
-        reward = gain.reward;
-        energyVisual = { vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
-      }
+      // Time-qualified answers earn pink time energy, never an extra blue +1.
+      // Do not credit persistent balance until the entire round (including retry) ends.
+      if (timeBonus && roundTransaction) roundTransaction.timeEnergyAmount += timeBonus.amount;
+      const gain = applyEnergyGain(progress, vehicleIndex, energyGain);
+      reward = gain.reward;
+      energyVisual = { vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
     }
     if (vehicleIndex === state.currentVehicleIndex) state.currentStage = currentStageForVehicle(vehicleIndex);
     // Ordinary point gains remain progress-only; acquisitions persist inside
