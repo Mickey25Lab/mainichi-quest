@@ -2934,6 +2934,7 @@ button, input { font: inherit; }
   }
   .keypad button,
   .play-stage .progress-badge,
+  .phonics-words-stage .progress-badge,
   .play-stage .elapsed-time,
   .play-stage .problem-card,
   .play-stage .answer-card,
