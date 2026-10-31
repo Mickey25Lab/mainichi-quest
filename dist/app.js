@@ -23,7 +23,7 @@
     Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
     Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
     Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" }),
-    Object.freeze({ id:"phonics-words", label:"フォニックスでよめることば", detail:"" })
+    Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -1094,6 +1094,7 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    const introRequestId = ++visualRequestId;
     beginDailyMissionAttempt(modeId);
     const missionAtStart = missionOverview();
     phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
@@ -1105,14 +1106,30 @@
     renderPhonicsIntroLetters();
     const phonicsBackgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     phonicsYoutube.backgroundPath = phonicsBackgroundPath;
-    $("phonics-intro-background").src = phonicsBackgroundPath;
-    document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
+    // Preload and decode the shared stage background before revealing the intro.
+    const introBackground = $("phonics-intro-background");
+    const videoBackground = document.querySelector(".phonics-youtube-background");
+    const introBackgroundReady = preloadDecodedImage(phonicsBackgroundPath)
+      .then(() => Promise.all([decodeImageElement(introBackground, phonicsBackgroundPath), decodeImageElement(videoBackground, phonicsBackgroundPath)]));
     $("phonics-intro-start").disabled = true;
     $("phonics-intro-start").textContent = "ちょっとまってね";
     $("phonics-intro-status").textContent = "";
-    showScreen("phonics-intro-screen");
-    schedulePlayStageSize("phonics-intro");
     preparePhonicsYoutubePlayback();
+    void introBackgroundReady.then(() => {
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      showScreen("phonics-intro-screen");
+      schedulePlayStageSize("phonics-intro");
+    }).catch((error) => {
+      console.warn("Phonics intro background failed to load", error);
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      // Keep the previous screen visible rather than showing an incomplete background.
+      phonicsYoutube.introMinimumElapsed = false;
+      clearPhonicsIntroTimer();
+      cancelDailyMissionAttempt();
+      phonicsYoutube.activeModeId = null;
+      renderModeSelectMission();
+      showFixedScreenWhenReady("mode-select-screen");
+    });
     preloadFanfareSounds();
     phonicsYoutube.introTimerId = window.setTimeout(() => {
       phonicsYoutube.introTimerId = 0;
@@ -1174,9 +1191,23 @@
   function startPhonicsWordMode() {
     if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
     beginDailyMissionAttempt("phonics-words");
-    $("phonics-words-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
-    showScreen("phonics-words-screen");
-    schedulePlayStageSize("phonics-words");
+    const wordsRequestId = ++visualRequestId;
+    const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    const wordBackground = $("phonics-words-background");
+    void preloadDecodedImage(backgroundPath).then(() => decodeImageElement(wordBackground, backgroundPath))
+      .catch((error) => {
+        console.warn("Phonics word background failed to load", error);
+        if (wordsRequestId === visualRequestId) {
+          window.MQPhonicsWords.quit();
+        }
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded === false) return;
+        if (wordsRequestId !== visualRequestId || !wordBackground.isConnected || !window.MQPhonicsWords) return;
+        showScreen("phonics-words-screen");
+        schedulePlayStageSize("phonics-words");
+      });
     window.MQPhonicsWords.start({
       onComplete: () => {
         completeDailyMissionRound("phonics-words");
@@ -4951,10 +4982,10 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:8 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 2 };
+    if (questBonusSelecting) return { friendship:5, energy:9 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
-      : { friendship:5, energy:25 };
+      : { friendship:5, energy:15 };
   }
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -6917,7 +6948,7 @@
     const name = $("profile-setup-name").value;
     try {
       if (profileStore.hasLegacyChildData()) profileStore.migrateLegacyProfile(name);
-      else profileStore.createProfile(name);
+      else profileStore.createProfile(name, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       setProfileError($("profile-setup-error"), "");
       $("profile-setup-overlay").hidden = true;
       initializeGameForActiveProfile();
@@ -6929,7 +6960,7 @@
   $("profile-add-form").addEventListener("submit", (event) => {
     event.preventDefault();
     try {
-      profileStore.createProfile($("profile-add-name").value);
+      profileStore.createProfile($("profile-add-name").value, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       window.location.reload();
     } catch (error) {
       console.error("Profile creation failed", error);
