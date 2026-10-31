@@ -38,7 +38,7 @@
       tile.textContent = character;
       wrap.append(tile);
     });
-    get("phonics-words-progress").textContent = (session.index + 1) + " / 10";
+    get("phonics-words-progress-count").textContent = (session.index + 1) + " / 10";
     get("phonics-words-picture").hidden = true;
     get("phonics-words-picture").replaceChildren();
     get("phonics-words-action").textContent = session.heard ? "いえたよ" : session.step >= word.length - 1 ? "きいてみる" : "つぎへ";
@@ -158,7 +158,7 @@
     <img id="phonics-words-background" class="phonics-words-background" alt="">
     <div class="phonics-intro-card"><div class="phonics-words-main"><div id="phonics-words-letters"></div></div><div id="phonics-words-picture" hidden></div></div>
     <button id="phonics-words-back" class="quit-button" type="button">やめる</button>
-    <header class="topbar"><div class="progress-badge" id="phonics-words-progress" aria-live="polite">1 / 10</div></header>
+    <header class="topbar"><div class="progress-badge" id="phonics-words-progress" aria-live="polite"><span id="phonics-words-progress-count">1 / 10</span></div></header>
     <button id="phonics-words-action" class="phonics-youtube-end" type="button">つぎへ</button>
   </div>`;
   get("app").append(screen);
