@@ -1105,14 +1105,25 @@
     renderPhonicsIntroLetters();
     const phonicsBackgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     phonicsYoutube.backgroundPath = phonicsBackgroundPath;
-    $("phonics-intro-background").src = phonicsBackgroundPath;
-    document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
+    // Preload and decode the shared stage background before revealing the intro.
+    const introBackground = $("phonics-intro-background");
+    const videoBackground = document.querySelector(".phonics-youtube-background");
+    const introBackgroundReady = preloadDecodedImage(phonicsBackgroundPath)
+      .then(() => Promise.all([decodeImageElement(introBackground, phonicsBackgroundPath), decodeImageElement(videoBackground, phonicsBackgroundPath)]));
     $("phonics-intro-start").disabled = true;
     $("phonics-intro-start").textContent = "ちょっとまってね";
     $("phonics-intro-status").textContent = "";
-    showScreen("phonics-intro-screen");
-    schedulePlayStageSize("phonics-intro");
     preparePhonicsYoutubePlayback();
+    void introBackgroundReady.then(() => {
+      if (phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      showScreen("phonics-intro-screen");
+      schedulePlayStageSize("phonics-intro");
+    }).catch((error) => {
+      console.warn("Phonics intro background failed to load", error);
+      if (phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      showScreen("phonics-intro-screen");
+      schedulePlayStageSize("phonics-intro");
+    });
     preloadFanfareSounds();
     phonicsYoutube.introTimerId = window.setTimeout(() => {
       phonicsYoutube.introTimerId = 0;
@@ -1174,9 +1185,15 @@
   function startPhonicsWordMode() {
     if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
     beginDailyMissionAttempt("phonics-words");
-    $("phonics-words-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
-    showScreen("phonics-words-screen");
-    schedulePlayStageSize("phonics-words");
+    const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    const wordBackground = $("phonics-words-background");
+    void preloadDecodedImage(backgroundPath).then(() => decodeImageElement(wordBackground, backgroundPath))
+      .catch((error) => { console.warn("Phonics word background failed to load", error); })
+      .then(() => {
+        if (!wordBackground.isConnected || !window.MQPhonicsWords) return;
+        showScreen("phonics-words-screen");
+        schedulePlayStageSize("phonics-words");
+      });
     window.MQPhonicsWords.start({
       onComplete: () => {
         completeDailyMissionRound("phonics-words");
