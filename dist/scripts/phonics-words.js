@@ -147,19 +147,18 @@
     #phonics-words-picture[hidden]{display:none!important}
     .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
     #phonics-words-action{bottom:34px;z-index:7}
-    #phonics-words-progress{position:absolute;z-index:7;right:42px;top:34px;display:flex;align-items:center;justify-content:center;width:166px;height:var(--play-corner-control-height);border:3px solid #9ebddd;border-radius:var(--play-corner-radius);background:#fff;box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);font:900 30px/1 "Noto Sans JP",sans-serif;color:#14284b}
     #phonics-words-back{z-index:7}
   `;
   document.head.append(css);
   const screen = document.createElement("section");
   screen.id = "phonics-words-screen";
-  screen.className = "screen phonics-intro-screen";
+  screen.className = "screen phonics-intro-screen phonics-words-screen";
   screen.setAttribute("aria-label", "フォニックスでよめることば");
   screen.innerHTML = `<div class="phonics-words-stage">
     <img id="phonics-words-background" class="phonics-words-background" alt="">
     <div class="phonics-intro-card"><div class="phonics-words-main"><div id="phonics-words-letters"></div></div><div id="phonics-words-picture" hidden></div></div>
     <button id="phonics-words-back" class="quit-button" type="button">やめる</button>
-    <span id="phonics-words-progress"></span>
+    <header class="topbar"><div class="progress-badge" id="phonics-words-progress" aria-live="polite">1 / 10</div></header>
     <button id="phonics-words-action" class="phonics-youtube-end" type="button">つぎへ</button>
   </div>`;
   get("app").append(screen);
