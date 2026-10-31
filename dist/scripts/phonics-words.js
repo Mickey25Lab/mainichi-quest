@@ -57,9 +57,8 @@
       region.hidden = false;
     },1000);
   }
-  function speakWord(word) {
+  function speakWord(word, current) {
     if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
-    stopAudio();
     const voice = new SpeechSynthesisUtterance(word.toLowerCase());
     voice.lang = "en-US";
     voice.rate = .85;
@@ -68,6 +67,9 @@
     const voices = window.speechSynthesis.getVoices();
     const us = voices.find(v => v.lang.toLowerCase().replace("_","-") === "en-us");
     if (us) voice.voice = us;
+    voice.onstart = () => {
+      if (session && session.words[session.index] === current && session.heard) pictureAfterOneSecond(current);
+    };
     window.speechSynthesis.speak(voice);
   }
   function next() {
@@ -84,12 +86,21 @@
       session.step = wordLength;
       render();
       get("phonics-words-action").textContent = "いえたよ";
+      // iPad WebKit requires the first speech request in the tap handler.
+      // A silent primer unlocks later delayed speech without speaking the word early.
+      if (window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function") {
+        try {
+          const primer = new SpeechSynthesisUtterance("");
+          primer.lang = "en-US";
+          primer.volume = 0;
+          window.speechSynthesis.speak(primer);
+        } catch (_) {}
+      }
       speechTimer = window.setTimeout(() => {
         speechTimer = 0;
         if (!session || session.words[session.index] !== current || !session.heard) return;
-        speakWord(current.word);
-        pictureAfterOneSecond(current);
-      }, 1000);
+        speakWord(current.word, current);
+      }, 500);
       return;
     }
     clearPictureTimer();
