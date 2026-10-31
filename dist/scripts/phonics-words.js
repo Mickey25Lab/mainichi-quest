@@ -112,35 +112,36 @@
   }
   const css = document.createElement("style");
   css.textContent = `
-    #phonics-words-screen{position:absolute;inset:0;background:linear-gradient(160deg,#dff7ff,#f9fdff);z-index:2;overflow:hidden}
+    #phonics-words-screen{position:absolute;inset:0;z-index:2;overflow:hidden;background:#071c38}
     #phonics-words-screen:not(.active){display:none!important}
-    .phonics-words-layout{position:absolute;inset:0;display:flex;align-items:center;flex-direction:column;gap:2vh;padding:2.5vh 3vw;box-sizing:border-box;color:#10204c;font-family:system-ui,-apple-system,sans-serif}
-    .phonics-words-header{display:flex;width:100%;align-items:center;justify-content:space-between;gap:1vw}
-    .phonics-words-title{font-size:clamp(17px,3vw,36px);font-weight:800;text-align:center}
-    .phonics-words-back{border:1px solid #a6cadb;background:white;border-radius:18px;padding:12px 20px;font-size:clamp(14px,2vw,23px);font-weight:700;color:#10204c}
-    #phonics-words-progress{font-size:clamp(15px,2.6vw,27px);font-weight:800;min-width:3em;text-align:right}
-    .phonics-words-board{flex:1;min-height:0;width:100%;background:white;border-radius:30px;display:flex;align-items:center;justify-content:center;position:relative}
-    .phonics-words-main{width:68%;display:flex;justify-content:center;align-items:center;min-width:0}
-    #phonics-words-letters{display:inline-flex;align-items:stretch;gap:clamp(3px,.5vw,10px);max-width:100%;border-radius:18px}
-    .phonics-words-letter{display:flex;justify-content:center;align-items:center;width:clamp(37px,8vw,110px);height:clamp(80px,18vh,160px);font-size:clamp(35px,7vw,96px);font-weight:850;border-radius:16px;background:transparent;color:#122453;box-sizing:border-box}
-    .phonics-words-letter.is-selected{background:#adf0ff}
-    #phonics-words-letters.is-combined{background:#adf0ff}
+    .phonics-words-stage{position:absolute;left:50%;top:50%;width:1400px;height:1050px;transform:translate(-50%,-50%) scale(var(--stage-scale,1));transform-origin:center;overflow:hidden;font-family:"Noto Sans JP",sans-serif}
+    .phonics-words-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.68)}
+    .phonics-words-stage::after{content:"";position:absolute;inset:0;background:rgba(3,20,45,.18);pointer-events:none}
+    .phonics-words-stage .phonics-intro-card{display:flex;align-items:center;justify-content:center;min-height:760px;height:760px;box-sizing:border-box}
+    .phonics-words-main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 290px 0 28px}
+    #phonics-words-letters{display:inline-flex;align-items:stretch;gap:8px;max-width:100%;border-radius:18px}
+    .phonics-words-letter{display:flex;align-items:center;justify-content:center;width:112px;height:160px;box-sizing:border-box;border-radius:18px;font:900 106px/1 "Noto Sans JP",sans-serif;color:#132b50}
+    .phonics-words-letter.is-selected,#phonics-words-letters.is-combined{background:#adf0ff}
     #phonics-words-letters.is-combined .phonics-words-letter{border-radius:0}
-    #phonics-words-picture{width:29%;display:flex;align-items:center;justify-content:center;flex-direction:column;position:absolute;right:1.5%;top:10%;bottom:10%}
+    #phonics-words-picture{position:absolute;right:35px;top:170px;bottom:145px;width:250px;display:flex;align-items:center;justify-content:center}
     #phonics-words-picture[hidden]{display:none!important}
-    .phonics-words-pictogram{display:block;width:min(100%,190px);height:auto;max-height:75%;object-fit:contain}
-    #phonics-words-action{font-weight:800;font-size:clamp(22px,3vw,33px);color:white;background:#2588ef;border:3px solid #1e69bf;border-radius:22px;width:min(60vw,410px);height:clamp(76px,14vh,105px);flex-shrink:0;touch-action:manipulation}
-    @media(max-width:700px){.phonics-words-letter{width:clamp(35px,8.2vw,68px)}.phonics-words-main{width:75%;justify-content:flex-start;padding-left:1vw}.phonics-words-pictogram{max-width:100px}}
+    .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
+    #phonics-words-action{bottom:34px;z-index:7}
+    #phonics-words-progress{position:absolute;z-index:7;right:42px;top:34px;display:flex;align-items:center;justify-content:center;width:166px;height:var(--play-corner-control-height);border:3px solid #9ebddd;border-radius:var(--play-corner-radius);background:#fff;box-shadow:0 6px 0 #8ca6bf,0 12px 22px rgba(3,52,109,.18);font:900 30px/1 "Noto Sans JP",sans-serif;color:#14284b}
+    #phonics-words-back{z-index:7}
   `;
   document.head.append(css);
   const screen = document.createElement("section");
   screen.id = "phonics-words-screen";
-  screen.className = "screen";
+  screen.className = "screen phonics-intro-screen";
   screen.setAttribute("aria-label", "フォニックスでよめることば");
-  screen.innerHTML = `<div class="phonics-words-layout">
-    <div class="phonics-words-header"><button id="phonics-words-back" class="phonics-words-back" type="button">もどる</button><div class="phonics-words-title">フォニックスでよめることば</div><span id="phonics-words-progress"></span></div>
-    <div class="phonics-words-board"><div class="phonics-words-main"><div id="phonics-words-letters"></div></div><div id="phonics-words-picture" hidden></div></div>
-    <button id="phonics-words-action" type="button">つぎへ</button></div>`;
+  screen.innerHTML = `<div class="phonics-words-stage">
+    <img id="phonics-words-background" class="phonics-words-background" alt="">
+    <div class="phonics-intro-card"><div class="phonics-words-main"><div id="phonics-words-letters"></div></div><div id="phonics-words-picture" hidden></div></div>
+    <button id="phonics-words-back" class="quit-button" type="button">やめる</button>
+    <span id="phonics-words-progress"></span>
+    <button id="phonics-words-action" class="phonics-youtube-end" type="button">つぎへ</button>
+  </div>`;
   get("app").append(screen);
   get("phonics-words-action").addEventListener("click", next);
   get("phonics-words-back").addEventListener("click",quit);
