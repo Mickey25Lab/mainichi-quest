@@ -1,4 +1,4 @@
-// 家庭内MVP：フォニックスでよめることば。保存データはこのモジュールでは変更しない。
+// 家庭内MVP：フォニックスでよんでみよう。保存データはこのモジュールでは変更しない。
 (() => {
   "use strict";
   const vocabulary = [
@@ -14,13 +14,15 @@
     }
     return copy;
   };
-  let session = null, pictureTimer = 0;
+  let session = null, pictureTimer = 0, speechTimer = 0;
   const get = id => document.getElementById(id);
   function clearPictureTimer() {
     if (pictureTimer) clearTimeout(pictureTimer);
     pictureTimer = 0;
   }
   function stopAudio() {
+    if (speechTimer) clearTimeout(speechTimer);
+    speechTimer = 0;
     try { window.speechSynthesis?.cancel(); } catch (_) {}
   }
   function render() {
@@ -39,7 +41,7 @@
     get("phonics-words-progress").textContent = (session.index + 1) + " / 10";
     get("phonics-words-picture").hidden = true;
     get("phonics-words-picture").replaceChildren();
-    get("phonics-words-action").textContent = !combined ? "つぎへ" : session.heard ? "いえたよ" : "きいてみる";
+    get("phonics-words-action").textContent = session.heard ? "いえたよ" : session.step >= word.length - 1 ? "きいてみる" : "つぎへ";
   }
   function pictureAfterOneSecond(current) {
     pictureTimer = window.setTimeout(() => {
@@ -62,6 +64,7 @@
     voice.lang = "en-US";
     voice.rate = .85;
     voice.pitch = 1;
+    voice.volume = 1; // Web Speech API maximum (cannot amplify above 100%).
     const voices = window.speechSynthesis.getVoices();
     const us = voices.find(v => v.lang.toLowerCase().replace("_","-") === "en-us");
     if (us) voice.voice = us;
@@ -71,16 +74,22 @@
     if (!session) return;
     const current = session.words[session.index];
     const wordLength = current.word.length;
-    if (session.step < wordLength) {
+    if (session.step < wordLength - 1) {
       session.step++;
       render();
       return;
     }
     if (!session.heard) {
       session.heard = true;
+      session.step = wordLength;
+      render();
       get("phonics-words-action").textContent = "いえたよ";
-      pictureAfterOneSecond(current);
-      speakWord(current.word);
+      speechTimer = window.setTimeout(() => {
+        speechTimer = 0;
+        if (!session || session.words[session.index] !== current || !session.heard) return;
+        speakWord(current.word);
+        pictureAfterOneSecond(current);
+      }, 1000);
       return;
     }
     clearPictureTimer();
