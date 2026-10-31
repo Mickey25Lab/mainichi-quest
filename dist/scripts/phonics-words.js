@@ -46,11 +46,11 @@
       pictureTimer = 0;
       if (!session || session.words[session.index] !== current || !session.heard) return;
       const region = get("phonics-words-picture");
-      const icon = document.createElement("span");
+      const icon = document.createElement("img");
       icon.className = "phonics-words-pictogram";
-      icon.setAttribute("role","img");
-      icon.setAttribute("aria-label",current.label);
-      icon.textContent = current.picture;
+      icon.alt = current.label;
+      icon.decoding = "async";
+      icon.src = "./assets/ui/phonics-words/" + current.word.toLowerCase() + ".svg";
       region.replaceChildren(icon);
       region.hidden = false;
     },1000);
@@ -128,9 +128,9 @@
     #phonics-words-letters.is-combined .phonics-words-letter{border-radius:0}
     #phonics-words-picture{width:29%;display:flex;align-items:center;justify-content:center;flex-direction:column;position:absolute;right:1.5%;top:10%;bottom:10%}
     #phonics-words-picture[hidden]{display:none!important}
-    .phonics-words-pictogram{font-size:clamp(70px,15vw,170px);line-height:1.3}
+    .phonics-words-pictogram{display:block;width:min(100%,190px);height:auto;max-height:75%;object-fit:contain}
     #phonics-words-action{font-weight:800;font-size:clamp(22px,3vw,33px);color:white;background:#2588ef;border:3px solid #1e69bf;border-radius:22px;width:min(60vw,410px);height:clamp(76px,14vh,105px);flex-shrink:0;touch-action:manipulation}
-    @media(max-width:700px){.phonics-words-letter{width:clamp(35px,8.2vw,68px)}.phonics-words-main{width:75%;justify-content:flex-start;padding-left:1vw}.phonics-words-pictogram{font-size:70px}}
+    @media(max-width:700px){.phonics-words-letter{width:clamp(35px,8.2vw,68px)}.phonics-words-main{width:75%;justify-content:flex-start;padding-left:1vw}.phonics-words-pictogram{max-width:100px}}
   `;
   document.head.append(css);
   const screen = document.createElement("section");
