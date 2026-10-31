@@ -23,7 +23,7 @@
     Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
     Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
     Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" }),
-    Object.freeze({ id:"phonics-words", label:"フォニックスでよめることば", detail:"" })
+    Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -4951,10 +4951,10 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:8 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 2 };
+    if (questBonusSelecting) return { friendship:5, energy:9 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
-      : { friendship:5, energy:25 };
+      : { friendship:5, energy:15 };
   }
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
