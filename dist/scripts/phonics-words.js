@@ -124,7 +124,7 @@
     #phonics-words-letters{display:inline-flex;align-items:stretch;gap:clamp(3px,.5vw,10px);max-width:100%;border-radius:18px}
     .phonics-words-letter{display:flex;justify-content:center;align-items:center;width:clamp(37px,8vw,110px);height:clamp(80px,18vh,160px);font-size:clamp(35px,7vw,96px);font-weight:850;border-radius:16px;background:transparent;color:#122453;box-sizing:border-box}
     .phonics-words-letter.is-selected{background:#adf0ff}
-    #phonics-words-letters.is-combined{background:#adf0ff;gap:0}
+    #phonics-words-letters.is-combined{background:#adf0ff}
     #phonics-words-letters.is-combined .phonics-words-letter{border-radius:0}
     #phonics-words-picture{width:29%;display:flex;align-items:center;justify-content:center;flex-direction:column;position:absolute;right:1.5%;top:10%;bottom:10%}
     #phonics-words-picture[hidden]{display:none!important}
