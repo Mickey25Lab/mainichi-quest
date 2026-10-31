@@ -1162,7 +1162,9 @@
   function startPhonicsWordMode() {
     if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
     beginDailyMissionAttempt("phonics-words");
+    $("phonics-words-background").src = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     showScreen("phonics-words-screen");
+    schedulePlayStageSize("phonics-words");
     window.MQPhonicsWords.start({
       onComplete: () => {
         completeDailyMissionRound("phonics-words");
@@ -1203,6 +1205,7 @@
       document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale-inverse", String(scale > 0 ? 1 / scale : 1));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".phonics-words-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     }
     if (includeCollection) {
