@@ -1122,8 +1122,13 @@
     }).catch((error) => {
       console.warn("Phonics intro background failed to load", error);
       if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
-      showScreen("phonics-intro-screen");
-      schedulePlayStageSize("phonics-intro");
+      // Keep the previous screen visible rather than showing an incomplete background.
+      phonicsYoutube.introMinimumElapsed = false;
+      clearPhonicsIntroTimer();
+      cancelDailyMissionAttempt();
+      phonicsYoutube.activeModeId = null;
+      renderModeSelectMission();
+      showFixedScreenWhenReady("mode-select-screen");
     });
     preloadFanfareSounds();
     phonicsYoutube.introTimerId = window.setTimeout(() => {
@@ -1190,8 +1195,15 @@
     const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     const wordBackground = $("phonics-words-background");
     void preloadDecodedImage(backgroundPath).then(() => decodeImageElement(wordBackground, backgroundPath))
-      .catch((error) => { console.warn("Phonics word background failed to load", error); })
-      .then(() => {
+      .catch((error) => {
+        console.warn("Phonics word background failed to load", error);
+        if (wordsRequestId === visualRequestId) {
+          window.MQPhonicsWords.quit();
+        }
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded === false) return;
         if (wordsRequestId !== visualRequestId || !wordBackground.isConnected || !window.MQPhonicsWords) return;
         showScreen("phonics-words-screen");
         schedulePlayStageSize("phonics-words");
