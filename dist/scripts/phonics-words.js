@@ -112,7 +112,7 @@
   }
   const css = document.createElement("style");
   css.textContent = `
-    #phonics-words-screen{position:absolute;inset:0;z-index:2;overflow:hidden;background:#071c38}
+    #phonics-words-screen{position:absolute;inset:0;z-index:2;overflow:hidden}
     #phonics-words-screen:not(.active){display:none!important}
     .phonics-words-stage{position:absolute;left:50%;top:50%;width:1400px;height:1050px;transform:translate(-50%,-50%) scale(var(--stage-scale,1));transform-origin:center;overflow:hidden;font-family:"Noto Sans JP",sans-serif}
     .phonics-words-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.68)}
