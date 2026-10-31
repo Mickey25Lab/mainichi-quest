@@ -49,3 +49,10 @@ test("MQ-001 keeps log export anchored at the top and does not automatically rel
   assert.match(body, /navigator\.clipboard\.writeText/);
   assert.doesNotMatch(body, /location\.reload\(|window\.location\.assign\(/);
 });
+
+test("MQ-001 admin toggle is visible rather than inside a hidden row", () => {
+  const html = fs.readFileSync(path.join(__dirname, "../dist/index.html"), "utf8");
+  const row = html.match(/<div class="admin-setting-row"([^>]*)>\s*<span>画面拡大診断<\/span>\s*<button[^>]*id="admin-viewport-diagnostics-toggle"/);
+  assert.ok(row, "MQ-001 toggle must exist in developer tools");
+  assert.doesNotMatch(row[1], /\bhidden\b/);
+});
