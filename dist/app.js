@@ -3883,6 +3883,65 @@
     if (holdDurationMs > 0) window.setTimeout(startFlight, holdDurationMs);
     else window.requestAnimationFrame(startFlight);
   }
+
+  // WS2 PR6: visual-only flights. Reward calculations and round commits stay independent.
+  function playEnergyOrbFlight(kind, onArrive = null) {
+    const stage = $("play-stage");
+    const runId = state.runId;
+    const source = $("answer-mark") || $("question-answer-card");
+    const destination = kind === "pink" ? ensureTimeEnergyHourglass() : $("answer-character");
+    if (!stage || !source || !destination) { if (onArrive) onArrive(); return; }
+    const scale = stage.getBoundingClientRect().width / stageCanvasWidth || 1;
+    const stageRect = stage.getBoundingClientRect();
+    const from = source.getBoundingClientRect(), to = destination.getBoundingClientRect();
+    const startX = (from.left + from.width * .5 - stageRect.left) / scale;
+    const startY = (from.top + from.height * .5 - stageRect.top) / scale;
+    const endX = (to.left + to.width * .5 - stageRect.left) / scale;
+    const endY = (to.top + to.height * .5 - stageRect.top) / scale;
+    const orb = document.createElement("div");
+    orb.className = "ws2-energy-orb ws2-energy-orb--" + kind;
+    orb.setAttribute("aria-hidden", "true");
+    orb.style.left = startX + "px";
+    orb.style.top = startY + "px";
+    stage.appendChild(orb);
+    let finished = false;
+    const arrive = () => {
+      if (finished) return;
+      finished = true;
+      orb.remove();
+      if (runId !== state.runId || !$("play-screen").classList.contains("active")) return;
+      destination.classList.remove("ws2-energy-absorbed");
+      void destination.offsetWidth;
+      destination.classList.add("ws2-energy-absorbed");
+      if (onArrive) onArrive();
+    };
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || typeof orb.animate !== "function") {
+      arrive();
+      return;
+    }
+    const dx = endX - startX, dy = endY - startY;
+    const animation = orb.animate([
+      { offset:0, transform:"translate(0,0) scale(1)", opacity:1 },
+      { offset:.65, transform:`translate(${dx*.65}px,${dy*.65-18}px) scale(.9)`, opacity:1 },
+      { offset:1, transform:`translate(${dx}px,${dy}px) scale(.12)`, opacity:0 }
+    ], { duration:690, easing:"ease-in-out", fill:"forwards" });
+    animation.finished.then(arrive, arrive);
+    // Clean up orphaned flights on interrupted navigation / PWA lifecycle.
+    window.setTimeout(() => { orb.remove(); if (runId === state.runId) arrive(); }, 850);
+  }
+  function ensureTimeEnergyHourglass() {
+    const stage = $("play-stage");
+    let hourglass = $("ws2-time-hourglass");
+    if (!hourglass) {
+      hourglass = document.createElement("div");
+      hourglass.id = "ws2-time-hourglass";
+      hourglass.className = "ws2-time-hourglass";
+      hourglass.textContent = "⌛";
+      hourglass.setAttribute("aria-label", "ピンクのタイムエネルギー");
+      stage.appendChild(hourglass);
+    }
+    return hourglass;
+  }
   function timeBonusAnswerDigits(question) {
     if (question.kind === "multiplication" || question.kind === "multiplication2x2") return String(question.product).length;
     return String(question.quotient).length + (question.remainder === 0 ? 0 : String(question.remainder).length);
@@ -4022,7 +4081,7 @@
   function progressCollectionForCorrect(question = state.current) {
     const vehicleIndex = question.vehicleIndex ?? state.currentVehicleIndex;
     const progress = vehicleProgress(vehicleIndex);
-    let reward = null, energyGain = 0, friendshipGain = 0, deferredTimeBonus = null, energyVisual = null;
+    let reward = null, energyGain = 0, friendshipGain = 0, deferredTimeBonus = null, energyVisual = null, pinkGain = 0;
     if (!progress.discovered) {
       reward = commitAcquisition({ vehicleIndex, acquisitionType: "vehicle_discovered", stage: 1 });
     } else if (!progress.friendly) {
@@ -4040,7 +4099,7 @@
       const timeBonus = getTimeBonusForCorrect(question);
       // Time-qualified answers earn pink time energy, never an extra blue +1.
       // Do not credit persistent balance until the entire round (including retry) ends.
-      if (timeBonus && roundTransaction) roundTransaction.timeEnergyAmount += timeBonus.amount;
+      if (timeBonus && roundTransaction) { roundTransaction.timeEnergyAmount += timeBonus.amount; pinkGain = timeBonus.amount; }
       const gain = applyEnergyGain(progress, vehicleIndex, energyGain);
       reward = gain.reward;
       energyVisual = { vehicleIndex, energy: gain.appliedEnergy, required: gain.required };
@@ -4049,7 +4108,7 @@
     // Ordinary point gains remain progress-only; acquisitions persist inside
     // commitAcquisition together with history and session GET data.
     if (!deferredTimeBonus && !reward) saveCollectionProgress();
-    return { reward, energyGain, friendshipGain, deferredTimeBonus, energyVisual };
+    return { reward, energyGain, friendshipGain, deferredTimeBonus, energyVisual, pinkGain };
   }
   function isFinalInitialQuestion() {
     return state.phase === "initial" && state.initialIndex >= state.questions.length - 1;
@@ -4187,14 +4246,13 @@
         progression = progressCollectionForCorrect(state.current);
         reward = progression.reward;
         if (progression.friendshipGain) playProgressGainAnimation({ kind: "friendship" });
-        else if (progression.energyGain && !progression.deferredTimeBonus) playProgressGainAnimation({
-          kind: "energy", amount: progression.energyGain, completed: Boolean(reward),
-          onArrive: () => {
-            if (progression.energyVisual) state.energyDisplayOverride = progression.energyVisual;
-            renderVehicleProgressUi(state.current.vehicleIndex);
-            showProgressSpeechBubbleForCurrentQuestion(state.current.vehicleIndex);
-          }
+        else if (progression.energyGain && !progression.deferredTimeBonus) playEnergyOrbFlight("blue", () => {
+          if (progression.energyVisual) state.energyDisplayOverride = progression.energyVisual;
+          renderVehicleProgressUi(state.current.vehicleIndex);
+          showProgressSpeechBubbleForCurrentQuestion(state.current.vehicleIndex);
+          if (reward) flashEnergyCapsule();
         });
+        if (progression.pinkGain) playEnergyOrbFlight("pink");
       }
       if (reward && reward.stage < 5) preloadRewardVisuals(reward.stage, reward.vehicleIndex, reward.kind).catch(() => {});
       playSimpleCorrectSound();
