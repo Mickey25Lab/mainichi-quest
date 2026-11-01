@@ -601,6 +601,15 @@
     updateTimeEnergyClock();
     timeEnergyTimer = window.setInterval(updateTimeEnergyClock,200);
   }
+  function qaDailyBonusScenario() {
+    const qa = profileStore.getActiveQaState();
+    return qa.qaEnabled && qa.dailyBonusScenario?.date === japanDateKey()
+      ? qa.dailyBonusScenario : null;
+  }
+  function questBonusClaimedDate() {
+    const scenario = qaDailyBonusScenario();
+    return scenario ? scenario.questClaimDate || null : profileStore.getQuestBonusClaimDate();
+  }
   function setupTimeEnergyQaControls() {
     const qaButton = $("admin-qa-toggle");
     if (!qaButton || !$("admin-qa-toggle").parentElement) return;
@@ -609,7 +618,25 @@
     button.textContent = "QA：タイムボーナス +8 → 30秒割り当て";
     button.style.cssText = "margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
     qaButton.parentElement.after(button);
-    const sync = () => { button.hidden = !qaProgressModeEnabled(); };
+    const scenarioButton = document.createElement("button");
+    scenarioButton.type = "button";
+    scenarioButton.textContent = "QA：ミッションぜんぶクリア → ボーナスをもらう！（タイム＋8・クエスト）";
+    scenarioButton.style.cssText = "display:block;margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
+    button.after(scenarioButton);
+    scenarioButton.addEventListener("click", () => {
+      if (!qaProgressModeEnabled()) return;
+      const qa = profileStore.getActiveQaState();
+      profileStore.setActiveQaState({
+        ...qa,
+        dailyBonusScenario: { date:japanDateKey(), questClaimDate:null },
+        timeEnergy: { balance:0, allocation:null, completed:[] }
+      });
+      profileStore.creditTimeEnergy(8, "qa-daily-bonus-" + japanDateKey());
+      $("admin-panel-overlay").hidden = true;
+      dailyBonusFlow = false;
+      endToModeSelect();
+    });
+    const sync = () => { button.hidden = !qaProgressModeEnabled(); scenarioButton.hidden = !qaProgressModeEnabled(); };
     sync();
     button.addEventListener("click", () => {
       if (!qaProgressModeEnabled()) return;
@@ -657,6 +684,11 @@
     // QA presets must never become permanent player points.
     if (qaProgressModeEnabled()) {
       profileStore.setRewardProgress(state.rewardProgress);
+      if (questBonusClaimPendingDate && qaDailyBonusScenario()) {
+        const qa = profileStore.getActiveQaState();
+        profileStore.setActiveQaState({ ...qa, dailyBonusScenario:{ ...qa.dailyBonusScenario, questClaimDate:questBonusClaimPendingDate } });
+      }
+      questBonusClaimPendingDate = null;
       capsuleSpendPending = false; // QA capsules are virtual and never deducted.
       return;
     }
@@ -2829,7 +2861,7 @@
     const mission = dailyMissionState();
     const items = parentModeDefinitions.map((mode) => {
       const target = normalizedMissionTarget(settings, mode.id);
-      const completed = Math.max(0, Number(mission.completedCounts?.[mode.id]) || 0);
+      const completed = qaDailyBonusScenario() ? target : Math.max(0, Number(mission.completedCounts?.[mode.id]) || 0);
       const remaining = Math.max(0, target - completed);
       const energyId = childEnergyPresentation[settings.energyMultipliers?.[mode.id]]
         ? settings.energyMultipliers[mode.id]
@@ -2879,8 +2911,8 @@
     banner.hidden = !overview.allComplete;
     banner.classList.toggle("is-final", overview.allComplete && !overview.freePlayEnabled);
     const questButton = $("quest-bonus-continue");
-    const questClaimedToday = profileStore.getQuestBonusClaimDate() === japanDateKey();
-    const questQaEnabled = qaProgressModeEnabled();
+    const questClaimedToday = questBonusClaimedDate() === japanDateKey();
+    const questQaEnabled = qaProgressModeEnabled() && !qaDailyBonusScenario();
     const questAvailable = overview.allComplete && !questClaimedToday && !questQaEnabled;
     // The finished day and profile-specific claim determine visibility.
     // In-flight animation/transaction flags must never hide the earned action.
@@ -2964,9 +2996,9 @@
   }
 
   function questBonusAvailable() {
-    if (qaProgressModeEnabled() || questBonusSelecting || roundTransaction) return false;
+    if ((qaProgressModeEnabled() && !qaDailyBonusScenario()) || questBonusSelecting || roundTransaction) return false;
     const today = japanDateKey();
-    return missionOverview().allComplete && profileStore.getQuestBonusClaimDate() !== today;
+    return missionOverview().allComplete && questBonusClaimedDate() !== today;
   }
   function promptQuestBonusIfAvailable() {
     if (!questBonusAvailable()) return false;
@@ -2991,7 +3023,7 @@
     preparePhonicsYoutubePlayback();
   }
   function beginDailyBonusFlow() {
-    if (dailyBonusFlow || qaProgressModeEnabled() || !missionOverview().allComplete) return;
+    if (dailyBonusFlow || (qaProgressModeEnabled() && !qaDailyBonusScenario()) || !missionOverview().allComplete) return;
     const time = profileStore.getTimeEnergy();
     if (!time.allocation && time.balance <= 0 && !questBonusAvailable()) return;
     dailyBonusFlow = true;
@@ -5197,7 +5229,7 @@
         return;
       }
       if (!questBonusSelectionDate || questBonusSelectionProfileId !== profileStore.getActiveProfileId()
-        || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
+        || questBonusClaimedDate() === questBonusSelectionDate) return;
       questBonusClaimPendingDate = questBonusSelectionDate;
     }
     let reward = null;
