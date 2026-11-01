@@ -72,6 +72,7 @@ jobs:
             tests/time-energy-earning.test.cjs \
             tests/time-energy-integrated-flow.test.cjs \
             tests/ws2-energy-flight.test.cjs \
+            tests/ws2-daily-bonus-flow.test.cjs \
             tests/round-transaction.test.cjs \
             tests/acquisition-commit-flow.test.cjs \
             tests/collection-earned-layouts.test.cjs \
