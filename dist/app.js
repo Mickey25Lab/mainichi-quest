@@ -2847,6 +2847,10 @@
 
   function dailyMissionState() {
     const today = japanDateKey();
+    if (qaDailyBonusScenario()) {
+      // The QA full-clear preview must not rewrite the real daily mission ledger.
+      return { date:today, completedCounts:{}, questRewardLevel:levelSystem.levelAt(profileStore.getPointLedger()?.total || 0) };
+    }
     let mission;
     try { mission = profileStore.getDailyMission(); } catch (_) { mission = null; }
     if (!mission || mission.date !== today || !mission.completedCounts || typeof mission.completedCounts !== "object") {
