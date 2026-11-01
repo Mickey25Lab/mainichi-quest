@@ -24,3 +24,11 @@ test("WS2 PR7 leaves existing earning formulas and atomic storage paths intact",
   assert.match(app, /profileStore\.commitTimeEnergyAllocation\(/);
   assert.match(app, /questBonusClaimDate: questBonusClaimPendingDate/);
 });
+
+test("WS2 PR7 keeps bonus action inside visible completion panel", () => {
+  const css = fs.readFileSync("dist/styles.css", "utf8");
+  assert.match(css, /WS2 PR7: keep the claim button inside the visible completion panel/);
+  assert.match(css, /\.mode-select-screen > \.mode-select-mission-complete \{\s*gap:12px;\s*padding:32px 42px;/);
+  assert.match(css, /\.mode-select-screen > \.mode-select-mission-complete #quest-bonus-continue:not\(\[hidden\]\)/);
+  assert.match(app, /banner\.dataset\.bonusStatus/);
+});
