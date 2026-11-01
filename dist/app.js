@@ -621,7 +621,7 @@
     const scenarioButton = document.createElement("button");
     scenarioButton.type = "button";
     scenarioButton.textContent = "QA：ミッションぜんぶクリア → ボーナスをもらう！（タイム＋8・クエスト）";
-    scenarioButton.style.cssText = "display:block;margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
+    scenarioButton.style.cssText = "margin:10px auto;padding:12px;font-size:16px;border-radius:10px";
     button.after(scenarioButton);
     scenarioButton.addEventListener("click", () => {
       if (!qaProgressModeEnabled()) return;
