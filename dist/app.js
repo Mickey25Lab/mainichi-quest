@@ -2895,6 +2895,13 @@
       : "available";
     questButton.dataset.questProfile = profileStore.getActiveProfileId() || "";
     questButton.dataset.questClaimDate = profileStore.getQuestBonusClaimDate() || "";
+    // Explicitly distinguish an already-claimed day from a clipped CTA in QA.
+    banner.dataset.bonusStatus = !overview.allComplete ? "incomplete"
+      : questQaEnabled ? "qa"
+      : bonusAvailable ? "claimable" : "already-claimed";
+    if (overview.allComplete && !bonusAvailable && !questQaEnabled) {
+      questButton.setAttribute("aria-label", "きょうのボーナスはうけとりずみ");
+    } else questButton.removeAttribute("aria-label");
   }
 
   function isModeAvailableForMission(mode) {
