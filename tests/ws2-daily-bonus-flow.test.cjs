@@ -59,7 +59,7 @@ test("WS2 PR7 QA complete-day override never writes production daily mission", (
 });
 
 test("WS2 PR7 removes stale dark scan overlay before opening the next bonus card grid", () => {
-  const selection = app.slice(app.indexOf("async function openPhonicsRewardSelection("), app.indexOf("function startPhonicsRewardVehicleSelection("));
+  const selection = app.slice(app.indexOf("async function openPhonicsRewardSelection("), app.indexOf("// Inventory opens within the 60-second collection session."));
   assert.match(selection, /document\.getElementById\("phonics-reward-scrim"\)\?\.remove\(\)/);
   assert.match(selection, /document\.getElementById\("phonics-scan-showcase"\)\?\.remove\(\)/);
   assert.match(selection, /state\.phonicsChargedShowcase\?\.remove\(\)/);
