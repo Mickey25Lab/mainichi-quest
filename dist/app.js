@@ -1906,6 +1906,71 @@
       });
     });
   }
+  // MQ-001: iPad standalone PWAs can report a portrait viewport while the
+  // device orientation still reports landscape. Never force a landscape size
+  // without an independent orientation signal: real rotations must work.
+  let viewportOrientationRecoveryTimer = null;
+  let viewportOrientationRecoveryPending = 0;
+  let viewportOrientationRecoveryLastAttempt = 0;
+  function physicalLandscapeSignal() {
+    const modern = window.screen.orientation;
+    if (modern && typeof modern.type === "string"
+        && /^(landscape-primary|landscape-secondary)$/.test(modern.type)) return true;
+    // iOS Safari exposes legacy window.orientation on many older iPads.
+    const legacy = window.orientation;
+    return typeof legacy === "number" && Math.abs(legacy) === 90;
+  }
+  function scheduleViewportOrientationRecovery(reason) {
+    if (viewportOrientationRecoveryTimer !== null) window.clearTimeout(viewportOrientationRecoveryTimer);
+    if (document.hidden) return;
+    const first = viewportSnapshot();
+    const unexpectedPortrait = first.innerHeight > first.innerWidth
+      && physicalLandscapeSignal()
+      && first.visualViewportScale !== null
+      && Math.abs(first.visualViewportScale - 1) <= 0.01;
+    if (!unexpectedPortrait) {
+      if (viewportOrientationRecoveryPending) recordViewportDiagnostic("orientation-recovery-cleared", { reason });
+      viewportOrientationRecoveryPending = 0;
+      return;
+    }
+    const token = ++viewportOrientationRecoveryPending;
+    recordViewportDiagnostic("orientation-viewport-mismatch", { reason, token });
+    viewportOrientationRecoveryTimer = window.setTimeout(() => {
+      viewportOrientationRecoveryTimer = null;
+      if (document.hidden || token !== viewportOrientationRecoveryPending) return;
+      const current = viewportSnapshot();
+      if (!physicalLandscapeSignal() || !viewportIsStable(first, current)
+          || current.innerHeight <= current.innerWidth) return;
+      // Cooldown avoids continuous viewport-meta writes when WebKit does not
+      // honor a re-layout request. No reload, navigation or profile mutation.
+      const now = Date.now();
+      if (now - viewportOrientationRecoveryLastAttempt < 30000 || viewportRecoveryInProgress) return;
+      viewportOrientationRecoveryLastAttempt = now;
+      viewportRecoveryInProgress = true;
+      const meta = document.querySelector('meta[name="viewport"]');
+      recordViewportDiagnostic("orientation-recovery-start", { reason });
+      if (meta) {
+        const original = meta.getAttribute("content") || stableViewportMetaContent;
+        meta.setAttribute("content", resetViewportMetaContent);
+        void document.documentElement.offsetWidth;
+        window.setTimeout(() => {
+          meta.setAttribute("content", original);
+          viewportRecoveryInProgress = false;
+          schedulePlayStageSize("orientation-recovery");
+          window.setTimeout(() => {
+            schedulePlayStageSize("orientation-recovery-verify");
+            recordViewportDiagnostic("orientation-recovery-result", {
+              recovered: window.innerWidth >= window.innerHeight,
+              reason
+            });
+          }, 250);
+        }, 60);
+      } else {
+        viewportRecoveryInProgress = false;
+        recordViewportDiagnostic("orientation-recovery-unavailable", { reason });
+      }
+    }, 800);
+  }
   function assignQuestionVisualContext(question) {
     if (question.vehicleIndex === undefined) question.vehicleIndex = state.currentVehicleIndex;
     question.answerStage = currentStageForVehicle(question.vehicleIndex);
@@ -6886,12 +6951,14 @@
   window.addEventListener("resize", () => {
     recordViewportDiagnostic("window.resize");
     schedulePlayStageSize("resize");
+    scheduleViewportOrientationRecovery("resize");
   });
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
     if (!recoverAbnormalPwaZoom("pageshow")) schedulePlayStageSize("pageshow");
+    scheduleViewportOrientationRecovery("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
   window.addEventListener("pagehide", () => {
@@ -6906,10 +6973,12 @@
   window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });
   window.addEventListener("orientationchange", () => {
     schedulePlayStageSize("orientationchange");
+    scheduleViewportOrientationRecovery("orientationchange");
   });
   window.visualViewport?.addEventListener("resize", () => {
     recordViewportDiagnostic("visualViewport.resize");
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
+    scheduleViewportOrientationRecovery("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("scroll", () => recordViewportDiagnostic("visualViewport.scroll"));
   $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
