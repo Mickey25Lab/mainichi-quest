@@ -5898,3 +5898,30 @@ button, input { font: inherit; }
   .play-screen .ws2-energy-orb, .play-screen .ws2-time-hourglass.ws2-energy-absorbed,
   .play-screen .answer-character.ws2-energy-absorbed { animation:none; }
 }
+
+/* WS2 PR7: keep the claim button inside the visible completion panel on all viewports.
+   The original 76/48px text plus ruby, large gaps and padding exceeded 795px. */
+.mode-select-screen > .mode-select-mission-complete {
+  gap:12px;
+  padding:32px 42px;
+  justify-content:center;
+  overflow:visible;
+}
+.mode-select-screen > .mode-select-mission-complete strong {
+  font-size:56px;
+  line-height:1.24;
+}
+.mode-select-screen > .mode-select-mission-complete span {
+  font-size:36px;
+  line-height:1.3;
+}
+.mode-select-screen > .mode-select-mission-complete strong .mission-title-line {
+  font-size:inherit;
+  line-height:inherit;
+}
+.mode-select-screen > .mode-select-mission-complete #quest-bonus-continue:not([hidden]) {
+  flex-shrink:0;
+  margin-top:8px;
+  padding:14px 38px;
+  font-size:36px;
+}
