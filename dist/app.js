@@ -5181,6 +5181,14 @@
     const amounts = phonicsGrowthAmounts();
     if (questBonusSelecting) {
       stopQuestBonusTimer();
+      if (questBonusSelectionDate !== japanDateKey()) {
+        // The quest reward expires at the Japan-day boundary; never credit yesterday's quest.
+        questBonusSelecting = false;
+        dailyBonusFlow = false;
+        questBonusClaimPendingDate = null;
+        endToModeSelect();
+        return;
+      }
       if (!questBonusSelectionDate || questBonusSelectionProfileId !== profileStore.getActiveProfileId()
         || profileStore.getQuestBonusClaimDate() === questBonusSelectionDate) return;
       questBonusClaimPendingDate = questBonusSelectionDate;
