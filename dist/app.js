@@ -515,8 +515,9 @@
         const definition = acquisitionDefinitions[acquisitionType];
         if (definition) showReward({
           stage, vehicleIndex, isNew:true, kind:definition.rewardKind
-        }, false, showPhonicsCollectionHandoff);
-      } else showPhonicsCollectionHandoff();
+        }, false, dailyBonusFlow ? finishDailyTimeBonusFlow : showPhonicsCollectionHandoff);
+      } else if (dailyBonusFlow) finishDailyTimeBonusFlow();
+      else showPhonicsCollectionHandoff();
       return true;
     } catch (error) {
       console.error("Time energy allocation was not committed", error);
@@ -620,6 +621,7 @@
     if (pending && qaProgressModeEnabled())
       window.setTimeout(() => { if (qaProgressModeEnabled()) void openTimeEnergyAllocation(); },1500);
   }
+  let dailyBonusFlow = false;
   let questBonusSelecting = false;
   let questBonusClaimPendingDate = null;
   let questBonusSelectionDate = null;
@@ -2882,7 +2884,11 @@
     const questAvailable = overview.allComplete && !questClaimedToday && !questQaEnabled;
     // The finished day and profile-specific claim determine visibility.
     // In-flight animation/transaction flags must never hide the earned action.
-    questButton.hidden = !questAvailable;
+    const timeState = profileStore.getTimeEnergy();
+    const bonusAvailable = overview.allComplete && !questQaEnabled
+      && (questAvailable || timeState.balance > 0 || Boolean(timeState.allocation));
+    questButton.hidden = !bonusAvailable;
+    questButton.textContent = "ボーナスをもらう！";
     questButton.dataset.questReason = !overview.allComplete ? "incomplete"
       : questClaimedToday ? "claimed-today"
       : questQaEnabled ? "qa"
@@ -2977,7 +2983,26 @@
     // the subsequent phonics-mode tap the only interaction needed before play.
     preparePhonicsYoutubePlayback();
   }
-  $("quest-bonus-continue").addEventListener("click", promptQuestBonusIfAvailable);
+  function beginDailyBonusFlow() {
+    if (dailyBonusFlow || qaProgressModeEnabled() || !missionOverview().allComplete) return;
+    const time = profileStore.getTimeEnergy();
+    if (!time.allocation && time.balance <= 0 && !questBonusAvailable()) return;
+    dailyBonusFlow = true;
+    if (time.allocation || time.balance > 0) {
+      void openTimeEnergyAllocation().catch((error) => {
+        console.error("Daily time bonus could not be opened", error);
+        dailyBonusFlow = false;
+        renderModeSelectMission();
+      });
+    } else finishDailyTimeBonusFlow();
+  }
+  function finishDailyTimeBonusFlow() {
+    if (!dailyBonusFlow) return;
+    if (questBonusAvailable() && promptQuestBonusIfAvailable()) return;
+    dailyBonusFlow = false;
+    endToModeSelect();
+  }
+  $("quest-bonus-continue").addEventListener("click", beginDailyBonusFlow);
   function startGameFromGesture(mode) {
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); return; }
     recordVisualDiagnostic("mode-select-tap", { mode, ...visualVehicleSnapshot() });
@@ -5177,7 +5202,9 @@
       if (!reward) saveCollectionProgress();
     }
     // The selected quest charge and its once-per-day claim are saved together.
+    const completedQuestBonus = questBonusSelecting;
     if (questBonusSelecting) { questBonusSelecting = false; questBonusSelectionDate = null; questBonusSelectionProfileId = null; }
+    if (completedQuestBonus && dailyBonusFlow) onFinished = () => { dailyBonusFlow = false; endToModeSelect(); };
     // Retain the existing card DOM and artwork; only patch progress indicators.
     if (reward) {
       showReward(reward, false, onFinished);
