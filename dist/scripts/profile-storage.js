@@ -290,6 +290,13 @@
       const timestamp = isoNow(now);
       const profile = emptyProfile(name, stableId(randomUUID), timestamp);
       if (createOptions.legacySnapshot) applyLegacySnapshot(profile, createOptions.legacySnapshot);
+      else if (Array.isArray(createOptions.initialModeIds)) {
+        for (const modeId of createOptions.initialModeIds) {
+          if (typeof modeId !== "string" || !modeId) continue;
+          profile.enabledModes[modeId] = true;
+          profile.dailyTargetCounts[modeId] = 1;
+        }
+      }
       const registry = readRegistry();
       registry.profiles.push(profile);
       writeRegistry(registry);

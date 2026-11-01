@@ -22,7 +22,8 @@
     Object.freeze({ id:"phonics-part-3", label:"フォニックス", detail:"パート3　L〜P" }),
     Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
     Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
-    Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" })
+    Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" }),
+    Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -30,7 +31,7 @@
     Object.freeze({ id:"medium", label:"中" }),
     Object.freeze({ id:"large", label:"大" })
   ]);
-  const screens = ["start-screen", "mode-select-screen", "phonics-intro-screen", "phonics-youtube-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
+  const screens = ["start-screen", "mode-select-screen", "phonics-intro-screen", "phonics-youtube-screen", "phonics-words-screen", "play-screen", "transition-screen", "reward-screen", "result-screen", "collection-screen", "collection-detail-screen"];
   const fanfareSoundPaths = ["./assets/audio/correct-grand-fanfare.wav", "./assets/audio/correct-arcade-celebration.wav", "./assets/audio/correct-applause-cheer.wav"];
   const startSoundPath = "./assets/audio/warizan-start-powerup.wav";
   const startKeyVisualPath = "./assets/ui/top/top_key_visual.webp";
@@ -1093,6 +1094,7 @@
     if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
     if (!selectPhonicsYoutubeLesson(lessonId)) return;
     phonicsYoutube.activeModeId = modeId;
+    const introRequestId = ++visualRequestId;
     beginDailyMissionAttempt(modeId);
     const missionAtStart = missionOverview();
     phonicsYoutube.rewardAlmostZero = missionAtStart.allComplete
@@ -1104,14 +1106,30 @@
     renderPhonicsIntroLetters();
     const phonicsBackgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     phonicsYoutube.backgroundPath = phonicsBackgroundPath;
-    $("phonics-intro-background").src = phonicsBackgroundPath;
-    document.querySelector(".phonics-youtube-background").src = phonicsBackgroundPath;
+    // Preload and decode the shared stage background before revealing the intro.
+    const introBackground = $("phonics-intro-background");
+    const videoBackground = document.querySelector(".phonics-youtube-background");
+    const introBackgroundReady = preloadDecodedImage(phonicsBackgroundPath)
+      .then(() => Promise.all([decodeImageElement(introBackground, phonicsBackgroundPath), decodeImageElement(videoBackground, phonicsBackgroundPath)]));
     $("phonics-intro-start").disabled = true;
     $("phonics-intro-start").textContent = "ちょっとまってね";
     $("phonics-intro-status").textContent = "";
-    showScreen("phonics-intro-screen");
-    schedulePlayStageSize("phonics-intro");
     preparePhonicsYoutubePlayback();
+    void introBackgroundReady.then(() => {
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      showScreen("phonics-intro-screen");
+      schedulePlayStageSize("phonics-intro");
+    }).catch((error) => {
+      console.warn("Phonics intro background failed to load", error);
+      if (introRequestId !== visualRequestId || phonicsYoutube.activeModeId !== modeId || phonicsYoutube.backgroundPath !== phonicsBackgroundPath) return;
+      // Keep the previous screen visible rather than showing an incomplete background.
+      phonicsYoutube.introMinimumElapsed = false;
+      clearPhonicsIntroTimer();
+      cancelDailyMissionAttempt();
+      phonicsYoutube.activeModeId = null;
+      renderModeSelectMission();
+      showFixedScreenWhenReady("mode-select-screen");
+    });
     preloadFanfareSounds();
     phonicsYoutube.introTimerId = window.setTimeout(() => {
       phonicsYoutube.introTimerId = 0;
@@ -1170,6 +1188,38 @@
     // sees playVideo() after the user-gesture window has expired and blocks it.
     preparePhonicsYoutubePlayback();
   }
+  function startPhonicsWordMode() {
+    if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
+    beginDailyMissionAttempt("phonics-words");
+    const wordsRequestId = ++visualRequestId;
+    const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
+    const wordBackground = $("phonics-words-background");
+    void preloadDecodedImage(backgroundPath).then(() => decodeImageElement(wordBackground, backgroundPath))
+      .catch((error) => {
+        console.warn("Phonics word background failed to load", error);
+        if (wordsRequestId === visualRequestId) {
+          window.MQPhonicsWords.quit();
+        }
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded === false) return;
+        if (wordsRequestId !== visualRequestId || !wordBackground.isConnected || !window.MQPhonicsWords) return;
+        showScreen("phonics-words-screen");
+        schedulePlayStageSize("phonics-words");
+      });
+    window.MQPhonicsWords.start({
+      onComplete: () => {
+        completeDailyMissionRound("phonics-words");
+        openPhonicsRewardSelection();
+      },
+      onQuit: () => {
+        cancelDailyMissionAttempt();
+        renderModeSelectMission();
+        showFixedScreenWhenReady("mode-select-screen");
+      }
+    });
+  }
   function completePhonicsYoutubeAndLeave() {
     if (phonicsYoutube.activeModeId) completeDailyMissionRound(phonicsYoutube.activeModeId);
     stopAndDestroyPhonicsYoutube();
@@ -1198,6 +1248,7 @@
       document.querySelector(".collection-detail-stage")?.style.setProperty("--stage-scale-inverse", String(scale > 0 ? 1 / scale : 1));
       $("play-stage").style.setProperty("--stage-scale", String(scale));
       $("phonics-intro-stage")?.style.setProperty("--stage-scale", String(scale));
+      document.querySelector(".phonics-words-stage")?.style.setProperty("--stage-scale", String(scale));
       $("phonics-youtube-stage")?.style.setProperty("--stage-scale", String(scale));
     }
     if (includeCollection) {
@@ -3883,7 +3934,6 @@
     if (holdDurationMs > 0) window.setTimeout(startFlight, holdDurationMs);
     else window.requestAnimationFrame(startFlight);
   }
-
   // WS2 PR6: visual-only flights. Reward calculations and round commits stay independent.
   function playEnergyOrbFlight(kind, onArrive = null) {
     const stage = $("play-stage");
@@ -4989,10 +5039,10 @@
     }
   }
   function phonicsGrowthAmounts() {
-    if (questBonusSelecting) return { friendship:5, energy:8 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) * 2 };
+    if (questBonusSelecting) return { friendship:5, energy:9 + (dailyMissionState().questRewardLevel || levelSystem.levelAt(profileStore.getPointLedger()?.total || 0)) };
     return phonicsYoutube.rewardAlmostZero
       ? { friendship:1, energy:5 }
-      : { friendship:5, energy:25 };
+      : { friendship:5, energy:15 };
   }
   function phonicsGrowthAmountLabel(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
@@ -6424,7 +6474,7 @@
     const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
     // Newly introduced modes must not silently add a daily requirement to existing children.
-    const newModeUnconfigured = modeId === "multiplication2x2-zero"
+    const newModeUnconfigured = (modeId === "multiplication2x2-zero" || modeId === "phonics-words")
       && settings.enabledModes?.[settingsKey] === undefined;
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
@@ -6862,7 +6912,7 @@
     if (!recoverAbnormalPwaZoom("visualViewport.resize")) schedulePlayStageSize("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("scroll", () => recordViewportDiagnostic("visualViewport.scroll"));
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
@@ -6955,7 +7005,7 @@
     const name = $("profile-setup-name").value;
     try {
       if (profileStore.hasLegacyChildData()) profileStore.migrateLegacyProfile(name);
-      else profileStore.createProfile(name);
+      else profileStore.createProfile(name, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       setProfileError($("profile-setup-error"), "");
       $("profile-setup-overlay").hidden = true;
       initializeGameForActiveProfile();
@@ -6967,7 +7017,7 @@
   $("profile-add-form").addEventListener("submit", (event) => {
     event.preventDefault();
     try {
-      profileStore.createProfile($("profile-add-name").value);
+      profileStore.createProfile($("profile-add-name").value, { initialModeIds:parentModeDefinitions.map(mode => mode.id) });
       window.location.reload();
     } catch (error) {
       console.error("Profile creation failed", error);
