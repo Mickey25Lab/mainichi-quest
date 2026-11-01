@@ -50,3 +50,10 @@ test("WS2 PR7 QA quest bonus is claimed only in QA state and does not mutate the
   assert.match(app, /function questBonusClaimedDate\(\)/);
   assert.match(app, /if \(\(qaProgressModeEnabled\(\) && !qaDailyBonusScenario\(\)\) \|\| questBonusSelecting/);
 });
+
+test("WS2 PR7 QA complete-day override never writes production daily mission", () => {
+  const mission = app.slice(app.indexOf("function dailyMissionState()"), app.indexOf("function missionOverview()"));
+  assert.match(mission, /if \(qaDailyBonusScenario\(\)\)/);
+  assert.match(mission, /return \{ date:today, completedCounts:\{\}, questRewardLevel:levelSystem\.levelAt/);
+  assert.ok(mission.indexOf("if (qaDailyBonusScenario())") < mission.indexOf("profileStore.setDailyMission(mission)"));
+});
