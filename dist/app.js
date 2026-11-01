@@ -5273,6 +5273,16 @@
     endToModeSelect();
   }
   async function openPhonicsRewardSelection({ quest = false } = {}) {
+    // Starting another bonus selection must release the previous charge animation's
+    // dark scrim/showcase. These are not part of the selection screen.
+    document.getElementById("phonics-reward-scrim")?.remove();
+    document.getElementById("phonics-scan-showcase")?.remove();
+    state.phonicsChargedShowcase?.remove();
+    state.phonicsChargedShowcase = null;
+    state.phonicsShowcaseGeometry = null;
+    $("collection-screen").classList.remove("is-phonics-reward-handoff-pending", "is-phonics-winner-selected", "is-phonics-scanning");
+    $("reward-screen").classList.remove("phonics-reward-overlay");
+    stopQuestBonusTimer();
     stopCollectionTimer();
     state.collectionClosing = false;
     state.collectionUsed = true;
