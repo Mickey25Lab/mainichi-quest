@@ -98,7 +98,7 @@
         speechTimer = 0;
         if (!session || session.words[session.index] !== current || !session.heard) return;
         speakWord(current.word, current);
-      }, 500);
+      }, 100); // Start promptly; iPad speech synthesis may add its own startup latency.
       return;
     }
     clearPictureTimer();
