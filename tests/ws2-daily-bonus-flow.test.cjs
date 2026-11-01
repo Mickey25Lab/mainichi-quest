@@ -57,3 +57,12 @@ test("WS2 PR7 QA complete-day override never writes production daily mission", (
   assert.match(mission, /return \{ date:today, completedCounts:\{\}, questRewardLevel:levelSystem\.levelAt/);
   assert.ok(mission.indexOf("if (qaDailyBonusScenario())") < mission.indexOf("profileStore.setDailyMission(mission)"));
 });
+
+test("WS2 PR7 removes stale dark scan overlay before opening the next bonus card grid", () => {
+  const selection = app.slice(app.indexOf("async function openPhonicsRewardSelection("), app.indexOf("function startPhonicsRewardVehicleSelection("));
+  assert.match(selection, /document\.getElementById\("phonics-reward-scrim"\)\?\.remove\(\)/);
+  assert.match(selection, /document\.getElementById\("phonics-scan-showcase"\)\?\.remove\(\)/);
+  assert.match(selection, /state\.phonicsChargedShowcase\?\.remove\(\)/);
+  assert.match(selection, /classList\.remove\("is-phonics-reward-handoff-pending"/);
+  assert.ok(selection.indexOf('"phonics-reward-scrim"') < selection.indexOf('renderCollectionGrid({ showSessionMarkers: false })'));
+});
