@@ -84,7 +84,7 @@ test("foreground resume re-syncs BGM for the active screen", () => {
 
 test("pagehide fades and suspends audio instead of abruptly stopping the BGM source", () => {
   const lifecycle = app.slice(app.indexOf('window.addEventListener("pageshow"'), app.indexOf('window.addEventListener("pointerdown"'));
-  assert.match(lifecycle, /window\.addEventListener\("pagehide", \(\) => \{/);
+  assert.match(lifecycle, /window\.addEventListener\("pagehide", \((?:event)?\) => \{/);
   assert.match(lifecycle, /suspendAudioForBackground\("pagehide", \{ requireHidden: false, fadeMs: 24, suspendDelayMs: 40 \}\)/);
   assert.doesNotMatch(lifecycle, /pagehide[^\n]*stopBackgroundMusic/);
 });

@@ -1744,6 +1744,14 @@
       clientHeight: root.clientHeight,
       screenWidth: window.screen.width,
       screenHeight: window.screen.height,
+      // Read both orientation APIs and the CSS media query independently.
+      // On older iPadOS they can disagree during standalone PWA rotation.
+      screenOrientationType: window.screen.orientation?.type ?? null,
+      screenOrientationAngle: Number.isFinite(window.screen.orientation?.angle) ? window.screen.orientation.angle : null,
+      legacyWindowOrientation: typeof window.orientation === "number" ? window.orientation : null,
+      mediaQueryLandscape: window.matchMedia?.("(orientation: landscape)").matches ?? null,
+      displayModeStandalone: window.matchMedia?.("(display-mode: standalone)").matches ?? null,
+      navigatorStandalone: typeof navigator.standalone === "boolean" ? navigator.standalone : null,
       devicePixelRatio: window.devicePixelRatio,
       visualViewportWidth: visualViewport?.width ?? null,
       visualViewportHeight: visualViewport?.height ?? null,
@@ -1829,7 +1837,10 @@
         snapshot.clientWidth, snapshot.clientHeight,
         snapshot.visualViewportWidth, snapshot.visualViewportHeight,
         snapshot.visualViewportScale, snapshot.visualViewportOffsetLeft,
-        snapshot.visualViewportOffsetTop, snapshot.appRect, snapshot.stageRect,
+        snapshot.visualViewportOffsetTop,
+        snapshot.screenOrientationType, snapshot.screenOrientationAngle,
+        snapshot.legacyWindowOrientation, snapshot.mediaQueryLandscape,
+        snapshot.appRect, snapshot.stageRect,
         snapshot.stageScale, snapshot.scrollX, snapshot.scrollY
       ]);
       const now = Date.now();
@@ -7043,13 +7054,15 @@
   });
   window.addEventListener("resize", scheduleCollectionStageSize);
   window.addEventListener("pageshow", (event) => {
+    recordViewportDiagnostic("pageshow", { persisted: Boolean(event.persisted) });
     resumeAudioAfterVisible("pageshow");
     syncBackgroundMusicForActiveScreen();
     if (!recoverAbnormalPwaZoom("pageshow")) schedulePlayStageSize("pageshow");
     scheduleViewportOrientationRecovery("pageshow");
   });
   window.addEventListener("pageshow", scheduleCollectionStageSize);
-  window.addEventListener("pagehide", () => {
+  window.addEventListener("pagehide", (event) => {
+    recordViewportDiagnostic("pagehide", { persisted: Boolean(event.persisted) });
     // Do not stop/disconnect the BufferSource during iOS app handoff.
     // An abrupt source.stop() here can create a short click/beep before the OS
     // suspends Web Audio. Reuse the same short fade+suspend path as blur.
@@ -7060,6 +7073,7 @@
   window.addEventListener("touchstart", () => primeBackgroundMusicFromGesture(), { capture: true, passive: true });
   window.addEventListener("keydown", () => primeBackgroundMusicFromGesture(), { capture: true });
   window.addEventListener("orientationchange", () => {
+    recordViewportDiagnostic("orientationchange");
     schedulePlayStageSize("orientationchange");
     scheduleViewportOrientationRecovery("orientationchange");
   });
@@ -7261,6 +7275,7 @@
     suspendAudioForBackground("blur", { requireHidden: false, fadeMs: 24, suspendDelayMs: 40 });
   });
   window.addEventListener("focus", () => {
+    recordViewportDiagnostic("focus");
     resumeAudioAfterVisible("focus");
     recoverAbnormalPwaZoom("focus");
     checkQuestionTimeout();

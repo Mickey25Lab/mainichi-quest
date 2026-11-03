@@ -28,3 +28,22 @@ test("resize, page restore and viewport events feed recovery guard", () => {
   assert.match(app, /scheduleViewportOrientationRecovery\("orientationchange"\)/);
   assert.match(app, /scheduleViewportOrientationRecovery\("visualViewport\.resize"\)/);
 });
+
+test("MQ-001 snapshots include independent physical, CSS and PWA orientation signals", () => {
+  const chunk = app.slice(app.indexOf("function diagnosticViewportSnapshot()"), app.indexOf("function recordViewportDiagnostic("));
+  for (const field of ["screenOrientationType", "screenOrientationAngle", "legacyWindowOrientation",
+    "mediaQueryLandscape", "displayModeStandalone", "navigatorStandalone"]) {
+    assert.match(chunk, new RegExp(field + ":"));
+  }
+  assert.match(chunk, /window\.screen\.orientation\?\.type \?\? null/);
+  assert.match(chunk, /typeof window\.orientation === "number"/);
+});
+
+test("orientation and app lifecycle events record snapshots, without altering recovery policy", () => {
+  assert.match(app, /recordViewportDiagnostic\("orientationchange"\)/);
+  assert.match(app, /recordViewportDiagnostic\("pageshow", \{ persisted: Boolean\(event\.persisted\) \}\)/);
+  assert.match(app, /recordViewportDiagnostic\("pagehide", \{ persisted: Boolean\(event\.persisted\) \}\)/);
+  assert.match(app, /recordViewportDiagnostic\("focus"\)/);
+  const section = app.slice(app.indexOf("function diagnosticViewportSnapshot()"), app.indexOf("function updateViewportDiagnosticsButton()"));
+  assert.doesNotMatch(section, /location\.reload|profileStore|beginRound\(/);
+});
