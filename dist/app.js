@@ -125,9 +125,9 @@
     rewardDuckMultiplier: 0.30,
     transitionDurationSeconds: 0.5,
     tracks: Object.freeze({
-      game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.38 }),
-      heroic: Object.freeze({ filePath: "./assets/audio/heroic_loop.wav", normalVolume: 0.18 }),
-      collection: Object.freeze({ filePath: "./assets/audio/collection_sci_fi_loop.mp3", normalVolume: 0.18 })
+      game: Object.freeze({ filePath: "./assets/audio/bgm_pynchon.mp3", normalVolume: 0.15 }),
+      heroic: Object.freeze({ filePath: "./assets/audio/heroic_loop.wav", normalVolume: 0.08 }),
+      collection: Object.freeze({ filePath: "./assets/audio/collection_sci_fi_loop.mp3", normalVolume: 0.08 })
     }),
     screenGroups: Object.freeze({
       "start-screen": "heroic",
@@ -6538,7 +6538,7 @@
     if (buffers.length > 1 && index === state.lastFanfareSoundIndex) index = (index + 1) % buffers.length;
     state.lastFanfareSoundIndex = index;
     const ctx = audioContext(), source = ctx.createBufferSource(), gain = ctx.createGain(), compressor = ctx.createDynamicsCompressor();
-    source.buffer = buffers[index]; gain.gain.value = 0.75; compressor.threshold.value = -10; compressor.ratio.value = 4;
+    source.buffer = buffers[index]; gain.gain.value = 0.20; compressor.threshold.value = -10; compressor.ratio.value = 4;
     source.connect(gain).connect(compressor).connect(ctx.destination); source.start();
   }
   function playSimpleCorrectSound() { tone(880, 0, .12, "sine", .234); tone(1320, .14, .18, "sine", .234); }

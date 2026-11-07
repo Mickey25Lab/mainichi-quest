@@ -95,12 +95,14 @@ test("top screen has no BGM toggle and developer credit remains removed", () => 
   assert.doesNotMatch(css, /(^|\n)button\s*\{/);
 });
 
-test("audio balance keeps gameplay BGM stronger and reward celebration controlled", () => {
-  assert.match(app, /game: Object\.freeze\(\{ filePath: "\.\/assets\/audio\/bgm_pynchon\.mp3", normalVolume: 0\.38 \}\)/);
-  const correct = app.slice(app.indexOf("function playFanfareSound"), app.indexOf("function playSimpleCorrectSound"));
-  assert.match(correct, /gain\.gain\.value = 0\.75/);
-  assert.match(correct, /tone\(660, 0, \.15, "sine", \.18\)/);
-  assert.match(correct, /tone\(880, \.16, \.3, "sine", \.18\)/);
+test("audio balance preserves quieter BGM and reward fanfare", () => {
+  const music = app.slice(app.indexOf("const bgmConfig"), app.indexOf("const state"));
+  assert.match(music, /normalVolume: 0\.15/);
+  assert.equal((music.match(/normalVolume: 0\.08/g) || []).length, 2);
+  const fanfare = app.slice(app.indexOf("function playFanfareSound"), app.indexOf("function playSimpleCorrectSound"));
+  assert.match(fanfare, /gain\.gain\.value = 0\.20/);
+  assert.match(fanfare, /tone\(660, 0, \.15, "sine", \.18\)/);
+  assert.match(fanfare, /tone\(880, \.16, \.3, "sine", \.18\)/);
 });
 
 test("all configured BGM assets exist", () => {
