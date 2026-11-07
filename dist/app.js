@@ -5256,6 +5256,9 @@
     setCollectionCategory("summary");
     // Keep the existing garage cards mounted to avoid flashing empty images.
     $("collection-grid").querySelectorAll(".collection-card").forEach((card) => {
+      // Reward selection may disable cards; browsing must restore their detail links.
+      card.disabled = false;
+      card.removeAttribute("aria-disabled");
       const idx = Number(card.dataset.vehicle);
       const progress = vehicleProgress(idx);
       const status = card.querySelector(".collection-card-status");
