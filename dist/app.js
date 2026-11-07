@@ -1594,6 +1594,9 @@
     medal.hidden = false;
     medal.style.visibility = "";
     medal.querySelector(".detail-master-medal-art").src = masterMedalArtworkPath(vehicleIndex);
+    // Reuse the existing reward-dimmer component inside the copied collection
+    // scene: background, logo and evolution forms are behind it, medal above it.
+    scene.appendChild($("reward-screen").querySelector(".reward-dimmer").cloneNode(false));
     const layout = scene.querySelector(".detail-evolution-layout");
     layout.hidden = false;
     layout.style.visibility = "";
@@ -4533,13 +4536,16 @@
     const nextVehicleOverlayAlt = "さあ、新しいのりものをさがしに行こう!!";
     nextVehicleOverlay.hidden = true;
     nextVehicleOverlay.alt = nextVehicleOverlayAlt;
-    rewardMeta.hidden = false;
-    $("reward-vehicle-name").textContent = vehicle.nameJa;
-    $("reward-vehicle-rarity").textContent = `${vehicle.rarityLabel} ${vehicle.rarityStars}`;
+    // Stage 5 uses the medal artwork, not the redundant vehicle/rarity caption.
+    rewardMeta.hidden = stage === 5;
+    if (stage !== 5) {
+      $("reward-vehicle-name").textContent = vehicle.nameJa;
+      $("reward-vehicle-rarity").textContent = `${vehicle.rarityLabel} ${vehicle.rarityStars}`;
+    }
     $("reward-stage").dataset.stage = String(stage);
     $("reward-stage").dataset.rewardKind = kind;
     $("reward-image").alt = `${vehicle.nameJa}の獲得演出`;
-    $("reward-screen").classList.toggle("reward-overlay", stage < 5);
+    $("reward-screen").classList.toggle("reward-overlay", stage <= 5);
     $("reward-screen").classList.toggle("phonics-reward-overlay", Boolean(onDone) && state.collectionMode === "phonics-reward-select");
     const runId = state.runId;
     const nextVehicleOverlayReady = shouldShowNextVehicleOverlay
