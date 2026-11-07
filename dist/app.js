@@ -429,7 +429,7 @@
           await scanPause(230);
         }
       }else{
-        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const needed=requiredEnergyForProgress(progress);
         const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
         const fill=panel.querySelector(".energy-fill"),current=panel.querySelector(".energy-value span");
         const required=panel.querySelector(".energy-value span:last-child");
@@ -480,7 +480,7 @@
       progress.friendship = Math.min(5, progress.friendship + Math.min(locked.amount, 5));
       if (progress.friendship === 5) progress.friendly = true;
     } else {
-      const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+      const required = requiredEnergyForProgress(progress);
       progress.energy = Math.min(required, progress.energy + locked.amount);
       if (progress.energy >= required && !progress.masterMedal) {
         progress.energy = 0;
@@ -706,13 +706,16 @@
     const progress = vehicleProgress(vehicleIndex);
     return progress.discovered ? progress.stage : 1;
   }
-  function requiredEnergyForStage(stage) { return ({ 2: 30, 3: 50, 4: 100, 5: 200 })[stage] || 0; }
+  const energyRequirementsByStage = Object.freeze({ 2: 30, 3: 50, 4: 100, 5: 200, 6: 500 });
+  function requiredEnergyForStage(stage) { return energyRequirementsByStage[stage] || 0; }
+  function energyStageForProgress(progress) { return progress.masterMedal ? 6 : progress.stage; }
+  function requiredEnergyForProgress(progress) { return requiredEnergyForStage(energyStageForProgress(progress)); }
   function energyStageForRequired(required) { return ({ 30: 2, 50: 3, 100: 4, 200: 5 })[required] || 0; }
   function progressSpeechBubbleSpec(vehicleIndex) {
     const progress = vehicleProgress(vehicleIndex);
     if (!progress.discovered || !progress.friendly || progress.masterMedal) return null;
     const visualEnergy = state.energyDisplayOverride?.vehicleIndex === vehicleIndex ? state.energyDisplayOverride : null;
-    const required = visualEnergy?.required ?? requiredEnergyForStage(progress.stage);
+    const required = visualEnergy?.required ?? requiredEnergyForProgress(progress);
     const energy = visualEnergy?.energy ?? progress.energy;
     const stage = visualEnergy ? energyStageForRequired(required) : progress.stage;
     const threshold = Math.floor(required * 0.8);
@@ -3966,7 +3969,7 @@
     });
     if (!progress.friendly) return;
     const visualEnergy = state.energyDisplayOverride?.vehicleIndex === vehicleIndex ? state.energyDisplayOverride : null;
-    const needed = visualEnergy?.required ?? (progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage));
+    const needed = visualEnergy?.required ?? (requiredEnergyForProgress(progress));
     const currentEnergy = visualEnergy?.energy ?? progress.energy;
     const capsule = $("energy-capsule");
     capsule.style.setProperty("--capsule-height", `${({ 30: 194, 50: 254, 100: 314, 200: 374, 500: 374 })[needed] || 194}px`);
@@ -4260,7 +4263,7 @@
     return acquisitionType ? commitAcquisition({ vehicleIndex, acquisitionType, stage, source }) : null;
   }
   function applyEnergyGain(progress, vehicleIndex, amount, { completeStage = true, source = "normal" } = {}) {
-    const required = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+    const required = requiredEnergyForProgress(progress);
     progress.energy = Math.min(required, progress.energy + amount);
     const appliedEnergy = progress.energy;
     const reward = completeStage && !progress.masterMedal && progress.energy >= required ? completeEnergyStage(progress, vehicleIndex, source) : null;
@@ -4784,7 +4787,7 @@
         // Evolution resets energy. If the current stage gained energy later in
         // this play, show only that stage and highlight its new portion.
         const from = after.stage === before.stage ? before.energy : 0;
-        if (after.energy > from) return { vehicle, after, type: "energy", from, to: after.energy, required: requiredEnergyForStage(after.stage) };
+        if (after.energy > from) return { vehicle, after, type: "energy", from, to: after.energy, required: requiredEnergyForProgress(after) };
       }
       return null;
     }).filter(Boolean);
@@ -5171,7 +5174,7 @@
         await scanPause(600);
         for(let value=initial+1;value<=final;value++){paint(value);await scanPause(220);}
       }else{
-        const needed=progress.masterMedal?500:requiredEnergyForStage(progress.stage);
+        const needed=requiredEnergyForProgress(progress);
         const initial=progress.energy,final=Math.min(needed,initial+amounts.energy);
         const capsule=progressPanel.querySelector(".energy-capsule");
         const fill=progressPanel.querySelector(".energy-fill");
@@ -5263,7 +5266,7 @@
       const progress = vehicleProgress(idx);
       const status = card.querySelector(".collection-card-status");
       if (status?.classList.contains("collection-card-energy")) {
-        const max = progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage);
+        const max = requiredEnergyForProgress(progress);
         const fill = status.querySelector("i");
         if (fill) fill.style.height = Math.min(100, progress.energy / max * 100)+"%";
         status.setAttribute("aria-label", `エネルギー ${progress.energy} / ${max}`);
@@ -5279,9 +5282,9 @@
           hearts.remove();
           const energy = document.createElement("span");
           energy.className = "collection-card-status collection-card-energy";
-          energy.setAttribute("aria-label", `エネルギー ${progress.energy} / ${requiredEnergyForStage(progress.stage)}`);
+          energy.setAttribute("aria-label", `エネルギー ${progress.energy} / ${requiredEnergyForProgress(progress)}`);
           const bar = document.createElement("i");
-          bar.style.height = Math.min(100,progress.energy / requiredEnergyForStage(progress.stage)*100)+"%";
+          bar.style.height = Math.min(100,progress.energy / requiredEnergyForProgress(progress)*100)+"%";
           energy.append(bar);
           card.append(energy);
         }
@@ -5553,7 +5556,7 @@
         }
         const meter = chargedCard.querySelector(".collection-card-energy");
         if (meter) {
-          const maxEnergy = current.masterMedal ? 500 : requiredEnergyForStage(current.stage);
+          const maxEnergy = requiredEnergyForProgress(current);
           const fill = meter.querySelector("i");
           meter.setAttribute("aria-label", `エネルギー ${current.energy} / ${maxEnergy}`);
           if (fill) fill.style.height = `${Math.min(100, current.energy / maxEnergy * 100)}%`;
@@ -5972,7 +5975,7 @@
       const formStage = complete ? 5 : Math.max(2, Math.min(5, progress.stage));
       const status = !discovered ? "" : !progress.friendly
         ? `<span class="collection-card-status collection-card-hearts" aria-label="なかよし ${progress.friendship} / 5">${[5,4,3,2,1].map((level) => `<i class="${level <= progress.friendship ? "is-earned" : ""}">♥</i>`).join("")}</span>`
-        : `<span class="collection-card-status collection-card-energy" aria-label="エネルギー ${progress.energy} / ${progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage)}"><i style="height:${Math.min(100, progress.energy / (progress.masterMedal ? 500 : requiredEnergyForStage(progress.stage)) * 100)}%"></i></span>`;
+        : `<span class="collection-card-status collection-card-energy" aria-label="エネルギー ${progress.energy} / ${requiredEnergyForProgress(progress)}"><i style="height:${Math.min(100, progress.energy / (requiredEnergyForProgress(progress)) * 100)}%"></i></span>`;
       const artPath = discovered ? answerArtworkPath(vehicle.index, formStage) : vehicleArtworkPath(0);
       const formClass = formStage === 2 ? "is-vehicle-form" : formStage === 3 ? "is-evolved-form is-robot-form" : formStage === 5 ? "is-evolved-form is-equipped-super-robot" : "is-evolved-form";
       const grayscaleClass = formStage === 2 && !progress.friendly ? " is-pre-friendship" : "";
@@ -6979,7 +6982,7 @@
       const tr = document.createElement("tr");
       const cells = [vehicle.nameJa,
         !state.discovered ? "未発見" : state.masterMedal ? `メダル・エネルギー${state.energy}/500`
-          : !state.friendly ? `ハート${state.friendship}/5` : `段階${state.stage}・エネルギー${state.energy}/${requiredEnergyForStage(state.stage)}`,
+          : !state.friendly ? `ハート${state.friendship}/5` : `段階${state.stage}・エネルギー${state.energy}/${requiredEnergyForProgress(state)}`,
         String(profileStore.calculateVehiclePointValue(state))];
       cells.forEach((value) => { const td = document.createElement("td"); td.textContent = value; tr.appendChild(td); });
       rows.appendChild(tr);
