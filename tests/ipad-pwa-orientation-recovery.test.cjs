@@ -47,3 +47,35 @@ test("orientation and app lifecycle events record snapshots, without altering re
   const section = app.slice(app.indexOf("function diagnosticViewportSnapshot()"), app.indexOf("function updateViewportDiagnosticsButton()"));
   assert.doesNotMatch(section, /location\.reload|profileStore|beginRound\(/);
 });
+
+test("false portrait snapshots pin the last validated landscape app layout", () => {
+  assert.match(app, /let lastStableLandscapeViewport = null/);
+  assert.match(app, /function syncLandscapeViewportLayout\(snapshot = viewportSnapshot\(\)\)/);
+  assert.match(app, /snapshot\.innerHeight > snapshot\.innerWidth\s*&& physicalLandscapeSignal\(\)/);
+  assert.match(app, /lastStableLandscapeViewport = \{ width: snapshot\.innerWidth, height: snapshot\.innerHeight \}/);
+  assert.match(app, /if \(syncLandscapeViewportLayout\(snapshot\)\) return false/);
+  assert.match(app, /root\.classList\.add\("mq-viewport-landscape-pinned"\)/);
+  assert.match(app, /root\.classList\.remove\("mq-viewport-landscape-pinned"\)/);
+  assert.match(app, /recordViewportDiagnostic\("orientation-layout-pinned"/);
+  assert.match(app, /recordViewportDiagnostic\("orientation-layout-unpinned"/);
+});
+test("viewport is pinned before paint and normal viewport can still update", () => {
+  const scheduler = app.slice(app.indexOf("function schedulePlayStageSize("), app.indexOf("// MQ-001: iPad standalone PWAs"));
+  assert.ok(scheduler.indexOf("syncLandscapeViewportLayout();") < scheduler.indexOf("window.requestAnimationFrame("));
+  assert.match(app, /if \(!isNormalViewport\(snapshot\)\) return false/);
+  const lock = app.slice(app.indexOf("function syncLandscapeViewportLayout("), app.indexOf("function sizePlayStage("));
+  assert.doesNotMatch(lock, /location\.reload|meta\.setAttribute|profileStore|localStorage\.clear|beginRound\(/);
+  const css = fs.readFileSync(path.join(__dirname, "../dist/styles.css"), "utf8");
+  assert.match(css, /:root\.mq-viewport-landscape-pinned \.app\s*\{/);
+  assert.match(css, /width: var\(--mq-locked-viewport-width\)/);
+  assert.match(css, /height: var\(--mq-locked-viewport-height\)/);
+});
+
+test("landscape pin prevents the portrait media-query scroll switch", () => {
+  const css = fs.readFileSync(path.join(__dirname, "../dist/styles.css"), "utf8");
+  assert.ok(css.includes("html.mq-viewport-landscape-pinned body {"));
+  const block = css.split("html.mq-viewport-landscape-pinned body {")[1]?.split("}")[0];
+  assert.ok(block?.includes("overflow: hidden;"), "false portrait may not scroll the page");
+  assert.ok(css.includes("@media (max-aspect-ratio: 4/5) {"));
+  assert.ok(css.includes("body { overflow:auto; }"), "real portrait styling remains available");
+});
