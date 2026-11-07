@@ -3964,6 +3964,12 @@
   function renderVehicleProgressUi(vehicleIndex = state.current?.vehicleIndex ?? state.currentVehicleIndex) {
     const root = $("vehicle-progress-ui"), friendship = $("friendship-progress"), energy = $("energy-progress");
     const progress = vehicleProgress(vehicleIndex);
+    const playMedal = $("play-master-medal");
+    playMedal.hidden = !progress.masterMedal;
+    if (progress.masterMedal) {
+      playMedal.src = masterMedalArtworkPath(vehicleIndex);
+      playMedal.alt = `${vehicles[vehicleIndex].nameJa}のマスターメダル`;
+    }
     root.hidden = !progress.discovered;
     friendship.hidden = !progress.discovered || progress.friendly;
     energy.hidden = !progress.discovered || !progress.friendly;
@@ -6018,6 +6024,32 @@
       else openVehicleDetail(vehicleIndex);
     }));
   }
+  // Clone the original answer-screen panels so the design stays identical.
+  // These panels are read-only and use the selected vehicle's saved progress.
+  function renderDetailProgressUi(progress) {
+    const holder = $("detail-progress-ui");
+    holder.replaceChildren();
+    holder.hidden = !progress.discovered;
+    if (!progress.discovered) return;
+    const source = $(progress.friendly ? "energy-progress" : "friendship-progress");
+    const panel = source.cloneNode(true);
+    panel.removeAttribute("id");
+    panel.removeAttribute("hidden");
+    panel.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
+    if (progress.friendly) {
+      const needed = requiredEnergyForProgress(progress);
+      panel.querySelector(".energy-capsule").style.setProperty("--capsule-height", `${({30:194,50:254,100:314,200:374,500:374})[needed] || 194}px`);
+      panel.querySelector(".energy-fill").style.height = `${Math.max(0,Math.min(100,progress.energy / needed * 100))}%`;
+      const values = panel.querySelectorAll(".energy-value span");
+      values[0].textContent = String(progress.energy);
+      values[values.length - 1].textContent = String(needed);
+    } else {
+      panel.querySelectorAll(".friendship-heart").forEach((heart, index) => {
+        heart.classList.toggle("is-filled", index >= 5 - progress.friendship);
+      });
+    }
+    holder.append(panel);
+  }
   let vehicleDetailRenderRequestId = 0;
   function openVehicleDetail(index) {
     state.detailVehicleIndex = index;
@@ -6036,6 +6068,8 @@
     const layout = $("detail-evolution-layout");
     const logo = $("detail-vehicle-logo");
     const medalDisplay = $("detail-master-medal-display");
+    medalDisplay.classList.remove("is-animated");
+    renderDetailProgressUi(progress);
     const medalHologram = medalDisplay.querySelector(".detail-master-medal-hologram");
     const medalArt = $("detail-master-medal-art");
     const vehicleArt = $("detail-vehicle-art");
@@ -6117,7 +6151,12 @@
         if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
         logo.style.visibility = "";
         layout.style.visibility = "";
-        if (progress.masterMedal) medalDisplay.style.visibility = "";
+        if (progress.masterMedal) {
+          medalDisplay.style.visibility = "";
+          // Reset the shared 20-second medal animation on every detail open.
+          void medalDisplay.offsetWidth;
+          medalDisplay.classList.add("is-animated");
+        }
       });
     } catch (error) {
       if (requestId !== vehicleDetailRenderRequestId || vehicleIndex !== state.detailVehicleIndex) return;
