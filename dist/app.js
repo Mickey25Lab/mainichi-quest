@@ -24,7 +24,8 @@
     Object.freeze({ id:"phonics-part-4", label:"フォニックス", detail:"パート4　Q〜U" }),
     Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
     Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" }),
-    Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" })
+    Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" }),
+    Object.freeze({ id:"dolch-basic", label:"えいごのことばをよもう", detail:"パート１　きほんの名詞　14 words" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
@@ -1226,9 +1227,9 @@
     // sees playVideo() after the user-gesture window has expired and blocks it.
     preparePhonicsYoutubePlayback();
   }
-  function startPhonicsWordMode() {
-    if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
-    beginDailyMissionAttempt("phonics-words");
+  function startPhonicsWordMode(modeId = "phonics-words") {
+    if (!isModeAvailableForMission(modeId)) { renderModeSelectMission(); return; }
+    beginDailyMissionAttempt(modeId);
     const wordsRequestId = ++visualRequestId;
     const backgroundPath = playBackgroundPath(Math.floor(Math.random() * vehicles.length));
     const wordBackground = $("phonics-words-background");
@@ -1247,8 +1248,9 @@
         schedulePlayStageSize("phonics-words");
       });
     window.MQPhonicsWords.start({
+      mode:modeId,
       onComplete: () => {
-        completeDailyMissionRound("phonics-words");
+        completeDailyMissionRound(modeId);
         openPhonicsRewardSelection();
       },
       onQuit: () => {
@@ -6757,7 +6759,7 @@
     const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
     // Newly introduced modes must not silently add a daily requirement to existing children.
-    const newModeUnconfigured = (modeId === "multiplication3x2" || modeId === "multiplication2x2-zero" || modeId === "phonics-words")
+    const newModeUnconfigured = (modeId === "multiplication3x2" || modeId === "multiplication2x2-zero" || modeId === "phonics-words" || modeId === "dolch-basic")
       && settings.enabledModes?.[settingsKey] === undefined;
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
@@ -7202,7 +7204,7 @@
     scheduleViewportOrientationRecovery("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("scroll", () => recordViewportDiagnostic("visualViewport.scroll"));
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-3x2").addEventListener("click", startThreeDigitGuidedMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-3x2").addEventListener("click", startThreeDigitGuidedMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", () => startPhonicsWordMode("phonics-words")); $("mode-select-dolch-basic").addEventListener("click", () => startPhonicsWordMode("dolch-basic")); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
