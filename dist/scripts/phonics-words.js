@@ -4,6 +4,24 @@
   const vocabulary = [
     [{word:"CAT",picture:"🐱",label:"ねこ"},{word:"DOG",picture:"🐶",label:"いぬ"},{word:"SUN",picture:"☀️",label:"たいよう"},{word:"BOX",picture:"📦",label:"はこ"},{word:"PIG",picture:"🐷",label:"ぶた"}]
   ];
+  // Part 1: Dolch basic A+B; each round samples 10 of the 14 nouns without repeats.
+  // Ruby markup is static lesson data, never generated from user input.
+  const basicVocabulary = [
+    {word:"BED",label:"ベッド",meaning:"ベッド"},
+    {word:"BOX",label:"箱",meaning:"<ruby>箱<rt>はこ</rt></ruby>"},
+    {word:"CAT",label:"猫",meaning:"<ruby>猫<rt>ねこ</rt></ruby>"},
+    {word:"DOG",label:"犬",meaning:"<ruby>犬<rt>いぬ</rt></ruby>"},
+    {word:"LEG",label:"足",meaning:"<ruby>足<rt>あし</rt></ruby>"},
+    {word:"MAN",label:"男の人",meaning:"<ruby>男<rt>おとこ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>"},
+    {word:"MEN",label:"男の人たち",meaning:"<ruby>男<rt>おとこ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>たち"},
+    {word:"PIG",label:"ブタ",meaning:"ブタ"},
+    {word:"SUN",label:"太陽",meaning:"<ruby>太陽<rt>たいよう</rt></ruby>"},
+    {word:"TOP",label:"こま",meaning:"こま"},
+    {word:"HAND",label:"手",meaning:"<ruby>手<rt>て</rt></ruby>"},
+    {word:"MILK",label:"牛乳",meaning:"<ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>"},
+    {word:"NEST",label:"鳥の巣",meaning:"<ruby>鳥<rt>とり</rt></ruby>の<ruby>巣<rt>す</rt></ruby>"},
+    {word:"WIND",label:"風",meaning:"<ruby>風<rt>かぜ</rt></ruby>"}
+  ];
   const shuffle = items => {
     const copy = items.slice();
     for (let i = copy.length - 1; i > 0; --i) {
@@ -26,20 +44,21 @@
   function render() {
     if (!session) return;
     const current = session.words[session.index], word = current.word;
-    const combined = session.step >= word.length;
+    const combined = session.wholeWord || session.step >= word.length;
     const wrap = get("phonics-words-letters");
     wrap.classList.toggle("is-combined", combined);
     wrap.replaceChildren();
     Array.from(word).forEach((character, index) => {
       const tile = document.createElement("span");
-      tile.className = "phonics-words-letter" + (!combined && index === session.step ? " is-selected" : "");
+      tile.className = "phonics-words-letter" + (!session.wholeWord && !combined && index === session.step ? " is-selected" : "");
       tile.textContent = character;
       wrap.append(tile);
     });
     get("phonics-words-progress-count").textContent = (session.index + 1) + " / " + session.words.length;
     get("phonics-words-picture").hidden = true;
     get("phonics-words-picture").replaceChildren();
-    get("phonics-words-action").textContent = session.heard ? "いえたよ" : session.step >= word.length - 1 ? "きいてみる" : "つぎへ";
+    get("phonics-words-replay").hidden = !session.wholeWord || !session.heard;
+    get("phonics-words-action").textContent = session.heard ? "いえたよ" : session.wholeWord || session.step >= word.length - 1 ? "きいてみる" : "つぎへ";
   }
   function pictureAfterOneSecond(current) {
     pictureTimer = window.setTimeout(() => {
@@ -52,6 +71,12 @@
       icon.decoding = "async";
       icon.src = "./assets/ui/phonics-words/" + current.word.toLowerCase() + ".svg";
       region.replaceChildren(icon);
+      if (session.wholeWord) {
+        const meaning = document.createElement("div");
+        meaning.className = "phonics-words-meaning";
+        meaning.innerHTML = current.meaning;
+        region.append(meaning);
+      }
       region.hidden = false;
     },1000);
   }
@@ -74,7 +99,7 @@
     if (!session) return;
     const current = session.words[session.index];
     const wordLength = current.word.length;
-    if (session.step < wordLength - 1) {
+    if (!session.wholeWord && session.step < wordLength - 1) {
       session.step++;
       render();
       return;
@@ -110,7 +135,7 @@
       return;
     }
     session.index++;
-    session.step = 0;
+    session.step = session.wholeWord ? session.words[session.index].word.length : 0;
     session.heard = false;
     render();
   }
@@ -122,10 +147,19 @@
     stopAudio();
     callback();
   }
-  function start({onComplete,onQuit}) {
+  function replay() {
+    if (!session || !session.wholeWord || !session.heard) return;
+    const current = session.words[session.index];
+    // The replay tap is the user gesture: start speaking directly without a delayed timer.
+    stopAudio();
+    speakWord(current.word, current);
+  }
+  function start({onComplete,onQuit,mode="phonics-words"}) {
     clearPictureTimer();
     stopAudio();
-    session = { words:vocabulary.flatMap(shuffle), index:0, step:0, heard:false,onComplete,onQuit };
+    const wholeWord = mode === "dolch-basic";
+    const words = wholeWord ? shuffle(basicVocabulary).slice(0,10) : vocabulary.flatMap(shuffle);
+    session = { words, index:0, step:wholeWord ? words[0].word.length : 0, wholeWord, heard:false,onComplete,onQuit };
     render();
   }
   const css = document.createElement("style");
@@ -145,6 +179,14 @@
     #phonics-words-picture[hidden]{display:none!important}
     .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
     #phonics-words-action{bottom:34px;z-index:7}
+    #phonics-words-replay{position:absolute;right:62px;bottom:45px;z-index:7;border:3px solid #1c6192;border-radius:25px;background:#e3f7ff;color:#123d67;font:700 28px/1.3 "Noto Sans JP",sans-serif;padding:18px 25px;cursor:pointer}
+    #phonics-words-replay[hidden]{display:none!important}
+    #phonics-words-picture:has(.phonics-words-meaning){flex-direction:column;gap:22px}
+    .phonics-words-meaning{font-size:36px;font-weight:800;color:#132b50;text-align:center;line-height:1.6;white-space:nowrap}
+    .phonics-words-meaning rt{font-size:17px;font-weight:600}
+    #phonics-words-letters.is-combined{background:transparent}
+    #phonics-words-letters.is-combined .phonics-words-letter{background:#adf0ff}
+    
     #phonics-words-back{z-index:7}
   `;
   document.head.append(css);
@@ -158,9 +200,11 @@
     <button id="phonics-words-back" class="quit-button" type="button">やめる</button>
     <header class="topbar"><div class="progress-badge" id="phonics-words-progress" aria-live="polite"><span id="phonics-words-progress-count">1 / 5</span></div></header>
     <button id="phonics-words-action" class="phonics-youtube-end" type="button">つぎへ</button>
+    <button id="phonics-words-replay" type="button" hidden>もういちどきく</button>
   </div>`;
   get("app").append(screen);
   get("phonics-words-action").addEventListener("click", next);
   get("phonics-words-back").addEventListener("click",quit);
+  get("phonics-words-replay").addEventListener("click",replay);
   window.MQPhonicsWords = Object.freeze({start,quit});
 })();
