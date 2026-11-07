@@ -12,10 +12,10 @@
     Object.freeze({ id:"counting1", label:"かずかぞえ1", detail:"" }),
     Object.freeze({ id:"counting2", label:"かずかぞえ2", detail:"" }),
     Object.freeze({ id:"multiplication", label:"かけ算ひっ算", detail:"2けた×1けた" }),
-    Object.freeze({ id:"multiplication3x2", label:"かけ算ひっ算", detail:"3けた×2けた その1（ヒントつき）" }),
     Object.freeze({ id:"multiplication2x2", label:"かけ算ひっ算", detail:"2けた×2けた その1（ヒントつき）" }),
     Object.freeze({ id:"multiplication2x2-unguided", label:"かけ算ひっ算", detail:"2けた×2けた その2" }),
     Object.freeze({ id:"multiplication2x2-zero", label:"かけ算ひっ算", detail:"2けた×2けた その3（2段目に0あり）" }),
+    Object.freeze({ id:"multiplication3x2", label:"かけ算ひっ算", detail:"3けた×2けた その1（ヒントつき）" }),
     Object.freeze({ id:"normal", label:"わり算計算", detail:"" }),
     Object.freeze({ id:"longdivision", label:"わり算ひっ算", detail:"" }),
     Object.freeze({ id:"phonics-part-1", label:"フォニックス", detail:"パート1　A〜F" }),
@@ -2642,6 +2642,35 @@
     });
   }
 
+  function makeThreeDigitGuidedMultiplicationQuestions() {
+    // Same five-question, 1..5 digit and distinct multiplier digits as guided 2x2.
+    const multipliers = [];
+    for (let tens = 1; tens <= 5; tens += 1) {
+      for (let ones = 1; ones <= 5; ones += 1) {
+        if (tens !== ones) multipliers.push(tens * 10 + ones);
+      }
+    }
+    const seen = new Set();
+    const questions = [];
+    while (questions.length < 5) {
+      const multiplicand = (1 + Math.floor(Math.random() * 5)) * 100
+        + Math.floor(Math.random() * 6) * 10 + Math.floor(Math.random() * 6);
+      const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+      const key = `${multiplicand}*${multiplier}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const partial1 = multiplicand * (multiplier % 10);
+      const partial2 = multiplicand * Math.floor(multiplier / 10);
+      const product = multiplicand * multiplier;
+      questions.push({
+        kind: "multiplication2x2", id: `multiplication3x2-${questions.length + 1}-${key}`,
+        multiplicand, multiplier, partial1, partial2, product, quotient: product, remainder: 0,
+        hintUsed: false, answerRevealed: false, assistedCorrect: false, resultType: null, isReview: false
+      });
+    }
+    return questions;
+  }
+
   function makeTwoDigitMultiplicationQuestions(unguided = false, zeroMode = false) {
     if (zeroMode) {
       const used = new Set();
@@ -2695,35 +2724,6 @@
       });
     }
     return pairs;
-  }
-
-  function makeThreeDigitGuidedMultiplicationQuestions() {
-    // Same five-question, 1..5 digit and distinct multiplier digits as guided 2x2.
-    const multipliers = [];
-    for (let tens = 1; tens <= 5; tens += 1) {
-      for (let ones = 1; ones <= 5; ones += 1) {
-        if (tens !== ones) multipliers.push(tens * 10 + ones);
-      }
-    }
-    const seen = new Set();
-    const questions = [];
-    while (questions.length < 5) {
-      const multiplicand = (1 + Math.floor(Math.random() * 5)) * 100
-        + Math.floor(Math.random() * 6) * 10 + Math.floor(Math.random() * 6);
-      const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
-      const key = `${multiplicand}*${multiplier}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const partial1 = multiplicand * (multiplier % 10);
-      const partial2 = multiplicand * Math.floor(multiplier / 10);
-      const product = multiplicand * multiplier;
-      questions.push({
-        kind: "multiplication2x2", id: `multiplication3x2-${questions.length + 1}-${key}`,
-        multiplicand, multiplier, partial1, partial2, product, quotient: product, remainder: 0,
-        hintUsed: false, answerRevealed: false, assistedCorrect: false, resultType: null, isReview: false
-      });
-    }
-    return questions;
   }
 
   function setGameMode(mode) {
