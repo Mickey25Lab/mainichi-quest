@@ -5950,3 +5950,32 @@ button, input { font: inherit; }
   width:var(--multiplication-2x2-column); height:53px;
   border-radius:0 0 var(--operation-guide-radius) var(--operation-guide-radius);
 }
+
+
+/* Compact learning-screen corner controls (1400 × 1050 reference stage).
+   Keep widths and typography unchanged; halve vertical edge spacing. */
+:root {
+  --play-corner-control-height: 60.8px; /* 76px × 80% */
+}
+.play-screen .topbar,
+.phonics-words-screen .topbar {
+  top: 14px; /* formerly 28px */
+  height: 60.8px;
+}
+.play-screen .quit-button,
+.phonics-intro-screen .quit-button,
+.phonics-youtube-screen .quit-button,
+.play-screen .assist-button {
+  bottom: 17px; /* formerly 34px */
+  height: var(--play-corner-control-height);
+  min-height: 0;
+}
+.play-screen .quit-button.bgm-toggle-button {
+  height: var(--play-corner-control-height);
+}
+/* Phonics word-answer screen: align the corner exit with the same controls. */
+.phonics-words-screen .quit-button {
+  bottom: 17px;
+  height: var(--play-corner-control-height);
+  min-height: 0;
+}
