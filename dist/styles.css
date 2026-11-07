@@ -5979,3 +5979,21 @@ button, input { font: inherit; }
   height: var(--play-corner-control-height);
   min-height: 0;
 }
+
+/* Two-digit multiplier only (3 × 2 and all 2 × 2 variants):
+   Preserve the column/number/answer-cell geometry while giving the
+   recovered vertical space to all four numeric keypad rows equally.
+   1400 × 1050 logical canvas, independent of viewport scaling.
+   Timer bottom: 14 + 60.8 = 74.8; question top: 107 (gap ~32).
+   Inner content: 336px tall, centered in 383px (top/bottom ~23.5).
+   Keypad bottom: 107 + 383 + 8 + 12 + 431 = 941;
+   hint top: 1050 - 17 - 60.8 = 972.2 (gap ~31). */
+.play-screen .game-area.multiplication-2x2-layout {
+  top: 107px; /* previous 140px: halve timer-to-question gap */
+}
+.play-screen .question-answer-card.multiplication-2x2-mode {
+  height: 383px; /* previous 430px: halve panel inner top/bottom gaps */
+}
+.play-screen .keypad.multiplication-2x2-mode {
+  height: 431px; /* previous 320px: distribute freed space to 4 equal rows */
+}
