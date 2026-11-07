@@ -5925,3 +5925,24 @@ button, input { font: inherit; }
   padding:14px 38px;
   font-size:36px;
 }
+
+/* Guided 3-digit x 2-digit shares the 2x2 flow; only its column count and cyan guide expand. */
+.multiplication-2x2-panel.is-three-digit {
+  grid-template-columns:repeat(5, var(--multiplication-2x2-column));
+}
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-multiplicand { grid-column:3 / 6; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-multiplier { grid-column:4 / 6; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operator { grid-column:3; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operation-guide { grid-column:3 / 6; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-bar { grid-column:2 / 6; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-bar-sum { grid-column:1 / 6; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-shift-guide { grid-column:5; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operation-guide[data-stage="tens"]::before {
+  top:0; left:0; width:100%; height:48px;
+  border-radius:var(--operation-guide-radius) var(--operation-guide-radius) 0 var(--operation-guide-radius);
+}
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operation-guide[data-stage="tens"]::after {
+  top:auto; bottom:0; right:calc(var(--multiplication-2x2-column) + var(--multiplication-2x2-gap));
+  width:var(--multiplication-2x2-column); height:53px;
+  border-radius:0 0 var(--operation-guide-radius) var(--operation-guide-radius);
+}
