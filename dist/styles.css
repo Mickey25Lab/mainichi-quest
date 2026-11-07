@@ -71,6 +71,20 @@ button, input { font: inherit; }
   background-size: cover;
 }
 
+/* iPad PWA: when the native orientation remains landscape but WebKit
+   temporarily publishes a portrait viewport, retain the last validated
+   landscape geometry rather than reflowing the app into portrait.
+   This changes app layout only, not the native WKWebView bounds. */
+:root.mq-viewport-landscape-pinned {
+  --content-stage-width: min(var(--mq-locked-viewport-width), calc(var(--mq-locked-viewport-height) * 4 / 3));
+  --content-stage-height: min(var(--mq-locked-viewport-height), calc(var(--mq-locked-viewport-width) * 3 / 4));
+}
+:root.mq-viewport-landscape-pinned .app {
+  width: var(--mq-locked-viewport-width);
+  height: var(--mq-locked-viewport-height);
+}
+
+
 .screen {
   position: absolute;
   inset: 0;
