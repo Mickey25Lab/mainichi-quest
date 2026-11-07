@@ -782,8 +782,8 @@
         { discovered: true, friendship: 4, friendly: false, stage: 2, energy: 0, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 2, energy: 23, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 3, energy: 39, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 55, masterMedal: false },
-        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 79, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 4, energy: 79, masterMedal: false },
+        { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 179, masterMedal: false },
         { discovered: true, friendship: 5, friendly: true, stage: 5, energy: 100, masterMedal: true }
       ];
       qaVehicleIndexes.forEach((vehicleIndex, displayIndex) => {
