@@ -9,9 +9,9 @@ const html = fs.readFileSync(path.join(root, "dist/index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "dist/styles.css"), "utf8");
 
 test("guided 3x2 uses five unique questions and the guided 2x2 digit restrictions", () => {
-  const extracted = app.match(/function makeThreeDigitGuidedMultiplicationQuestions\(\) \{[\s\S]*?\n  \}\n\n  function setGameMode/);
+  const extracted = app.match(/function makeThreeDigitGuidedMultiplicationQuestions\(\) \{[\s\S]*?\n  \}\n\n  function makeTwoDigitMultiplicationQuestions/);
   assert.ok(extracted);
-  const generator = vm.runInNewContext("(" + extracted[0].replace(/\n\n  function setGameMode$/, "") + ")", { Math, Set });
+  const generator = vm.runInNewContext("(" + extracted[0].replace(/\n\n  function makeTwoDigitMultiplicationQuestions$/, "") + ")", { Math, Set });
   for (let run = 0; run < 100; run++) {
     const questions = generator();
     assert.equal(questions.length, 5);
@@ -36,4 +36,7 @@ test("guided 3x2 is wired into the shared worksheet and parent mode settings", (
   assert.match(css, /\.multiplication-2x2-panel\.is-three-digit/);
   assert.match(css, /grid-template-columns:repeat\(5, var\(--multiplication-2x2-column\)\)/);
   assert.match(css, /\.multiplication-2x2-operation-guide\[data-stage="tens"\]::before/);
+  assert.match(css, /\.multiplication-2x2-panel\.is-three-digit \.multiplication-2x2-operator \{ grid-column:2; \}/);
+  assert.ok(html.indexOf('id="mode-select-multiplication-2x2-zero"') < html.indexOf('id="mode-select-multiplication-3x2"'));
+  assert.ok(app.indexOf('id:"multiplication2x2-zero"') < app.indexOf('id:"multiplication3x2"'));
 });
