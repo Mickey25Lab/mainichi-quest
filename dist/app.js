@@ -1699,6 +1699,7 @@
     preloadNormalQuestionBackgrounds();
   }
   let lastStableAppScale = null;
+  let lastStableLandscapeViewport = null;
   let scaleUpdateRequest = 0;
   const viewportDiagnosticsPreferenceKey = "mq-001:viewport-diagnostics-enabled-v1";
   const viewportDiagnosticsStorageKey = "mq-001:viewport-diagnostics-v1";
@@ -1928,15 +1929,47 @@
         || !Number.isFinite(second.visualViewportScale)
         || Math.abs(first.visualViewportScale - second.visualViewportScale) <= 0.005);
   }
+  // Keep the last real landscape frame intact when standalone WebKit reports
+  // 768x1004 while the independent orientation API still says landscape.
+  // This prevents app CSS and the 1400x1050 stage from reflowing to portrait.
+  // A true portrait rotation clears the lock. We never mutate saved progress.
+  function syncLandscapeViewportLayout(snapshot = viewportSnapshot()) {
+    const root = document.documentElement;
+    const isContradiction = snapshot.innerHeight > snapshot.innerWidth
+      && physicalLandscapeSignal()
+      && (!Number.isFinite(snapshot.visualViewportScale)
+        || Math.abs(snapshot.visualViewportScale - 1) <= 0.01);
+    if (isContradiction && lastStableLandscapeViewport) {
+      root.style.setProperty("--mq-locked-viewport-width", lastStableLandscapeViewport.width + "px");
+      root.style.setProperty("--mq-locked-viewport-height", lastStableLandscapeViewport.height + "px");
+      if (!root.classList.contains("mq-viewport-landscape-pinned")) {
+        root.classList.add("mq-viewport-landscape-pinned");
+        recordViewportDiagnostic("orientation-layout-pinned", { width: lastStableLandscapeViewport.width, height: lastStableLandscapeViewport.height });
+      }
+      return true;
+    }
+    if (root.classList.contains("mq-viewport-landscape-pinned")) {
+      root.classList.remove("mq-viewport-landscape-pinned");
+      root.style.removeProperty("--mq-locked-viewport-width");
+      root.style.removeProperty("--mq-locked-viewport-height");
+      recordViewportDiagnostic("orientation-layout-unpinned");
+    }
+    return false;
+  }
   function sizePlayStage(snapshot = viewportSnapshot()) {
-    if (!isNormalViewport(snapshot)) {
-      return false;
+    if (syncLandscapeViewportLayout(snapshot)) return false;
+    if (!isNormalViewport(snapshot)) return false;
+    if (snapshot.innerWidth > snapshot.innerHeight && physicalLandscapeSignal()) {
+      lastStableLandscapeViewport = { width: snapshot.innerWidth, height: snapshot.innerHeight };
     }
     const scale = sizeStages({ width: snapshot.innerWidth, height: snapshot.innerHeight, includePlay: true, includeCollection: true });
     lastStableAppScale = scale;
     return true;
   }
   function schedulePlayStageSize(reason) {
+    // Freeze before the next frame paints; requestAnimationFrame alone allows
+    // a screenshot/lifecycle resize to lay out the wrong portrait CSS once.
+    syncLandscapeViewportLayout();
     const requestId = ++scaleUpdateRequest;
     window.requestAnimationFrame(() => {
       const first = viewportSnapshot();
@@ -1970,6 +2003,7 @@
     if (viewportOrientationRecoveryTimer !== null) window.clearTimeout(viewportOrientationRecoveryTimer);
     if (document.hidden) return;
     const first = viewportSnapshot();
+    syncLandscapeViewportLayout(first);
     const unexpectedPortrait = first.innerHeight > first.innerWidth
       && physicalLandscapeSignal()
       && first.visualViewportScale !== null
