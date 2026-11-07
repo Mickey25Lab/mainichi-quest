@@ -5932,7 +5932,7 @@ button, input { font: inherit; }
 }
 .multiplication-2x2-panel.is-three-digit .multiplication-2x2-multiplicand { grid-column:3 / 6; }
 .multiplication-2x2-panel.is-three-digit .multiplication-2x2-multiplier { grid-column:4 / 6; }
-.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operator { grid-column:3; }
+.multiplication-2x2-panel.is-three-digit .multiplication-2x2-operator { grid-column:2; }
 .multiplication-2x2-panel.is-three-digit .multiplication-2x2-operation-guide { grid-column:3 / 6; }
 .multiplication-2x2-panel.is-three-digit .multiplication-2x2-bar { grid-column:2 / 6; }
 .multiplication-2x2-panel.is-three-digit .multiplication-2x2-bar-sum { grid-column:1 / 6; }
