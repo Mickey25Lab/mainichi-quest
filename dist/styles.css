@@ -83,6 +83,15 @@ button, input { font: inherit; }
   width: var(--mq-locked-viewport-width);
   height: var(--mq-locked-viewport-height);
 }
+/* The portrait aspect-ratio media query normally enables document scrolling.
+   When orientation APIs still report landscape, that is a false-portrait
+   viewport and must not turn a full-screen PWA into a scrolling page.
+   Preserve genuine portrait behavior by scoping this rule to the pin. */
+html.mq-viewport-landscape-pinned,
+html.mq-viewport-landscape-pinned body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
 
 .screen {
