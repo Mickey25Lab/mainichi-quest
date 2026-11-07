@@ -1954,6 +1954,38 @@
   // MQ-001: iPad standalone PWAs can report a portrait viewport while the
   // device orientation still reports landscape. Never force a landscape size
   // without an independent orientation signal: real rotations must work.
+  // A native PWA viewport can become portrait while iPadOS remains landscape.
+  // Web content cannot resize the native WKWebView. If the safe viewport-meta
+  // reflow fails, expose a user-initiated reload outside the scaled game stage.
+  let viewportRecoveryActionButton = null;
+  function setViewportRecoveryActionVisible(visible) {
+    if (!viewportRecoveryActionButton && visible) {
+      const button = document.createElement("button");
+      button.id = "viewport-recovery-action";
+      button.type = "button";
+      button.textContent = "画面をなおす";
+      button.setAttribute("aria-label", "画面の表示をなおす（確認後にアプリを再読み込み）");
+      Object.assign(button.style, {
+        position: "fixed",
+        left: "max(12px, env(safe-area-inset-left))",
+        bottom: "max(16px, env(safe-area-inset-bottom))",
+        zIndex: "2147483646",
+        padding: "12px 18px",
+        border: "3px solid #ffffff",
+        borderRadius: "14px",
+        background: "#146c9f",
+        color: "#ffffff",
+        fontSize: "18px",
+        fontWeight: "bold",
+        boxShadow: "0 3px 12px #0009",
+        touchAction: "manipulation"
+      });
+      button.addEventListener("click", reloadAfterUserViewportRecoveryRequest);
+      document.body.appendChild(button);
+      viewportRecoveryActionButton = button;
+    }
+    if (viewportRecoveryActionButton) viewportRecoveryActionButton.hidden = !visible;
+  }
   let viewportOrientationRecoveryTimer = null;
   let viewportOrientationRecoveryPending = 0;
   let viewportOrientationRecoveryLastAttempt = 0;
@@ -1974,6 +2006,7 @@
       && first.visualViewportScale !== null
       && Math.abs(first.visualViewportScale - 1) <= 0.01;
     if (!unexpectedPortrait) {
+      setViewportRecoveryActionVisible(false);
       if (viewportOrientationRecoveryPending) recordViewportDiagnostic("orientation-recovery-cleared", { reason });
       viewportOrientationRecoveryPending = 0;
       return;
@@ -2004,10 +2037,16 @@
           schedulePlayStageSize("orientation-recovery");
           window.setTimeout(() => {
             schedulePlayStageSize("orientation-recovery-verify");
-            recordViewportDiagnostic("orientation-recovery-result", {
-              recovered: window.innerWidth >= window.innerHeight,
-              reason
-            });
+            const recovered = window.innerWidth >= window.innerHeight;
+            recordViewportDiagnostic("orientation-recovery-result", { recovered, reason });
+            // Native WebKit geometry cannot be forced by CSS; a visible,
+            // consent-based escape hatch is safer than repeated meta writes.
+            if (!recovered && physicalLandscapeSignal()) {
+              setViewportRecoveryActionVisible(true);
+              recordViewportDiagnostic("orientation-recovery-action-shown", { reason });
+            } else {
+              setViewportRecoveryActionVisible(false);
+            }
           }, 250);
         }, 60);
       } else {
@@ -2015,6 +2054,17 @@
         recordViewportDiagnostic("orientation-recovery-unavailable", { reason });
       }
     }, 800);
+  }
+  function reloadAfterUserViewportRecoveryRequest() {
+    // Check again before requesting any navigation; a real device rotation may
+    // have resolved the mismatch since the recovery control first appeared.
+    if (window.innerWidth >= window.innerHeight || !physicalLandscapeSignal()) {
+      setViewportRecoveryActionVisible(false);
+      return;
+    }
+    if (!window.confirm("画面をなおすため、マイクエを再読み込みします。保存済みの記録は消えませんが、いま取り組んでいる問題はやり直しになる場合があります。再読み込みしますか？")) return;
+    recordViewportDiagnostic("orientation-recovery-user-reload");
+    window.location.reload();
   }
   function assignQuestionVisualContext(question) {
     if (question.vehicleIndex === undefined) question.vehicleIndex = state.currentVehicleIndex;
