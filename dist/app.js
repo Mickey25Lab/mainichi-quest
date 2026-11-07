@@ -2776,6 +2776,7 @@
     $("question-answer-card").classList.toggle("long-division-mode", isLongDivision);
     $("question-answer-card").classList.toggle("number-card-mode", isNumberCards);
     $("question-answer-card").classList.toggle("multiplication-mode", isMultiplication);
+    $("game-area").classList.toggle("multiplication-2x2-layout", isMultiplication2x2);
     $("question-answer-card").classList.toggle("multiplication-2x2-mode", isMultiplication2x2);
     $("question-answer-card").classList.toggle("counting-mode", isCounting);
     $("question-answer-card").classList.toggle("counting1-mode", mode === "counting1");
