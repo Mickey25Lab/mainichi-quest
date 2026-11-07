@@ -47,6 +47,7 @@
     const combined = session.wholeWord || session.step >= word.length;
     const wrap = get("phonics-words-letters");
     wrap.classList.toggle("is-combined", combined);
+    wrap.classList.toggle("is-whole-word", session.wholeWord);
     wrap.replaceChildren();
     Array.from(word).forEach((character, index) => {
       const tile = document.createElement("span");
@@ -184,8 +185,8 @@
     #phonics-words-picture:has(.phonics-words-meaning){flex-direction:column;gap:22px}
     .phonics-words-meaning{font-size:36px;font-weight:800;color:#132b50;text-align:center;line-height:1.6;white-space:nowrap}
     .phonics-words-meaning rt{font-size:17px;font-weight:600}
-    #phonics-words-letters.is-combined{background:transparent}
-    #phonics-words-letters.is-combined .phonics-words-letter{background:#adf0ff}
+    #phonics-words-letters.is-combined.is-whole-word{background:transparent}
+    #phonics-words-letters.is-combined.is-whole-word .phonics-words-letter{background:#adf0ff}
     
     #phonics-words-back{z-index:7}
   `;
