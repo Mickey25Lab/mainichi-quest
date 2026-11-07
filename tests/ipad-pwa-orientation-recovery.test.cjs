@@ -13,7 +13,7 @@ test("portrait mismatch recovery requires an independent physical landscape sign
 });
 
 test("recovery is guarded, rate limited and does not reload or reset progress", () => {
-  const chunk = app.slice(app.indexOf("function scheduleViewportOrientationRecovery("), app.indexOf("function assignQuestionVisualContext("));
+  const chunk = app.slice(app.indexOf("function scheduleViewportOrientationRecovery("), app.indexOf("function reloadAfterUserViewportRecoveryRequest()"));
   assert.match(chunk, /if \(document\.hidden\) return/);
   assert.match(chunk, /30000/);
   assert.match(chunk, /window\.setTimeout\(/);
