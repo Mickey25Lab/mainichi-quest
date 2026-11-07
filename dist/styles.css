@@ -6005,7 +6005,7 @@ button, input { font: inherit; }
 /* Collection-only: restore the original translucent rounded panel and
    scale the whole gauge (including panel) from 70% to 80.5%: 15% larger.
    Lower it 80px while keeping the left-shifted placement. */
-.collection-detail-stage .detail-progress-ui { z-index:1; left:16px; top:212px; width:133.63px; justify-content:flex-start; }
+.collection-detail-stage .detail-progress-ui { z-index:1; left:16px; top:172px; width:133.63px; justify-content:flex-start; }
 .collection-detail-stage .detail-progress-ui .friendship-progress,
 .collection-detail-stage .detail-progress-ui .energy-progress {
   transform:scale(.805);
@@ -6014,7 +6014,7 @@ button, input { font: inherit; }
 .collection-detail-stage .detail-progress-ui[hidden] { display:none; }
 .collection-detail-stage .detail-progress-ui .friendship-progress,
 .collection-detail-stage .detail-progress-ui .energy-progress { flex-shrink:0; }
-.play-screen .play-master-medal { position:absolute; z-index:5; left:42.5px; top:826px; width:165px; height:165px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 5px 9px rgba(2,14,47,.65)); }
+.play-screen .play-master-medal { position:absolute; z-index:5; left:42.5px; top:776px; width:165px; height:165px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 5px 9px rgba(2,14,47,.65)); }
 .play-screen .play-master-medal[hidden] { display:none; }
 /* Existing medal-list keyframes: the first spin begins one second after reveal,
    then repeats at the same 20-second cadence; the gentle hover runs throughout. */
