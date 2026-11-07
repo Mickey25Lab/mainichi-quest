@@ -47,3 +47,31 @@ test("orientation and app lifecycle events record snapshots, without altering re
   const section = app.slice(app.indexOf("function diagnosticViewportSnapshot()"), app.indexOf("function updateViewportDiagnosticsButton()"));
   assert.doesNotMatch(section, /location\.reload|profileStore|beginRound\(/);
 });
+
+test("failed stable landscape/portrait mismatch shows a viewport-independent recovery control", () => {
+  assert.match(app, /function setViewportRecoveryActionVisible\(visible\)/);
+  assert.match(app, /document\.body\.appendChild\(button\)/);
+  assert.match(app, /position: "fixed"/);
+  assert.match(app, /button\.textContent = "画面をなおす"/);
+  assert.match(app, /if \(!recovered && physicalLandscapeSignal\(\)\)/);
+  assert.match(app, /setViewportRecoveryActionVisible\(true\)/);
+  assert.match(app, /orientation-recovery-action-shown/);
+  assert.match(app, /setViewportRecoveryActionVisible\(false\)/);
+});
+
+test("refresh is user-initiated and guarded by confirmation without progress deletion", () => {
+  const clickHandler = app.slice(
+    app.indexOf("function reloadAfterUserViewportRecoveryRequest()"),
+    app.indexOf("function assignQuestionVisualContext(")
+  );
+  assert.match(app, /button\.addEventListener\("click", reloadAfterUserViewportRecoveryRequest\)/);
+  assert.match(clickHandler, /window\.innerWidth >= window\.innerHeight \|\| !physicalLandscapeSignal\(\)/);
+  assert.match(clickHandler, /window\.confirm\(/);
+  assert.match(clickHandler, /window\.location\.reload\(\)/);
+  assert.doesNotMatch(clickHandler, /localStorage\.clear|deleteProfile|resetProfile|removeItem|profileStore/);
+  const automaticRecovery = app.slice(
+    app.indexOf("function scheduleViewportOrientationRecovery("),
+    app.indexOf("function reloadAfterUserViewportRecoveryRequest()")
+  );
+  assert.doesNotMatch(automaticRecovery, /location\.reload|window\.confirm/);
+});
