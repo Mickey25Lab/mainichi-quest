@@ -70,3 +70,12 @@ test("viewport is pinned before paint and normal viewport can still update", () 
   assert.match(css, /width: var\(--mq-locked-viewport-width\)/);
   assert.match(css, /height: var\(--mq-locked-viewport-height\)/);
 });
+
+test("landscape pin prevents the portrait media-query scroll switch", () => {
+  const css = fs.readFileSync(path.join(__dirname, "../dist/styles.css"), "utf8");
+  assert.ok(css.includes("html.mq-viewport-landscape-pinned body {"));
+  const block = css.split("html.mq-viewport-landscape-pinned body {")[1]?.split("}")[0];
+  assert.ok(block?.includes("overflow: hidden;"), "false portrait may not scroll the page");
+  assert.ok(css.includes("@media (max-aspect-ratio: 4/5) {"));
+  assert.ok(css.includes("body { overflow:auto; }"), "real portrait styling remains available");
+});
