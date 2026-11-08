@@ -70,8 +70,10 @@
     });
     }
     get("phonics-words-progress-count").textContent = (session.index + 1) + " / " + session.words.length;
-    get("phonics-words-picture").hidden = true;
-    get("phonics-words-picture").replaceChildren();
+    if (!retainMeaning) {
+      get("phonics-words-picture").hidden = true;
+      get("phonics-words-picture").replaceChildren();
+    }
     get("phonics-words-replay").hidden = !session.wholeWord || !session.heard;
     get("phonics-words-replay").disabled = Boolean(session.playing);
     get("phonics-words-action").disabled = Boolean(session.playing);
@@ -99,7 +101,7 @@
   }
   // Three distinct utterances, with a gap measured from each onend event.
   // The first speak() stays in the button's user-gesture handler for iPad.
-  function speakThreeTimes(current) {
+  function speakThreeTimes(current, { retainMeaning = false } = {}) {
     stopAudio();
     const serial = playbackSerial;
     session.playing = true;
@@ -127,7 +129,14 @@
       utterance.onend = () => {
         if (!session || session.words[session.index] !== current || playbackSerial !== serial) return;
         spoken++;
-        if (spoken === 3) { void revealMeaning(current, serial); return; }
+        if (spoken === 3) {
+          if (retainMeaning) {
+            session.playing = false;
+            get("phonics-words-replay").disabled = false;
+            get("phonics-words-action").disabled = false;
+          } else void revealMeaning(current, serial);
+          return;
+        }
         speechTimer = window.setTimeout(() => {
           speechTimer = 0;
           speakNext();
@@ -232,7 +241,7 @@
     if (!session || !session.wholeWord || !session.heard) return;
     const current = session.words[session.index];
     // In the new mode a replay repeats the same three-utterance sequence.
-    speakThreeTimes(current);
+    speakThreeTimes(current, { retainMeaning: true });
   }
   function start({onComplete,onQuit,mode="phonics-words"}) {
     clearPictureTimer();
@@ -260,8 +269,8 @@
     .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
     #phonics-words-action{bottom:34px;z-index:7}
     #phonics-words-screen .phonics-words-stage:has(.is-whole-word) #phonics-words-action{bottom:34px}
-    #phonics-words-replay{position:absolute;right:110px;bottom:34px;z-index:7;box-sizing:border-box;width:280px;height:var(--play-corner-control-height);padding:0;border:3px solid #7aa8d6;border-radius:var(--play-corner-radius);color:#fff;background:#2f79c7;box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
-    #phonics-words-replay:active{transform:translateY(3px);box-shadow:0 3px 0 #4f79a2,0 7px 14px rgba(3,52,109,.16)}
+    #phonics-words-replay{position:absolute;right:110px;bottom:34px;z-index:7;box-sizing:border-box;width:280px;height:var(--play-corner-control-height);padding:0;border:3px solid #8cb9d5;border-radius:var(--play-corner-radius);color:#23547b;background:#dbf1ff;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
+    #phonics-words-replay:active{transform:translateY(3px);box-shadow:0 3px 0 #8baec5,0 7px 14px rgba(3,52,109,.12)}
     #phonics-words-replay:disabled,#phonics-words-action:disabled{opacity:.7;cursor:default}
     #phonics-words-letters.is-whole-word{background:transparent!important}
     .phonics-words-word-pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-width:450px}
