@@ -30,13 +30,14 @@
     }
     return copy;
   };
-  let session = null, pictureTimer = 0, speechTimer = 0;
+  let session = null, pictureTimer = 0, speechTimer = 0, playbackSerial = 0;
   const get = id => document.getElementById(id);
   function clearPictureTimer() {
     if (pictureTimer) clearTimeout(pictureTimer);
     pictureTimer = 0;
   }
   function stopAudio() {
+    playbackSerial++;
     if (speechTimer) clearTimeout(speechTimer);
     speechTimer = 0;
     try { window.speechSynthesis?.cancel(); } catch (_) {}
@@ -49,17 +50,98 @@
     wrap.classList.toggle("is-combined", combined);
     wrap.classList.toggle("is-whole-word", session.wholeWord);
     wrap.replaceChildren();
+    if (session.wholeWord) {
+      const wordPair = document.createElement("div");
+      wordPair.className = "phonics-words-word-pair";
+      const primary = document.createElement("span");
+      primary.className = "phonics-words-primary";
+      primary.textContent = word.toLowerCase();
+      const secondary = document.createElement("span");
+      secondary.className = "phonics-words-secondary";
+      secondary.textContent = word;
+      wordPair.append(primary, secondary);
+      wrap.append(wordPair);
+    } else {
     Array.from(word).forEach((character, index) => {
       const tile = document.createElement("span");
       tile.className = "phonics-words-letter" + (!session.wholeWord && !combined && index === session.step ? " is-selected" : "");
       tile.textContent = character;
       wrap.append(tile);
     });
+    }
     get("phonics-words-progress-count").textContent = (session.index + 1) + " / " + session.words.length;
     get("phonics-words-picture").hidden = true;
     get("phonics-words-picture").replaceChildren();
     get("phonics-words-replay").hidden = !session.wholeWord || !session.heard;
+    get("phonics-words-replay").disabled = Boolean(session.playing);
+    get("phonics-words-action").disabled = Boolean(session.playing);
     get("phonics-words-action").textContent = session.heard ? "いえたよ" : session.wholeWord || session.step >= word.length - 1 ? "きいてみる" : "つぎへ";
+  }
+  // Reveal the complete illustration + ruby as a single DOM update only after
+  // the final spoken word and after the image has decoded.
+  async function revealMeaning(current, serial) {
+    const icon = document.createElement("img");
+    icon.className = "phonics-words-pictogram";
+    icon.alt = current.label;
+    icon.decoding = "async";
+    icon.src = "./assets/ui/phonics-words/" + current.word.toLowerCase() + ".svg";
+    try { await icon.decode(); } catch (_) {}
+    if (!session || session.words[session.index] !== current || !session.heard || playbackSerial !== serial) return;
+    const region = get("phonics-words-picture");
+    const meaning = document.createElement("div");
+    meaning.className = "phonics-words-meaning";
+    meaning.innerHTML = current.meaning;
+    region.replaceChildren(icon, meaning);
+    region.hidden = false;
+    session.playing = false;
+    get("phonics-words-replay").disabled = false;
+    get("phonics-words-action").disabled = false;
+  }
+  // Three distinct utterances, with a gap measured from each onend event.
+  // The first speak() stays in the button's user-gesture handler for iPad.
+  function speakThreeTimes(current) {
+    stopAudio();
+    const serial = playbackSerial;
+    session.playing = true;
+    get("phonics-words-action").disabled = true;
+    get("phonics-words-replay").disabled = true;
+    get("phonics-words-picture").hidden = true;
+    get("phonics-words-picture").replaceChildren();
+    if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") {
+      // No false claim of completion if speech is unsupported.
+      session.playing = false;
+      get("phonics-words-replay").disabled = false;
+      get("phonics-words-action").disabled = false;
+      return;
+    }
+    let spoken = 0;
+    const speakNext = () => {
+      if (!session || session.words[session.index] !== current || playbackSerial !== serial) return;
+      const utterance = new SpeechSynthesisUtterance(current.word.toLowerCase());
+      utterance.lang = "en-US";
+      utterance.rate = .85;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      const us = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().replace("_","-") === "en-us");
+      if (us) utterance.voice = us;
+      utterance.onend = () => {
+        if (!session || session.words[session.index] !== current || playbackSerial !== serial) return;
+        spoken++;
+        if (spoken === 3) { void revealMeaning(current, serial); return; }
+        speechTimer = window.setTimeout(() => {
+          speechTimer = 0;
+          speakNext();
+        }, 800);
+      };
+      utterance.onerror = () => {
+        if (!session || playbackSerial !== serial) return;
+        session.playing = false;
+        get("phonics-words-replay").disabled = false;
+        get("phonics-words-action").disabled = false;
+      };
+      window.speechSynthesis.speak(utterance);
+    };
+    speakNext();
   }
   function pictureAfterOneSecond(current) {
     pictureTimer = window.setTimeout(() => {
@@ -72,12 +154,6 @@
       icon.decoding = "async";
       icon.src = "./assets/ui/phonics-words/" + current.word.toLowerCase() + ".svg";
       region.replaceChildren(icon);
-      if (session.wholeWord) {
-        const meaning = document.createElement("div");
-        meaning.className = "phonics-words-meaning";
-        meaning.innerHTML = current.meaning;
-        region.append(meaning);
-      }
       region.hidden = false;
     },1000);
   }
@@ -110,6 +186,10 @@
       session.step = wordLength;
       render();
       get("phonics-words-action").textContent = "いえたよ";
+      if (session.wholeWord) {
+        speakThreeTimes(current);
+        return;
+      }
       // iPad WebKit requires the first speech request in the tap handler.
       // A silent primer unlocks later delayed speech without speaking the word early.
       if (window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function") {
@@ -151,9 +231,8 @@
   function replay() {
     if (!session || !session.wholeWord || !session.heard) return;
     const current = session.words[session.index];
-    // The replay tap is the user gesture: start speaking directly without a delayed timer.
-    stopAudio();
-    speakWord(current.word, current);
+    // In the new mode a replay repeats the same three-utterance sequence.
+    speakThreeTimes(current);
   }
   function start({onComplete,onQuit,mode="phonics-words"}) {
     clearPictureTimer();
@@ -180,13 +259,20 @@
     #phonics-words-picture[hidden]{display:none!important}
     .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
     #phonics-words-action{bottom:34px;z-index:7}
-    #phonics-words-replay{position:absolute;right:62px;bottom:45px;z-index:7;border:3px solid #1c6192;border-radius:25px;background:#e3f7ff;color:#123d67;font:700 28px/1.3 "Noto Sans JP",sans-serif;padding:18px 25px;cursor:pointer}
+    #phonics-words-screen .phonics-words-stage:has(.is-whole-word) #phonics-words-action{bottom:34px}
+    #phonics-words-replay{position:absolute;right:110px;bottom:34px;z-index:7;box-sizing:border-box;width:280px;height:var(--play-corner-control-height);padding:0;border:3px solid #7aa8d6;border-radius:var(--play-corner-radius);color:#fff;background:#2f79c7;box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
+    #phonics-words-replay:active{transform:translateY(3px);box-shadow:0 3px 0 #4f79a2,0 7px 14px rgba(3,52,109,.16)}
+    #phonics-words-replay:disabled,#phonics-words-action:disabled{opacity:.7;cursor:default}
+    #phonics-words-letters.is-whole-word{background:transparent!important}
+    .phonics-words-word-pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-width:450px}
+    .phonics-words-primary{font:900 128px/1.1 "Noto Sans JP",sans-serif;color:#132b50;letter-spacing:3px}
+    .phonics-words-secondary{font:800 55px/1.1 "Noto Sans JP",sans-serif;color:#60758f;letter-spacing:3px}
     #phonics-words-replay[hidden]{display:none!important}
     #phonics-words-picture:has(.phonics-words-meaning){flex-direction:column;gap:22px}
     .phonics-words-meaning{font-size:36px;font-weight:800;color:#132b50;text-align:center;line-height:1.6;white-space:nowrap}
     .phonics-words-meaning rt{font-size:17px;font-weight:600}
     #phonics-words-letters.is-combined.is-whole-word{background:transparent}
-    #phonics-words-letters.is-combined.is-whole-word .phonics-words-letter{background:#adf0ff}
+    #phonics-words-letters.is-combined.is-whole-word .phonics-words-letter{background:transparent}
     
     #phonics-words-back{z-index:7}
   `;
