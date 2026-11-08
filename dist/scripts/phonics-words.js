@@ -283,7 +283,7 @@
     #phonics-words-replay:active:not(:disabled){transform:translateY(3px);box-shadow:0 3px 0 #8baec5,0 7px 14px rgba(3,52,109,.12)}
     #phonics-words-screen #phonics-words-action:active:disabled{transform:translateX(-50%);box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18)}
     #phonics-words-screen #phonics-words-replay:active:disabled{transform:none;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12)}
-    #phonics-words-replay:disabled,#phonics-words-action:disabled{opacity:1;cursor:default;pointer-events:none;-webkit-tap-highlight-color:transparent}
+    #phonics-words-screen #phonics-words-replay:disabled,#phonics-words-screen #phonics-words-action:disabled{opacity:.52;filter:saturate(.45);cursor:default;pointer-events:none;-webkit-tap-highlight-color:transparent}
     #phonics-words-letters.is-whole-word{background:transparent!important}
     .phonics-words-word-pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-width:450px}
     .phonics-words-primary{font:900 128px/1.1 "Noto Sans JP",sans-serif;color:#132b50;letter-spacing:3px}
