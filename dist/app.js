@@ -1227,6 +1227,29 @@
     // sees playVideo() after the user-gesture window has expired and blocks it.
     preparePhonicsYoutubePlayback();
   }
+  // All six strings get the same horizontal compression so font widths
+  // remain comparable. Vertical glyph size is 142px (previously 57px).
+  async function fitAlphabetCheckLines() {
+    const lines = [...document.querySelectorAll(".alphabet-check-line")];
+    if (!lines.length) return;
+    try {
+      await Promise.all([
+        document.fonts.load('700 142px "Andika"'),
+        document.fonts.load('700 142px "Jost"')
+      ]);
+    } catch (error) {
+      console.warn("Alphabet check font load failed", error);
+    }
+    if (!$("alphabet-check-screen").classList.contains("active")) return;
+    const contentWidth = Math.min(...lines.map(line => line.clientWidth));
+    const naturalWidth = Math.max(...lines.map(line => {
+      const text = line.querySelector(".alphabet-check-text");
+      // transform does not affect scrollWidth.
+      return text?.scrollWidth || 1;
+    }));
+    const scale = Math.min(1, (contentWidth - 4) / naturalWidth);
+    lines.forEach(line => line.style.setProperty("--alphabet-check-width-scale", String(scale)));
+  }
   function startPhonicsWordMode() {
     if (!isModeAvailableForMission("phonics-words")) { renderModeSelectMission(); return; }
     beginDailyMissionAttempt("phonics-words");
@@ -7204,7 +7227,7 @@
     scheduleViewportOrientationRecovery("visualViewport.resize");
   });
   window.visualViewport?.addEventListener("scroll", () => recordViewportDiagnostic("visualViewport.scroll"));
-  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-3x2").addEventListener("click", startThreeDigitGuidedMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); $("mode-select-alphabet-check").addEventListener("click", () => { showScreen("alphabet-check-screen"); schedulePlayStageSize("alphabet-check"); }); $("alphabet-check-back").addEventListener("click", () => { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); }); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
+  $("start-button").addEventListener("click", openModeSelect); $("mode-select-back").addEventListener("click", () => showFixedScreenWhenReady("start-screen")); $("mode-select-number-cards").addEventListener("click", startNumberCardApp); $("mode-select-counting-1").addEventListener("click", startCounting1App); $("mode-select-counting-2").addEventListener("click", startCounting2App); $("mode-select-multiplication").addEventListener("click", startMultiplicationApp); $("mode-select-multiplication-3x2").addEventListener("click", startThreeDigitGuidedMultiplicationApp); $("mode-select-multiplication-2x2").addEventListener("click", startTwoDigitMultiplicationApp); $("mode-select-multiplication-2x2-unguided").addEventListener("click", startTwoDigitMultiplicationUnguidedApp); $("mode-select-multiplication-2x2-zero").addEventListener("click", startTwoDigitMultiplicationZeroApp); $("mode-select-normal").addEventListener("click", startApp); $("mode-select-long-division").addEventListener("click", startLongDivisionApp); $("mode-select-phonics-words").addEventListener("click", startPhonicsWordMode); $("mode-select-alphabet-check").addEventListener("click", () => { showScreen("alphabet-check-screen"); schedulePlayStageSize("alphabet-check"); fitAlphabetCheckLines(); }); $("alphabet-check-back").addEventListener("click", () => { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); }); document.querySelectorAll("[data-phonics-lesson]").forEach((button) => button.addEventListener("click", () => showPhonicsIntro(button.dataset.phonicsLesson, button.dataset.mode))); $("phonics-intro-start").addEventListener("click", startPhonicsFromIntroGesture); $("phonics-intro-back").addEventListener("click", leavePhonicsIntro); $("phonics-youtube-start").addEventListener("click", startPhonicsYoutubeFromGesture); $("phonics-youtube-back").addEventListener("click", leavePhonicsYoutube); $("phonics-youtube-end").addEventListener("click", completePhonicsYoutubeAndLeave); $("again-button").addEventListener("click", () => {
     const mode = state.mode || "normal";
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
