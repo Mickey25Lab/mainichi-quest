@@ -52,7 +52,7 @@ jobs:
         run: npm install --no-save --no-package-lock playwright@1.58.2
       - name: Run point ledger unit tests
         if: steps.changes.outputs.docs_only != 'true'
-        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs
+        run: node --test tests/point-ledger.test.cjs tests/point-diagnostics.test.cjs tests/level-system.test.cjs tests/dolch-basic-words.test.cjs
       - name: Test critical-PR classifier
         if: steps.changes.outputs.docs_only != 'true'
         run: node --test .github/scripts/classify-critical-pr.test.mjs
