@@ -112,9 +112,8 @@ test("Dolch mode speaks exactly three times and keeps meaning visible on replay"
   h.get("phonics-words-replay").click();
   assert.equal(h.spoken.length, 3);
   h.releaseFonts();
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+  // The async font readiness + image decode chain crosses multiple microtask turns.
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(h.get("phonics-words-picture").hidden, false);
   assert.equal(h.get("phonics-words-picture").children.length, 2);
   h.get("phonics-words-replay").click();
