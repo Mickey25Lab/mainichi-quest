@@ -166,7 +166,7 @@ test("all English word TTS uses fixed pitch 1.2 and has no selector", () => {
   intro.start({ mode:"phonics-words", onComplete() {}, onQuit() {} });
   const letters = intro.get("phonics-words-letters").children.length;
   for (let i=0; i<letters; ++i) intro.get("phonics-words-action").click();
-  assert.equal(intro.spoken.length, 0, "original five-word mode preserves its initial primer delay");
+  assert.equal(intro.spoken.length, 1, "original five-word mode still queues its silent primer");
   assert.match(source, /utterance\.pitch = 1\.2;/);
   assert.match(source, /voice\.pitch = 1\.2;/);
   assert.doesNotMatch(source, /phonics-words-pitch-control|pitchOptions|changePitch/);
