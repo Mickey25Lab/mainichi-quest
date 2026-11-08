@@ -79,9 +79,6 @@
     });
     }
     get("phonics-words-progress-count").textContent = (session.index + 1) + " / " + session.words.length;
-    const pitchControl = get("phonics-words-pitch-control");
-    pitchControl.hidden = !session.wholeWord;
-    get("phonics-words-pitch").value = String(session.pitch);
     get("phonics-words-picture").hidden = true;
     get("phonics-words-picture").replaceChildren();
     get("phonics-words-replay").hidden = !session.wholeWord || !session.heard;
@@ -144,7 +141,7 @@
       const utterance = new SpeechSynthesisUtterance(current.word.toLowerCase());
       utterance.lang = "en-US";
       utterance.rate = .85;
-      utterance.pitch = session.pitch;
+      utterance.pitch = 1.2;
       utterance.volume = 1;
       const us = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().replace("_","-") === "en-us");
       if (us) utterance.voice = us;
@@ -193,7 +190,7 @@
     const voice = new SpeechSynthesisUtterance(word.toLowerCase());
     voice.lang = "en-US";
     voice.rate = .85;
-    voice.pitch = 1;
+    voice.pitch = 1.2;
     voice.volume = 1; // Web Speech API maximum (cannot amplify above 100%).
     const voices = window.speechSynthesis.getVoices();
     const us = voices.find(v => v.lang.toLowerCase().replace("_","-") === "en-us");
@@ -265,18 +262,12 @@
     // In the new mode a replay repeats the same three-utterance sequence.
     speakThreeTimes(current, { retainMeaning: true });
   }
-  const pitchOptions = [0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0];
-  function changePitch() {
-    if (!session || !session.wholeWord) return;
-    const selected = Number(get("phonics-words-pitch").value);
-    if (pitchOptions.includes(selected)) session.pitch = selected;
-  }
   function start({onComplete,onQuit,mode="phonics-words"}) {
     clearPictureTimer();
     stopAudio();
     const wholeWord = mode === "dolch-basic";
     const words = wholeWord ? shuffle(basicVocabulary).slice(0,10) : vocabulary.flatMap(shuffle);
-    session = { words, index:0, step:wholeWord ? words[0].word.length : 0, wholeWord, pitch:1.0, heard:false,onComplete,onQuit };
+    session = { words, index:0, step:wholeWord ? words[0].word.length : 0, wholeWord, heard:false,onComplete,onQuit };
     render();
   }
   const css = document.createElement("style");
@@ -315,11 +306,6 @@
     #phonics-words-letters.is-combined.is-whole-word{background:transparent}
     #phonics-words-letters.is-combined.is-whole-word .phonics-words-letter{background:transparent}
     
-    /* Dolch-only pitch experiment: separated from the shared top-left progress badge. */
-    #phonics-words-pitch-control{position:absolute;right:42px;top:18px;z-index:9;display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:19px;background:rgba(255,255,255,.94);border:2px solid #a9c9dc;box-shadow:0 3px 10px rgba(3,52,109,.13);color:#254464;font:800 22px/1.3 "Noto Sans JP",sans-serif}
-    #phonics-words-pitch-control[hidden]{display:none!important}
-    #phonics-words-pitch{width:122px;min-height:48px;padding:4px 9px;border:2px solid #97bcd5;border-radius:12px;background:#fff;color:#123d67;font:800 25px/1.2 "Noto Sans JP",sans-serif;cursor:pointer}
-    #phonics-words-pitch:focus-visible{outline:4px solid #559bd1;outline-offset:2px}
     #phonics-words-back{z-index:7}
   `;
   document.head.append(css);
@@ -337,7 +323,6 @@
     <div class="phonics-intro-card"><div class="phonics-words-main"><div id="phonics-words-letters"></div></div><div id="phonics-words-picture" hidden></div></div>
     <button id="phonics-words-back" class="quit-button" type="button">やめる</button>
     <header class="topbar"><div class="progress-badge" id="phonics-words-progress" aria-live="polite"><span id="phonics-words-progress-count">1 / 5</span></div></header>
-    <label id="phonics-words-pitch-control" hidden for="phonics-words-pitch"><span>声の高さ</span><select id="phonics-words-pitch" aria-label="声の高さをえらぶ"><option value="0.6">0.6</option><option value="0.8">0.8</option><option value="1">1.0</option><option value="1.2">1.2</option><option value="1.4">1.4</option><option value="1.6">1.6</option><option value="1.8">1.8</option><option value="2">2.0</option></select></label>
     <button id="phonics-words-action" class="phonics-youtube-end" type="button">つぎへ</button>
     <button id="phonics-words-replay" type="button" hidden>もういちどきく</button>
   </div>`;
@@ -345,6 +330,5 @@
   get("phonics-words-action").addEventListener("click", next);
   get("phonics-words-back").addEventListener("click",quit);
   get("phonics-words-replay").addEventListener("click",replay);
-  get("phonics-words-pitch").addEventListener("change",changePitch);
   window.MQPhonicsWords = Object.freeze({start,quit});
 })();
