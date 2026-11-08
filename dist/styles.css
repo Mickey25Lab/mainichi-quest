@@ -6052,7 +6052,7 @@ html.mq-viewport-landscape-pinned body {
   #collection-detail-screen .detail-master-medal-display.is-animated .detail-master-medal-art { animation:none; }
 }
 
-/* Display-only alphabet font audit; this is not a daily learning mission. */
+/* Display-only alphabet font audit; not a daily learning mission. */
 .alphabet-check-screen { padding:0; background:#000; overflow:hidden; }
 .alphabet-check-screen.active { display:block; }
 .alphabet-check-stage {
@@ -6062,31 +6062,42 @@ html.mq-viewport-landscape-pinned body {
 }
 .alphabet-check-background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .alphabet-check-card {
-  position:absolute; left:50%; top:49%; transform:translate(-50%,-50%);
-  width:1320px; height:870px; padding:26px 46px;
-  border-radius:34px; background:#fff; box-shadow:0 18px 54px rgba(3,52,109,.22);
-  color:#163a70; display:flex; flex-direction:column; gap:16px;
+  position:absolute; inset:10px 10px 10px;
+  width:auto; height:auto; padding:12px 20px 14px;
+  border-radius:24px; background:#fff; box-shadow:0 18px 54px rgba(3,52,109,.22);
+  color:#163a70; display:flex; flex-direction:column; gap:2px;
 }
 .alphabet-check-card h2 {
-  margin:0; text-align:center; font:900 43px/1.2 "Noto Sans JP",sans-serif;
+  flex:0 0 auto; margin:0 230px 0 0; text-align:center;
+  font:900 32px/1.16 "Noto Sans JP",sans-serif;
 }
-.alphabet-check-pattern { min-height:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:4px; }
-.alphabet-check-pattern + .alphabet-check-pattern { border-top:2px solid #d7e4f0; padding-top:12px; }
+.alphabet-check-pattern {
+  min-height:0; flex:1; display:flex; flex-direction:column; justify-content:center;
+  gap:0; overflow:hidden;
+}
+.alphabet-check-pattern + .alphabet-check-pattern {
+  border-top:2px solid #d7e4f0; padding-top:2px;
+}
 .alphabet-check-pattern h3 {
-  margin:0 0 3px; font:800 26px/1.15 "Noto Sans JP",sans-serif;
+  margin:0; font:800 23px/1.05 "Noto Sans JP",sans-serif;
+  flex:0 0 auto;
 }
 .alphabet-check-line {
-  font:700 57px/1.12 "Andika",sans-serif; font-synthesis:none;
-  letter-spacing:0; word-spacing:0; white-space:nowrap;
-  text-align:left;
+  display:block; width:100%; min-width:0; overflow:visible;
+  color:#163a70; font:700 142px/.98 "Andika",sans-serif;
+  letter-spacing:0; word-spacing:0; white-space:nowrap; font-synthesis:none;
 }
-.alphabet-check-line span { font-family:inherit; }
+.alphabet-check-text {
+  display:inline-block; width:max-content; white-space:nowrap;
+  font-family:inherit; transform:scaleX(var(--alphabet-check-width-scale, 1));
+  transform-origin:left center;
+}
 .alphabet-check-mixed .alphabet-check-jost { font-family:"Jost",sans-serif; }
 .alphabet-check-jost .alphabet-check-line { font-family:"Jost",sans-serif; }
 .alphabet-check-back {
-  position:absolute; bottom:17px; right:34px; min-width:210px; height:60.8px;
-  border:3px solid #b5d8ed; border-radius:24px;
-  color:#173e5e; background:#fff; font:900 26px/1 "Noto Sans JP",sans-serif;
+  position:absolute; top:13px; right:22px; min-width:185px; height:46px;
+  border:3px solid #b5d8ed; border-radius:18px; z-index:2;
+  color:#173e5e; background:#fff; font:900 23px/1 "Noto Sans JP",sans-serif;
   cursor:pointer;
 }
 .mode-select-alphabet-check { grid-template-columns:1fr; }
