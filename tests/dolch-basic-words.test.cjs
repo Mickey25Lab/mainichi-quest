@@ -145,6 +145,7 @@ test("disabled actions never animate, and Japanese ruby waits for font glyphs", 
   assert.match(source, /#phonics-words-replay:active:not\(:disabled\)/);
   assert.match(source, /#phonics-words-screen #phonics-words-action:active:disabled/);
   assert.match(source, /pointer-events:none;-webkit-tap-highlight-color:transparent/);
+  assert.match(source, /#phonics-words-screen #phonics-words-replay:disabled,#phonics-words-screen #phonics-words-action:disabled\{opacity:\.52;filter:saturate\(\.45\)/);
   assert.match(source, /fonts\?\.load\('800 36px/);
   assert.match(source, /fonts\?\.load\('600 17px/);
 });
