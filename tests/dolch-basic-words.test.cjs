@@ -26,6 +26,7 @@ function harness() {
     append(...children) { this.children.push(...children); }
     replaceChildren(...children) { this.children = [...children]; }
     addEventListener(name, callback) { this.handlers[name] = callback; }
+    setAttribute(name, value) { this[name] = value; }
     click() { this.handlers.click?.(); }
     decode() { return Promise.resolve(); }
   }
