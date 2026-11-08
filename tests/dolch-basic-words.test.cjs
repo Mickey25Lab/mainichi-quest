@@ -11,6 +11,8 @@ function harness() {
   const pendingTimers = new Map();
   let timerId = 0;
   const spoken = [];
+  const fontLoads = [];
+  const fontResolvers = [];
   class Element {
     constructor() {
       this.hidden = false;
@@ -28,6 +30,13 @@ function harness() {
     decode() { return Promise.resolve(); }
   }
   const document = {
+    fonts: {
+      load(spec, text) {
+        fontLoads.push({ spec, text });
+        return new Promise(resolve => fontResolvers.push(resolve));
+      },
+      get ready() { return Promise.resolve(); }
+    },
     head: { append() {} },
     createElement() { return new Element(); },
     getElementById(id) {
@@ -55,6 +64,8 @@ function harness() {
     get: id => document.getElementById(id),
     start: args => window.MQPhonicsWords.start(args),
     spoken,
+    fontLoads,
+    releaseFonts() { fontResolvers.splice(0).forEach(resolve => resolve([])); },
     runPause() {
       const [id, timer] = [...pendingTimers][0] || [];
       assert.ok(timer, "next utterance has a scheduled pause");
@@ -91,17 +102,35 @@ test("Dolch mode speaks exactly three times and keeps meaning visible on replay"
   assert.equal(h.get("phonics-words-picture").hidden, true);
   h.spoken[2].onend();
   await Promise.resolve();
+  assert.equal(h.fontLoads.length, 2, "both main glyphs and ruby must preload");
+  assert.equal(h.get("phonics-words-picture").hidden, true, "do not show Japanese before fonts finish");
+  assert.equal(h.get("phonics-words-action").disabled, true);
+  assert.equal(h.get("phonics-words-replay").disabled, true);
+  // Neither button may advance or enqueue an utterance during TTS playback.
+  h.get("phonics-words-action").click();
+  h.get("phonics-words-replay").click();
+  assert.equal(h.spoken.length, 3);
+  h.releaseFonts();
+  await Promise.resolve();
+  await Promise.resolve();
   await Promise.resolve();
   assert.equal(h.get("phonics-words-picture").hidden, false);
   assert.equal(h.get("phonics-words-picture").children.length, 2);
   h.get("phonics-words-replay").click();
   assert.equal(h.spoken.length, 4);
+  assert.equal(h.get("phonics-words-action").disabled, true);
+  assert.equal(h.get("phonics-words-replay").disabled, true);
+  h.get("phonics-words-action").click();
+  h.get("phonics-words-replay").click();
+  assert.equal(h.spoken.length, 4, "buttons must be inert during replay");
   assert.equal(h.get("phonics-words-picture").hidden, false, "replay must keep illustration and ruby visible");
   assert.equal(h.get("phonics-words-picture").children.length, 2);
   h.spoken[3].onend(); h.runPause();
   h.spoken[4].onend(); h.runPause();
   h.spoken[5].onend();
   assert.equal(h.get("phonics-words-picture").hidden, false);
+  assert.equal(h.get("phonics-words-action").disabled, false);
+  assert.equal(h.get("phonics-words-replay").disabled, false);
 });
 
 test("existing five-word mode still begins with per-letter next button", () => {
@@ -110,4 +139,12 @@ test("existing five-word mode still begins with per-letter next button", () => {
   assert.equal(h.get("phonics-words-progress-count").textContent, "1 / 5");
   assert.equal(h.get("phonics-words-action").textContent, "つぎへ");
   assert.equal(h.get("phonics-words-replay").hidden, true);
+});
+
+test("disabled actions never animate, and Japanese ruby waits for font glyphs", () => {
+  assert.match(source, /#phonics-words-replay:active:not\(:disabled\)/);
+  assert.match(source, /#phonics-words-screen #phonics-words-action:active:disabled/);
+  assert.match(source, /pointer-events:none;-webkit-tap-highlight-color:transparent/);
+  assert.match(source, /fonts\?\.load\('800 36px/);
+  assert.match(source, /fonts\?\.load\('600 17px/);
 });
