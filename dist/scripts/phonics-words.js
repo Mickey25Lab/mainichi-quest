@@ -85,12 +85,22 @@
     icon.alt = current.label;
     icon.decoding = "async";
     icon.src = "./assets/ui/phonics-words/" + current.word.toLowerCase() + ".svg";
-    try { await icon.decode(); } catch (_) {}
-    if (!session || session.words[session.index] !== current || !session.heard || playbackSerial !== serial) return;
-    const region = get("phonics-words-picture");
     const meaning = document.createElement("div");
     meaning.className = "phonics-words-meaning";
     meaning.innerHTML = current.meaning;
+    // Japanese glyphs/ruby can use different font subsets on iPad Safari.
+    // Wait for both glyph sizes and the image before making the pair visible.
+    const fonts = document.fonts;
+    try {
+      await Promise.all([
+        icon.decode(),
+        fonts?.load('800 36px "Noto Sans JP"', current.label) || Promise.resolve(),
+        fonts?.load('600 17px "Noto Sans JP"', current.meaning.replace(/<[^>]*>/g, "")) || Promise.resolve()
+      ]);
+      if (fonts?.ready) await fonts.ready;
+    } catch (_) { /* Use the available fallback font/image if loading fails. */ }
+    if (!session || session.words[session.index] !== current || !session.heard || playbackSerial !== serial) return;
+    const region = get("phonics-words-picture");
     region.replaceChildren(icon, meaning);
     region.hidden = false;
     session.playing = false;
@@ -182,7 +192,7 @@
     window.speechSynthesis.speak(voice);
   }
   function next() {
-    if (!session) return;
+    if (!session || session.playing) return;
     const current = session.words[session.index];
     const wordLength = current.word.length;
     if (!session.wholeWord && session.step < wordLength - 1) {
@@ -238,7 +248,7 @@
     callback();
   }
   function replay() {
-    if (!session || !session.wholeWord || !session.heard) return;
+    if (!session || session.playing || !session.wholeWord || !session.heard) return;
     const current = session.words[session.index];
     // In the new mode a replay repeats the same three-utterance sequence.
     speakThreeTimes(current, { retainMeaning: true });
@@ -270,8 +280,10 @@
     #phonics-words-action{bottom:34px;z-index:7}
     #phonics-words-screen .phonics-words-stage:has(.is-whole-word) #phonics-words-action{bottom:34px}
     #phonics-words-replay{position:absolute;right:110px;bottom:34px;z-index:7;box-sizing:border-box;width:280px;height:var(--play-corner-control-height);padding:0;border:3px solid #8cb9d5;border-radius:var(--play-corner-radius);color:#23547b;background:#dbf1ff;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
-    #phonics-words-replay:active{transform:translateY(3px);box-shadow:0 3px 0 #8baec5,0 7px 14px rgba(3,52,109,.12)}
-    #phonics-words-replay:disabled,#phonics-words-action:disabled{opacity:.7;cursor:default}
+    #phonics-words-replay:active:not(:disabled){transform:translateY(3px);box-shadow:0 3px 0 #8baec5,0 7px 14px rgba(3,52,109,.12)}
+    #phonics-words-screen #phonics-words-action:active:disabled{transform:translateX(-50%);box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18)}
+    #phonics-words-screen #phonics-words-replay:active:disabled{transform:none;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12)}
+    #phonics-words-replay:disabled,#phonics-words-action:disabled{opacity:1;cursor:default;pointer-events:none;-webkit-tap-highlight-color:transparent}
     #phonics-words-letters.is-whole-word{background:transparent!important}
     .phonics-words-word-pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-width:450px}
     .phonics-words-primary{font:900 128px/1.1 "Noto Sans JP",sans-serif;color:#132b50;letter-spacing:3px}
