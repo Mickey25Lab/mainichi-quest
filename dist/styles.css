@@ -6062,19 +6062,27 @@ html.mq-viewport-landscape-pinned body {
 }
 .alphabet-check-background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .alphabet-check-card {
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  width:980px; min-height:440px; padding:54px 62px;
-  border-radius:36px; background:#fff; box-shadow:0 18px 54px rgba(3,52,109,.22);
-  color:#163a70;
+  position:absolute; left:50%; top:49%; transform:translate(-50%,-50%);
+  width:1320px; height:870px; padding:26px 46px;
+  border-radius:34px; background:#fff; box-shadow:0 18px 54px rgba(3,52,109,.22);
+  color:#163a70; display:flex; flex-direction:column; gap:16px;
 }
-.alphabet-check-card h2 { margin:0 0 38px; text-align:center; font:900 48px/1.2 "Noto Sans JP",sans-serif; }
-.alphabet-check-letters {
-  font:700 67px/1.25 "Andika",sans-serif;
-  font-synthesis:none; letter-spacing:0; word-spacing:0; overflow-wrap:anywhere;
-  word-break:break-all; text-align:left;
+.alphabet-check-card h2 {
+  margin:0; text-align:center; font:900 43px/1.2 "Noto Sans JP",sans-serif;
 }
-.alphabet-check-letters span { font-family:"Andika",sans-serif; }
-.alphabet-check-letters .alphabet-check-jost { font-family:"Jost",sans-serif; }
+.alphabet-check-pattern { min-height:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.alphabet-check-pattern + .alphabet-check-pattern { border-top:2px solid #d7e4f0; padding-top:12px; }
+.alphabet-check-pattern h3 {
+  margin:0 0 3px; font:800 26px/1.15 "Noto Sans JP",sans-serif;
+}
+.alphabet-check-line {
+  font:700 57px/1.12 "Andika",sans-serif; font-synthesis:none;
+  letter-spacing:0; word-spacing:0; white-space:nowrap;
+  text-align:left;
+}
+.alphabet-check-line span { font-family:inherit; }
+.alphabet-check-mixed .alphabet-check-jost { font-family:"Jost",sans-serif; }
+.alphabet-check-jost .alphabet-check-line { font-family:"Jost",sans-serif; }
 .alphabet-check-back {
   position:absolute; bottom:17px; right:34px; min-width:210px; height:60.8px;
   border:3px solid #b5d8ed; border-radius:24px;
