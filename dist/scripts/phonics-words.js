@@ -32,6 +32,16 @@
   };
   let session = null, pictureTimer = 0, speechTimer = 0, playbackSerial = 0;
   const get = id => document.getElementById(id);
+  // Shared font map for both word-reading modes: 49 Andika glyphs + Q/t/y in Jost.
+  function wordLetter(char, className) {
+    const letter = document.createElement("span");
+    letter.className = className + (char === "Q" || char === "t" || char === "y" ? " is-jost" : "");
+    letter.textContent = char;
+    return letter;
+  }
+  function appendSpelledWord(target, text, className) {
+    target.replaceChildren(...Array.from(text, char => wordLetter(char, className)));
+  }
   function clearPictureTimer() {
     if (pictureTimer) clearTimeout(pictureTimer);
     pictureTimer = 0;
@@ -55,17 +65,16 @@
       wordPair.className = "phonics-words-word-pair";
       const primary = document.createElement("span");
       primary.className = "phonics-words-primary";
-      primary.textContent = word.toLowerCase();
+      appendSpelledWord(primary, word.toLowerCase(), "phonics-words-glyph");
       const secondary = document.createElement("span");
       secondary.className = "phonics-words-secondary";
-      secondary.textContent = word;
+      appendSpelledWord(secondary, word, "phonics-words-glyph");
       wordPair.append(primary, secondary);
       wrap.append(wordPair);
     } else {
     Array.from(word).forEach((character, index) => {
-      const tile = document.createElement("span");
-      tile.className = "phonics-words-letter" + (!session.wholeWord && !combined && index === session.step ? " is-selected" : "");
-      tile.textContent = character;
+      const tile = wordLetter(character, "phonics-words-letter");
+      if (!combined && index === session.step) tile.classList.add("is-selected");
       wrap.append(tile);
     });
     }
@@ -280,7 +289,8 @@
     .phonics-words-stage .phonics-intro-card{display:flex;align-items:center;justify-content:center;min-height:760px;height:760px;box-sizing:border-box}
     .phonics-words-main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0}
     #phonics-words-letters{display:inline-flex;align-items:stretch;gap:8px;max-width:100%;border-radius:18px}
-    .phonics-words-letter{display:flex;align-items:center;justify-content:center;width:112px;height:160px;box-sizing:border-box;border-radius:18px;font:900 106px/1 "Noto Sans JP",sans-serif;color:#132b50}
+    .phonics-words-letter{display:flex;align-items:center;justify-content:center;width:112px;height:160px;box-sizing:border-box;border-radius:18px;font:700 106px/1 "Andika",sans-serif;color:#132b50}
+    .phonics-words-letter.is-jost,.phonics-words-glyph.is-jost{font-family:"Jost",sans-serif}
     .phonics-words-letter.is-selected,#phonics-words-letters.is-combined{background:#adf0ff}
     #phonics-words-letters.is-combined .phonics-words-letter{border-radius:0}
     #phonics-words-picture{position:absolute;right:35px;top:170px;bottom:145px;width:250px;display:flex;align-items:center;justify-content:center}
@@ -295,8 +305,9 @@
     #phonics-words-screen #phonics-words-replay:disabled,#phonics-words-screen #phonics-words-action:disabled{opacity:.52;filter:saturate(.45);cursor:default;pointer-events:none;-webkit-tap-highlight-color:transparent}
     #phonics-words-letters.is-whole-word{background:transparent!important}
     .phonics-words-word-pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-width:450px}
-    .phonics-words-primary{font:900 128px/1.1 "Noto Sans JP",sans-serif;color:#132b50;letter-spacing:3px}
-    .phonics-words-secondary{font:800 55px/1.1 "Noto Sans JP",sans-serif;color:#60758f;letter-spacing:3px}
+    .phonics-words-primary{font:700 128px/1.1 "Andika",sans-serif;color:#132b50;letter-spacing:3px;white-space:nowrap}
+    .phonics-words-secondary{font:700 55px/1.1 "Andika",sans-serif;color:#60758f;letter-spacing:3px;white-space:nowrap}
+    .phonics-words-glyph{display:inline-block;font-family:"Andika",sans-serif}
     #phonics-words-replay[hidden]{display:none!important}
     #phonics-words-picture:has(.phonics-words-meaning){flex-direction:column;gap:22px}
     .phonics-words-meaning{font-size:36px;font-weight:800;color:#132b50;text-align:center;line-height:1.6;white-space:nowrap}
@@ -312,6 +323,11 @@
     #phonics-words-back{z-index:7}
   `;
   document.head.append(css);
+  // Noto Sans JP remains the common UI/Japanese-label font; only alphabet glyphs use these.
+  const alphabetFontStylesheet = document.createElement("link");
+  alphabetFontStylesheet.rel = "stylesheet";
+  alphabetFontStylesheet.href = "https://fonts.googleapis.com/css2?family=Andika:wght@700&family=Jost:wght@700&display=swap";
+  document.head.append(alphabetFontStylesheet);
   const screen = document.createElement("section");
   screen.id = "phonics-words-screen";
   screen.className = "screen phonics-intro-screen phonics-words-screen";
