@@ -184,6 +184,7 @@
     [230,465,700,935,1170].map((x) => Object.freeze({ x, contactY:centerY, size:140, anchorY:.5 }))
   ));
   const questionTimeoutMs = 5 * 60 * 1000;
+  const idleBgmTimeoutMs = 5 * 60 * 1000;
   const rarityConfig = Object.freeze({
     normal: { label: "ノーマル", stars: "★", weight: 10 },
     special: { label: "スペシャル", stars: "★★", weight: 5 },
@@ -854,6 +855,7 @@
       if ($("startup-loader")?.hidden) openPendingLevelCelebration();
     }
     setDesiredBgmGroup(bgmConfig.screenGroups[id] || null);
+    checkIdleBgmTimeout();
     recordVisualDiagnostic("show-screen", { screenId: id });
   }
   function showRewardOverPlay() {
@@ -4953,6 +4955,7 @@
   }
   function handleQuestionTimeout() {
     stopQuestionTimeout(); saveCollection();
+    silenceBackgroundMusicForIdle();
     if (state.pendingNextVehicleOverlay) state.pendingNextVehicleOverlay.hidden = true;
     state.pendingNextVehicleOverlay = null;
     state.preparedNextQuestionVisual = null;
@@ -6380,6 +6383,38 @@
   function activeBgmGroup() {
     return bgmConfig.screenGroups[activeScreenId()] || null;
   }
+  // Temporary silence is independent of the persistent parent BGM preference.
+  let idleBgmSilenced = false;
+  let lastIdleInteractionAt = Date.now();
+  let lastIdleScreenId = null;
+  function isIdleBgmScreen(id = activeScreenId()) {
+    return id === "start-screen" || id === "mode-select-screen";
+  }
+  function silenceBackgroundMusicForIdle() {
+    if (idleBgmSilenced) return;
+    idleBgmSilenced = true;
+    stopBackgroundMusic({ clearDesired: false });
+    recordBgmDiagnostic("idle-bgm-silenced");
+  }
+  function recordIdleBgmInteraction() {
+    lastIdleInteractionAt = Date.now();
+    if (!idleBgmSilenced) return;
+    idleBgmSilenced = false;
+    recordBgmDiagnostic("idle-bgm-resume");
+    if (state.bgmEnabled && isIdleBgmScreen()) primeBackgroundMusicFromGesture(activeBgmGroup());
+  }
+  function checkIdleBgmTimeout() {
+    const screenId = activeScreenId();
+    if (!isIdleBgmScreen(screenId)) {
+      lastIdleScreenId = null;
+      return;
+    }
+    if (screenId !== lastIdleScreenId) {
+      lastIdleScreenId = screenId;
+      if (!idleBgmSilenced) lastIdleInteractionAt = Date.now();
+    }
+    if (!idleBgmSilenced && Date.now() - lastIdleInteractionAt >= idleBgmTimeoutMs) silenceBackgroundMusicForIdle();
+  }
   function bgmTrack(group = state.bgmGroup || state.desiredBgmGroup) {
     return group ? bgmConfig.tracks[group] || null : null;
   }
@@ -6541,7 +6576,7 @@
     }
   }
   function canPlayBackgroundMusic(group = state.desiredBgmGroup) {
-    if (!group || document.hidden || !state.bgmEnabled || activeBgmGroup() !== group) return false;
+    if (!group || document.hidden || !state.bgmEnabled || idleBgmSilenced || activeBgmGroup() !== group) return false;
     if (group !== "game") return true;
     return (state.phase === "initial" || state.phase === "retry") && Boolean(state.current);
   }
@@ -6568,14 +6603,14 @@
       return;
     }
     if (state.bgmSource && state.bgmGroup !== normalized) { transitionBackgroundMusic(normalized); return; }
-    if (!normalized || !state.bgmEnabled) return;
+    if (!normalized || !state.bgmEnabled || idleBgmSilenced) return;
     startBackgroundMusic(normalized);
   }
   function syncBackgroundMusicForActiveScreen() {
     setDesiredBgmGroup(activeBgmGroup());
   }
   function primeBackgroundMusicFromGesture(group = state.desiredBgmGroup || activeBgmGroup()) {
-    if (!state.bgmEnabled || !group) return;
+    if (!state.bgmEnabled || idleBgmSilenced || !group) return;
     if (state.desiredBgmGroup !== group) setDesiredBgmGroup(group);
     audioContext();
     resumeAudioContext();
@@ -6586,7 +6621,11 @@
     try { localStorage.setItem(bgmConfig.storageKey, String(state.bgmEnabled)); } catch (_) {}
     updateBgmToggleButton();
     if (!state.bgmEnabled) stopBackgroundMusic({ clearDesired: false });
-    else primeBackgroundMusicFromGesture(state.desiredBgmGroup || activeBgmGroup());
+    else {
+      idleBgmSilenced = false;
+      lastIdleInteractionAt = Date.now();
+      primeBackgroundMusicFromGesture(state.desiredBgmGroup || activeBgmGroup());
+    }
   }
   function toggleBackgroundMusic() { setBgmEnabled(!state.bgmEnabled); }
   function tone(frequency, start, duration, type = "sine", volume = .17) {
@@ -7168,6 +7207,7 @@
   updateVersionLabelWithPreviewMetadata();
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
+  window.setInterval(checkIdleBgmTimeout, 1000);
   window.addEventListener("resize", () => {
     recordViewportDiagnostic("window.resize");
     schedulePlayStageSize("resize");
@@ -7388,6 +7428,7 @@
       if (!recoverAbnormalPwaZoom("visibilitychange:visible")) schedulePlayStageSize("visibilitychange:visible");
       updateTopCollectionButton();
       checkQuestionTimeout();
+      checkIdleBgmTimeout();
     }
   });
   window.addEventListener("blur", () => {
@@ -7400,15 +7441,18 @@
     resumeAudioAfterVisible("focus");
     recoverAbnormalPwaZoom("focus");
     checkQuestionTimeout();
+    checkIdleBgmTimeout();
   });
   // WebKit can leave double-tap smart zoom enabled on non-interactive hit targets
   // even when touch-action: manipulation is applied. A no-op click listener on
   // the app root keeps the full app surface in the interactive hit-test path.
   $("app").addEventListener("click", () => {});
   document.addEventListener("pointerdown", () => {
+    recordIdleBgmInteraction();
     resumeAudioAfterVisible("pointerdown");
   }, { passive: true });
   document.addEventListener("touchstart", () => {
+    recordIdleBgmInteraction();
     resumeAudioAfterVisible("touchstart");
   }, { passive: true });
   let touchStartX = 0;
