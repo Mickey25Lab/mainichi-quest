@@ -70,10 +70,8 @@
     });
     }
     get("phonics-words-progress-count").textContent = (session.index + 1) + " / " + session.words.length;
-    if (!retainMeaning) {
-      get("phonics-words-picture").hidden = true;
-      get("phonics-words-picture").replaceChildren();
-    }
+    get("phonics-words-picture").hidden = true;
+    get("phonics-words-picture").replaceChildren();
     get("phonics-words-replay").hidden = !session.wholeWord || !session.heard;
     get("phonics-words-replay").disabled = Boolean(session.playing);
     get("phonics-words-action").disabled = Boolean(session.playing);
