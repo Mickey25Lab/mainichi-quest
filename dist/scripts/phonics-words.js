@@ -105,8 +105,10 @@
     session.playing = true;
     get("phonics-words-action").disabled = true;
     get("phonics-words-replay").disabled = true;
-    get("phonics-words-picture").hidden = true;
-    get("phonics-words-picture").replaceChildren();
+    if (!retainMeaning) {
+      get("phonics-words-picture").hidden = true;
+      get("phonics-words-picture").replaceChildren();
+    }
     if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") {
       // No false claim of completion if speech is unsupported.
       session.playing = false;
