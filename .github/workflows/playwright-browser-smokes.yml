@@ -78,6 +78,7 @@ jobs:
             tests/collection-earned-layouts.test.cjs \
             tests/level-system.test.cjs \
             tests/bgm-controller.test.cjs \
+            tests/idle-bgm-timeout.test.cjs \
             tests/two-digit-multiplication-guides.test.cjs
       - name: Run PWA origin transfer safety tests
         if: steps.changes.outputs.docs_only != 'true'
