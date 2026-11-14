@@ -2469,15 +2469,14 @@
     } else stagedBubble.hidden = true;
     swapVisualLayerIds();
   }
-  function raritiesForDraw(streak, afterStage5 = false) {
+  function raritiesForDraw(streak) {
     if (streak <= 1) return ["normal"];
     if (streak === 2) return ["normal", "special"];
-    if (streak === 3) return ["normal", "special", "rare"];
-    if (streak === 4) return ["special", "rare"];
-    return afterStage5 ? ["special", "rare", "super-rare"] : ["normal", "special", "rare"];
+    if (streak <= 4) return ["normal", "special", "rare"];
+    return ["normal", "special", "rare", "super-rare"];
   }
-  function candidatesForDraw(streak, afterStage5 = false, recentHistory = state.recentVehicleHistory, pool = vehicles, excludeCurrent = false) {
-    const allowedRarities = new Set(raritiesForDraw(streak, afterStage5));
+  function candidatesForDraw(streak, recentHistory = state.recentVehicleHistory, pool = vehicles, excludeCurrent = false) {
+    const allowedRarities = new Set(raritiesForDraw(streak));
     const recent = [...recentHistory].slice(-3);
     let candidates = [];
     while (candidates.length === 0) {
@@ -2488,8 +2487,8 @@
     }
     return candidates;
   }
-  function chooseNextVehicle({ afterStage5 = false, excludeCurrent = false } = {}) {
-    const candidates = candidatesForDraw(state.correctStreak, afterStage5, state.recentVehicleHistory, vehicles, excludeCurrent);
+  function chooseNextVehicle({ excludeCurrent = false } = {}) {
+    const candidates = candidatesForDraw(state.correctStreak, state.recentVehicleHistory, vehicles, excludeCurrent);
     const totalWeight = candidates.reduce((sum, vehicle) => sum + vehicle.weight, 0);
     let ticket = Math.random() * totalWeight;
     let selected = candidates[candidates.length - 1];
@@ -2506,8 +2505,8 @@
   }
   // A vehicle challenge is independent from its evolution stage.  Every new
   // challenge starts at question one and never inherits the previous count.
-  function startNextVehicleChallenge({ afterStage5 = false } = {}) {
-    chooseNextVehicle({ afterStage5, excludeCurrent: true });
+  function startNextVehicleChallenge() {
+    chooseNextVehicle({ excludeCurrent: true });
     state.vehicleChallengeQuestionCount = 0;
   }
   function prepareInitialVehicle() {
@@ -4604,7 +4603,7 @@
       // Every acquisition/evolution closes its vehicle challenge.  Pick the
       // successor once here, after the reward has finished, and prepare it
       // behind the current scene before the single visual swap.
-      startNextVehicleChallenge({ afterStage5: stage === 5 });
+      startNextVehicleChallenge();
       const nextQuestion = state.phase === "initial" ? state.questions[state.initialIndex + 1] : null;
       if (nextQuestion) {
         assignQuestionVisualContext(nextQuestion);
