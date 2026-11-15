@@ -2724,8 +2724,9 @@
         let multiplicand, multiplier, key;
         do {
           multiplicand = 10 + Math.floor(Math.random() * 90);
-          const tens = 1 + Math.floor(Math.random() * 9);
           const ones = (index === 0 || index === 3) ? 0 : 1 + Math.floor(Math.random() * 9);
+          // A multiplier of 10 is a trivial place-value shift; use 20..50 for ×0 questions.
+          const tens = ones === 0 ? 2 + Math.floor(Math.random() * 4) : 1 + Math.floor(Math.random() * 9);
           multiplier = tens * 10 + ones;
           key = `${multiplicand}*${multiplier}`;
         } while (used.has(key));
