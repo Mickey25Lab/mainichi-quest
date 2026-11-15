@@ -6107,6 +6107,12 @@ html.mq-viewport-landscape-pinned body {
 .play-screen .keypad.is-reviewing-wrong-answer .key,
 .play-screen .keypad.is-reviewing-wrong-answer .remainder-key,
 .play-screen .keypad.is-reviewing-wrong-answer .no-remainder-key { pointer-events:none; }
+/* A submitted answer locks the ordinary keypad, but the review action
+   must remain tappable until the 10-second timer or the next tap finishes. */
+.play-screen .keypad[aria-busy="true"] .wrong-answer-next:not([hidden]) {
+  pointer-events:auto;
+  touch-action:manipulation;
+}
 .play-screen .keypad .wrong-answer-next:active {
   transform:translate(-50%,calc(-50% + 4px));
   box-shadow:0 3px 0 #4d9bc9;
