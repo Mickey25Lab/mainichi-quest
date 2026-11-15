@@ -25,7 +25,7 @@
     Object.freeze({ id:"phonics-part-5", label:"フォニックス", detail:"パート5　V〜Z" }),
     Object.freeze({ id:"phonics-review", label:"フォニックス", detail:"まとめ　A〜Z" }),
     Object.freeze({ id:"phonics-words", label:"フォニックスでよんでみよう", detail:"" }),
-    Object.freeze({ id:"dolch-basic", label:"えいごのことばをよもう", detail:"パート１　きほんの名詞　14 words" })
+    Object.freeze({ id:"dolch-basic", label:"えいごのことばをよもう", detail:"パート１　きほんの名詞　13 words" })
   ]);
   const parentEnergyLevels = Object.freeze([
     Object.freeze({ id:"almost-zero", label:"ほぼ0" }),
