@@ -31,6 +31,11 @@ test("review controls preserve fixed canvas alignment and corrections are not cl
   assert.match(css, /pointer-events:auto;/);
 });
 
+test("zero-ones multiplier never generates ×10", () => {
+  assert.match(app, /const ones = \(index === 0 \|\| index === 3\) \? 0 : 1 \+ Math\.floor\(Math\.random\(\) \* 9\);/);
+  assert.match(app, /const tens = ones === 0 \? 2 \+ Math\.floor\(Math\.random\(\) \* 4\) : 1 \+ Math\.floor\(Math\.random\(\) \* 9\);/);
+});
+
 test("vehicle transition notice appears during correction review, not after next tap", () => {
   assert.match(app, /review\.markTimeout = window\.setTimeout\([\s\S]*?incorrect-next-vehicle-notice"\)\.hidden = false;[\s\S]*?prepareIncorrectNextVehicleDuringReview\(\);/);
   assert.match(app, /function prepareIncorrectNextVehicleDuringReview\(\)/);
