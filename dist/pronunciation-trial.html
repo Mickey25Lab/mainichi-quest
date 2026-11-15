@@ -28,7 +28,11 @@ button.primary{background:#77cbf5;color:#103b67}
 .trial-judge{background:rgba(255,255,255,.95);border:3px solid #8ac5e5;border-radius:24px;padding:16px}
 .trial-judge h2{margin:0 0 10px;font-size:22px}
 .trial-judge-buttons{display:flex;flex-wrap:wrap;gap:10px}
-.trial-judge-buttons button{flex:1;min-width:160px;padding:14px 8px;font-size:19px}
+.trial-judge-buttons button{flex:1;min-width:160px;padding:14px 8px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px}
+.judge-symbol{font:900 34px/1 "Noto Sans JP",sans-serif;flex:none}
+.judge-symbol.good{color:#e33e48}
+.judge-symbol.bad{color:#237bda}
+.judge-symbol.unsure{color:#eb8b19}
 .trial-result{background:#fff;border-radius:22px;padding:18px;flex:1}
 .trial-result h1{font-size:25px;margin:0 0 12px}
 .trial-result table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:clamp(14px,2.7vw,21px)}
@@ -49,15 +53,14 @@ button.primary{background:#77cbf5;color:#103b67}
 </section>
 <div id="controls" class="trial-controls">
   <button id="start" class="primary" type="button">よんでみる</button>
-  <button id="finish" class="primary" type="button" hidden>よみおわったよ</button>
   <button id="retry" type="button" hidden>もういちど</button>
 </div>
 <section id="judge" class="trial-judge" hidden aria-label="親判定">
   <h2>おうちのひとの はんてい</h2>
   <div class="trial-judge-buttons">
-    <button type="button" data-judge="合っている">発音が合っている</button>
-    <button type="button" data-judge="間違っている">発音が間違っている</button>
-    <button type="button" data-judge="曖昧・ノイズあり">曖昧・ノイズあり</button>
+    <button type="button" data-judge="合っている"><span class="judge-symbol good" aria-hidden="true">○</span>発音が合っている</button>
+    <button type="button" data-judge="間違っている"><span class="judge-symbol bad" aria-hidden="true">×</span>発音が間違っている</button>
+    <button type="button" data-judge="曖昧・ノイズあり"><span class="judge-symbol unsure" aria-hidden="true">△</span>曖昧・ノイズあり</button>
   </div>
 </section>
 <section id="results" class="trial-result" hidden>
@@ -93,7 +96,7 @@ function render(){
   resetRecognition();generation++;best="";pending="";phase="ready";
   $("progress").textContent="お試しモード "+(index+1)+" / "+words.length;
   letter("word-lower",words[index].toLowerCase());letter("word-upper",words[index]);
-  $("response").hidden=true;$("judge").hidden=true;$("start").hidden=false;$("finish").hidden=true;$("retry").hidden=true;
+  $("response").hidden=true;$("judge").hidden=true;$("start").hidden=false;$("retry").hidden=true;
   setStatus(Recognition?"ボタンをおして、こえにだしてよもう！":"このiPadでは音声認識が使えません。親判定だけ記録できます。");
   if(!Recognition){$("start").textContent="認識できないので すすむ";}else{$("start").textContent="よんでみる";}
 }
@@ -103,16 +106,7 @@ function revealJudgement(){
   transcript(best||pending||"（認識なし）");
   const normalized=(best||pending).trim().toUpperCase().replace(/[^A-Z]/g,"");
   setStatus("iPadの判定："+(normalized===words[index]?"一致":"不一致 / 認識なし")+"　※発音の正誤とは別");
-  $("finish").hidden=true;$("start").hidden=true;$("retry").hidden=false;$("judge").hidden=false;
-}
-function stop(){
-  if(phase!=="listening")return;
-  phase="settling";listening=false;$("finish").disabled=true;
-  setStatus("ききとった ことばを かくにんちゅう…");
-  // stop(), unlike abort(), allows late final results to arrive on iPad.
-  try{recognition?.stop();}catch(_){}
-  const token=generation;
-  settleTimer=setTimeout(()=>{if(generation===token&&phase==="settling")revealJudgement();},1300);
+  $("start").hidden=true;$("retry").hidden=false;$("judge").hidden=false;
 }
 function start(){
   if(phase!=="ready")return;
@@ -132,7 +126,8 @@ function start(){
   rec.onerror=event=>{
     if(token!==generation)return;
     if(!best&&!pending)best="（エラー: "+event.error+"）";
-    if(phase==="listening")stop();
+    if(phase==="listening"){phase="settling";listening=false;}
+    if(phase==="settling"){clearTimeout(settleTimer);revealJudgement();}
   };
   rec.onend=()=>{
     if(token!==generation)return;
@@ -141,8 +136,8 @@ function start(){
   };
   try{
     rec.start();phase="listening";listening=true;
-    $("start").hidden=true;$("finish").hidden=false;$("finish").disabled=false;$("retry").hidden=true;$("judge").hidden=true;$("response").hidden=true;
-    setStatus("きいているよ！ よみおわったら ボタンをおしてね");
+    $("start").hidden=true;$("retry").hidden=true;$("judge").hidden=true;$("response").hidden=true;
+    setStatus("きいているよ！ よみおわったら じどうで すすむよ");
   }catch(error){
     best="（開始エラー）";revealJudgement();
   }
@@ -160,7 +155,6 @@ function complete(){
   }
 }
 $("start").addEventListener("click",start);
-$("finish").addEventListener("click",stop);
 $("retry").addEventListener("click",render);
 $("judge").addEventListener("click",event=>{
   const target=event.target.closest("button[data-judge]");
@@ -169,7 +163,13 @@ $("judge").addEventListener("click",event=>{
   index++;
   if(index===words.length)complete();else render();
 });
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&phase==="listening")stop();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&phase==="listening"){
+  // Hiding the page stops the microphone; preserve whatever the recognizer heard.
+  phase="settling";listening=false;
+  try{recognition?.stop();}catch(_){}
+  const token=generation;
+  settleTimer=setTimeout(()=>{if(generation===token&&phase==="settling")revealJudgement();},1300);
+}});
 window.addEventListener("pagehide",resetRecognition);
 render();
 })();
