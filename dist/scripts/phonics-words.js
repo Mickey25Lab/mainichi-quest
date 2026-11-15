@@ -331,5 +331,5 @@
   get("phonics-words-action").addEventListener("click", next);
   get("phonics-words-back").addEventListener("click",quit);
   get("phonics-words-replay").addEventListener("click",replay);
-  window.MQPhonicsWords = Object.freeze({start,quit});
+  window.MQPhonicsWords = Object.freeze({start,quit,getBasicVocabulary: () => basicVocabulary.map(w => ({...w}))});
 })();

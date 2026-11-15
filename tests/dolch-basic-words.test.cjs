@@ -244,7 +244,7 @@ test("mode selection and parent settings share the same definitions, with no dup
   assert.match(app, /detail\.textContent = definition\.detail/);
   assert.match(app, /title\.textContent = definition\.label/);
   const choiceNames = [...html.matchAll(/<span class="mode-select-name">([^<]*)<\/span>/g)];
-  assert.equal(choiceNames.length, 18, "every child mode title should be sourced from parentModeDefinitions");
+  assert.equal(choiceNames.length, 19, "every child mode title should be sourced from parentModeDefinitions");
   assert.ok(choiceNames.every(m => m[1] === ""), "no hardcoded child mode title is permitted");
   assert.doesNotMatch(html, /14 words/);
 });
