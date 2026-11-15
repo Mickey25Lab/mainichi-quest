@@ -143,6 +143,9 @@
     })
   });
   const wrongFeedbackDurationMs = 500;
+  const wrongAnswerReviewDurationMs = 10000;
+  let wrongAnswerReview = null;
+  let pendingIncorrectNextVehicleVisuals = null;
   const revealedAnswerDurationMs = 2000 * 2;
   // All interactive scenes use the native size of the delivered backgrounds.
   // Keeping this in one place avoids a second coordinate system creeping back
@@ -2721,8 +2724,9 @@
         let multiplicand, multiplier, key;
         do {
           multiplicand = 10 + Math.floor(Math.random() * 90);
-          const tens = 1 + Math.floor(Math.random() * 9);
           const ones = (index === 0 || index === 3) ? 0 : 1 + Math.floor(Math.random() * 9);
+          // A multiplier of 10 is a trivial place-value shift; use 20..50 for ×0 questions.
+          const tens = ones === 0 ? 2 + Math.floor(Math.random() * 4) : 1 + Math.floor(Math.random() * 9);
           multiplier = tens * 10 + ones;
           key = `${multiplicand}*${multiplier}`;
         } while (used.has(key));
@@ -2826,6 +2830,7 @@
     $("long-division-skip-key").disabled = !isLongDivision;
   }
   function resetAnswerCard() {
+    cancelWrongAnswerReview();
     $("question-answer-card").className = "question-answer-card";
     $("answer-card").className = "answer-card";
     $("answer-text").textContent = "";
@@ -2860,6 +2865,7 @@
   ensureGameplayFontsReady();
 
   function displayQuestion(question, onRevealed = null) {
+    cancelWrongAnswerReview();
     // Keep the previous red correction through the blue grading mark and
     // any interim notice; remove it only as the next problem takes over.
     removeMultiplicationCorrectionOverlays();
@@ -2945,6 +2951,9 @@
     });
   }
   function beginRound(mode = state.mode || "normal") {
+    cancelWrongAnswerReview();
+    pendingIncorrectNextVehicleVisuals = null;
+    $("incorrect-next-vehicle-notice").hidden = true;
     beginRoundTransaction();
     clearRetryAutoStartTimer(); clearIdleGuide();
     stopCollectionTimer();
@@ -4429,19 +4438,145 @@
   }
 
   function removeMultiplicationCorrectionOverlays() {
-    $("play-stage").querySelectorAll(".multiplication-correction-overlay").forEach((node) => node.remove());
+    $("play-stage").querySelectorAll(".multiplication-correction-overlay, .multiplication-addition-hint").forEach((node) => node.remove());
   }
-  function addMultiplicationCorrectionOverlay(slot, expected) {
+  // Partial product 2 starts at the tens column. For every wrong final-row
+  // digit, compare the *entered* value with multiplication of the two aligned
+  // partial-product digits, not the correct sum (which may include a carry).
+  // Only highlight one mistake: the rightmost matching column.
+  function findMultiplicationInsteadOfAdditionIndex(model) {
+    if (!model || model.specialZero || model.rows.length < 3) return -1;
+    const [upper, lower, total] = model.rows;
+    for (let i = total.cells.length - 1; i >= 0; i -= 1) {
+      if (total.cells[i] === total.value[i]) continue;
+      const place = total.cells.length - 1 - i;
+      const upperIndex = upper.cells.length - 1 - place;
+      const lowerIndex = lower.cells.length - place; // lower row shifted one place left
+      if (upperIndex < 0 || lowerIndex < 0 ||
+          upperIndex >= upper.cells.length || lowerIndex >= lower.cells.length) continue;
+      const upperDigit = upper.cells[upperIndex];
+      const lowerDigit = lower.cells[lowerIndex];
+      if (!/^[0-9]$/.test(upperDigit) || !/^[0-9]$/.test(lowerDigit) ||
+          upperDigit !== upper.value[upperIndex] || lowerDigit !== lower.value[lowerIndex]) continue;
+      const multiplied = Number(upperDigit) * Number(lowerDigit);
+      // A two-digit product also means a multiplication slip when its ones
+      // digit matches this cell; disregard carries from any neighboring column.
+      if (total.cells[i] === String(multiplied % 10)) return i;
+    }
+    return -1;
+  }
+  function showMultiplicationAdditionHint(model) {
+    const index = findMultiplicationInsteadOfAdditionIndex(model);
+    if (index < 0) return;
+    const slot = model.rows[2].holder.querySelectorAll(".multiplication-2x2-slot")[index];
+    if (!slot) return;
     const stage = $("play-stage");
     const stageRect = stage.getBoundingClientRect();
     const slotRect = slot.getBoundingClientRect();
+    const keypadRect = $("keypad").getBoundingClientRect();
     const scale = stageRect.width / stageCanvasWidth || 1;
-    const correction = document.createElement("span");
-    correction.className = "multiplication-correction-overlay";
-    correction.textContent = expected;
-    correction.style.left = ((slotRect.left + slotRect.width / 2 - stageRect.left) / scale) + "px";
-    correction.style.top = ((slotRect.bottom - stageRect.top) / scale + 4) + "px";
-    stage.appendChild(correction);
+    const width = (keypadRect.width / scale) * 0.8;
+    const anchorX = (slotRect.left + slotRect.width / 2 - stageRect.left) / scale;
+    const top = (slotRect.bottom - stageRect.top) / scale + 110;
+    const left = Math.max(12, Math.min(stageCanvasWidth - width - 12, anchorX - width / 2));
+    const bubble = document.createElement("div");
+    bubble.className = "multiplication-addition-hint";
+    bubble.setAttribute("role", "note");
+    bubble.textContent = "かけざんしちゃってない？";
+    bubble.style.width = width + "px";
+    bubble.style.left = left + "px";
+    bubble.style.top = top + "px";
+    bubble.style.setProperty("--addition-tip-x", (anchorX - left) + "px");
+    stage.appendChild(bubble);
+  }
+  function addMultiplicationCorrectionOverlay(slot, expected) {
+    // Preserve the original inline correction's exact position, font and size.
+    // Only move its rendering outside the paint-contained multiplication panel.
+    const inlineCorrection = slot.querySelector(".incorrect-digit-correction");
+    if (!inlineCorrection) return;
+    const stage = $("play-stage");
+    const stageRect = stage.getBoundingClientRect();
+    const correctionRect = inlineCorrection.getBoundingClientRect();
+    const scale = stageRect.width / stageCanvasWidth || 1;
+    const typography = window.getComputedStyle(inlineCorrection);
+    const overlay = document.createElement("span");
+    overlay.className = "multiplication-correction-overlay";
+    overlay.textContent = expected;
+    overlay.style.left = ((correctionRect.left + correctionRect.width / 2 - stageRect.left) / scale) + "px";
+    overlay.style.top = ((correctionRect.top - stageRect.top) / scale) + "px";
+    overlay.style.fontSize = typography.fontSize;
+    overlay.style.lineHeight = typography.lineHeight;
+    overlay.style.fontWeight = typography.fontWeight;
+    stage.appendChild(overlay);
+    inlineCorrection.remove();
+  }
+  function cancelWrongAnswerReview() {
+    if (wrongAnswerReview) {
+      window.clearTimeout(wrongAnswerReview.timeout);
+      window.clearTimeout(wrongAnswerReview.markTimeout);
+      window.clearInterval(wrongAnswerReview.interval);
+      wrongAnswerReview = null;
+    }
+    $("wrong-answer-countdown").hidden = true;
+    $("wrong-answer-next").hidden = true;
+    $("keypad").classList.remove("is-reviewing-wrong-answer");
+    $("question-answer-card").classList.remove("wrong-mark-hidden");
+  }
+  function prepareIncorrectNextVehicleDuringReview() {
+    if (state.phase !== "initial" || isFinalInitialQuestion()) return;
+    if (pendingIncorrectNextVehicleVisuals?.runId === state.runId) return;
+    const runId = state.runId;
+    const nextQuestion = state.questions[state.initialIndex + 1];
+    startNextVehicleChallenge();
+    const ready = nextQuestion
+      ? (assignQuestionVisualContext(nextQuestion),
+        prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
+          if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
+          return prepared;
+        }).catch((error) => { console.error("Incorrect next-question preload failed", error); return null; }))
+      : Promise.resolve(null);
+    pendingIncorrectNextVehicleVisuals = { runId, ready };
+  }
+  function startWrongAnswerReview(next) {
+    cancelWrongAnswerReview();
+    const countdown = $("wrong-answer-countdown");
+    const button = $("wrong-answer-next");
+    const deadline = performance.now() + wrongAnswerReviewDurationMs;
+    const review = { timeout: null, markTimeout: null, interval: null, finished: false };
+    wrongAnswerReview = review;
+    countdown.hidden = false;
+    // Show the large × first. Uncover つぎへ with the left-side notice.
+    button.hidden = true;
+    $("keypad").classList.add("is-reviewing-wrong-answer");
+    function renderCountdown() {
+      if (wrongAnswerReview !== review) return;
+      countdown.textContent = "あと " + Math.max(0, Math.ceil((deadline - performance.now()) / 1000)) + " 秒";
+    }
+    function finish() {
+      if (wrongAnswerReview !== review || review.finished) return;
+      review.finished = true;
+      // Fast taps before the × fades should still skip the extra notice delay.
+      if (state.phase === "initial" && !isFinalInitialQuestion() &&
+          !pendingIncorrectNextVehicleVisuals) {
+        $("incorrect-next-vehicle-notice").hidden = false;
+        prepareIncorrectNextVehicleDuringReview();
+      }
+      cancelWrongAnswerReview();
+      next();
+    }
+    review.finish = finish;
+    renderCountdown();
+    review.markTimeout = window.setTimeout(() => {
+      if (wrongAnswerReview !== review) return;
+      $("question-answer-card").classList.add("wrong-mark-hidden");
+      button.hidden = false;
+      if (state.phase === "initial" && !isFinalInitialQuestion()) {
+        $("incorrect-next-vehicle-notice").hidden = false;
+        prepareIncorrectNextVehicleDuringReview();
+      }
+    }, wrongFeedbackDurationMs);
+    review.interval = window.setInterval(renderCountdown, 100);
+    review.timeout = window.setTimeout(() => { renderCountdown(); finish(); }, wrongAnswerReviewDurationMs);
   }
   function showWrongDigitCorrections() {
     const question = state.current;
@@ -4468,16 +4603,24 @@
           markDigit(slot, expected[i] ?? "", "below");
           // Corrections in the grid are clipped by ancestor paint containment.
           // Mount the red answer directly in the scaled play stage instead.
-          slot.querySelector(".incorrect-digit-correction")?.remove();
           addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
         }
       });
     } else if (((state.mode === "multiplication3x2" || state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided" || state.mode === "multiplication2x2-zero")) && state.multiplication2x2) {
-      state.multiplication2x2.rows.forEach((row) => {
+      removeMultiplicationCorrectionOverlays();
+      const multiplicationModel = state.multiplication2x2;
+      const additionHintIndex = findMultiplicationInsteadOfAdditionIndex(multiplicationModel);
+      multiplicationModel.rows.forEach((row, rowIndex) => {
+        // The ×0 layout has only one editable/visible result row.
+        if (multiplicationModel.specialZero && rowIndex > 0) return;
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
-          if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
+          if (row.cells[i] !== row.value[i]) {
+            markDigit(slot, row.value[i], "below");
+            addMultiplicationCorrectionOverlay(slot, row.value[i]);
+          }
         });
       });
+      if (additionHintIndex >= 0) showMultiplicationAdditionHint(multiplicationModel);
     } else if (state.mode === "longdivision" && state.longDivision) {
       const slots = Array.from($("long-division-slots").children);
       const expected = String(question.quotient).padStart(slots.length, " ");
@@ -4569,19 +4712,22 @@
       return;
     }
     const runId = state.runId;
-    window.setTimeout(() => {
+    const next = () => {
       if (runId !== state.runId) return;
       runAnswerTransition(() => {
         if (state.phase === "initial") {
           finishInitialQuestion({ reward, challengeEnds: correct ? challengeMustEndAfterCorrect(state.current, reward) : true });
         } else advance();
       });
-    }, correct ? Math.max(
-      correctFeedbackDurationMs,
-      progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
-    ) : (!["numbercards", "counting1", "counting2"].includes(state.mode) && ((state.phase === "initial" && (isFinalInitialQuestion() || state.current.vehicleChallengePosition >= 5)) || (state.phase === "retry" && state.retrySetPosition >= state.retrySetTotal))
-      ? Math.max(wrongFeedbackDurationMs, 2000)
-      : wrongFeedbackDurationMs));
+    };
+    if (!correct && !["numbercards", "counting1", "counting2"].includes(state.mode)) {
+      startWrongAnswerReview(next);
+    } else {
+      window.setTimeout(next, correct ? Math.max(
+        correctFeedbackDurationMs,
+        progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
+      ) : wrongFeedbackDurationMs);
+    }
     } catch (error) { state.transitioning = false; throw error; }
   }
   function showReward({ stage, vehicleIndex, isNew, replay = false, kind = "evolution" }, drawAfterReward = false, onDone = null) {
@@ -4732,27 +4878,33 @@
   function showIncorrectNextVehicleNotice() {
     const runId = state.runId;
     const notice = $("incorrect-next-vehicle-notice");
-    // The × has completed; keep the solved problem visible behind the notice.
+    const preloaded = pendingIncorrectNextVehicleVisuals?.runId === runId
+      ? pendingIncorrectNextVehicleVisuals : null;
+    pendingIncorrectNextVehicleVisuals = null;
     setQuestionCardState("");
     pauseGameTimer();
     notice.hidden = false;
-    const prepareNextVisuals = () => {
-      startNextVehicleChallenge();
-      const nextQuestion = state.questions[state.initialIndex + 1];
-      if (!nextQuestion) return Promise.resolve(null);
-      assignQuestionVisualContext(nextQuestion);
-      return prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
-        if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
-        return prepared;
-      }).catch(() => null);
-    };
-    const nextVisualsReady = prepareNextVisuals();
+    // The notice has already been shown while reviewing the correction.
+    // Advance immediately after the preloaded visuals are ready; no extra hold.
+    if (preloaded) {
+      preloaded.ready.then(() => {
+        if (runId === state.runId) runAnswerTransition(advance);
+      });
+      return;
+    }
+    // Preserve the earlier flow for callers without an active review.
+    startNextVehicleChallenge();
+    const nextQuestion = state.questions[state.initialIndex + 1];
+    const nextVisualsReady = nextQuestion
+      ? (assignQuestionVisualContext(nextQuestion),
+        prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
+          if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
+        }).catch(() => null))
+      : Promise.resolve();
     window.setTimeout(() => {
       if (runId !== state.runId) return;
       nextVisualsReady.then(() => {
-        if (runId !== state.runId) return;
-        notice.hidden = true;
-        runAnswerTransition(advance);
+        if (runId === state.runId) runAnswerTransition(advance);
       });
     }, incorrectNextVehicleNoticeDurationMs);
   }
@@ -7262,6 +7414,7 @@
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
   });
+  $("wrong-answer-next").addEventListener("click", () => wrongAnswerReview?.finish?.());
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
