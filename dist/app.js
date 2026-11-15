@@ -1889,10 +1889,8 @@
       if (button.disabled) return;
       button.disabled = true;
       try {
-        // No choice dialog: include SS's 10-second post-capture interval automatically.
-        const waitMs = Math.max(0, viewportLastSsAt + viewportSsWindowAfterMs - Date.now());
-        if (waitMs) await new Promise((resolve) => window.setTimeout(resolve, waitMs));
-        if (viewportLastSsAt && waitMs) recordViewportDiagnostic("screenshot-window-end");
+        // Copy directly within the user gesture (iPad Safari clipboard policy).
+        // SS's following ten seconds are recorded asynchronously for later copies.
         const text = JSON.stringify(viewportDiagnostics);
         try {
           await navigator.clipboard.writeText(text);
@@ -1922,6 +1920,12 @@
     });
     ssButton.addEventListener("click", () => {
       recordViewportDiagnostic("screenshot-marker", { source: "manual-ss-button" });
+      const markedAt = viewportLastSsAt;
+      window.setTimeout(() => {
+        if (viewportDiagnosticsEnabled && viewportLastSsAt === markedAt) {
+          recordViewportDiagnostic("screenshot-window-end");
+        }
+      }, viewportSsWindowAfterMs);
       ssButton.textContent = "OK";
       window.setTimeout(() => { ssButton.textContent = "SS"; }, 900);
     });
