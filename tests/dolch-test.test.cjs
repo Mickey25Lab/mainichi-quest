@@ -35,13 +35,13 @@ test("test uses first-attempt grading, separate errors per word/step, and 3 spee
   assert.match(source,/else s\.mistakes\[s\.words\[s\.index\]\.word\]\[phase\]\+\+/);
   assert.match(source,/if\(\+\+count<3\)speechDelay=setTimeout\(utter,800\)/);
   assert.match(source,/u\.rate=\.85;u\.pitch=1\.2;u\.volume=1/);
-  assert.match(source,/if\(ok\).*stopSpeech\(\)/);
+  assert.match(source,/stopSpeech\(\);s\.speaking=false;/);
   assert.match(source,/setTimeout\(\(\)=>\{stepTimer=0;[\s\S]*\},500\)/);
   assert.match(source,/mq\.dolch-test\.v1\./);
   assert.match(source,/encodeURIComponent\(s\.profileId\)/);
   assert.match(source,/history|spellingFirstTry/);
   assert.match(source,/dt-card-mark/);
-  assert.match(source,/if\(ok&&phase==="spelling"\)speakThree\(\)/);
+  assert.match(source,/else if\(phase==="spelling"\)speakThree\(\)/);
   assert.match(source,/dolch-test-replay/);
   assert.doesNotMatch(source,/dolch-test-listen/,"no manual start action");
   assert.match(source,/speakThree\(\{first:true\}\);\s*\}/,"playback starts at session start");
