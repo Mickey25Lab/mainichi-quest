@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const html = fs.readFileSync(path.join(__dirname,"../dist/pronunciation-trial.html"),"utf8");
 test("13 trial words are sequential and isolated from saved progress",()=>{
-  assert.match(html,/const words=\["BED","BOX","CAT","DOG","LEG","MAN","MEN","PIG","SUN","TOP","HAND","MILK","NEST"\]/);
+  assert.match(html,/const words=\["BED","BOX","CAT","DOG","LEG","MAN","PIG","SUN","TOP","HAND","MILK","NEST","WIND"\]/);
   assert.match(html,/index\+\+/);
   assert.doesNotMatch(html,/localStorage|rewardProgress|fetch\(/);
 });
@@ -31,4 +31,23 @@ test("parent buttons never break text and result table has case-insensitive four
   assert.match(html,/word\.toUpperCase\(\)===recognized\.trim\(\)\.toUpperCase\(\)/);
   assert.match(html,/matched\?"○":"×"/);
   assert.match(html,/row\.word,row\.recognized,matched\?"○":"×",row\.judgement/);
+});
+
+test("MEN is excluded and WIND is included in all thirteen prompts",()=>{
+  const match=html.match(/const words=(\[[^;]+\]);/);
+  assert.ok(match);
+  const words=JSON.parse(match[1]);
+  assert.equal(words.length,13);
+  assert.equal(new Set(words).size,13);
+  assert.ok(!words.includes("MEN"));
+  assert.ok(words.includes("WIND"));
+});
+test("result restart clears prior responses and returns to first question in place",()=>{
+  assert.match(html,/id="restart"[^>]*>もう一度<\/button>/);
+  assert.match(html,/function restart\(\)\{/);
+  assert.match(html,/rows\.length=0;index=0;/);
+  assert.match(html,/\$\("results"\)\.hidden=true;/);
+  assert.match(html,/\$\("question"\)\.hidden=false;\$\("controls"\)\.hidden=false;/);
+  assert.match(html,/\$\("result-body"\)\.replaceChildren\(\)/);
+  assert.match(html,/\$\("restart"\)\.addEventListener\("click",restart\)/);
 });
