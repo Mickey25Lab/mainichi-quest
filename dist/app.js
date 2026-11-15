@@ -3035,9 +3035,23 @@
   // The completion dialog must not be clipped or obscured by the iPad-scaled mode canvas.
   $("mode-select-screen").append($("mode-select-mission-complete"));
   function renderModeSelectMission() {
+    // Single source of truth for parent settings and child mode-select labels.
+    const modeById = new Map(parentModeDefinitions.map(mode => [mode.id, mode]));
     const overview = missionOverview();
     const freePlayActive = overview.allComplete && overview.freePlayEnabled;
     document.querySelectorAll(".mode-select-choice[data-mode]").forEach((button) => {
+      const definition = modeById.get(button.dataset.mode);
+      const name = button.querySelector(".mode-select-name");
+      if (definition && name) {
+        const title = document.createElement("b");
+        title.textContent = definition.label;
+        name.replaceChildren(title);
+        if (definition.detail) {
+          const detail = document.createElement("small");
+          detail.textContent = definition.detail;
+          name.append(detail);
+        }
+      }
       const item = overview.items.find((entry) => entry.id === button.dataset.mode);
       button.hidden = !item;
       if (!item) return;
