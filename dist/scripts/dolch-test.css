@@ -19,7 +19,7 @@
 .dt-card img{flex:none;width:74px;height:85px;max-width:40%;object-fit:contain}
 
 /* Match the existing phonics word progress/quit and arithmetic elapsed counter. */
-#dolch-test-screen .topbar{position:absolute;z-index:7;top:28px;left:42px;right:42px;height:78px}
+#dolch-test-screen .topbar{position:absolute;z-index:7;top:14px;left:42px;right:42px;height:60.8px}
 #dolch-test-screen .progress-badge,
 #dolch-test-screen .elapsed-time{
  position:absolute;top:50%;transform:translateY(-50%);display:flex;
@@ -30,8 +30,8 @@
  box-shadow:0 7px 18px rgba(3,52,109,.18);
  font:900 31px/1 "Noto Sans JP",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-#dolch-test-screen .progress-badge{left:0}
-#dolch-test-screen .elapsed-time{right:0}
+#dolch-test-screen .progress-badge{left:0;width:166px;height:60.8px}
+#dolch-test-screen .elapsed-time{right:0;height:60.8px}
 #dolch-test-quit{z-index:7;font-size:21.7px}
 .dt-stage .dt-word{position:absolute;z-index:7;left:50%;top:14px;
  transform:translateX(-50%);box-sizing:border-box;width:calc((1180px - 24px - 27px) / 4);
