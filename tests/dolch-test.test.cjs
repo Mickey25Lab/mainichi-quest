@@ -43,6 +43,9 @@ test("test uses first-attempt grading, separate errors per word/step, and 3 spee
   assert.match(source,/dt-card-mark/);
   assert.match(source,/if\(ok&&phase==="spelling"\)speakThree\(\)/);
   assert.match(source,/dolch-test-replay/);
+  assert.doesNotMatch(source,/dolch-test-listen/,"no manual start action");
+  assert.match(source,/speakThree\(\{first:true\}\);\s*\}/,"playback starts at session start");
+  assert.match(source,/else speakThree\(\{first:true\}\)/,"next spelling word auto-plays");
   assert.match(css,/#ec343d/);
   assert.match(css,/#197de2/);
 });
