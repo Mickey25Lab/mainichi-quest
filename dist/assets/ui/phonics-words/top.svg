@@ -2,7 +2,6 @@
   <title id="title">山のてっぺん</title>
   <desc id="desc">緑の山の頂上に赤い旗が立っている</desc>
   <rect width="256" height="256" rx="30" fill="#faf4e9"/>
-  <circle cx="209" cy="51" r="20" fill="#f3ca5e"/>
   <path d="M0 224 Q38 201 80 215 Q135 190 192 214 Q223 200 256 218 V256 H0Z" fill="#d9e8d1"/>
   <!-- The flag marks the mountain peak, not an object on its own. -->
   <path d="M128 45 V104" fill="none" stroke="#79543c" stroke-width="6" stroke-linecap="round"/>
@@ -10,6 +9,5 @@
   <path d="M22 223 L128 104 L234 223Z" fill="#70a97d" stroke="#417d68" stroke-width="5" stroke-linejoin="round"/>
   <path d="M128 104 L234 223 H175 L134 159 L115 181 L93 166 L72 183Z" fill="#488d79"/>
   <path d="M96 140 L128 104 L160 140 L144 134 L135 143 L128 132 L116 145 L107 136Z" fill="#fffaf0" stroke="#e4e6df" stroke-width="3" stroke-linejoin="round"/>
-  <circle cx="128" cy="104" r="7" fill="#f8d978" stroke="#d4933a" stroke-width="2"/>
   <path d="M24 225 H232" stroke="#8aaf8c" stroke-width="7" stroke-linecap="round"/>
 </svg>
