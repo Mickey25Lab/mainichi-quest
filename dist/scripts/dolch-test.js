@@ -20,6 +20,7 @@ function render(){
  const deck=meaning?s.meaningOrder:s.spellingOrder;
  deck.forEach((item,i)=>{
   const b=document.createElement("button");b.type="button";b.className="dt-card"+(i===12?" dt-last":"")+(s.done.has(item.word)?" dt-used":"");
+  b.dataset.word=item.word;
   b.disabled=s.locked||s.done.has(item.word)||(!meaning&&!s.heard);
   if(meaning){const label=document.createElement("span");label.className="dt-jp";label.innerHTML=item.meaning.replace(/<br\s*\/?>/g," ");const image=document.createElement("img");image.alt="";image.src="./assets/ui/phonics-words/"+item.word.toLowerCase()+".svg";b.append(label,image);}
   else{const lower=glyphs(item.word.toLowerCase()),upper=glyphs(item.word);lower.className="dt-lower";upper.className="dt-upper";b.append(lower,upper);}
