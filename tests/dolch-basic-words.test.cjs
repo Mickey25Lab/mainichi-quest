@@ -248,3 +248,14 @@ test("mode selection and parent settings share the same definitions, with no dup
   assert.ok(choiceNames.every(m => m[1] === ""), "no hardcoded child mode title is permitted");
   assert.doesNotMatch(html, /14 words/);
 });
+
+test("NEST eggs have strong gray outlines and gray crack marks", () => {
+  const svg = fs.readFileSync(path.resolve(__dirname, "../dist/assets/ui/phonics-words/nest.svg"), "utf8");
+  const eggs = [...svg.matchAll(/<ellipse[^>]*cx="(?:105|149)"[^>]*>/g)];
+  assert.equal(eggs.length, 2);
+  eggs.forEach(egg => {
+    assert.match(egg[0], /fill="#fcf5db"/, "keep the warm egg fill");
+    assert.match(egg[0], /stroke="#596168" stroke-width="3\.5"/, "outline should be strong gray");
+  });
+  assert.match(svg, /M103 99 L114 113 M149 98 L158 112" stroke="#596168" stroke-width="4"/);
+});
