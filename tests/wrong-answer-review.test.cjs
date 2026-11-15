@@ -15,7 +15,7 @@ test("incorrect arithmetic stays visible for 10 seconds and can be skipped", () 
   assert.match(app, /wrongFeedbackDurationMs\);/);
   assert.match(app, /wrong-mark-hidden/);
   assert.match(html, /id="wrong-answer-countdown"/);
-  assert.match(html, /id="wrong-answer-next"[^>]*>次へ<\/button>/);
+  assert.match(html, /id="wrong-answer-next"[^>]*>つぎへ<\/button>/);
 });
 
 test("review controls preserve fixed canvas alignment and corrections are not clipped", () => {
@@ -24,4 +24,9 @@ test("review controls preserve fixed canvas alignment and corrections are not cl
   assert.match(css, /height:var\(--play-corner-control-height\)/);
   assert.match(css, /question-answer-card\.wrong \{ z-index:20; \}/);
   assert.match(app, /addMultiplicationCorrectionOverlay\(slot, row\.value\[i\]\)/);
+  assert.match(app, /if \(state\.multiplication2x2\.specialZero && rowIndex > 0\) return;/);
+  assert.match(app, /inlineCorrection\.getBoundingClientRect\(\)/);
+  assert.match(app, /inlineCorrection\.remove\(\)/);
+  assert.match(css, /keypad\[aria-busy="true"\] \.wrong-answer-next:not\(\[hidden\]\)/);
+  assert.match(css, /pointer-events:auto;/);
 });
