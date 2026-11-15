@@ -6062,6 +6062,7 @@ html.mq-viewport-landscape-pinned body {
 .play-screen .question-answer-card.wrong .long-division-answer-row {
   overflow:visible;
 }
+.play-screen .question-answer-card.wrong { z-index:20; }
 .play-screen .wrong-answer-countdown {
   position:absolute;
   z-index:8;
@@ -6077,7 +6078,8 @@ html.mq-viewport-landscape-pinned body {
   border:none;
   border-radius:var(--play-corner-radius);
   box-shadow:none;
-  font-size:var(--keypad-remainder-label-size);
+  font-size:29px; /* matches the hint control on the 1400px play canvas */
+  font-family:"Noto Sans JP",sans-serif;
   font-weight:900;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
