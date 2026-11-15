@@ -259,3 +259,21 @@ test("NEST eggs have strong gray outlines and gray crack marks", () => {
   });
   assert.match(svg, /M103 99 L114 113 M149 98 L158 112" stroke="#596168" stroke-width="4"/);
 });
+
+test("all phonics lesson CTAs use the intro 420x88 geometry, and word cards end at the YouTube video bottom", () => {
+  const styles = fs.readFileSync(path.resolve(__dirname, "../dist/styles.css"), "utf8");
+  assert.match(styles, /--phonics-cta-width: 420px;/);
+  assert.match(styles, /--phonics-cta-height: 88px;/);
+  assert.match(styles, /--phonics-video-bottom: 867\.5625px;/);
+  assert.match(styles, /\.phonics-intro-start\s*\{[^}]*width:var\(--phonics-cta-width\);[^}]*height:var\(--phonics-cta-height\);/);
+  assert.match(styles, /\.phonics-youtube-end\s*\{[^}]*bottom:44px;[^}]*width:var\(--phonics-cta-width\);[^}]*height:var\(--phonics-cta-height\);/);
+  assert.match(source, /\.phonics-words-stage \.phonics-intro-card\{[^}]*top:145px;transform:translateX\(-50%\);min-height:0;height:calc\(var\(--phonics-video-bottom\) - 145px\)/);
+  assert.match(source, /#phonics-words-action\{bottom:44px;z-index:7;width:var\(--phonics-cta-width\);height:var\(--phonics-cta-height\)\}/);
+  assert.match(source, /#phonics-words-replay\{[^}]*bottom:44px;[^}]*width:280px;height:var\(--phonics-cta-height\)/);
+  const videoBottom = (1050 + 685.125) / 2;
+  const whiteCardTop = (1050 - 760) / 2;
+  const whiteCardHeight = videoBottom - whiteCardTop;
+  assert.equal(videoBottom, 867.5625);
+  assert.equal(whiteCardTop, 145);
+  assert.equal(whiteCardHeight, 722.5625);
+});
