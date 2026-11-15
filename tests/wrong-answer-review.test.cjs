@@ -72,6 +72,10 @@ test("addition-error bubble chooses rightmost matching column, never covers digi
   });
   // The tens column has 2+4=6, but the child entered 2×4=8.
   assert.equal(findIndex(model("24", "34", "364", "384")), 1);
+  // Tens column: 3 + 6 = 9, but 3 × 6 = 18 and the child entered 8.
+  assert.equal(findIndex(model("36", "66", "696", "686")), 1);
+  // Both tens and hundreds suggest 3 × 6 = 18; show one bubble at the rightmost.
+  assert.equal(findIndex(model("336", "66", "996", "886")), 1);
   // Both tens and hundreds columns look multiplied: show only the rightmost.
   assert.equal(findIndex(model("222", "44", "662", "882")), 1);
   assert.equal(findIndex(model("24", "34", "364", "364")), -1);
@@ -79,7 +83,7 @@ test("addition-error bubble chooses rightmost matching column, never covers digi
   assert.equal(findIndex(model("24", "34", "364", "384", true)), -1);
   assert.ok(app.includes('bubble.textContent = "かけざんしちゃってない？";'));
   assert.ok(app.includes("const width = (keypadRect.width / scale) * 0.8;"));
-  assert.ok(app.includes("const top = (slotRect.bottom - stageRect.top) / scale + 130;"));
+  assert.ok(app.includes("const top = (slotRect.bottom - stageRect.top) / scale + 110;"));
   assert.ok(css.includes(".play-screen .multiplication-addition-hint::before"));
   assert.ok(css.includes(".play-screen .multiplication-addition-hint {"));
 });
