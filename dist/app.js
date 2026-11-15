@@ -1806,15 +1806,51 @@
       stageScale: playStage?.style.getPropertyValue("--stage-scale").trim() || null
     };
   }
+  // MQ-001: keep a small normal tail, plus recent SS and mismatch windows.
+  // Previous 180-entry logs are migrated on read; never grow without limit.
+  const viewportNormalLogLimit = 60;
+  const viewportTotalLogLimit = 150;
+  const viewportSsWindowBeforeMs = 30000;
+  const viewportSsWindowAfterMs = 10000;
+  let viewportSsButton = null;
+  let viewportLastSsAt = 0;
+  function isViewportAnomaly(entry) {
+    return /^(orientation-viewport-mismatch|orientation-recovery-|orientation-layout-)/.test(entry.event)
+      || (entry.snapshot?.innerHeight > entry.snapshot?.innerWidth
+        && /landscape/.test(entry.snapshot?.screenOrientationType || ""));
+  }
+  function compactViewportDiagnostics() {
+    const entries = viewportDiagnostics.filter((entry) => entry && Number.isFinite(Date.parse(entry.ts)));
+    const markerEvents = entries.filter((entry) => entry.event === "screenshot-marker").slice(-3);
+    const anomalyEvents = entries.filter(isViewportAnomaly).filter((entry) =>
+      /^(orientation-viewport-mismatch|orientation-recovery-start)$/.test(entry.event)).slice(-2);
+    const windows = [...markerEvents, ...anomalyEvents].map((entry) => Date.parse(entry.ts));
+    const selected = new Set(entries.slice(-viewportNormalLogLimit));
+    for (const entry of entries) {
+      const time = Date.parse(entry.ts);
+      if (windows.some((anchor) => time >= anchor - viewportSsWindowBeforeMs
+        && time <= anchor + viewportSsWindowAfterMs)) selected.add(entry);
+    }
+    // Protect markers and event-order evidence first; trim other entries.
+    const protectedEntries = entries.filter((entry) => selected.has(entry)
+      && (entry.event === "screenshot-marker" || isViewportAnomaly(entry)));
+    const tail = entries.filter((entry) => selected.has(entry) && !protectedEntries.includes(entry));
+    const remaining = Math.max(0, viewportTotalLogLimit - protectedEntries.length);
+    const keep = new Set([...protectedEntries.slice(-viewportTotalLogLimit), ...tail.slice(-remaining || tail.length)]);
+    viewportDiagnostics = entries.filter((entry) => keep.has(entry)).slice(-viewportTotalLogLimit);
+    viewportLastSsAt = Math.max(0, ...viewportDiagnostics.filter((entry) =>
+      entry.event === "screenshot-marker").map((entry) => Date.parse(entry.ts)));
+  }
   function recordViewportDiagnostic(event, detail = {}) {
     if (!viewportDiagnosticsEnabled) return;
     const entry = { ts: new Date().toISOString(), event, ...detail, snapshot: diagnosticViewportSnapshot() };
     viewportDiagnostics.push(entry);
-    if (viewportDiagnostics.length > 180) viewportDiagnostics = viewportDiagnostics.slice(-180);
+    compactViewportDiagnostics();
     try { localStorage.setItem(viewportDiagnosticsStorageKey, JSON.stringify(viewportDiagnostics)); } catch (_) {}
   }
   function updateViewportDiagnosticsButton() {
     if (viewportDiagnosticsButton) viewportDiagnosticsButton.hidden = !viewportDiagnosticsEnabled;
+    if (viewportSsButton) viewportSsButton.hidden = !viewportDiagnosticsEnabled;
   }
   function updateAdminViewportDiagnosticsToggle() {
     const toggle = $("admin-viewport-diagnostics-toggle");
@@ -1833,12 +1869,13 @@
     viewportDiagnosticsEnabled = loadViewportDiagnosticsEnabled();
     try {
       const stored = JSON.parse(localStorage.getItem(viewportDiagnosticsStorageKey) || "[]");
-      if (Array.isArray(stored)) viewportDiagnostics = stored.slice(-180);
+      if (Array.isArray(stored)) viewportDiagnostics = stored;
     } catch (_) {}
+    compactViewportDiagnostics();
     const button = document.createElement("button");
     viewportDiagnosticsButton = button;
     button.type = "button";
-    button.textContent = "MQ-001 LOG";
+    button.textContent = "LOG";
     Object.assign(button.style, {
       position: "fixed",
       left: "8px",
@@ -1849,22 +1886,50 @@
       opacity: "0.85"
     });
     button.addEventListener("click", async () => {
-      const text = JSON.stringify(viewportDiagnostics, null, 2);
+      if (button.disabled) return;
+      button.disabled = true;
       try {
-        await navigator.clipboard.writeText(text);
-        button.textContent = "LOG COPIED";
-        window.setTimeout(() => { button.textContent = "MQ-001 LOG"; }, 1400);
-      } catch (_) {
-        window.prompt("MQ-001 viewport log", text);
+        // No choice dialog: include SS's 10-second post-capture interval automatically.
+        const waitMs = Math.max(0, viewportLastSsAt + viewportSsWindowAfterMs - Date.now());
+        if (waitMs) await new Promise((resolve) => window.setTimeout(resolve, waitMs));
+        if (viewportLastSsAt && waitMs) recordViewportDiagnostic("screenshot-window-end");
+        const text = JSON.stringify(viewportDiagnostics);
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "COPIED";
+          window.setTimeout(() => { button.textContent = "LOG"; }, 1400);
+        } catch (_) {
+          window.prompt("MQ-001 viewport log", text);
+        }
+      } finally {
+        button.disabled = false;
       }
     });
     document.body.appendChild(button);
+    const ssButton = document.createElement("button");
+    viewportSsButton = ssButton;
+    ssButton.type = "button";
+    ssButton.textContent = "SS";
+    ssButton.setAttribute("aria-label", "スクリーンショット撮影直後の時刻を記録");
+    Object.assign(ssButton.style, {
+      position: "fixed",
+      left: "61px",
+      top: "8px",
+      zIndex: "2147483647",
+      fontSize: "12px",
+      padding: "6px 8px",
+      opacity: "0.85"
+    });
+    ssButton.addEventListener("click", () => {
+      recordViewportDiagnostic("screenshot-marker", { source: "manual-ss-button" });
+      ssButton.textContent = "OK";
+      window.setTimeout(() => { ssButton.textContent = "SS"; }, 900);
+    });
+    document.body.appendChild(ssButton);
     updateViewportDiagnosticsButton();
-    if (viewportDiagnosticsEnabled) {
-      recordViewportDiagnostic("diagnostics-start");
-    }
-    // Sample low-frequency changes even if WebKit omits resize/focus events.
-    // Store transitions and an occasional baseline; do not log every frame.
+    if (viewportDiagnosticsEnabled) recordViewportDiagnostic("diagnostics-start");
+    // Sample geometry every 5 seconds; a normal baseline is needed at most once
+    // every five minutes. Event-triggered snapshots remain detailed.
     let lastGeometry = null;
     let lastBaselineAt = 0;
     window.setInterval(() => {
@@ -1882,7 +1947,7 @@
         snapshot.stageScale, snapshot.scrollX, snapshot.scrollY
       ]);
       const now = Date.now();
-      if (signature !== lastGeometry || now - lastBaselineAt >= 30000) {
+      if (signature !== lastGeometry || now - lastBaselineAt >= 300000) {
         recordViewportDiagnostic(signature !== lastGeometry ? "geometry-change" : "geometry-baseline");
         lastGeometry = signature;
         lastBaselineAt = now;
