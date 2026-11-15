@@ -9,7 +9,7 @@ function glyphs(word){const node=document.createElement("span");for(const ch of 
 function clock(){if(!state)return;let t=Math.floor((Date.now()-state.started)/1000);$("dolch-test-time").textContent=String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");}
 function render(){
  if(!state)return;
- const s=state,meaning=s.phase==="meaning",result=s.phase==="result",grid=$("dolch-test-grid");
+ const s=state,meaning=s.phase==="meaning",result=s.phase==="result",grid=$("dolch-test-board");
  $("dolch-test-progress").textContent=(result?13:s.index+1)+" / 13";
  $("dolch-test-word").hidden=!meaning;
  $("dolch-test-board").hidden=result;
