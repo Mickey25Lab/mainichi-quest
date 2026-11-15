@@ -48,6 +48,10 @@ test("test uses first-attempt grading, separate errors per word/step, and 3 spee
   assert.match(source,/else speakThree\(\{first:true\}\)/,"next spelling word auto-plays");
   assert.match(css,/#ec343d/);
   assert.match(css,/#197de2/);
+  assert.match(source,/stopSpeech\(\);s\.speaking=false;/,"wrong answers cancel speech too");
+  assert.match(source,/if\(!ok\)speakThree\(\)/,"wrong answers restart spoken word");
+  assert.match(css,/\.dt-stage \.dt-word\{background:#197de2;border:none/);
+  assert.match(css,/\.dt-stage>\.dt-white \.dt-summary\{[^}]*background:transparent/);
 });
 
 test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",()=>{
@@ -58,8 +62,10 @@ test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",(
   assert.match(source,/dt-focus-upper/);
   assert.match(source,/if\(s\.viewKey===viewKey\)/,"cards persist through speech state updates");
   assert.match(source,/mark\.remove\(\)/,"marks are removed without rerendering image");
-  assert.match(source,/dt-empty-ruby/,"particle の should have a ruby base aligned with adjacent kanji");
-  assert.match(css,/\.dt-jp rt\.dt-empty-ruby\{visibility:hidden\}/);
+  assert.match(source,/function meaningMarkup\(markup\)/,"custom kanji/ruby rendering");
+  assert.match(source,/dt-ruby-base/);
+  assert.match(css,/\.dt-ruby-base\{display:inline-block;color:#132b50;visibility:visible/);
+  assert.match(source,/aligned\.replace\(\/<ruby>/);
   assert.match(source,/dt-focus-lower/);
   assert.match(css,/\.dt-card\[data-word="TOP"\] \.dt-jp\{display:block;font-size:27px/);
   assert.match(css,/\.dt-card img\{flex:none;width:75px/);
