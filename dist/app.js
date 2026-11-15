@@ -4490,6 +4490,12 @@
     function finish() {
       if (wrongAnswerReview !== review || review.finished) return;
       review.finished = true;
+      // Fast taps before the × fades should still skip the extra notice delay.
+      if (state.phase === "initial" && !isFinalInitialQuestion() &&
+          !pendingIncorrectNextVehicleVisuals) {
+        $("incorrect-next-vehicle-notice").hidden = false;
+        prepareIncorrectNextVehicleDuringReview();
+      }
       cancelWrongAnswerReview();
       next();
     }
