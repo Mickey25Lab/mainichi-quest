@@ -940,13 +940,19 @@ html.mq-viewport-landscape-pinned body {
   margin:0;
   overflow:hidden;
 }
+/* Shared phonics CTA geometry: keep the approved intro 'やってみる！' size. */
+:root {
+  --phonics-cta-width: 420px;
+  --phonics-cta-height: 88px;
+  --phonics-video-bottom: 867.5625px; /* (1050 + 685.125) / 2 */
+}
 .phonics-intro-start {
   position:relative;
   z-index:3;
   display:block;
-  width:420px;
+  width:var(--phonics-cta-width);
   margin:28px auto 0;
-  height:88px;
+  height:var(--phonics-cta-height);
   border:3px solid #fff;
   border-radius:28px;
   color:#fff;
@@ -1086,10 +1092,10 @@ html.mq-viewport-landscape-pinned body {
 .phonics-youtube-end {
   position:absolute;
   left:50%;
-  bottom:34px;
+  bottom:44px;
   z-index:7;
-  width:360px;
-  height:var(--play-corner-control-height);
+  width:var(--phonics-cta-width);
+  height:var(--phonics-cta-height);
   padding:0;
   transform:translateX(-50%);
   border:3px solid #7aa8d6;
