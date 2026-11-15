@@ -94,6 +94,24 @@ test("Dolch mode initializes with 10 cards and the correct first action", () => 
   assert.equal(h.spoken[0].pitch, 1.2);
 });
 
+test("Part 1 uses 13 distinct nouns, never MEN, while still asking 10 questions", () => {
+  const begin = source.indexOf("const basicVocabulary = [");
+  const end = source.indexOf("];", begin);
+  assert.ok(begin >= 0 && end > begin, "basic word list exists");
+  const words = [...source.slice(begin, end).matchAll(/\{word:"([A-Z]+)"/g)].map(m => m[1]);
+  assert.equal(words.length, 13);
+  assert.equal(new Set(words).size, 13);
+  assert.ok(words.includes("MAN"));
+  assert.ok(!words.includes("MEN"));
+  const h = harness();
+  for (let run = 0; run < 25; run++) {
+    h.start({ mode:"dolch-basic", onComplete() {}, onQuit() {} });
+    assert.equal(h.get("phonics-words-progress-count").textContent, "1 / 10");
+    const displayed = h.get("phonics-words-letters").children[0].children[1].children.map(c => c.textContent).join("");
+    assert.notEqual(displayed, "MEN");
+  }
+});
+
 test("Dolch mode speaks exactly three times and keeps meaning visible on replay", async () => {
   const h = harness();
   h.start({ mode:"dolch-basic", onComplete() {}, onQuit() {} });
