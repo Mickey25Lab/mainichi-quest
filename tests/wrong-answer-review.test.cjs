@@ -49,7 +49,9 @@ test("guided addition sign is bold and has no jewel glow", () => {
   const first = css.indexOf(".multiplication-2x2-sum-operator {");
   assert.ok(first >= 0);
   const rule = css.slice(first, css.indexOf("}", first));
-  assert.ok(rule.includes("font-weight:1000;"));
+  assert.ok(rule.includes("font-size:0;"));
+  assert.ok(css.includes(".multiplication-2x2-sum-operator::before { width:48px; height:9px; }"));
+  assert.ok(css.includes(".multiplication-2x2-sum-operator::after { width:9px; height:48px; }"));
   assert.ok(rule.includes("text-shadow:none;"));
   assert.ok(rule.includes("filter:none;"));
 });
