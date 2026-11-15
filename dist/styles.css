@@ -6051,3 +6051,56 @@ html.mq-viewport-landscape-pinned body {
 @media (prefers-reduced-motion: reduce) {
   #collection-detail-screen .detail-master-medal-display.is-animated .detail-master-medal-art { animation:none; }
 }
+
+/* Incorrect arithmetic: review the red correction before continuing. */
+.play-screen .question-answer-card.wrong.wrong-mark-hidden .answer-mark {
+  display:none;
+}
+.play-screen .question-answer-card.wrong:not(.multiplication-mode),
+.play-screen .question-answer-card.wrong .answer-card,
+.play-screen .question-answer-card.wrong .long-division-panel,
+.play-screen .question-answer-card.wrong .long-division-answer-row {
+  overflow:visible;
+}
+.play-screen .wrong-answer-countdown {
+  position:absolute;
+  z-index:8;
+  left:741px; /* same left edge as the keypad */
+  bottom:17px; /* same baseline as Hint / BGM */
+  width:var(--play-corner-control-width);
+  height:var(--play-corner-control-height);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#285e88;
+  background:rgba(255,255,255,.68);
+  border:none;
+  border-radius:var(--play-corner-radius);
+  box-shadow:none;
+  font-size:var(--keypad-remainder-label-size);
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.play-screen .wrong-answer-countdown[hidden],
+.play-screen .wrong-answer-next[hidden] { display:none !important; }
+.play-screen .keypad { position:relative; }
+.play-screen .keypad .wrong-answer-next {
+  position:absolute;
+  z-index:15;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:4px solid #83bce9;
+  border-radius:28px;
+  background:linear-gradient(180deg,#d9f5ff,#73cbfa);
+  color:#075795;
+  font:900 64px/1 "Noto Sans JP",sans-serif;
+  box-shadow:0 7px 0 #4d9bc9,0 12px 20px rgba(3,52,109,.2);
+  cursor:pointer;
+}
+.play-screen .keypad .wrong-answer-next:active {
+  transform:translateY(4px);
+  box-shadow:0 3px 0 #4d9bc9;
+}
