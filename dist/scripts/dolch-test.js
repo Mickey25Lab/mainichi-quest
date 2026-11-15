@@ -6,6 +6,12 @@ let state=null, timer=0, stepTimer=0, speechDelay=0, speechToken=0;
 function stopSpeech(){speechToken++;clearTimeout(speechDelay);speechDelay=0;try{window.speechSynthesis.cancel();}catch(_){}}
 function stop(){stopSpeech();clearInterval(timer);clearTimeout(stepTimer);timer=stepTimer=0;}
 function glyphs(word){const node=document.createElement("span");for(const ch of word){const span=document.createElement("span");span.className="dt-glyph"+(["Q","t","y"].includes(ch)?" dt-jost":"");span.textContent=ch;node.append(span);}return node;}
+// Expand native ruby into explicit reading + base spans for stable iPad Safari glyph painting.
+function meaningMarkup(markup){
+ const aligned=markup.replace(/<\/ruby>の<ruby>/g,'</ruby><ruby>の<rt>　</rt></ruby><ruby>');
+ return '<span class="dt-jp-lines">' + aligned.replace(/<ruby>([^<]+)<rt>([^<]*)<\/rt><\/ruby>/g,(_,base,reading)=>
+  '<span class="dt-inline-ruby"><span class="dt-ruby-base">'+base+'</span><span class="dt-ruby-reading">'+reading+'</span></span>') + '</span>';
+}
 function clock(){if(!state)return;let t=Math.floor((Date.now()-state.started)/1000);$("dolch-test-time").textContent=(t>=60?Math.floor(t/60)+"分"+t%60+"秒":t+"秒");}
 function render(){
  if(!state)return;
@@ -34,7 +40,7 @@ function render(){
   b.dataset.word=item.word;
   b.dataset.last=i===12?"true":"false";
   b.disabled=s.locked||s.done.has(item.word)||(!meaning&&!s.heard);
-  if(meaning){const label=document.createElement("span");label.className="dt-jp";label.innerHTML=item.meaning.replace(/<\/ruby>の<ruby>/g, '</ruby><ruby>の<rt class="dt-empty-ruby" aria-hidden="true">の</rt></ruby><ruby>');const image=document.createElement("img");image.alt="";image.src="./assets/ui/phonics-words/"+item.word.toLowerCase()+".svg";b.append(label,image);}
+  if(meaning){const label=document.createElement("span");label.className="dt-jp";label.innerHTML=meaningMarkup(item.meaning);const image=document.createElement("img");image.alt="";image.src="./assets/ui/phonics-words/"+item.word.toLowerCase()+".svg";b.append(label,image);}
   else{const lower=glyphs(item.word.toLowerCase()),upper=glyphs(item.word);lower.className="dt-lower";upper.className="dt-upper";b.append(lower,upper);}
   b.addEventListener("click",()=>choose(item.word));grid.append(b);
  });
@@ -80,12 +86,14 @@ function finish(){
 function choose(word){
  const s=state;if(!s||s.locked||s.phase==="result"||(s.phase==="spelling"&&!s.heard)||s.done.has(word))return;
  const phase=s.phase,ok=word===s.words[s.index].word;
- if(ok){if(s.mistakes[word][phase]===0)s.score[phase]++;stopSpeech();s.speaking=false;}
+ if(ok){if(s.mistakes[word][phase]===0)s.score[phase]++;}
  else s.mistakes[s.words[s.index].word][phase]++;
+ // Cancel whatever is being spoken on both correct and wrong answers.
+ stopSpeech();s.speaking=false;
  s.locked=true;render();beep(ok);
  const selected=[...$("dolch-test-board").children].find(button=>button.dataset.word===word);
  const mark=document.createElement("span");mark.className="dt-card-mark "+(ok?"dt-ok":"dt-no");mark.setAttribute("aria-hidden","true");if(selected)selected.append(mark);
- stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;mark.remove();if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(ok){if(phase==="spelling")speakThree();else speakThree({first:true});}},500);
+ stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;mark.remove();if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(!ok)speakThree();else if(phase==="spelling")speakThree();else speakThree({first:true});},500);
 }
 function quit(){if(!state)return;const callback=state.onQuit;stop();state=null;callback();}
 function start({profileId,onComplete,onQuit}){
@@ -98,7 +106,7 @@ function start({profileId,onComplete,onQuit}){
  speakThree({first:true});
 }
 const screen=document.createElement("section");screen.id="dolch-test-screen";screen.className="screen phonics-intro-screen";screen.setAttribute("aria-label","えいごのことばテスト");
-screen.innerHTML='<div class="dt-stage"><img class="dt-background" id="dolch-test-background" alt=""><div class="phonics-intro-card dt-white"><div id="dolch-test-board" class="dt-grid"></div></div><button class="quit-button" id="dolch-test-quit" type="button">やめる</button><header class="topbar"><div class="progress-badge"><span id="dolch-test-progress">1 / 13</span></div><div class="elapsed-time" id="dolch-test-time">0秒</div></header><div id="dolch-test-word" class="dt-word" hidden></div><button id="dolch-test-replay" type="button" hidden>もういちどきく</button><div id="dolch-test-summary" class="dt-summary" hidden><h2>テストけっか</h2><p>えいご　<span id="dolch-test-score-spelling"></span></p><p>いみ　<span id="dolch-test-score-meaning"></span></p><button id="dolch-test-finish" type="button">のりものをそだてる</button></div></div>';
+screen.innerHTML='<div class="dt-stage"><img class="dt-background" id="dolch-test-background" alt=""><div class="phonics-intro-card dt-white"><div id="dolch-test-board" class="dt-grid"></div><div id="dolch-test-summary" class="dt-summary" hidden><h2>テストけっか</h2><p>えいご　<span id="dolch-test-score-spelling"></span></p><p>いみ　<span id="dolch-test-score-meaning"></span></p><button id="dolch-test-finish" type="button">のりものをそだてる</button></div></div><button class="quit-button" id="dolch-test-quit" type="button">やめる</button><header class="topbar"><div class="progress-badge"><span id="dolch-test-progress">1 / 13</span></div><div class="elapsed-time" id="dolch-test-time">0秒</div></header><div id="dolch-test-word" class="dt-word" hidden></div><button id="dolch-test-replay" type="button" hidden>もういちどきく</button></div>';
 document.getElementById("app").append(screen);
 $("dolch-test-replay").addEventListener("click",replay);$("dolch-test-quit").addEventListener("click",quit);
 $("dolch-test-finish").addEventListener("click",()=>{if(!state||state.phase!=="result")return;const callback=state.onComplete;stop();state=null;callback();});
