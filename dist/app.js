@@ -143,6 +143,8 @@
     })
   });
   const wrongFeedbackDurationMs = 500;
+  const wrongAnswerReviewDurationMs = 10000;
+  let wrongAnswerReview = null;
   const revealedAnswerDurationMs = 2000 * 2;
   // All interactive scenes use the native size of the delivered backgrounds.
   // Keeping this in one place avoids a second coordinate system creeping back
@@ -2826,6 +2828,7 @@
     $("long-division-skip-key").disabled = !isLongDivision;
   }
   function resetAnswerCard() {
+    cancelWrongAnswerReview();
     $("question-answer-card").className = "question-answer-card";
     $("answer-card").className = "answer-card";
     $("answer-text").textContent = "";
@@ -2860,6 +2863,7 @@
   ensureGameplayFontsReady();
 
   function displayQuestion(question, onRevealed = null) {
+    cancelWrongAnswerReview();
     // Keep the previous red correction through the blue grading mark and
     // any interim notice; remove it only as the next problem takes over.
     removeMultiplicationCorrectionOverlays();
@@ -4429,6 +4433,46 @@
     correction.style.top = ((slotRect.bottom - stageRect.top) / scale + 4) + "px";
     stage.appendChild(correction);
   }
+  function cancelWrongAnswerReview() {
+    if (wrongAnswerReview) {
+      window.clearTimeout(wrongAnswerReview.timeout);
+      window.clearTimeout(wrongAnswerReview.markTimeout);
+      window.clearInterval(wrongAnswerReview.interval);
+      wrongAnswerReview = null;
+    }
+    $("wrong-answer-countdown").hidden = true;
+    $("wrong-answer-next").hidden = true;
+    $("keypad").classList.remove("is-reviewing-wrong-answer");
+    $("question-answer-card").classList.remove("wrong-mark-hidden");
+  }
+  function startWrongAnswerReview(next) {
+    cancelWrongAnswerReview();
+    const countdown = $("wrong-answer-countdown");
+    const button = $("wrong-answer-next");
+    const deadline = performance.now() + wrongAnswerReviewDurationMs;
+    const review = { timeout: null, markTimeout: null, interval: null, finished: false };
+    wrongAnswerReview = review;
+    countdown.hidden = false;
+    button.hidden = false;
+    $("keypad").classList.add("is-reviewing-wrong-answer");
+    function renderCountdown() {
+      if (wrongAnswerReview !== review) return;
+      countdown.textContent = "あと " + Math.max(0, Math.ceil((deadline - performance.now()) / 1000)) + " 秒";
+    }
+    function finish() {
+      if (wrongAnswerReview !== review || review.finished) return;
+      review.finished = true;
+      cancelWrongAnswerReview();
+      next();
+    }
+    review.finish = finish;
+    renderCountdown();
+    review.markTimeout = window.setTimeout(() => {
+      if (wrongAnswerReview === review) $("question-answer-card").classList.add("wrong-mark-hidden");
+    }, wrongFeedbackDurationMs);
+    review.interval = window.setInterval(renderCountdown, 100);
+    review.timeout = window.setTimeout(() => { renderCountdown(); finish(); }, wrongAnswerReviewDurationMs);
+  }
   function showWrongDigitCorrections() {
     const question = state.current;
     if (!question || ["numbercards", "counting1", "counting2"].includes(state.mode)) return;
@@ -4459,9 +4503,14 @@
         }
       });
     } else if (((state.mode === "multiplication3x2" || state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided" || state.mode === "multiplication2x2-zero")) && state.multiplication2x2) {
+      removeMultiplicationCorrectionOverlays();
       state.multiplication2x2.rows.forEach((row) => {
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
-          if (row.cells[i] !== row.value[i]) markDigit(slot, row.value[i], "below");
+          if (row.cells[i] !== row.value[i]) {
+            markDigit(slot, row.value[i], "below");
+            slot.querySelector(".incorrect-digit-correction")?.remove();
+            addMultiplicationCorrectionOverlay(slot, row.value[i]);
+          }
         });
       });
     } else if (state.mode === "longdivision" && state.longDivision) {
@@ -4555,19 +4604,22 @@
       return;
     }
     const runId = state.runId;
-    window.setTimeout(() => {
+    const next = () => {
       if (runId !== state.runId) return;
       runAnswerTransition(() => {
         if (state.phase === "initial") {
           finishInitialQuestion({ reward, challengeEnds: correct ? challengeMustEndAfterCorrect(state.current, reward) : true });
         } else advance();
       });
-    }, correct ? Math.max(
-      correctFeedbackDurationMs,
-      progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
-    ) : (!["numbercards", "counting1", "counting2"].includes(state.mode) && ((state.phase === "initial" && (isFinalInitialQuestion() || state.current.vehicleChallengePosition >= 5)) || (state.phase === "retry" && state.retrySetPosition >= state.retrySetTotal))
-      ? Math.max(wrongFeedbackDurationMs, 2000)
-      : wrongFeedbackDurationMs));
+    };
+    if (!correct && !["numbercards", "counting1", "counting2"].includes(state.mode)) {
+      startWrongAnswerReview(next);
+    } else {
+      window.setTimeout(next, correct ? Math.max(
+        correctFeedbackDurationMs,
+        progressGainTotalDurationMs + (reward && progression?.energyGain ? energyFullDisplayDurationMs : 0)
+      ) : wrongFeedbackDurationMs);
+    }
     } catch (error) { state.transitioning = false; throw error; }
   }
   function showReward({ stage, vehicleIndex, isNew, replay = false, kind = "evolution" }, drawAfterReward = false, onDone = null) {
@@ -7248,6 +7300,7 @@
     if (!isModeAvailableForMission(mode)) { renderModeSelectMission(); showFixedScreenWhenReady("mode-select-screen"); return; }
     primeBackgroundMusicFromGesture("game"); beginRound(mode);
   });
+  $("wrong-answer-next").addEventListener("click", () => wrongAnswerReview?.finish?.());
   $("top-collection-button").addEventListener("click", openTopCollection);
   $("finish-button").addEventListener("click", endToModeSelect); $("quit-button").addEventListener("click", openQuitConfirmation); $("bgm-toggle-button").addEventListener("click", toggleBackgroundMusic);
   $("collection-button").addEventListener("click", openCollection); $("collection-exit").addEventListener("click", exitCollection);
