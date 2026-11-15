@@ -4445,8 +4445,9 @@
       if (!/^[0-9]$/.test(upperDigit) || !/^[0-9]$/.test(lowerDigit) ||
           upperDigit !== upper.value[upperIndex] || lowerDigit !== lower.value[lowerIndex]) continue;
       const multiplied = Number(upperDigit) * Number(lowerDigit);
-      // One cell holds one digit. Avoid pretending that 12 means 2.
-      if (multiplied < 10 && total.cells[i] === String(multiplied)) return i;
+      // A two-digit product also means a multiplication slip when its ones
+      // digit matches this cell; disregard carries from any neighboring column.
+      if (total.cells[i] === String(multiplied % 10)) return i;
     }
     return -1;
   }
@@ -4462,7 +4463,7 @@
     const scale = stageRect.width / stageCanvasWidth || 1;
     const width = (keypadRect.width / scale) * 0.8;
     const anchorX = (slotRect.left + slotRect.width / 2 - stageRect.left) / scale;
-    const top = (slotRect.bottom - stageRect.top) / scale + 130;
+    const top = (slotRect.bottom - stageRect.top) / scale + 110;
     const left = Math.max(12, Math.min(stageCanvasWidth - width - 12, anchorX - width / 2));
     const bubble = document.createElement("div");
     bubble.className = "multiplication-addition-hint";
