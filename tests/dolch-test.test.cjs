@@ -66,4 +66,7 @@ test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",(
   assert.match(css,/\.dt-stage \.dt-word\{[^}]*width:calc\(\(1180px - 24px - 27px\) \/ 4\)/);
   assert.match(css,/#dolch-test-replay\{[^}]*width:280px/);
   assert.match(source,/class="elapsed-time" id="dolch-test-time"/);
+  assert.match(css,/#dolch-test-screen \.topbar\{position:absolute;z-index:7;top:14px;left:42px;right:42px;height:60\.8px\}/);
+  assert.match(css,/#dolch-test-screen \.progress-badge\{left:0;width:166px;height:60\.8px\}/);
+  assert.match(css,/#dolch-test-screen \.elapsed-time\{right:0;height:60\.8px\}/);
 });
