@@ -4462,7 +4462,7 @@
     const scale = stageRect.width / stageCanvasWidth || 1;
     const width = (keypadRect.width / scale) * 0.8;
     const anchorX = (slotRect.left + slotRect.width / 2 - stageRect.left) / scale;
-    const top = (slotRect.bottom - stageRect.top) / scale + 90;
+    const top = (slotRect.bottom - stageRect.top) / scale + 130;
     const left = Math.max(12, Math.min(stageCanvasWidth - width - 12, anchorX - width / 2));
     const bubble = document.createElement("div");
     bubble.className = "multiplication-addition-hint";
