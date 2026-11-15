@@ -2420,8 +2420,8 @@ html.mq-viewport-landscape-pinned body {
   width:64px;
   height:62px;
   transform:translateY(-50%);
-  color:var(--navy);
-  font-size:0; /* draw solid bars rather than relying on a thin font glyph */
+  color:#48d9ff;
+  font-size:0; /* plain, thick plus sign without glow or decorative text effects */
   text-shadow:none;
   filter:none;
   pointer-events:none;
