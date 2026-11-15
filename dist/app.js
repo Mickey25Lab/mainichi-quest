@@ -4424,7 +4424,55 @@
   }
 
   function removeMultiplicationCorrectionOverlays() {
-    $("play-stage").querySelectorAll(".multiplication-correction-overlay").forEach((node) => node.remove());
+    $("play-stage").querySelectorAll(".multiplication-correction-overlay, .multiplication-addition-hint").forEach((node) => node.remove());
+  }
+  // Partial product 2 starts at the tens column. For every wrong final-row
+  // digit, compare the *entered* value with multiplication of the two aligned
+  // partial-product digits, not the correct sum (which may include a carry).
+  // Only highlight one mistake: the rightmost matching column.
+  function findMultiplicationInsteadOfAdditionIndex(model) {
+    if (!model || model.specialZero || model.rows.length < 3) return -1;
+    const [upper, lower, total] = model.rows;
+    for (let i = total.cells.length - 1; i >= 0; i -= 1) {
+      if (total.cells[i] === total.value[i]) continue;
+      const place = total.cells.length - 1 - i;
+      const upperIndex = upper.cells.length - 1 - place;
+      const lowerIndex = lower.cells.length - place; // lower row shifted one place left
+      if (upperIndex < 0 || lowerIndex < 0 ||
+          upperIndex >= upper.cells.length || lowerIndex >= lower.cells.length) continue;
+      const upperDigit = upper.cells[upperIndex];
+      const lowerDigit = lower.cells[lowerIndex];
+      if (!/^[0-9]$/.test(upperDigit) || !/^[0-9]$/.test(lowerDigit) ||
+          upperDigit !== upper.value[upperIndex] || lowerDigit !== lower.value[lowerIndex]) continue;
+      const multiplied = Number(upperDigit) * Number(lowerDigit);
+      // One cell holds one digit. Avoid pretending that 12 means 2.
+      if (multiplied < 10 && total.cells[i] === String(multiplied)) return i;
+    }
+    return -1;
+  }
+  function showMultiplicationAdditionHint(model) {
+    const index = findMultiplicationInsteadOfAdditionIndex(model);
+    if (index < 0) return;
+    const slot = model.rows[2].holder.querySelectorAll(".multiplication-2x2-slot")[index];
+    if (!slot) return;
+    const stage = $("play-stage");
+    const stageRect = stage.getBoundingClientRect();
+    const slotRect = slot.getBoundingClientRect();
+    const keypadRect = $("keypad").getBoundingClientRect();
+    const scale = stageRect.width / stageCanvasWidth || 1;
+    const width = (keypadRect.width / scale) * 0.8;
+    const anchorX = (slotRect.left + slotRect.width / 2 - stageRect.left) / scale;
+    const top = (slotRect.bottom - stageRect.top) / scale + 90;
+    const left = Math.max(12, Math.min(stageCanvasWidth - width - 12, anchorX - width / 2));
+    const bubble = document.createElement("div");
+    bubble.className = "multiplication-addition-hint";
+    bubble.setAttribute("role", "note");
+    bubble.textContent = "かけざんしちゃってない？";
+    bubble.style.width = width + "px";
+    bubble.style.left = left + "px";
+    bubble.style.top = top + "px";
+    bubble.style.setProperty("--addition-tip-x", (anchorX - left) + "px");
+    stage.appendChild(bubble);
   }
   function addMultiplicationCorrectionOverlay(slot, expected) {
     // Preserve the original inline correction's exact position, font and size.
@@ -4545,9 +4593,11 @@
       });
     } else if (((state.mode === "multiplication3x2" || state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided" || state.mode === "multiplication2x2-zero")) && state.multiplication2x2) {
       removeMultiplicationCorrectionOverlays();
-      state.multiplication2x2.rows.forEach((row, rowIndex) => {
+      const multiplicationModel = state.multiplication2x2;
+      const additionHintIndex = findMultiplicationInsteadOfAdditionIndex(multiplicationModel);
+      multiplicationModel.rows.forEach((row, rowIndex) => {
         // The ×0 layout has only one editable/visible result row.
-        if (state.multiplication2x2.specialZero && rowIndex > 0) return;
+        if (multiplicationModel.specialZero && rowIndex > 0) return;
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
           if (row.cells[i] !== row.value[i]) {
             markDigit(slot, row.value[i], "below");
@@ -4555,6 +4605,7 @@
           }
         });
       });
+      if (additionHintIndex >= 0) showMultiplicationAdditionHint(multiplicationModel);
     } else if (state.mode === "longdivision" && state.longDivision) {
       const slots = Array.from($("long-division-slots").children);
       const expected = String(question.quotient).padStart(slots.length, " ");
