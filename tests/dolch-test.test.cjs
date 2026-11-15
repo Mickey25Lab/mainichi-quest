@@ -52,6 +52,7 @@ test("test uses first-attempt grading, separate errors per word/step, and 3 spee
   assert.match(source,/if\(!ok\)speakThree\(\)/,"wrong answers restart spoken word");
   assert.match(css,/\.dt-stage \.dt-word\{background:#197de2;border:none/);
   assert.match(css,/\.dt-stage>\.dt-white \.dt-summary\{[^}]*background:transparent/);
+  assert.match(source,/mark\.remove\(\);if\(ok\)/,"feedback mark clears before advancing");
 });
 
 test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",()=>{
