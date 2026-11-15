@@ -50,6 +50,7 @@ test("guided addition sign is bold and has no jewel glow", () => {
   assert.ok(first >= 0);
   const rule = css.slice(first, css.indexOf("}", first));
   assert.ok(rule.includes("font-size:0;"));
+  assert.ok(rule.includes("color:#48d9ff;"));
   assert.ok(css.includes(".multiplication-2x2-sum-operator::before { width:48px; height:9px; }"));
   assert.ok(css.includes(".multiplication-2x2-sum-operator::after { width:9px; height:48px; }"));
   assert.ok(rule.includes("text-shadow:none;"));
@@ -78,7 +79,7 @@ test("addition-error bubble chooses rightmost matching column, never covers digi
   assert.equal(findIndex(model("24", "34", "364", "384", true)), -1);
   assert.ok(app.includes('bubble.textContent = "かけざんしちゃってない？";'));
   assert.ok(app.includes("const width = (keypadRect.width / scale) * 0.8;"));
-  assert.ok(app.includes("const top = (slotRect.bottom - stageRect.top) / scale + 90;"));
+  assert.ok(app.includes("const top = (slotRect.bottom - stageRect.top) / scale + 130;"));
   assert.ok(css.includes(".play-screen .multiplication-addition-hint::before"));
   assert.ok(css.includes(".play-screen .multiplication-addition-hint {"));
 });
