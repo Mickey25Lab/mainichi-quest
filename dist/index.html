@@ -282,6 +282,7 @@
         </div>
 
         <div class="keypad" id="keypad" aria-label="こたえを入力">
+          <button class="wrong-answer-next" id="wrong-answer-next" type="button" hidden>次へ</button>
           <div class="number-grid">
             <button class="key number-key" data-number="7">7</button>
             <button class="key number-key" data-number="8">8</button>
@@ -306,6 +307,7 @@
       </div>
       <button class="quit-button" id="quit-button">やめる</button>
       <button class="quit-button bgm-toggle-button" id="bgm-toggle-button" type="button" data-bgm-toggle aria-label="BGMをオフにする" aria-pressed="true">🔊</button>
+      <div class="wrong-answer-countdown" id="wrong-answer-countdown" role="timer" aria-label="次の問題までの時間" hidden>あと 10 秒</div>
       <button class="assist-button" id="assist-button">ヒントを見る</button>
       <div class="idle-guide" id="idle-guide" hidden aria-hidden="true">☝️</div>
       <div class="incorrect-next-vehicle-notice" id="incorrect-next-vehicle-notice" hidden aria-live="assertive">
