@@ -76,16 +76,18 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  assert.equal(h.get("dolch-test-board").children.filter(b=>b.disabled).length,0);
  const wrong=nouns.find(v=>v.word!==first).word;
  h.answer(wrong);
+ assert.equal(h.canceled.count>0,true,"wrong answer cancels existing audio");
  assert.ok(h.get("dolch-test-board").children.find(b=>b.dataset.word===wrong).children.at(-1).className.includes("dt-card-mark dt-no"),"wrong mark is on the selected card");
  h.advance();
+ assert.equal(h.spoken.length,2,"wrong answer automatically replays three times");
  assert.equal(h.get("dolch-test-progress").textContent,"1 / 13");
  h.answer(first);
  assert.ok(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).children.at(-1).className.includes("dt-card-mark dt-ok"),"correct mark is on selected card");
  h.advance();
  assert.equal(h.get("dolch-test-word").hidden,false);
  assert.equal(h.canceled.count>0,true,"speech is stopped on correct spelling");
- assert.equal(h.spoken.length,2,"meaning stage automatically speaks the word again");
- assert.equal(h.spoken[1].text.toUpperCase(),first);
+ assert.equal(h.spoken.length,3,"meaning stage automatically speaks the word again");
+ assert.equal(h.spoken[2].text.toUpperCase(),first);
  assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).children.at(-1).className.includes("dt-card-mark"),false,"previous mark cleared on phase change");
  const meaningCard=h.get("dolch-test-board").children.find(b=>b.dataset.word===first);
  const meaningImage=meaningCard.children.find(c=>c.src);
@@ -94,7 +96,7 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  assert.equal(meaningCard.children.find(c=>c.src),meaningImage,"speech ending preserves decoded image node");
  h.answer(first);h.advance();
  assert.equal(h.get("dolch-test-progress").textContent,"2 / 13");
- assert.equal(h.spoken.length,3,"next question starts speech automatically without a listen button");
+ assert.equal(h.spoken.length,4,"next question starts speech automatically without a listen button");
  assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).disabled,true);
  for(let i=1;i<13;i++){
   assert.equal(h.get("dolch-test-replay").hidden,false);
