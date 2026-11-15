@@ -276,7 +276,8 @@
     .phonics-words-stage{position:absolute;left:50%;top:50%;width:1400px;height:1050px;transform:translate(-50%,-50%) scale(var(--stage-scale,1));transform-origin:center;overflow:hidden;font-family:"Noto Sans JP",sans-serif}
     .phonics-words-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.68)}
     .phonics-words-stage::after{content:"";position:absolute;inset:0;background:rgba(3,20,45,.18);pointer-events:none}
-    .phonics-words-stage .phonics-intro-card{display:flex;align-items:center;justify-content:center;min-height:760px;height:760px;box-sizing:border-box}
+    /* Keep the card's 145px top, align its bottom with the YouTube player's 867.5625px bottom. */
+    .phonics-words-stage .phonics-intro-card{display:flex;align-items:center;justify-content:center;top:145px;transform:translateX(-50%);min-height:0;height:calc(var(--phonics-video-bottom) - 145px);box-sizing:border-box}
     .phonics-words-main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0}
     #phonics-words-letters{display:inline-flex;align-items:stretch;gap:8px;max-width:100%;border-radius:18px}
     .phonics-words-letter{display:flex;align-items:center;justify-content:center;width:112px;height:160px;box-sizing:border-box;border-radius:18px;font:700 106px/1 "Andika",sans-serif;color:#132b50}
@@ -286,9 +287,10 @@
     #phonics-words-picture{position:absolute;right:35px;top:170px;bottom:145px;width:250px;display:flex;align-items:center;justify-content:center}
     #phonics-words-picture[hidden]{display:none!important}
     .phonics-words-pictogram{display:block;width:100%;max-height:100%;object-fit:contain}
-    #phonics-words-action{bottom:34px;z-index:7}
-    #phonics-words-screen .phonics-words-stage:has(.is-whole-word) #phonics-words-action{bottom:34px}
-    #phonics-words-replay{position:absolute;right:110px;bottom:34px;z-index:7;box-sizing:border-box;width:280px;height:var(--play-corner-control-height);padding:0;border:3px solid #8cb9d5;border-radius:var(--play-corner-radius);color:#23547b;background:#dbf1ff;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
+    /* Match the approved intro CTA for 5-word and 13-word primary actions. */
+    #phonics-words-action{bottom:44px;z-index:7;width:var(--phonics-cta-width);height:var(--phonics-cta-height)}
+    #phonics-words-screen .phonics-words-stage:has(.is-whole-word) #phonics-words-action{bottom:44px}
+    #phonics-words-replay{position:absolute;right:110px;bottom:44px;z-index:7;box-sizing:border-box;width:280px;height:var(--phonics-cta-height);padding:0;border:3px solid #8cb9d5;border-radius:var(--play-corner-radius);color:#23547b;background:#dbf1ff;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12);font:900 28px/1 "Noto Sans JP",sans-serif;white-space:nowrap;cursor:pointer}
     #phonics-words-replay:active:not(:disabled){transform:translateY(3px);box-shadow:0 3px 0 #8baec5,0 7px 14px rgba(3,52,109,.12)}
     #phonics-words-screen #phonics-words-action:active:disabled{transform:translateX(-50%);box-shadow:0 6px 0 #4f79a2,0 12px 22px rgba(3,52,109,.18)}
     #phonics-words-screen #phonics-words-replay:active:disabled{transform:none;box-shadow:0 6px 0 #8baec5,0 12px 22px rgba(3,52,109,.12)}
