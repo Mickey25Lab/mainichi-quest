@@ -79,7 +79,10 @@ jobs:
             tests/level-system.test.cjs \
             tests/bgm-controller.test.cjs \
             tests/idle-bgm-timeout.test.cjs \
-            tests/two-digit-multiplication-guides.test.cjs
+            tests/two-digit-multiplication-guides.test.cjs \
+            tests/dolch-basic-words.test.cjs \
+            tests/dolch-test.test.cjs \
+            tests/dolch-test-behavior.test.cjs
       - name: Run PWA origin transfer safety tests
         if: steps.changes.outputs.docs_only != 'true'
         run: node --test tests/profile-transfer.test.cjs tests/ipad-pwa-orientation-recovery.test.cjs
