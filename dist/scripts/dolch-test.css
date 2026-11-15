@@ -39,8 +39,6 @@
  background:#dcefff;color:#132b50;display:flex;flex-direction:column;gap:1px;align-items:center;justify-content:center}
 .dt-focus-upper{font:700 28px/1.1 "Andika",sans-serif;color:#748399}
 .dt-focus-lower{font:700 58px/1.1 "Andika",sans-serif;color:#132b50}
-#dolch-test-listen{bottom:44px;z-index:7;width:var(--phonics-cta-width);height:var(--phonics-cta-height)}
-#dolch-test-listen:disabled{opacity:.52;pointer-events:none}
 #dolch-test-replay{position:absolute;right:110px;bottom:44px;z-index:7;box-sizing:border-box;
  width:280px;height:var(--phonics-cta-height);padding:0;border:3px solid #8cb9d5;
  border-radius:var(--play-corner-radius);color:#23547b;background:#dbf1ff;
