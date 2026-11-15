@@ -15,12 +15,24 @@ function render(){
  $("dolch-test-board").hidden=result;
  $("dolch-test-replay").hidden=result;
  $("dolch-test-replay").disabled=s.speaking||s.locked;
+ const viewKey=s.index+":"+s.phase;
+ // Preserve decoded images and Japanese text across speech and feedback changes.
+ if(s.viewKey===viewKey){
+  for(const button of grid.children){
+   const used=s.done.has(button.dataset.word);
+   button.disabled=s.locked||used||(!meaning&&!s.heard);
+   button.className="dt-card"+(button.dataset.last==="true"?" dt-last":"")+(used?" dt-used":"");
+  }
+  return;
+ }
+ s.viewKey=viewKey;
  if(meaning){const focus=$("dolch-test-word");focus.replaceChildren();const up=glyphs(s.words[s.index].word),low=glyphs(s.words[s.index].word.toLowerCase());up.className="dt-focus-upper";low.className="dt-focus-lower";focus.append(up,low);}
  grid.replaceChildren();
  const deck=meaning?s.meaningOrder:s.spellingOrder;
  deck.forEach((item,i)=>{
   const b=document.createElement("button");b.type="button";b.className="dt-card"+(i===12?" dt-last":"")+(s.done.has(item.word)?" dt-used":"");
   b.dataset.word=item.word;
+  b.dataset.last=i===12?"true":"false";
   b.disabled=s.locked||s.done.has(item.word)||(!meaning&&!s.heard);
   if(meaning){const label=document.createElement("span");label.className="dt-jp";label.innerHTML=item.meaning.replace(/<\/ruby>の<ruby>/g, '</ruby><ruby>の<rt class="dt-empty-ruby" aria-hidden="true">の</rt></ruby><ruby>');const image=document.createElement("img");image.alt="";image.src="./assets/ui/phonics-words/"+item.word.toLowerCase()+".svg";b.append(label,image);}
   else{const lower=glyphs(item.word.toLowerCase()),upper=glyphs(item.word);lower.className="dt-lower";upper.className="dt-upper";b.append(lower,upper);}
