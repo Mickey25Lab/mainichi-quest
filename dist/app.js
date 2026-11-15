@@ -145,6 +145,7 @@
   const wrongFeedbackDurationMs = 500;
   const wrongAnswerReviewDurationMs = 10000;
   let wrongAnswerReview = null;
+  let pendingIncorrectNextVehicleVisuals = null;
   const revealedAnswerDurationMs = 2000 * 2;
   // All interactive scenes use the native size of the delivered backgrounds.
   // Keeping this in one place avoids a second coordinate system creeping back
@@ -2949,6 +2950,9 @@
     });
   }
   function beginRound(mode = state.mode || "normal") {
+    cancelWrongAnswerReview();
+    pendingIncorrectNextVehicleVisuals = null;
+    $("incorrect-next-vehicle-notice").hidden = true;
     beginRoundTransaction();
     clearRetryAutoStartTimer(); clearIdleGuide();
     stopCollectionTimer();
@@ -4454,6 +4458,21 @@
     $("keypad").classList.remove("is-reviewing-wrong-answer");
     $("question-answer-card").classList.remove("wrong-mark-hidden");
   }
+  function prepareIncorrectNextVehicleDuringReview() {
+    if (state.phase !== "initial" || isFinalInitialQuestion()) return;
+    if (pendingIncorrectNextVehicleVisuals?.runId === state.runId) return;
+    const runId = state.runId;
+    const nextQuestion = state.questions[state.initialIndex + 1];
+    startNextVehicleChallenge();
+    const ready = nextQuestion
+      ? (assignQuestionVisualContext(nextQuestion),
+        prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
+          if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
+          return prepared;
+        }).catch((error) => { console.error("Incorrect next-question preload failed", error); return null; }))
+      : Promise.resolve(null);
+    pendingIncorrectNextVehicleVisuals = { runId, ready };
+  }
   function startWrongAnswerReview(next) {
     cancelWrongAnswerReview();
     const countdown = $("wrong-answer-countdown");
@@ -4477,7 +4496,12 @@
     review.finish = finish;
     renderCountdown();
     review.markTimeout = window.setTimeout(() => {
-      if (wrongAnswerReview === review) $("question-answer-card").classList.add("wrong-mark-hidden");
+      if (wrongAnswerReview !== review) return;
+      $("question-answer-card").classList.add("wrong-mark-hidden");
+      if (state.phase === "initial" && !isFinalInitialQuestion()) {
+        $("incorrect-next-vehicle-notice").hidden = false;
+        prepareIncorrectNextVehicleDuringReview();
+      }
     }, wrongFeedbackDurationMs);
     review.interval = window.setInterval(renderCountdown, 100);
     review.timeout = window.setTimeout(() => { renderCountdown(); finish(); }, wrongAnswerReviewDurationMs);
@@ -4779,27 +4803,33 @@
   function showIncorrectNextVehicleNotice() {
     const runId = state.runId;
     const notice = $("incorrect-next-vehicle-notice");
-    // The × has completed; keep the solved problem visible behind the notice.
+    const preloaded = pendingIncorrectNextVehicleVisuals?.runId === runId
+      ? pendingIncorrectNextVehicleVisuals : null;
+    pendingIncorrectNextVehicleVisuals = null;
     setQuestionCardState("");
     pauseGameTimer();
     notice.hidden = false;
-    const prepareNextVisuals = () => {
-      startNextVehicleChallenge();
-      const nextQuestion = state.questions[state.initialIndex + 1];
-      if (!nextQuestion) return Promise.resolve(null);
-      assignQuestionVisualContext(nextQuestion);
-      return prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
-        if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
-        return prepared;
-      }).catch(() => null);
-    };
-    const nextVisualsReady = prepareNextVisuals();
+    // The notice has already been shown while reviewing the correction.
+    // Advance immediately after the preloaded visuals are ready; no extra hold.
+    if (preloaded) {
+      preloaded.ready.then(() => {
+        if (runId === state.runId) runAnswerTransition(advance);
+      });
+      return;
+    }
+    // Preserve the earlier flow for callers without an active review.
+    startNextVehicleChallenge();
+    const nextQuestion = state.questions[state.initialIndex + 1];
+    const nextVisualsReady = nextQuestion
+      ? (assignQuestionVisualContext(nextQuestion),
+        prepareQuestionVisuals(nextQuestion, true).then((prepared) => {
+          if (prepared && runId === state.runId) state.preparedNextQuestionVisual = { question: nextQuestion, prepared };
+        }).catch(() => null))
+      : Promise.resolve();
     window.setTimeout(() => {
       if (runId !== state.runId) return;
       nextVisualsReady.then(() => {
-        if (runId !== state.runId) return;
-        notice.hidden = true;
-        runAnswerTransition(advance);
+        if (runId === state.runId) runAnswerTransition(advance);
       });
     }, incorrectNextVehicleNoticeDurationMs);
   }
