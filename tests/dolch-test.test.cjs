@@ -40,6 +40,11 @@ test("test uses first-attempt grading, separate errors per word/step, and 3 spee
   assert.match(source,/mq\.dolch-test\.v1\./);
   assert.match(source,/encodeURIComponent\(s\.profileId\)/);
   assert.match(source,/history|spellingFirstTry/);
+  assert.match(source,/dt-card-mark/);
+  assert.match(source,/if\(ok&&phase==="spelling"\)speakThree\(\)/);
+  assert.match(source,/dolch-test-replay/);
+  assert.match(css,/#ec343d/);
+  assert.match(css,/#197de2/);
 });
 
 test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",()=>{
@@ -49,4 +54,9 @@ test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",(
   assert.match(css,/\.dt-jp\{[^}]*white-space:nowrap/);
   assert.match(source,/dt-focus-upper/);
   assert.match(source,/dt-focus-lower/);
+  assert.match(css,/\.dt-card\[data-word="TOP"\] \.dt-jp\{display:block;font-size:27px/);
+  assert.match(css,/\.dt-card img\{flex:none;width:75px/);
+  assert.match(css,/\.dt-stage \.dt-word\{[^}]*width:calc\(\(1180px - 24px - 27px\) \/ 4\)/);
+  assert.match(css,/#dolch-test-replay\{[^}]*width:280px/);
+  assert.match(source,/class="elapsed-time" id="dolch-test-time"/);
 });
