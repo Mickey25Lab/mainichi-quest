@@ -30,3 +30,11 @@ test("review controls preserve fixed canvas alignment and corrections are not cl
   assert.match(css, /keypad\[aria-busy="true"\] \.wrong-answer-next:not\(\[hidden\]\)/);
   assert.match(css, /pointer-events:auto;/);
 });
+
+test("vehicle transition notice appears during correction review, not after next tap", () => {
+  assert.match(app, /review\.markTimeout = window\.setTimeout\([\s\S]*?incorrect-next-vehicle-notice"\)\.hidden = false;[\s\S]*?prepareIncorrectNextVehicleDuringReview\(\);/);
+  assert.match(app, /function prepareIncorrectNextVehicleDuringReview\(\)/);
+  assert.match(app, /pendingIncorrectNextVehicleVisuals = \{ runId, ready \};/);
+  assert.match(app, /if \(preloaded\) \{\s*preloaded\.ready\.then\(\(\) => \{/);
+  assert.match(app, /runAnswerTransition\(advance\)/);
+});
