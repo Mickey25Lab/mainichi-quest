@@ -4,7 +4,7 @@
   const vocabulary = [
     [{word:"CAT",picture:"🐱",label:"ねこ"},{word:"DOG",picture:"🐶",label:"いぬ"},{word:"SUN",picture:"☀️",label:"たいよう"},{word:"BOX",picture:"📦",label:"はこ"},{word:"PIG",picture:"🐷",label:"ぶた"}]
   ];
-  // Part 1: Dolch basic A+B; each round samples 10 of the 14 nouns without repeats.
+  // Part 1: Dolch basic A+B; each round samples 10 of the 13 nouns without repeats.
   // Ruby markup is static lesson data, never generated from user input.
   const basicVocabulary = [
     {word:"BED",label:"ベッド",meaning:"ベッド"},
@@ -13,7 +13,6 @@
     {word:"DOG",label:"犬",meaning:"<ruby>犬<rt>いぬ</rt></ruby>"},
     {word:"LEG",label:"足",meaning:"<ruby>足<rt>あし</rt></ruby>"},
     {word:"MAN",label:"男の人",meaning:"<ruby>男<rt>おとこ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>"},
-    {word:"MEN",label:"男の人たち",meaning:"<ruby>男<rt>おとこ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>たち"},
     {word:"PIG",label:"ブタ",meaning:"ブタ"},
     {word:"SUN",label:"太陽",meaning:"<ruby>太陽<rt>たいよう</rt></ruby>"},
     {word:"TOP",label:"こま",meaning:"こま"},
