@@ -4481,7 +4481,8 @@
     const review = { timeout: null, markTimeout: null, interval: null, finished: false };
     wrongAnswerReview = review;
     countdown.hidden = false;
-    button.hidden = false;
+    // Show the large × first. Uncover つぎへ with the left-side notice.
+    button.hidden = true;
     $("keypad").classList.add("is-reviewing-wrong-answer");
     function renderCountdown() {
       if (wrongAnswerReview !== review) return;
@@ -4504,6 +4505,7 @@
     review.markTimeout = window.setTimeout(() => {
       if (wrongAnswerReview !== review) return;
       $("question-answer-card").classList.add("wrong-mark-hidden");
+      button.hidden = false;
       if (state.phase === "initial" && !isFinalInitialQuestion()) {
         $("incorrect-next-vehicle-notice").hidden = false;
         prepareIncorrectNextVehicleDuringReview();
