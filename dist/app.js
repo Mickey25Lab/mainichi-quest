@@ -6986,7 +6986,7 @@
     const rawTarget = Number(settings.dailyTargetCounts?.[settingsKey]);
     const hasStoredTarget = Number.isInteger(rawTarget);
     // Newly introduced modes must not silently add a daily requirement to existing children.
-    const newModeUnconfigured = (modeId === "multiplication3x2" || modeId === "multiplication2x2-zero" || modeId === "phonics-words" || modeId === "dolch-basic" || modeId === "dolch-basic-test")
+    const newModeUnconfigured = (modeId === "multiplication3x2" || modeId === "multiplication2x2-zero" || modeId === "phonics-words" || modeId === "dolch-basic")
       && settings.enabledModes?.[settingsKey] === undefined;
     const target = hasStoredTarget
       ? Math.max(0, Math.min(9, rawTarget))
