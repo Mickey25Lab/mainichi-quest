@@ -2430,6 +2430,9 @@ html.mq-viewport-landscape-pinned body {
 .multiplication-2x2-sum-operator::after {
   content:"";
   position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
   background:currentColor;
   border-radius:2px;
 }
