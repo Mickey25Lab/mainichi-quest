@@ -23,3 +23,12 @@ test("three parent judgments and 13 row screenshot summary",()=>{
   assert.match(html,/if\(index===words\.length\)complete\(\)/);
   assert.match(html,/for\(const row of rows\)/);
 });
+
+test("parent buttons never break text and result table has case-insensitive fourth column",()=>{
+  assert.match(html,/\.trial-judge-buttons button\{[^}]*white-space:nowrap/);
+  assert.match(html,/<th>iPadの認識結果<\/th><th>文字正誤<\/th><th>おうちのひとの判定<\/th>/);
+  assert.match(html,/function matchesWord\(word,recognized\)/);
+  assert.match(html,/word\.toUpperCase\(\)===recognized\.trim\(\)\.toUpperCase\(\)/);
+  assert.match(html,/matched\?"○":"×"/);
+  assert.match(html,/row\.word,row\.recognized,matched\?"○":"×",row\.judgement/);
+});
