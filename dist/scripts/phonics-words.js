@@ -15,7 +15,7 @@
     {word:"MAN",label:"男の人",meaning:"<ruby>男<rt>おとこ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>"},
     {word:"PIG",label:"ブタ",meaning:"ブタ"},
     {word:"SUN",label:"太陽",meaning:"<ruby>太陽<rt>たいよう</rt></ruby>"},
-    {word:"TOP",label:"こま",meaning:"こま"},
+    {word:"TOP",label:"てっぺん、いちばん上",meaning:"てっぺん、いちばん<ruby>上<rt>うえ</rt></ruby>"},
     {word:"HAND",label:"手",meaning:"<ruby>手<rt>て</rt></ruby>"},
     {word:"MILK",label:"牛乳",meaning:"<ruby>牛乳<rt>ぎゅうにゅう</rt></ruby>"},
     {word:"NEST",label:"鳥の巣",meaning:"<ruby>鳥<rt>とり</rt></ruby>の<ruby>巣<rt>す</rt></ruby>"},
