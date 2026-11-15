@@ -31,3 +31,6 @@
 .dt-summary p{font:900 46px/1.35 "Noto Sans JP",sans-serif;margin:20px 0}
 #dolch-test-finish{margin-top:36px;padding:22px 44px;border:3px solid #4379ad;border-radius:24px;background:#a9defa;color:#183d61;font:900 31px/1 "Noto Sans JP",sans-serif}
 #dolch-test-screen [hidden]{display:none!important}
+
+.dt-card[data-word="TOP"] .dt-jp{font-size:16px}
+.dt-card[data-word="TOP"] img{width:56px;max-width:30%}
