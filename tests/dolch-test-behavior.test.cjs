@@ -115,6 +115,30 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  assert.equal(h.done,1);
 });
 
+test("meaning cards keep kanji base glyphs and do not blink when wrong answers replay",()=>{
+ const h=harness();h.start("kanji-check");
+ const first=h.spoken[0].text.toUpperCase();
+ h.answer(first);h.advance();
+ const board=h.get("dolch-test-board");
+ for(const [word,base] of [["MAN","男"],["NEST","鳥"],["BOX","箱"]]){
+  const card=board.children.find(x=>x.dataset.word===word);
+  assert.ok(card,"meaning card "+word);
+  assert.ok(card.children[0].innerHTML.includes('dt-ruby-base">'+base+'</span>'),"kanji is a visible base span");
+  assert.ok(!card.children[0].innerHTML.includes("<ruby>"),"no native ruby element remains");
+ }
+ const wrong=nouns.find(v=>v.word!==first).word;
+ const card=board.children.find(x=>x.dataset.word===wrong);
+ const icon=card.children.find(x=>x.src);
+ const before=h.spoken.length;
+ h.answer(wrong);
+ assert.equal(h.get("dolch-test-board").children.find(x=>x.dataset.word===wrong),card,"wrong answer keeps meaning card DOM");
+ assert.ok(h.canceled.count>=2,"wrong meaning selection cancels current TTS");
+ h.advance();
+ assert.equal(h.spoken.length,before+1,"wrong meaning selection restarts pronunciation after 500ms");
+ assert.equal(h.get("dolch-test-board").children.find(x=>x.dataset.word===wrong),card,"replay preserves card element");
+ assert.equal(card.children.find(x=>x.src),icon,"replay preserves the image node");
+});
+
 test("quitting does not store an incomplete test or invoke reward completion",()=>{
  const h=harness();h.start("child-two");
  h.get("dolch-test-quit").click();
