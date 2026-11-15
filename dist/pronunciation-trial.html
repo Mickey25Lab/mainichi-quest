@@ -70,13 +70,14 @@ button.primary{background:#77cbf5;color:#103b67}
   <h1>おためし けっか（13こ）</h1>
   <table><thead><tr><th>おだい</th><th>iPadの認識結果</th><th>文字正誤</th><th>おうちのひとの判定</th></tr></thead><tbody id="result-body"></tbody></table>
   <p>音声認識は発音の正確さを直接採点するものではありません。「認識なし」「エラー」もそのまま記録します。スクリーンショットを撮って共有してください。</p>
+  <div class="trial-controls"><button id="restart" class="primary" type="button">もう一度</button></div>
 </section>
 <script>
 (() => {
 "use strict";
-// Current Part 1 vocabulary has 14 entries in main. The 13-word trial uses
-// the first 13 (WIND is omitted); no learning state is modified.
-const words=["BED","BOX","CAT","DOG","LEG","MAN","MEN","PIG","SUN","TOP","HAND","MILK","NEST"];
+// Part 1 has 13 active nouns: MEN was removed; WIND remains.
+// No existing learning state is modified.
+const words=["BED","BOX","CAT","DOG","LEG","MAN","PIG","SUN","TOP","HAND","MILK","NEST","WIND"];
 const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 const $=id=>document.getElementById(id);
 const rows=[];
@@ -147,6 +148,14 @@ function start(){
     best="（開始エラー）";revealJudgement();
   }
 }
+function restart(){
+  resetRecognition();generation++;
+  rows.length=0;index=0;
+  $("results").hidden=true;
+  $("question").hidden=false;$("controls").hidden=false;
+  $("result-body").replaceChildren();
+  render();
+}
 function complete(){
   resetRecognition();$("question").hidden=true;$("controls").hidden=true;$("judge").hidden=true;$("results").hidden=false;
   $("progress").textContent="お試しモード　けっか";
@@ -167,6 +176,7 @@ function complete(){
 }
 $("start").addEventListener("click",start);
 $("retry").addEventListener("click",render);
+$("restart").addEventListener("click",restart);
 $("judge").addEventListener("click",event=>{
   const target=event.target.closest("button[data-judge]");
   if(!target||phase!=="judge")return;
