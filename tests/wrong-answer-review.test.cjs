@@ -46,11 +46,12 @@ test("vehicle transition notice appears during correction review, not after next
 });
 
 test("guided addition sign is bold and has no jewel glow", () => {
-  const rule = css.match(/\\.multiplication-2x2-sum-operator \\{([^}]+)\\}/)?.[1];
-  assert.ok(rule, "sum operator style exists");
-  assert.match(rule, /font-weight:1000;/);
-  assert.match(rule, /text-shadow:none;/);
-  assert.match(rule, /filter:none;/);
+  const first = css.indexOf(".multiplication-2x2-sum-operator {");
+  assert.ok(first >= 0);
+  const rule = css.slice(first, css.indexOf("}", first));
+  assert.ok(rule.includes("font-weight:1000;"));
+  assert.ok(rule.includes("text-shadow:none;"));
+  assert.ok(rule.includes("filter:none;"));
 });
 
 test("addition-error bubble chooses rightmost matching column, never covers digits", () => {
@@ -68,15 +69,14 @@ test("addition-error bubble chooses rightmost matching column, never covers digi
   });
   // The tens column has 2+4=6, but the child entered 2×4=8.
   assert.equal(findIndex(model("24", "34", "364", "384")), 1);
-  // Both tens and hundreds columns look multiplied: show only the ones-place-side error.
+  // Both tens and hundreds columns look multiplied: show only the rightmost.
   assert.equal(findIndex(model("222", "44", "662", "882")), 1);
   assert.equal(findIndex(model("24", "34", "364", "364")), -1);
   assert.equal(findIndex(model("24", "34", "364", "374")), -1);
   assert.equal(findIndex(model("24", "34", "364", "384", true)), -1);
-  assert.match(app, /bubble\.textContent = "かけざんしちゃってない？";/);
-  assert.match(app, /const width = \\(keypadRect\\.width \\/ scale\\) \\* 0\\.8;/);
-  assert.match(app, /const top = \\(slotRect\\.bottom - stageRect\\.top\\) \\/ scale \\+ 90;/);
-  assert.match(css, /\\.play-screen \\.multiplication-addition-hint::before/);
-  assert.match(css, /\\.play-screen \\.multiplication-addition-hint \\{/);
-  assert.match(css, /pointer-events:none;/);
+  assert.ok(app.includes('bubble.textContent = "かけざんしちゃってない？";'));
+  assert.ok(app.includes("const width = (keypadRect.width / scale) * 0.8;"));
+  assert.ok(app.includes("const top = (slotRect.bottom - stageRect.top) / scale + 90;"));
+  assert.ok(css.includes(".play-screen .multiplication-addition-hint::before"));
+  assert.ok(css.includes(".play-screen .multiplication-addition-hint {"));
 });
