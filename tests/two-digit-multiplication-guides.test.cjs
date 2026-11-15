@@ -90,7 +90,9 @@ test("zero mode places a zero in lower multiplier only in questions 2 and 4", ()
   }
 });
 test("zero mode has a separate label and immediate correction for zero-only step", () => {
-  assert.match(html, /2けた×2けた その3（2段目に0あり）/);
+  assert.match(app, /id:"multiplication2x2-zero", label:"かけ算ひっ算", detail:"2けた×2けた その3（2段目に0あり）"/);
+  assert.match(html, /id="mode-select-multiplication-2x2-zero"/);
+  assert.match(app, /detail\.textContent = definition\.detail/);
   assert.match(app, /state\.mode === "multiplication2x2-zero"/);
   assert.match(app, /String\(number\) !== "0"/);
   assert.match(app, /playTwoDigitRowCorrectEffect\(\{ holder: slot \}\)/);
