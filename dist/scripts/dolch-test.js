@@ -13,10 +13,8 @@ function render(){
  $("dolch-test-progress").textContent=(result?13:s.index+1)+" / 13";
  $("dolch-test-word").hidden=!meaning;
  $("dolch-test-board").hidden=result;
- $("dolch-test-listen").hidden=meaning||result;
- $("dolch-test-listen").disabled=s.heard;
  $("dolch-test-replay").hidden=result;
- $("dolch-test-replay").disabled=s.speaking||(!meaning&&!s.heard)||s.locked;
+ $("dolch-test-replay").disabled=s.speaking||s.locked;
  if(meaning){const focus=$("dolch-test-word");focus.replaceChildren();const up=glyphs(s.words[s.index].word),low=glyphs(s.words[s.index].word.toLowerCase());up.className="dt-focus-upper";low.className="dt-focus-lower";focus.append(up,low);}
  grid.replaceChildren();
  const deck=meaning?s.meaningOrder:s.spellingOrder;
@@ -44,7 +42,6 @@ function speakThree({first=false}={}){
   window.speechSynthesis.speak(u);
  };utter();
 }
-function listen(){speakThree({first:true});}
 function replay(){speakThree();}
 function beep(ok){
  try{
@@ -76,7 +73,7 @@ function choose(word){
  s.locked=true;render();beep(ok);
  const selected=[...$("dolch-test-board").children].find(button=>button.dataset.word===word);
  const mark=document.createElement("span");mark.className="dt-card-mark "+(ok?"dt-ok":"dt-no");mark.setAttribute("aria-hidden","true");if(selected)selected.append(mark);
- stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(ok&&phase==="spelling")speakThree();},500);
+ stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(ok){if(phase==="spelling")speakThree();else speakThree({first:true});}},500);
 }
 function quit(){if(!state)return;const callback=state.onQuit;stop();state=null;callback();}
 function start({profileId,onComplete,onQuit}){
@@ -85,11 +82,13 @@ function start({profileId,onComplete,onQuit}){
  const words=shuffle(vocab),mistakes={};words.forEach(v=>mistakes[v.word]={spelling:0,meaning:0});
  state={words,spellingOrder:shuffle(vocab),meaningOrder:shuffle(vocab),index:0,phase:"spelling",heard:false,speaking:false,locked:false,done:new Set(),mistakes,score:{spelling:0,meaning:0},profileId:String(profileId),started:Date.now(),onComplete,onQuit};
  $("dolch-test-summary").hidden=true;render();clock();timer=setInterval(clock,1000);
+ // Start speech in the same user gesture that selected the test mode (iPad Safari).
+ speakThree({first:true});
 }
 const screen=document.createElement("section");screen.id="dolch-test-screen";screen.className="screen phonics-intro-screen";screen.setAttribute("aria-label","えいごのことばテスト");
-screen.innerHTML='<div class="dt-stage"><img class="dt-background" id="dolch-test-background" alt=""><div class="phonics-intro-card dt-white"><div id="dolch-test-board" class="dt-grid"></div></div><button class="quit-button" id="dolch-test-quit" type="button">やめる</button><header class="topbar"><div class="progress-badge"><span id="dolch-test-progress">1 / 13</span></div><div class="elapsed-time" id="dolch-test-time">0秒</div></header><div id="dolch-test-word" class="dt-word" hidden></div><button class="phonics-youtube-end" id="dolch-test-listen" type="button">きいてみる</button><button id="dolch-test-replay" type="button" hidden>もういちどきく</button><div id="dolch-test-summary" class="dt-summary" hidden><h2>テストけっか</h2><p>えいご　<span id="dolch-test-score-spelling"></span></p><p>いみ　<span id="dolch-test-score-meaning"></span></p><button id="dolch-test-finish" type="button">のりものをそだてる</button></div></div>';
+screen.innerHTML='<div class="dt-stage"><img class="dt-background" id="dolch-test-background" alt=""><div class="phonics-intro-card dt-white"><div id="dolch-test-board" class="dt-grid"></div></div><button class="quit-button" id="dolch-test-quit" type="button">やめる</button><header class="topbar"><div class="progress-badge"><span id="dolch-test-progress">1 / 13</span></div><div class="elapsed-time" id="dolch-test-time">0秒</div></header><div id="dolch-test-word" class="dt-word" hidden></div><button id="dolch-test-replay" type="button" hidden>もういちどきく</button><div id="dolch-test-summary" class="dt-summary" hidden><h2>テストけっか</h2><p>えいご　<span id="dolch-test-score-spelling"></span></p><p>いみ　<span id="dolch-test-score-meaning"></span></p><button id="dolch-test-finish" type="button">のりものをそだてる</button></div></div>';
 document.getElementById("app").append(screen);
-$("dolch-test-listen").addEventListener("click",listen);$("dolch-test-replay").addEventListener("click",replay);$("dolch-test-quit").addEventListener("click",quit);
+$("dolch-test-replay").addEventListener("click",replay);$("dolch-test-quit").addEventListener("click",quit);
 $("dolch-test-finish").addEventListener("click",()=>{if(!state||state.phase!=="result")return;const callback=state.onComplete;stop();state=null;callback();});
 window.MQDolchTest=Object.freeze({start,quit});
 })();
