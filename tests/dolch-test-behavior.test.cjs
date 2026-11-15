@@ -13,7 +13,8 @@ function harness(){
  let timerId=0,done=0,quit=0;
  class Element {
   constructor(){this.children=[];this.handlers={};this.dataset={};this.hidden=false;this.disabled=false;this.className="";this.textContent="";this.innerHTML="";}
-  append(...nodes){this.children.push(...nodes);}
+  append(...nodes){for(const node of nodes){node.parent=this;this.children.push(node);}}
+  remove(){if(this.parent)this.parent.children=this.parent.children.filter(node=>node!==this);}
   replaceChildren(...nodes){this.children=[...nodes];}
   addEventListener(type,fn){this.handlers[type]=fn;}
   setAttribute(){}
@@ -86,6 +87,11 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  assert.equal(h.spoken.length,2,"meaning stage automatically speaks the word again");
  assert.equal(h.spoken[1].text.toUpperCase(),first);
  assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).children.at(-1).className.includes("dt-card-mark"),false,"previous mark cleared on phase change");
+ const meaningCard=h.get("dolch-test-board").children.find(b=>b.dataset.word===first);
+ const meaningImage=meaningCard.children.find(c=>c.src);
+ h.spoken[h.spoken.length-1].onend();
+ assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first),meaningCard,"speech ending preserves meaning card node");
+ assert.equal(meaningCard.children.find(c=>c.src),meaningImage,"speech ending preserves decoded image node");
  h.answer(first);h.advance();
  assert.equal(h.get("dolch-test-progress").textContent,"2 / 13");
  assert.equal(h.spoken.length,3,"next question starts speech automatically without a listen button");
