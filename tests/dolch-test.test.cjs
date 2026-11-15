@@ -56,6 +56,8 @@ test("4-4-4-1 layout has equal cards, centered final row and Japanese no wrap",(
   assert.match(css,/\.dt-card\.dt-last\{grid-column:2 \/ span 2/);
   assert.match(css,/\.dt-jp\{[^}]*white-space:nowrap/);
   assert.match(source,/dt-focus-upper/);
+  assert.match(source,/dt-empty-ruby/,"particle の should have a ruby base aligned with adjacent kanji");
+  assert.match(css,/\.dt-jp rt\.dt-empty-ruby\{visibility:hidden\}/);
   assert.match(source,/dt-focus-lower/);
   assert.match(css,/\.dt-card\[data-word="TOP"\] \.dt-jp\{display:block;font-size:27px/);
   assert.match(css,/\.dt-card img\{flex:none;width:75px/);
