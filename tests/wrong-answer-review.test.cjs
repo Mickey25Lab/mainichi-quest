@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const app = fs.readFileSync(path.join(__dirname, "../dist/app.js"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "../dist/styles.css"), "utf8");
@@ -42,4 +43,40 @@ test("vehicle transition notice appears during correction review, not after next
   assert.match(app, /pendingIncorrectNextVehicleVisuals = \{ runId, ready \};/);
   assert.match(app, /if \(preloaded\) \{\s*preloaded\.ready\.then\(\(\) => \{/);
   assert.match(app, /runAnswerTransition\(advance\)/);
+});
+
+test("guided addition sign is bold and has no jewel glow", () => {
+  const rule = css.match(/\\.multiplication-2x2-sum-operator \\{([^}]+)\\}/)?.[1];
+  assert.ok(rule, "sum operator style exists");
+  assert.match(rule, /font-weight:1000;/);
+  assert.match(rule, /text-shadow:none;/);
+  assert.match(rule, /filter:none;/);
+});
+
+test("addition-error bubble chooses rightmost matching column, never covers digits", () => {
+  const start = app.indexOf("  function findMultiplicationInsteadOfAdditionIndex(model) {");
+  const end = app.indexOf("  function showMultiplicationAdditionHint(model) {", start);
+  assert.ok(start >= 0 && end > start);
+  const findIndex = vm.runInNewContext("(" + app.slice(start, end).trim() + ")");
+  const model = (upper, lower, expected, entered, specialZero = false) => ({
+    specialZero,
+    rows: [
+      {cells: upper.split(""), value: upper},
+      {cells: lower.split(""), value: lower},
+      {cells: entered.split(""), value: expected}
+    ]
+  });
+  // The tens column has 2+4=6, but the child entered 2×4=8.
+  assert.equal(findIndex(model("24", "34", "364", "384")), 1);
+  // Both tens and hundreds columns look multiplied: show only the ones-place-side error.
+  assert.equal(findIndex(model("222", "44", "662", "882")), 1);
+  assert.equal(findIndex(model("24", "34", "364", "364")), -1);
+  assert.equal(findIndex(model("24", "34", "364", "374")), -1);
+  assert.equal(findIndex(model("24", "34", "364", "384", true)), -1);
+  assert.match(app, /bubble\.textContent = "かけざんしちゃってない？";/);
+  assert.match(app, /const width = \\(keypadRect\\.width \\/ scale\\) \\* 0\\.8;/);
+  assert.match(app, /const top = \\(slotRect\\.bottom - stageRect\\.top\\) \\/ scale \\+ 90;/);
+  assert.match(css, /\\.play-screen \\.multiplication-addition-hint::before/);
+  assert.match(css, /\\.play-screen \\.multiplication-addition-hint \\{/);
+  assert.match(css, /pointer-events:none;/);
 });
