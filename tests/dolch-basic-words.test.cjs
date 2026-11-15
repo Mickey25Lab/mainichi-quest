@@ -221,3 +221,16 @@ test("legacy phonics letters and Dolch small-uppercase/large-lowercase use share
   const [primary, secondary] = dolch.get("phonics-words-letters").children[0].children;
   assert.ok([...primary.children,...secondary.children].every(x => x.className.startsWith("phonics-words-glyph")));
 });
+
+test("TOP uses summit meaning with ruby only on 上 and mountain-flag illustration", () => {
+  const topLine = source.split("\n").find(line => line.includes('{word:"TOP"'));
+  assert.ok(topLine, "TOP remains in Part 1");
+  assert.match(topLine, /label:"てっぺん、いちばん上"/);
+  assert.ok(topLine.includes('meaning:"てっぺん、いちばん<ruby>上<rt>うえ</rt></ruby>"'));
+  assert.doesNotMatch(topLine, /こま/);
+  const svg = fs.readFileSync(path.resolve(__dirname, "../dist/assets/ui/phonics-words/top.svg"), "utf8");
+  assert.match(svg, /<svg[\s>]/);
+  assert.match(svg, /<title[^>]*>山のてっぺん<\/title>/);
+  assert.match(svg, /山の頂上に赤い旗/);
+  assert.match(svg, /<path[^>]*fill="#e56d4a"/);
+});
