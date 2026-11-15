@@ -1932,6 +1932,15 @@
     document.body.appendChild(ssButton);
     updateViewportDiagnosticsButton();
     if (viewportDiagnosticsEnabled) recordViewportDiagnostic("diagnostics-start");
+    // A previous reload is never immediately repeated; inspect its outcome.
+    const lastAttempt = lastOrientationReloadAttempt();
+    if (lastAttempt && Date.now() - lastAttempt < orientationReloadCooldownMs) {
+      window.setTimeout(() => {
+        recordViewportDiagnostic("orientation-reload-observed", {
+          recovered: !persistentFalsePortrait()
+        });
+      }, 1200);
+    }
     // Sample geometry every 5 seconds; a normal baseline is needed at most once
     // every five minutes. Event-triggered snapshots remain detailed.
     let lastGeometry = null;
@@ -2104,6 +2113,60 @@
     const legacy = window.orientation;
     return typeof legacy === "number" && Math.abs(legacy) === 90;
   }
+  // Last-resort recovery: reloading during a question discards in-memory
+  // answers and timers. Only the non-playing landing screens are eligible.
+  // sessionStorage survives reloads, preventing screenshot-triggered loops.
+  const orientationReloadAttemptKey = "mq-001:orientation-reload-attempt-v1";
+  const orientationReloadCooldownMs = 10 * 60 * 1000;
+  let orientationReloadCheckTimer = null;
+  function isSafeOrientationReloadScreen() {
+    const start = $("start-screen");
+    const modes = $("mode-select-screen");
+    if (state.transitioning || state.confirmingAnswer || state.confirmingQuit) return false;
+    if (!document.querySelector(".start-layer")) return false;
+    if (!$("startup-loader")?.hidden) return false;
+    return Boolean(start?.classList.contains("active") || modes?.classList.contains("active"));
+  }
+  function persistentFalsePortrait() {
+    const snapshot = viewportSnapshot();
+    return !document.hidden
+      && Boolean(window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone)
+      && snapshot.innerHeight > snapshot.innerWidth
+      && physicalLandscapeSignal()
+      && (!Number.isFinite(snapshot.visualViewportScale)
+        || Math.abs(snapshot.visualViewportScale - 1) <= 0.01);
+  }
+  function lastOrientationReloadAttempt() {
+    try { return Number(sessionStorage.getItem(orientationReloadAttemptKey)) || 0; }
+    catch (_) { return 0; }
+  }
+  function queueSafeOrientationReload(reason) {
+    if (orientationReloadCheckTimer !== null) window.clearTimeout(orientationReloadCheckTimer);
+    if (!persistentFalsePortrait()) return;
+    orientationReloadCheckTimer = window.setTimeout(() => {
+      orientationReloadCheckTimer = null;
+      if (!persistentFalsePortrait()) return;
+      if (!isSafeOrientationReloadScreen()) {
+        recordViewportDiagnostic("orientation-reload-deferred", { reason: "active-session", trigger: reason });
+        return;
+      }
+      if (Date.now() - lastOrientationReloadAttempt() < orientationReloadCooldownMs) {
+        recordViewportDiagnostic("orientation-reload-skipped", { reason: "cooldown", trigger: reason });
+        return;
+      }
+      // Failure to access sessionStorage must be treated as unsafe: don't
+      // reload without a loop guard.
+      try {
+        sessionStorage.setItem(orientationReloadAttemptKey, String(Date.now()));
+        if (!Number(sessionStorage.getItem(orientationReloadAttemptKey))) return;
+      } catch (_) {
+        recordViewportDiagnostic("orientation-reload-skipped", { reason: "storage-unavailable", trigger: reason });
+        return;
+      }
+      recordViewportDiagnostic("orientation-reload-attempt", { reason: "persistent-mismatch", trigger: reason });
+      window.location.reload();
+    }, 3000);
+  }
   function scheduleViewportOrientationRecovery(reason) {
     if (viewportOrientationRecoveryTimer !== null) window.clearTimeout(viewportOrientationRecoveryTimer);
     if (document.hidden) return;
@@ -2144,10 +2207,9 @@
           schedulePlayStageSize("orientation-recovery");
           window.setTimeout(() => {
             schedulePlayStageSize("orientation-recovery-verify");
-            recordViewportDiagnostic("orientation-recovery-result", {
-              recovered: window.innerWidth >= window.innerHeight,
-              reason
-            });
+            const recovered = window.innerWidth >= window.innerHeight;
+            recordViewportDiagnostic("orientation-recovery-result", { recovered, reason });
+            if (!recovered) queueSafeOrientationReload(reason);
           }, 250);
         }, 60);
       } else {
@@ -7465,6 +7527,13 @@
   beginProfileExperience();
   window.setInterval(updateTopCollectionButton, 60000);
   window.setInterval(checkIdleBgmTimeout, 1000);
+  // If a question was active at the time of the mismatch, do not reload
+  // until the learner naturally returns to a landing screen.
+  window.setInterval(() => {
+    if (persistentFalsePortrait() && isSafeOrientationReloadScreen()) {
+      queueSafeOrientationReload("safe-screen");
+    }
+  }, 5000);
   window.addEventListener("resize", () => {
     recordViewportDiagnostic("window.resize");
     schedulePlayStageSize("resize");
