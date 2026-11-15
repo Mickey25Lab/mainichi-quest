@@ -4422,16 +4422,25 @@
     $("play-stage").querySelectorAll(".multiplication-correction-overlay").forEach((node) => node.remove());
   }
   function addMultiplicationCorrectionOverlay(slot, expected) {
+    // Preserve the original inline correction's exact position, font and size.
+    // Only move its rendering outside the paint-contained multiplication panel.
+    const inlineCorrection = slot.querySelector(".incorrect-digit-correction");
+    if (!inlineCorrection) return;
     const stage = $("play-stage");
     const stageRect = stage.getBoundingClientRect();
-    const slotRect = slot.getBoundingClientRect();
+    const correctionRect = inlineCorrection.getBoundingClientRect();
     const scale = stageRect.width / stageCanvasWidth || 1;
-    const correction = document.createElement("span");
-    correction.className = "multiplication-correction-overlay";
-    correction.textContent = expected;
-    correction.style.left = ((slotRect.left + slotRect.width / 2 - stageRect.left) / scale) + "px";
-    correction.style.top = ((slotRect.bottom - stageRect.top) / scale + 4) + "px";
-    stage.appendChild(correction);
+    const typography = window.getComputedStyle(inlineCorrection);
+    const overlay = document.createElement("span");
+    overlay.className = "multiplication-correction-overlay";
+    overlay.textContent = expected;
+    overlay.style.left = ((correctionRect.left + correctionRect.width / 2 - stageRect.left) / scale) + "px";
+    overlay.style.top = ((correctionRect.top - stageRect.top) / scale) + "px";
+    overlay.style.fontSize = typography.fontSize;
+    overlay.style.lineHeight = typography.lineHeight;
+    overlay.style.fontWeight = typography.fontWeight;
+    stage.appendChild(overlay);
+    inlineCorrection.remove();
   }
   function cancelWrongAnswerReview() {
     if (wrongAnswerReview) {
@@ -4498,17 +4507,17 @@
           markDigit(slot, expected[i] ?? "", "below");
           // Corrections in the grid are clipped by ancestor paint containment.
           // Mount the red answer directly in the scaled play stage instead.
-          slot.querySelector(".incorrect-digit-correction")?.remove();
           addMultiplicationCorrectionOverlay(slot, expected[i] ?? "");
         }
       });
     } else if (((state.mode === "multiplication3x2" || state.mode === "multiplication2x2" || state.mode === "multiplication2x2-unguided" || state.mode === "multiplication2x2-zero")) && state.multiplication2x2) {
       removeMultiplicationCorrectionOverlays();
-      state.multiplication2x2.rows.forEach((row) => {
+      state.multiplication2x2.rows.forEach((row, rowIndex) => {
+        // The ×0 layout has only one editable/visible result row.
+        if (state.multiplication2x2.specialZero && rowIndex > 0) return;
         Array.from(row.holder.querySelectorAll(".multiplication-2x2-slot")).forEach((slot, i) => {
           if (row.cells[i] !== row.value[i]) {
             markDigit(slot, row.value[i], "below");
-            slot.querySelector(".incorrect-digit-correction")?.remove();
             addMultiplicationCorrectionOverlay(slot, row.value[i]);
           }
         });
