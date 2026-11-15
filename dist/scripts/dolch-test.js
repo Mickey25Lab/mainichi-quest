@@ -85,7 +85,7 @@ function choose(word){
  s.locked=true;render();beep(ok);
  const selected=[...$("dolch-test-board").children].find(button=>button.dataset.word===word);
  const mark=document.createElement("span");mark.className="dt-card-mark "+(ok?"dt-ok":"dt-no");mark.setAttribute("aria-hidden","true");if(selected)selected.append(mark);
- stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(ok){if(phase==="spelling")speakThree();else speakThree({first:true});}},500);
+ stepTimer=setTimeout(()=>{stepTimer=0;if(state!==s)return;mark.remove();if(ok){if(phase==="spelling")s.phase="meaning";else{s.done.add(word);if(s.index===12){finish();return;}s.index++;s.phase="spelling";s.heard=false;}}s.locked=false;render();if(ok){if(phase==="spelling")speakThree();else speakThree({first:true});}},500);
 }
 function quit(){if(!state)return;const callback=state.onQuit;stop();state=null;callback();}
 function start({profileId,onComplete,onQuit}){
