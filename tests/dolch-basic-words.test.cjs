@@ -225,12 +225,26 @@ test("legacy phonics letters and Dolch small-uppercase/large-lowercase use share
 test("TOP uses summit meaning with ruby only on 上 and mountain-flag illustration", () => {
   const topLine = source.split("\n").find(line => line.includes('{word:"TOP"'));
   assert.ok(topLine, "TOP remains in Part 1");
-  assert.match(topLine, /label:"てっぺん、いちばん上"/);
-  assert.ok(topLine.includes('meaning:"てっぺん、いちばん<ruby>上<rt>うえ</rt></ruby>"'));
+  assert.match(topLine, /label:"てっぺん いちばん上"/);
+  assert.ok(topLine.includes('meaning:"てっぺん<br>いちばん<ruby>上<rt>うえ</rt></ruby>"'));
   assert.doesNotMatch(topLine, /こま/);
   const svg = fs.readFileSync(path.resolve(__dirname, "../dist/assets/ui/phonics-words/top.svg"), "utf8");
   assert.match(svg, /<svg[\s>]/);
   assert.match(svg, /<title[^>]*>山のてっぺん<\/title>/);
   assert.match(svg, /山の頂上に赤い旗/);
   assert.match(svg, /<path[^>]*fill="#e56d4a"/);
+  assert.doesNotMatch(svg, /<circle\b/, "sun and orange summit marker should both be removed");
+});
+
+test("mode selection and parent settings share the same definitions, with no duplicate 14-word label", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "../dist/index.html"), "utf8");
+  const app = fs.readFileSync(path.resolve(__dirname, "../dist/app.js"), "utf8");
+  assert.match(app, /id:"dolch-basic", label:"えいごのことばをよもう", detail:"パート１　きほんの名詞　13 words"/);
+  assert.match(app, /const modeById = new Map\(parentModeDefinitions\.map\(mode => \[mode\.id, mode\]\)\)/);
+  assert.match(app, /detail\.textContent = definition\.detail/);
+  assert.match(app, /title\.textContent = definition\.label/);
+  const choiceNames = [...html.matchAll(/<span class="mode-select-name">([^<]*)<\/span>/g)];
+  assert.equal(choiceNames.length, 18, "every child mode title should be sourced from parentModeDefinitions");
+  assert.ok(choiceNames.every(m => m[1] === ""), "no hardcoded child mode title is permitted");
+  assert.doesNotMatch(html, /14 words/);
 });
