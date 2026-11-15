@@ -94,6 +94,24 @@ test("Dolch mode initializes with 10 cards and the correct first action", () => 
   assert.equal(h.spoken[0].pitch, 1.2);
 });
 
+test("Part 1 uses 13 distinct nouns, never MEN, while still asking 10 questions", () => {
+  const begin = source.indexOf("const basicVocabulary = [");
+  const end = source.indexOf("];", begin);
+  assert.ok(begin >= 0 && end > begin, "basic word list exists");
+  const words = [...source.slice(begin, end).matchAll(/\{word:"([A-Z]+)"/g)].map(m => m[1]);
+  assert.equal(words.length, 13);
+  assert.equal(new Set(words).size, 13);
+  assert.ok(words.includes("MAN"));
+  assert.ok(!words.includes("MEN"));
+  const h = harness();
+  for (let run = 0; run < 25; run++) {
+    h.start({ mode:"dolch-basic", onComplete() {}, onQuit() {} });
+    assert.equal(h.get("phonics-words-progress-count").textContent, "1 / 10");
+    const displayed = h.get("phonics-words-letters").children[0].children[1].children.map(c => c.textContent).join("");
+    assert.notEqual(displayed, "MEN");
+  }
+});
+
 test("Dolch mode speaks exactly three times and keeps meaning visible on replay", async () => {
   const h = harness();
   h.start({ mode:"dolch-basic", onComplete() {}, onQuit() {} });
@@ -202,4 +220,60 @@ test("legacy phonics letters and Dolch small-uppercase/large-lowercase use share
   dolch.start({ mode:"dolch-basic", onComplete() {}, onQuit() {} });
   const [primary, secondary] = dolch.get("phonics-words-letters").children[0].children;
   assert.ok([...primary.children,...secondary.children].every(x => x.className.startsWith("phonics-words-glyph")));
+});
+
+test("TOP uses summit meaning with ruby only on 上 and mountain-flag illustration", () => {
+  const topLine = source.split("\n").find(line => line.includes('{word:"TOP"'));
+  assert.ok(topLine, "TOP remains in Part 1");
+  assert.match(topLine, /label:"てっぺん いちばん上"/);
+  assert.ok(topLine.includes('meaning:"てっぺん<br>いちばん<ruby>上<rt>うえ</rt></ruby>"'));
+  assert.doesNotMatch(topLine, /こま/);
+  const svg = fs.readFileSync(path.resolve(__dirname, "../dist/assets/ui/phonics-words/top.svg"), "utf8");
+  assert.match(svg, /<svg[\s>]/);
+  assert.match(svg, /<title[^>]*>山のてっぺん<\/title>/);
+  assert.match(svg, /山の頂上に赤い旗/);
+  assert.match(svg, /<path[^>]*fill="#e56d4a"/);
+  assert.doesNotMatch(svg, /<circle\b/, "sun and orange summit marker should both be removed");
+});
+
+test("mode selection and parent settings share the same definitions, with no duplicate 14-word label", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "../dist/index.html"), "utf8");
+  const app = fs.readFileSync(path.resolve(__dirname, "../dist/app.js"), "utf8");
+  assert.match(app, /id:"dolch-basic", label:"えいごのことばをよもう", detail:"パート１　きほんの名詞　13 words"/);
+  assert.match(app, /const modeById = new Map\(parentModeDefinitions\.map\(mode => \[mode\.id, mode\]\)\)/);
+  assert.match(app, /detail\.textContent = definition\.detail/);
+  assert.match(app, /title\.textContent = definition\.label/);
+  const choiceNames = [...html.matchAll(/<span class="mode-select-name">([^<]*)<\/span>/g)];
+  assert.equal(choiceNames.length, 18, "every child mode title should be sourced from parentModeDefinitions");
+  assert.ok(choiceNames.every(m => m[1] === ""), "no hardcoded child mode title is permitted");
+  assert.doesNotMatch(html, /14 words/);
+});
+
+test("NEST eggs have strong gray outlines and gray crack marks", () => {
+  const svg = fs.readFileSync(path.resolve(__dirname, "../dist/assets/ui/phonics-words/nest.svg"), "utf8");
+  const eggs = [...svg.matchAll(/<ellipse[^>]*cx="(?:105|149)"[^>]*>/g)];
+  assert.equal(eggs.length, 2);
+  eggs.forEach(egg => {
+    assert.match(egg[0], /fill="#fcf5db"/, "keep the warm egg fill");
+    assert.match(egg[0], /stroke="#596168" stroke-width="3\.5"/, "outline should be strong gray");
+  });
+  assert.match(svg, /M103 99 L114 113 M149 98 L158 112" stroke="#596168" stroke-width="4"/);
+});
+
+test("all phonics lesson CTAs use the intro 420x88 geometry, and word cards end at the YouTube video bottom", () => {
+  const styles = fs.readFileSync(path.resolve(__dirname, "../dist/styles.css"), "utf8");
+  assert.match(styles, /--phonics-cta-width: 420px;/);
+  assert.match(styles, /--phonics-cta-height: 88px;/);
+  assert.match(styles, /--phonics-video-bottom: 867\.5625px;/);
+  assert.match(styles, /\.phonics-intro-start\s*\{[^}]*width:var\(--phonics-cta-width\);[^}]*height:var\(--phonics-cta-height\);/);
+  assert.match(styles, /\.phonics-youtube-end\s*\{[^}]*bottom:44px;[^}]*width:var\(--phonics-cta-width\);[^}]*height:var\(--phonics-cta-height\);/);
+  assert.match(source, /\.phonics-words-stage \.phonics-intro-card\{[^}]*top:145px;transform:translateX\(-50%\);min-height:0;height:calc\(var\(--phonics-video-bottom\) - 145px\)/);
+  assert.match(source, /#phonics-words-action\{bottom:44px;z-index:7;width:var\(--phonics-cta-width\);height:var\(--phonics-cta-height\)\}/);
+  assert.match(source, /#phonics-words-replay\{[^}]*bottom:44px;[^}]*width:280px;height:var\(--phonics-cta-height\)/);
+  const videoBottom = (1050 + 685.125) / 2;
+  const whiteCardTop = (1050 - 760) / 2;
+  const whiteCardHeight = videoBottom - whiteCardTop;
+  assert.equal(videoBottom, 867.5625);
+  assert.equal(whiteCardTop, 145);
+  assert.equal(whiteCardHeight, 722.5625);
 });
