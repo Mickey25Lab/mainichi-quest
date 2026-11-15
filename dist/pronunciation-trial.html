@@ -28,7 +28,7 @@ button.primary{background:#77cbf5;color:#103b67}
 .trial-judge{background:rgba(255,255,255,.95);border:3px solid #8ac5e5;border-radius:24px;padding:16px}
 .trial-judge h2{margin:0 0 10px;font-size:22px}
 .trial-judge-buttons{display:flex;flex-wrap:wrap;gap:10px}
-.trial-judge-buttons button{flex:1;min-width:160px;padding:14px 8px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px}
+.trial-judge-buttons button{flex:1;min-width:160px;padding:14px 8px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap}
 .judge-symbol{font:900 34px/1 "Noto Sans JP",sans-serif;flex:none}
 .judge-symbol.good{color:#e33e48}
 .judge-symbol.bad{color:#237bda}
@@ -37,7 +37,10 @@ button.primary{background:#77cbf5;color:#103b67}
 .trial-result h1{font-size:25px;margin:0 0 12px}
 .trial-result table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:clamp(14px,2.7vw,21px)}
 .trial-result th,.trial-result td{padding:8px 4px;border-bottom:1px solid #d8e5ee;text-align:left;overflow-wrap:anywhere}
-.trial-result th:nth-child(1){width:22%}.trial-result th:nth-child(2){width:36%}.trial-result th:nth-child(3){width:42%}
+.trial-result th:nth-child(1){width:18%}.trial-result th:nth-child(2){width:29%}.trial-result th:nth-child(3){width:16%}.trial-result th:nth-child(4){width:37%}
+.trial-result .text-match{font:900 28px/1 "Noto Sans JP",sans-serif;text-align:center}
+.trial-result .text-match.is-correct{color:#e33e48}
+.trial-result .text-match.is-incorrect{color:#237bda}
 .trial-result p{font-size:14px;margin:12px 0}
 @media(max-width:600px){.trial-stage{padding:12px;gap:10px}.trial-head{font-size:17px}.trial-card{min-height:160px}.trial-judge-buttons button{min-width:120px;font-size:16px}}
 @media print{.trial-stage{background:#fff;padding:0;min-height:auto}.trial-head,.trial-controls,.trial-judge{display:none!important}.trial-result{padding:0}}
@@ -65,7 +68,7 @@ button.primary{background:#77cbf5;color:#103b67}
 </section>
 <section id="results" class="trial-result" hidden>
   <h1>おためし けっか（13こ）</h1>
-  <table><thead><tr><th>おだい</th><th>iPadの認識結果</th><th>おうちのひとの判定</th></tr></thead><tbody id="result-body"></tbody></table>
+  <table><thead><tr><th>おだい</th><th>iPadの認識結果</th><th>文字正誤</th><th>おうちのひとの判定</th></tr></thead><tbody id="result-body"></tbody></table>
   <p>音声認識は発音の正確さを直接採点するものではありません。「認識なし」「エラー」もそのまま記録します。スクリーンショットを撮って共有してください。</p>
 </section>
 <script>
@@ -84,6 +87,9 @@ function letter(target,word){
     if(ch==="Q"||ch==="t"||ch==="y") el.className="jost";
     return el;
   }));
+}
+function matchesWord(word,recognized){
+  return word.toUpperCase()===recognized.trim().toUpperCase().replace(/[^A-Z]/g,"");
 }
 function setStatus(text){$("status").textContent=text;}
 function transcript(text){$("transcript").textContent=text||"（認識なし）";$("response").hidden=false;}
@@ -104,8 +110,7 @@ function revealJudgement(){
   if(phase==="judge")return;
   phase="judge";listening=false;
   transcript(best||pending||"（認識なし）");
-  const normalized=(best||pending).trim().toUpperCase().replace(/[^A-Z]/g,"");
-  setStatus("iPadの判定："+(normalized===words[index]?"一致":"不一致 / 認識なし")+"　※発音の正誤とは別");
+  setStatus("iPadの判定："+(matchesWord(words[index],best||pending)?"一致":"不一致 / 認識なし")+"　※発音の正誤とは別");
   $("start").hidden=true;$("retry").hidden=false;$("judge").hidden=false;
 }
 function start(){
@@ -148,8 +153,14 @@ function complete(){
   const body=$("result-body");body.replaceChildren();
   for(const row of rows){
     const tr=document.createElement("tr");
-    for(const value of [row.word,row.recognized,row.judgement]){
-      const cell=document.createElement("td");cell.textContent=value;tr.append(cell);
+    const matched=matchesWord(row.word,row.recognized);
+    for(const value of [row.word,row.recognized,matched?"○":"×",row.judgement]){
+      const cell=document.createElement("td");cell.textContent=value;
+      if(value===(matched?"○":"×")&&tr.children.length===2){
+        cell.className="text-match "+(matched?"is-correct":"is-incorrect");
+        cell.setAttribute("aria-label",matched?"一致":"不一致");
+      }
+      tr.append(cell);
     }
     body.append(tr);
   }
