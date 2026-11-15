@@ -2421,14 +2421,20 @@ html.mq-viewport-landscape-pinned body {
   height:62px;
   transform:translateY(-50%);
   color:var(--navy);
-  font-size:64px;
-  font-family:"Noto Sans JP",sans-serif;
-  font-weight:1000;
-  line-height:1;
+  font-size:0; /* draw solid bars rather than relying on a thin font glyph */
   text-shadow:none;
   filter:none;
   pointer-events:none;
 }
+.multiplication-2x2-sum-operator::before,
+.multiplication-2x2-sum-operator::after {
+  content:"";
+  position:absolute;
+  background:currentColor;
+  border-radius:2px;
+}
+.multiplication-2x2-sum-operator::before { width:48px; height:9px; }
+.multiplication-2x2-sum-operator::after { width:9px; height:48px; }
 .multiplication-2x2-sum-operator[hidden] { display:none !important; }
 .question-answer-card:not(.multiplication-2x2-mode) .multiplication-2x2-sum-operator { display:none !important; }
 .multiplication-2x2-row-sparkles {
