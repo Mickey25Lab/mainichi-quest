@@ -48,6 +48,16 @@ function harness(){
  return {get,spoken,storage,canceled,answer,advance,
   start(id="one"){window.MQDolchTest.start({profileId:id,onComplete:()=>done++,onQuit:()=>quit++});},
   get done(){return done;},get quit(){return quit;},
+  finishThree(){
+    for(let i=0;i<3;i++){
+      spoken[spoken.length-1].onend();
+      if(i<2){
+        const pair=[...pending].find(([,v])=>v.ms===800);
+        assert.ok(pair,"speech pauses for 800ms between repeats");
+        pending.delete(pair[0]);pair[1].fn();
+      }
+    }
+  },
   quitTest(){window.MQDolchTest.quit();}
  };
 }
@@ -56,8 +66,9 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  const h=harness();h.start();
  assert.equal(h.get("dolch-test-progress").textContent,"1 / 13");
  assert.equal(h.get("dolch-test-board").children.length,13);
- assert.equal(h.get("dolch-test-board").children.filter(b=>b.disabled).length,13);
- h.get("dolch-test-listen").click();
+ assert.equal(h.get("dolch-test-board").children.filter(b=>b.disabled).length,0,"answer cards active as soon as mode starts");
+ assert.equal(h.get("dolch-test-replay").hidden,false,"replay visible while audio plays");
+ assert.equal(h.get("dolch-test-replay").disabled,true,"replay inactive while playing");
  assert.equal(h.spoken.length,1);
  assert.equal(h.spoken[0].pitch,1.2);
  const first=h.spoken[0].text.toUpperCase();
@@ -77,9 +88,10 @@ test("test renders thirteen distinct cards; audio unlocks them; spelling and mea
  assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).children.at(-1).className.includes("dt-card-mark"),false,"previous mark cleared on phase change");
  h.answer(first);h.advance();
  assert.equal(h.get("dolch-test-progress").textContent,"2 / 13");
+ assert.equal(h.spoken.length,3,"next question starts speech automatically without a listen button");
  assert.equal(h.get("dolch-test-board").children.find(b=>b.dataset.word===first).disabled,true);
  for(let i=1;i<13;i++){
-  h.get("dolch-test-listen").click();
+  assert.equal(h.get("dolch-test-replay").hidden,false);
   const word=h.spoken[h.spoken.length-1].text.toUpperCase();
   h.answer(word);h.advance();
   h.answer(word);h.advance();
